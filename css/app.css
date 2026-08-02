@@ -1,0 +1,989 @@
+html,
+body.app-page {
+  height: 100%;
+  overflow: hidden;
+}
+
+.topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-chip {
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+
+.layout {
+  display: flex;
+  height: calc(100% - 56px);
+}
+
+/* El mapa es el contenido, no un panel mas: ocupa todo el area y el panel de
+   controles flota encima con su propia sombra, en vez de partir la pantalla
+   en dos columnas con un borde al medio. Es la diferencia entre "una
+   herramienta con un mapa adentro" y "un mapa que se maneja". */
+.map-page .layout {
+  position: relative;
+}
+
+/* El alto del area de mapa se reparte con flex en vez de restarle al viewport
+   una altura fija de barra superior: en celular la barra envuelve a dos filas
+   y cualquier numero fijo deja la hoja de controles colgando por debajo del
+   borde de la pantalla, con el boton principal cortado. */
+body.map-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.map-page .layout {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.map-page .topbar {
+  flex-shrink: 0;
+}
+
+.sidebar {
+  width: 372px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  background: var(--bg-panel);
+}
+
+.map-page .sidebar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  bottom: 14px;
+  z-index: 500; /* sobre los paneles de Leaflet (400) */
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  box-shadow: var(--shadow-float);
+}
+
+/* El contenido scrollea, la accion principal queda fija abajo. */
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 16px 4px;
+}
+
+.sidebar-cta {
+  flex-shrink: 0;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.sidebar-cta #calculate-btn {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-cta .hint {
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.panel {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+/* Dentro del panel flotante los sub-paneles no necesitan su propia caja: dos
+   niveles de borde redondeado anidados leen como cajas dentro de cajas. Se
+   separan con espacio y una linea fina, que es suficiente. */
+.map-page .sidebar .panel {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 18px;
+  margin: 0 0 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.map-page .sidebar .panel:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 6px 0 12px;
+  line-height: 1.5;
+}
+
+.hint.hint-ok {
+  color: var(--accent-astar);
+}
+
+#calculate-hint {
+  margin-top: 6px;
+}
+
+button.small {
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+.inline-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.address-search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.address-search-row input {
+  flex: 1;
+}
+
+.address-result {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.address-result.warn {
+  color: var(--accent-dijkstra);
+  border-color: var(--accent-dijkstra-dim);
+}
+
+.address-result.error {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* --- Origen y destino: un solo control apilado ---------------------------- */
+
+.route-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+.route-slot {
+  display: grid;
+  grid-template-columns: 12px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+}
+
+/* El <input> es el campo en si: sin caja propia, porque la caja ya la pone
+   .route-input alrededor de los dos. El contenedor .route-autocomplete es lo
+   que ancla el desplegable de sugerencias justo debajo. */
+.route-autocomplete {
+  position: relative;
+  min-width: 0;
+}
+
+.route-slot input {
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 12px 0;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.route-slot input:hover {
+  border-color: transparent;
+}
+
+.route-slot input:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Desplegable de sugerencias: intersecciones del grafo que matchean lo
+   tipeado, mas una ultima opcion para buscar la direccion completa via
+   geocodificacion cuando ninguna intereseccion local alcanza. Position
+   fixed-like (absolute sobre el contenedor relative) para flotar sobre el
+   resto del panel sin empujar el layout. */
+.autocomplete-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -34px;
+  right: -12px;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.autocomplete-item {
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.autocomplete-item .ac-sub {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background: var(--bg);
+}
+
+.autocomplete-item.ac-geocode {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 10px;
+  color: var(--accent-astar);
+  font-weight: 500;
+}
+
+.autocomplete-item.ac-loading,
+.autocomplete-item.ac-empty {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* Mismos colores que los marcadores del mapa (.node-marker): el punto que se
+   ve en el panel y el que se ve sobre la calle tienen que ser el mismo punto. */
+.route-marker {
+  width: 10px;
+  height: 10px;
+  justify-self: center;
+  flex-shrink: 0;
+}
+
+.route-marker-origin {
+  border-radius: 50%;
+  background: var(--point-origin);
+}
+
+.route-marker-dest {
+  border-radius: 2px;
+  background: var(--point-dest);
+}
+
+/* El tramo punteado que une origen con destino: es lo que hace que los dos
+   campos se lean como un viaje y no como dos desplegables sueltos. */
+.route-connector {
+  height: 14px;
+  margin-left: 5px;
+  border-left: 1px dashed var(--text-faint);
+}
+
+/* Boton de "marcar tocando el mapa". Activo = el proximo toque en el mapa cae
+   en este punto; es el unico estado que el usuario necesita rastrear. */
+.pin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border-color: transparent;
+  background: none;
+  color: var(--text-faint);
+}
+
+.pin-btn:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.pin-btn.active {
+  background: var(--bg-panel-raised);
+  border-color: var(--accent-astar);
+  color: var(--accent-astar);
+}
+
+.station-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.station-list li {
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+
+.station-list li:last-child {
+  border-bottom: none;
+}
+
+.station-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  cursor: pointer;
+}
+
+.station-item-header:hover {
+  color: var(--accent-astar);
+}
+
+.station-item-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.station-item-name svg {
+  color: var(--accent-dijkstra);
+}
+
+.station-list .station-power {
+  font-family: var(--font-display);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.station-detail {
+  padding: 2px 0 10px 18px;
+  border-left: 1px solid var(--border);
+  margin-left: 4px;
+}
+
+.station-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+  color: var(--text-muted);
+}
+
+.station-detail-row b {
+  font-family: var(--font-display);
+  color: var(--text);
+  text-align: right;
+}
+
+.station-detail-note {
+  margin-top: 6px;
+  color: var(--text-faint);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Bloque de referencia de la hoja de resultados. Tiene que ser el area del
+   mapa y no .layout: en el layout de celular los controles son una hoja
+   inferior que TAMBIEN vive dentro de .layout, asi que anclar los resultados
+   ahi los apoyaba encima de los controles. */
+.map-page .main-area {
+  position: relative;
+}
+
+#map {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg);
+}
+
+/* Marcadores propios (DivIcon) para origen/destino */
+.node-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: #06231d;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.node-marker.origin {
+  background: var(--point-origin);
+}
+
+.node-marker.destination {
+  background: var(--point-dest);
+  color: #1c0f33;
+}
+
+.station-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dijkstra);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 8px rgba(242, 161, 84, 0.6);
+}
+
+.station-marker svg {
+  width: 11px;
+  height: 11px;
+  fill: #241d00;
+}
+
+.toll-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2c04d;
+  color: #241d00;
+  border-radius: 4px;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  box-shadow: 0 0 6px rgba(226, 192, 77, 0.6);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-panel-raised);
+}
+
+.leaflet-popup-content {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-content b {
+  font-family: var(--font-display);
+}
+
+/* --- Dashboard comparativo ------------------------------------------------ */
+
+/* Hoja de resultados: aparece sobre el mapa una vez calculada la ruta, anclada
+   abajo a la derecha para no taparse con el panel de controles. No cubre el
+   mapa entero a proposito -- la ruta dibujada y sus numeros se leen juntos. */
+.dashboard {
+  flex-shrink: 0;
+  max-height: 46%;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  padding: 16px 20px 20px;
+}
+
+.map-page .dashboard {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  /* Ancho del panel lateral (372) + su margen izquierdo (14) + la separacion
+     entre ambos (28), para que los resultados nunca queden debajo del panel. */
+  left: calc(372px + 42px);
+  max-height: min(52%, 460px);
+  z-index: 500;
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dashboard-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+}
+
+.dashboard-route-label {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.trip-control {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+#start-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+}
+
+#start-trip-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.trip-live {
+  margin-top: 12px;
+}
+
+.trip-live-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-bottom: 8px;
+}
+
+.trip-live-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trip-live-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.trip-live-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-astar);
+}
+
+.trip-progress-track {
+  position: relative;
+  height: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.trip-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-astar-dim), var(--accent-astar));
+  transition: width 0.15s linear;
+}
+
+.trip-progress-fill.charging {
+  background: linear-gradient(90deg, var(--accent-dijkstra-dim), var(--accent-dijkstra));
+}
+
+.trip-status {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.trip-status.charging {
+  color: var(--accent-dijkstra);
+}
+
+.trip-status.done {
+  color: var(--accent-astar);
+}
+
+.trip-status.warn {
+  color: var(--danger);
+}
+
+.speed-advisory {
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.speed-advisory.ok {
+  color: var(--accent-astar);
+  border-color: var(--accent-astar-dim);
+}
+
+/* Llega, pero raspando: ni el verde de "todo bien" ni el ambar de "hay que
+   actuar" -- un tono aparte para "esto merece tu atencion" sin ser alarma. */
+.speed-advisory.tight {
+  color: var(--accent-live);
+  border-color: var(--accent-live);
+}
+
+.speed-advisory.warn {
+  color: var(--accent-dijkstra);
+  border-color: var(--accent-dijkstra-dim);
+}
+
+.speed-advisory.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Marcador de ubicacion real (GPS) durante "Iniciar viaje": un punto solido
+   mas un aro que pulsa, igual al patron estandar de "tu ubicacion" en apps
+   de mapas -- se distingue a proposito de los acentos mint/ambar ya usados
+   para A*/Dijkstra, y de origen/destino, para no confundir "donde estoy yo"
+   con "cual es la ruta". */
+.live-location-marker {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.live-location-dot,
+.live-location-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-live);
+  transform: translate(-50%, -50%);
+}
+
+.live-location-dot {
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(58, 160, 255, 0.8);
+}
+
+.live-location-pulse {
+  opacity: 0.55;
+  animation: live-pulse 1.8s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  to {
+    transform: translate(-50%, -50%) scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* Auto que representa al vehiculo sobre la posicion GPS real: va apilado
+   arriba del punto+pulso (mismo lat/lng, mayor z-index), asi que se mueve
+   pegado a la ubicacion en cada actualizacion de watchPosition -- no es un
+   marcador aparte, es una capa mas del mismo liveMarker. */
+.live-location-car {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  line-height: 0;
+  z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+}
+
+.live-location-car svg {
+  width: 20px;
+  height: 20px;
+  fill: #ffffff;
+}
+
+/* --- Datos del viaje (panel principal) -------------------------------- */
+
+.trip-data-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.trip-stat {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+}
+
+.trip-stat-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.trip-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Distancia y tiempo son la respuesta a "¿cuanto me lleva llegar?": van mas
+   grandes que el resto para que se lean de un vistazo, sin obligar a recorrer
+   siete numeros del mismo tamaño buscando los dos que importan. */
+.trip-data-stats .trip-stat:nth-child(-n + 2) .trip-stat-value {
+  font-size: 25px;
+  line-height: 1.15;
+}
+
+.trip-stat-sub {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+.trip-charging-stops h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 4px 0 10px;
+}
+
+.trip-charging-stops {
+  margin-bottom: 16px;
+}
+
+.charging-stop-card {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+
+.charging-stop-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--accent-dijkstra);
+}
+
+/* Icono de carga: mismo trazo que el resto de los iconos, pero relleno --
+   un rayo en linea a este tamaño se convierte en un borron. */
+.charging-stop-header svg,
+.station-item-header svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: currentColor;
+  stroke: none;
+}
+
+.charging-stop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+  color: var(--text-muted);
+}
+
+.charging-stop-row b {
+  font-family: var(--font-display);
+  color: var(--text);
+}
+
+/* Debajo de este ancho el panel flotante ya no cabe al lado del mapa sin
+   comerselo entero, asi que pasa a ser una hoja anclada abajo -- el mapa
+   arriba, los controles al alcance del pulgar. */
+@media (max-width: 860px) {
+  html,
+  body.app-page {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 10px 14px;
+  }
+  .topbar-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .layout {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+  .sidebar {
+    width: auto;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  #map {
+    min-height: 320px;
+  }
+  .dashboard {
+    max-height: none;
+  }
+  .trip-data-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Reafirma el alto fijo: la regla generica de .app-page de mas arriba en
+     este mismo bloque deja scrollear la pagina entera, y el mapa necesita
+     quedarse quieto ocupando lo que sobra. */
+  body.map-page {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .map-page .layout {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: hidden;
+  }
+  .map-page .sidebar {
+    position: relative;
+    inset: auto;
+    width: auto;
+    max-height: 58%;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.28), 0 -16px 48px rgba(0, 0, 0, 0.4);
+  }
+  /* Tirador: la señal de que la hoja tiene mas contenido del que se ve. */
+  .map-page .sidebar::before {
+    content: "";
+    display: block;
+    flex-shrink: 0;
+    width: 36px;
+    height: 4px;
+    margin: 8px auto 2px;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+  }
+  .map-page .main-area {
+    flex: 1;
+    min-height: 220px;
+  }
+  .map-page .dashboard {
+    position: absolute;
+    inset: auto 10px 10px 10px;
+    max-height: 62%;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    padding: 12px;
+  }
+  .panel {
+    padding: 12px;
+  }
+  .map-page .sidebar,
+  .map-page .sidebar .panel {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .map-page .sidebar-scroll {
+    padding: 12px 14px 4px;
+  }
+  .map-page .sidebar-cta {
+    padding: 10px 14px 12px;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .topbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .trip-data-stats {
+    grid-template-columns: 1fr;
+  }
+  .map-page .dashboard {
+    padding: 14px 14px 16px;
+  }
+}

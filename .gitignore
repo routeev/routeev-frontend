@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+
+# Secretos/configuracion local no versionada
+.env
+.env.*
+
+# Artefactos temporales de editores y herramientas
+.cache/
+dist/
+build/
+node_modules/

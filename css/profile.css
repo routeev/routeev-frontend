@@ -1,0 +1,205 @@
+html,
+body.app-page {
+  height: auto;
+  overflow: auto;
+}
+
+.profile-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.profile-main .panel {
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.profile-main .panel h2 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.data-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-display);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.data-table td.cell-route {
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  white-space: normal;
+  min-width: 220px;
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg);
+}
+
+.data-table td.cell-danger {
+  color: var(--danger);
+}
+
+.data-table td.cell-recharge {
+  color: var(--accent-dijkstra);
+}
+
+/* --- Mis vehiculos ---------------------------------------------------------
+   Tarjetas en grilla: cada vehiculo con su silueta (coloreada a partir del
+   nombre, ver carSvg en profile.js), sus especificaciones y el boton de
+   eliminar. */
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+/* Los tres numeros del vehiculo (bateria, consumo, carga) en una fila cuando
+   hay lugar; apilados en pantallas angostas. */
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.vehicle-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--panel-2, rgba(255, 255, 255, 0.02));
+}
+
+.vehicle-art-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.vehicle-art {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+}
+
+/* Foto real de ESE vehiculo (subida por su dueño), cuando existe -- ver
+   loadVehicles en profile.js. Mismo alto que la silueta que reemplaza, para
+   que la tarjeta no salte de tamaño al cargar. */
+.vehicle-photo {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.vehicle-photo-edit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-panel-raised, rgba(0, 0, 0, 0.55));
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  margin: 0;
+}
+
+.vehicle-photo-edit:hover {
+  border-color: var(--accent-astar);
+}
+
+.vehicle-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vehicle-name {
+  margin: 0 0 8px;
+  font-size: 14px;
+  /* Un nombre largo no debe empujar la tarjeta ni desbordarla. */
+  overflow-wrap: anywhere;
+}
+
+.vehicle-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.vehicle-specs dt {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.vehicle-specs dd {
+  margin: 0;
+}
+
+/* La columna de gasto es la que se busca primero en estas tablas: se
+   destaca para que salte a la vista sin tener que leer el encabezado. */
+.data-table td.cell-total {
+  color: var(--accent-astar);
+  font-weight: 600;
+}
+
+.data-table td.cell-vehicle {
+  overflow-wrap: anywhere;
+}
