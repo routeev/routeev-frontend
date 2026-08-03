@@ -6,24 +6,31 @@ Este repo contiene la interfaz web. La API vive en `routeev-api`.
 
 ## Correr localmente
 
-Servir esta carpeta con cualquier servidor estatico. Por ejemplo:
+Copiar la configuracion local:
 
 ```bash
-python -m http.server 5500
+copy .env.example .env
+```
+
+En `.env`, elegir que backend usar:
+
+```env
+ROUTEEV_API_BASE_URL=https://routeev-api.onrender.com
+```
+
+Levantar el servidor local:
+
+```bash
+node scripts/dev-server.js
 ```
 
 Abrir `http://127.0.0.1:5500`.
 
 ## Conectar con la API
 
-Editar `js/config.js` y apuntar al backend:
-
-```js
-window.ROUTEEV_API_BASE_URL = "http://127.0.0.1:8000";
-```
-
+El frontend lee `ROUTEEV_API_BASE_URL` desde `.env` mediante `scripts/dev-server.js`.
 El backend debe permitir el origen del frontend con `CORS_ALLOW_ORIGINS`.
 
 ## Deploy
 
-Este repo se puede publicar como sitio estatico. En produccion, `js/config.js` debe apuntar al origen publico de `routeev-api`.
+Este repo se puede publicar como sitio estatico. Cuando tenga URL publica, agregar ese origen en `CORS_ALLOW_ORIGINS` del backend en Render.

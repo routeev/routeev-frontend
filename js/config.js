@@ -1,10 +1,7 @@
 // Configuracion del frontend estatico.
 //
-// En desarrollo separado, apunta al backend local:
-//   window.ROUTEEV_API_BASE_URL = "http://127.0.0.1:8000";
+// scripts/dev-server.js genera /js/env.js desde .env y define
+// window.ROUTEEV_API_BASE_URL antes de cargar este archivo.
 //
-// En produccion, reemplazar por el origen publico de la API:
-//   window.ROUTEEV_API_BASE_URL = "https://api.routeev.uy";
-//
-// Vacio mantiene el comportamiento de mismo origen.
+// Fallback para abrir el frontend con un servidor estatico simple.
 window.ROUTEEV_API_BASE_URL = window.ROUTEEV_API_BASE_URL || "http://127.0.0.1:8000";
