@@ -17,6 +17,14 @@ const TYPES = {
   ".webp": "image/webp",
 };
 
+const ROUTES = {
+  "/": "landing.html",
+  "/landing": "landing.html",
+  "/login": "login.html",
+  "/app": "app.html",
+  "/profile": "profile.html",
+};
+
 function readDotEnv() {
   const file = path.join(ROOT, ".env");
   if (!fs.existsSync(file)) return {};
@@ -44,7 +52,7 @@ function send(res, status, body, type = "text/plain; charset=utf-8") {
 
 function resolveFile(urlPath) {
   const cleanPath = decodeURIComponent(urlPath.split("?")[0]);
-  const relative = cleanPath === "/" ? "landing.html" : cleanPath.replace(/^\/+/, "");
+  const relative = ROUTES[cleanPath] || cleanPath.replace(/^\/+/, "");
   const full = path.resolve(ROOT, relative);
   if (!full.startsWith(ROOT + path.sep) && full !== ROOT) return null;
   return full;
