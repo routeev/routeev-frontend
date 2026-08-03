@@ -289,6 +289,7 @@
   // --- Ficha ------------------------------------------------------------
 
   async function abrirFicha(modelId) {
+    detenerSimulacion(); // la ficha anterior puede tener una animacion corriendo sobre un mapa que esta por desaparecer
     state.fichaId = modelId;
     els.ficha.classList.remove("hidden");
     els.ficha.innerHTML = '<p class="sr-cargando">Cargando ficha…</p>';
@@ -306,6 +307,7 @@
   }
 
   function cerrarFicha() {
+    detenerSimulacion();
     state.fichaId = null;
     els.ficha.classList.add("hidden");
     els.ficha.replaceChildren();
@@ -478,6 +480,383 @@
     }
   }
 
+  // --- Animacion del viaje simulado --------------------------------------
+  //
+  // El resultado numerico ya dice si el auto llega; esto lo muestra pasando:
+  // un auto recorriendo la ruta real sobre el mapa (misma curva de calle que
+  // devuelve el motor, ver route_coords en showroom_routes.py), con las
+  // paradas de carga marcadas donde de verdad caen. No hay GPS real como en
+  // "Iniciar viaje" de la app (ver liveTrip.js) -- aca nadie esta manejando
+  // -- asi que se anima con un cronometro: la posicion se interpola sobre la
+  // polilinea real en vez de seguir una posicion reportada por el dispositivo.
+
+  const CAR_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 15.4h12.8v2.3a.9.9 0 0 1-.9.9h-1.3a.9.9 0 0 1-.9-.9v-.6H8.7v.6a.9.9 0 0 1-.9.9H6.5a.9.9 0 0 1-.9-.9v-2.3Z"/><path d="M4.9 10.6 6.4 6.4a1.7 1.7 0 0 1 1.6-1.1h8a1.7 1.7 0 0 1 1.6 1.1l1.5 4.2a2 2 0 0 1 .1.7v3.3a.8.8 0 0 1-.8.8H5.6a.8.8 0 0 1-.8-.8v-3.3a2 2 0 0 1 .1-.7Z"/><circle cx="8.1" cy="12.8" r="1.05" fill="#0a0e13"/><circle cx="15.9" cy="12.8" r="1.05" fill="#0a0e13"/></svg>';
+  const BOLT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z"/></svg>';
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371.0088;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dphi = toRad(lat2 - lat1);
+    const dlambda = toRad(lon2 - lon1);
+    const a = Math.sin(dphi / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dlambda / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+
+  // Distancia acumulada (km) desde el inicio de `coords` hasta cada punto.
+  function acumular(coords) {
+    const cum = [0];
+    for (let i = 1; i < coords.length; i++) {
+      cum.push(cum[i - 1] + haversineKm(coords[i - 1][0], coords[i - 1][1], coords[i][0], coords[i][1]));
+    }
+    return cum;
+  }
+
+  // Punto sobre la polilinea a una distancia acumulada dada, interpolando
+  // dentro del segmento que la contiene (para que el auto se mueva sobre la
+  // curva real y no salte de cruce en cruce).
+  function puntoEnKm(coords, cum, km) {
+    const total = cum[cum.length - 1];
+    const objetivo = Math.max(0, Math.min(total, km));
+    let i = 1;
+    while (i < cum.length - 1 && cum[i] < objetivo) i++;
+    const kmPrev = cum[i - 1];
+    const kmNext = cum[i];
+    const t = kmNext > kmPrev ? (objetivo - kmPrev) / (kmNext - kmPrev) : 0;
+    const [la0, lo0] = coords[i - 1];
+    const [la1, lo1] = coords[i];
+    return [la0 + (la1 - la0) * t, lo0 + (lo1 - lo0) * t];
+  }
+
+  // A que distancia acumulada de la polilinea cae un punto dado (para ubicar
+  // una parada de carga -- que llega como lat/lon suelto -- dentro de la
+  // acumulada de su tramo): el punto de la ruta mas cercano, su acumulada.
+  function cumKmDePunto(coords, cum, lat, lon) {
+    let bestIdx = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < coords.length; i++) {
+      const d = haversineKm(coords[i][0], coords[i][1], lat, lon);
+      if (d < bestD) {
+        bestD = d;
+        bestIdx = i;
+      }
+    }
+    return cum[bestIdx];
+  }
+
+  // Unica instancia de mapa/animacion activa a la vez -- cada simulacion
+  // nueva (o cerrar la ficha) tiene que apagar la anterior, si no quedan
+  // varios requestAnimationFrame corriendo sobre un mapa que ya no existe.
+  const sim = { map: null, raf: null, marker: null };
+
+  function detenerSimulacion() {
+    if (sim.raf != null) cancelAnimationFrame(sim.raf);
+    sim.raf = null;
+    if (sim.map) {
+      sim.map.remove();
+      sim.map = null;
+    }
+    sim.marker = null;
+  }
+
+  function nodeMarkerIcon(cls, label) {
+    return L.divIcon({
+      className: "",
+      html: `<div class="sr-node-marker ${cls}">${label}</div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+  }
+
+  function stationMarkerIcon() {
+    return L.divIcon({
+      className: "",
+      html: `<div class="sr-station-marker">${BOLT_SVG}</div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+  }
+
+  function carMarkerIcon() {
+    return L.divIcon({
+      className: "",
+      html: `<div class="sr-car-marker"><div class="sr-car-pulse"></div><div class="sr-car-dot"></div><div class="sr-car-icon">${CAR_SVG}</div></div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+    });
+  }
+
+  // Arma, por tramo (ida y vuelta si corresponde), la polilinea con su
+  // acumulada y las paradas de ese tramo ya ubicadas en su km. Cada tramo
+  // trae su propia ruta -- ver route_coords en showroom_routes.py -- porque
+  // la vuelta no es necesariamente la ida al reves (puede tomar otra calle
+  // por el estado de bateria con el que arranca).
+  function armarTramos(resultado) {
+    return resultado.detalle.tramos.map((t) => {
+      const coords = t.route_coords;
+      const cum = acumular(coords);
+      const paradas = resultado.paradas
+        .filter((p) => p.tramo === t.tramo)
+        .map((p) => ({ ...p, cumKm: cumKmDePunto(coords, cum, p.lat, p.lon) }))
+        .sort((a, b) => a.cumKm - b.cumKm);
+      return { nombre: t.tramo, coords, cum, totalKm: cum[cum.length - 1], energiaKwh: t.energia_kwh, paradas };
+    });
+  }
+
+  // Traduce el viaje completo (uno o dos tramos) a una lista de segmentos de
+  // tiempo: manejar hasta la proxima parada/fin de tramo, quedarse quieto
+  // cargando, o la pausa en el destino antes de arrancar la vuelta. Cada
+  // segmento ya trae cuanto dura en la animacion y como varia la bateria
+  // (en kWh) durante el, para no tener que recalcular nada cuadro a cuadro.
+  //
+  // La duracion de manejar es proporcional a la distancia real (no al tiempo
+  // real del viaje: un viaje de 8 horas no puede animarse 8 horas), acotada
+  // para que ni una vuelta a la esquina ni un cruce del pais se sientan mal.
+  const MS_POR_KM = 26; // ritmo de animacion "manejando"
+  const DRIVE_MS_MIN = 3200; // piso: un viaje corto no puede animarse en un parpadeo
+  const DRIVE_MS_MAX = 13000; // techo: cruzar el pais tampoco puede tardar un minuto entero
+  const CHARGE_MS_MIN = 900;
+  const CHARGE_MS_MAX = 2600;
+  const TURN_MS = 1100;
+
+  function armarSegmentos(tramosInfo, bateriaInicialKwh) {
+    // Primera pasada: la geometria de cada segmento (posicion, bateria) sin
+    // asignarle duracion todavia -- eso depende del total de km a manejar
+    // de TODO el viaje, que recien se sabe al terminar de recorrer los tramos.
+    const segments = [];
+    let battKwh = bateriaInicialKwh;
+    let kmGlobalPrefix = 0;
+
+    tramosInfo.forEach((tramo, tramoIdx) => {
+      const ratePerKm = tramo.totalKm > 0 ? tramo.energiaKwh / tramo.totalKm : 0;
+      let kmCursor = 0;
+
+      const empujarTramo = (kmHasta) => {
+        if (kmHasta <= kmCursor) return;
+        const driveKm = kmHasta - kmCursor;
+        const battTo = battKwh - ratePerKm * driveKm;
+        segments.push({
+          type: "drive",
+          tramo,
+          kmFrom: kmCursor,
+          kmTo: kmHasta,
+          driveKm,
+          kmGlobalFrom: kmGlobalPrefix + kmCursor,
+          kmGlobalTo: kmGlobalPrefix + kmHasta,
+          battFrom: battKwh,
+          battTo,
+        });
+        battKwh = battTo;
+        kmCursor = kmHasta;
+      };
+
+      for (const parada of tramo.paradas) {
+        empujarTramo(parada.cumKm);
+        const battTo = battKwh + parada.kwh;
+        segments.push({
+          type: "charge",
+          tramo,
+          kmGlobal: kmGlobalPrefix + kmCursor,
+          battFrom: battKwh,
+          battTo,
+          parada,
+          durationMs: Math.min(CHARGE_MS_MAX, Math.max(CHARGE_MS_MIN, parada.minutos * 35)),
+        });
+        battKwh = battTo;
+      }
+      empujarTramo(tramo.totalKm);
+      kmGlobalPrefix += tramo.totalKm;
+
+      if (tramoIdx < tramosInfo.length - 1) {
+        segments.push({ type: "turn", tramo, kmGlobal: kmGlobalPrefix, battFrom: battKwh, battTo: battKwh, durationMs: TURN_MS });
+      }
+    });
+
+    // Segunda pasada: un presupuesto de tiempo UNICO para todo lo que es
+    // manejar (no por segmento, para que 3 tramos cortos no sumen 3 pisos),
+    // repartido entre los segmentos de manejo a prorrata de sus km.
+    const totalDriveKm = segments.filter((s) => s.type === "drive").reduce((a, s) => a + s.driveKm, 0);
+    const driveBudgetMs = Math.min(DRIVE_MS_MAX, Math.max(DRIVE_MS_MIN, totalDriveKm * MS_POR_KM));
+    for (const s of segments) {
+      if (s.type === "drive") s.durationMs = totalDriveKm > 0 ? driveBudgetMs * (s.driveKm / totalDriveKm) : 0;
+    }
+
+    let acc = 0;
+    for (const s of segments) {
+      s.startMs = acc;
+      acc += s.durationMs;
+    }
+    return { segments, totalMs: acc, totalKm: kmGlobalPrefix };
+  }
+
+  function dibujarMapaSim(mapEl, tramosInfo) {
+    const map = L.map(mapEl, { preferCanvas: true, zoomControl: false, scrollWheelZoom: false }).setView([-32.5, -56], 6);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
+
+    const bounds = [];
+    tramosInfo.forEach((tramo) => {
+      L.polyline(tramo.coords, {
+        color: getComputedStyle(document.documentElement).getPropertyValue(tramo.nombre === "ida" ? "--accent-astar" : "--accent-dijkstra").trim(),
+        weight: 4,
+        opacity: 0.9,
+        dashArray: tramo.nombre === "ida" ? null : "2 10",
+        lineCap: "round",
+      }).addTo(map);
+      bounds.push(...tramo.coords);
+      for (const parada of tramo.paradas) {
+        L.marker([parada.lat, parada.lon], { icon: stationMarkerIcon(), zIndexOffset: 300 })
+          .addTo(map)
+          .bindPopup(`<b>${escapeHtmlSim(parada.nombre)}</b><br>+${num(parada.kwh, 1)} kWh &middot; ${formatDuration(parada.minutos)}`);
+      }
+    });
+
+    const origen = tramosInfo[0].coords[0];
+    const destinoFinal = tramosInfo[0].coords[tramosInfo[0].coords.length - 1];
+    L.marker(origen, { icon: nodeMarkerIcon("sr-origin", "O"), zIndexOffset: 500 }).addTo(map);
+    L.marker(destinoFinal, { icon: nodeMarkerIcon("sr-destination", "D"), zIndexOffset: 500 }).addTo(map);
+
+    map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24] });
+    return map;
+  }
+
+  function escapeHtmlSim(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.textContent;
+  }
+
+  function formatBateriaPct(kwh, capacidadKwh) {
+    const pct = Math.max(0, Math.min(100, (kwh / capacidadKwh) * 100));
+    return `${pct.toFixed(0)}%`;
+  }
+
+  function iniciarSimulacionMapa(contenedor, resultado, model, bateriaInicialPct) {
+    detenerSimulacion();
+
+    const mapEl = contenedor.querySelector("#sr-sim-map");
+    if (!mapEl) return;
+
+    const tramosInfo = armarTramos(resultado);
+    if (tramosInfo.some((t) => t.coords.length < 2)) return; // sin geometria: no hay nada que animar
+
+    const capacidadKwh = model.bateria_kwh;
+    const bateriaInicialKwh = (capacidadKwh * bateriaInicialPct) / 100;
+    const { segments, totalMs, totalKm } = armarSegmentos(tramosInfo, bateriaInicialKwh);
+
+    sim.map = dibujarMapaSim(mapEl, tramosInfo);
+    sim.marker = L.marker(tramosInfo[0].coords[0], { icon: carMarkerIcon(), zIndexOffset: 1000 }).addTo(sim.map);
+
+    const elKm = contenedor.querySelector("#sr-sim-live-km");
+    const elBat = contenedor.querySelector("#sr-sim-live-bat");
+    const elTime = contenedor.querySelector("#sr-sim-live-time");
+    const elFill = contenedor.querySelector("#sr-sim-live-fill");
+    const elStatus = contenedor.querySelector("#sr-sim-live-status");
+    const btnReplay = contenedor.querySelector("#sr-sim-replay");
+
+    const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function puntoDeSegmento(seg, p) {
+      const tramo = seg.tramo;
+      if (seg.type === "drive") {
+        const km = seg.kmFrom + (seg.kmTo - seg.kmFrom) * p;
+        return puntoEnKm(tramo.coords, tramo.cum, km);
+      }
+      if (seg.type === "charge") return [seg.parada.lat, seg.parada.lon];
+      return tramo.coords[tramo.coords.length - 1]; // turn: quieto en el destino
+    }
+
+    function pintar(seg, p) {
+      const [lat, lon] = puntoDeSegmento(seg, p);
+      sim.marker.setLatLng([lat, lon]);
+
+      const kmGlobal = seg.type === "drive" ? seg.kmGlobalFrom + (seg.kmGlobalTo - seg.kmGlobalFrom) * p : seg.kmGlobal;
+      const battKwh = seg.battFrom + (seg.battTo - seg.battFrom) * p;
+
+      const tiempoTotalMin = resultado.tiempo_total_min || 0;
+      const tiempoTranscurridoMin = totalMs > 0 ? (totalMsAnimado(seg, p) / totalMs) * tiempoTotalMin : 0;
+
+      elKm.textContent = `${num(kmGlobal, 1)} / ${num(totalKm, 1)} km`;
+      elBat.textContent = formatBateriaPct(battKwh, capacidadKwh);
+      elTime.textContent = `${formatDuration(tiempoTranscurridoMin)} / ${formatDuration(tiempoTotalMin)}`;
+      elFill.style.width = `${Math.min(100, (kmGlobal / Math.max(0.001, totalKm)) * 100)}%`;
+      elFill.classList.toggle("charging", seg.type === "charge");
+
+      if (seg.type === "charge") {
+        elStatus.textContent = `Cargando en ${seg.parada.nombre}… (+${num(seg.parada.kwh, 1)} kWh, ${formatDuration(seg.parada.minutos)} reales)`;
+        elStatus.classList.add("charging");
+        elStatus.classList.remove("done");
+      } else if (seg.type === "turn") {
+        elStatus.textContent = "Llegó al destino. Iniciando la vuelta…";
+        elStatus.classList.remove("charging", "done");
+      } else {
+        elStatus.textContent = seg.tramo.nombre === "vuelta" ? "Volviendo…" : "En ruta…";
+        elStatus.classList.remove("charging", "done");
+      }
+    }
+
+    function totalMsAnimado(seg, p) {
+      return seg.startMs + seg.durationMs * p;
+    }
+
+    function terminar() {
+      const last = segments[segments.length - 1];
+      pintar(last, 1);
+      elStatus.textContent = tramosInfo.length > 1 ? "Ida y vuelta completa." : "Llegó a destino.";
+      elStatus.classList.remove("charging");
+      elStatus.classList.add("done");
+      elFill.classList.remove("charging");
+      btnReplay.disabled = false;
+    }
+
+    function reproducir() {
+      // Corta la animacion anterior sin desmontar el mapa (a diferencia de
+      // detenerSimulacion, que si lo hace): "repetir" reusa el mismo mapa ya
+      // dibujado, solo reinicia el cronometro.
+      if (sim.raf != null) cancelAnimationFrame(sim.raf);
+      btnReplay.disabled = true;
+      sim.marker.setLatLng(tramosInfo[0].coords[0]);
+
+      if (reducedMotion) {
+        terminar();
+        btnReplay.disabled = false;
+        return;
+      }
+
+      const t0 = performance.now();
+      const tick = (now) => {
+        const elapsed = now - t0;
+        let seg = segments[segments.length - 1];
+        let p = 1;
+        for (const s of segments) {
+          if (elapsed < s.startMs + s.durationMs) {
+            seg = s;
+            p = s.durationMs > 0 ? (elapsed - s.startMs) / s.durationMs : 1;
+            break;
+          }
+        }
+        pintar(seg, Math.max(0, Math.min(1, p)));
+
+        if (elapsed >= totalMs) {
+          terminar();
+          sim.raf = null;
+          return;
+        }
+        sim.raf = requestAnimationFrame(tick);
+      };
+      sim.raf = requestAnimationFrame(tick);
+    }
+
+    btnReplay.addEventListener("click", reproducir);
+    pintar(segments[0], 0);
+    // Arranca sola: es la parte que tiene que impactar apenas se calcula el
+    // viaje, no algo que haya que ir a buscar con otro clic.
+    reproducir();
+  }
+
   // --- Simulacion de viaje ----------------------------------------------
 
   async function prepararSimulador(model) {
@@ -534,6 +913,7 @@
           desde: origen.options[origen.selectedIndex].textContent,
           hasta: destino.options[destino.selectedIndex].textContent,
           bateria,
+          model,
         });
       } catch (err) {
         mostrarSimulacion(salida, { error: err.message || "No se pudo calcular el viaje." });
@@ -549,7 +929,8 @@
     return i === -1 ? state.destinos.length - 1 : i;
   }
 
-  function mostrarSimulacion(destino, { resultado, error, desde, hasta, bateria }) {
+  function mostrarSimulacion(destino, { resultado, error, desde, hasta, bateria, model }) {
+    detenerSimulacion(); // cualquier animacion de un calculo anterior queda sobre un mapa a punto de borrarse
     destino.classList.remove("hidden");
     destino.replaceChildren();
 
@@ -574,8 +955,31 @@
     // peajes reales, y cada parada con su direccion.
     const paradas = resultado.paradas || [];
     const d = resultado.detalle;
+    // route_coords viene por tramo (ver showroom_routes.py); sin geometria
+    // (caso raro, pero mejor no asumir) se muestran igual los numeros, solo
+    // sin el mapa animado.
+    const tieneMapa = d.tramos.every((t) => Array.isArray(t.route_coords) && t.route_coords.length > 1);
 
     destino.innerHTML = `
+      ${
+        tieneMapa
+          ? `<div class="sr-sim-anim">
+               <div class="sr-sim-map-wrap">
+                 <div class="sr-sim-map" id="sr-sim-map"></div>
+                 <button type="button" class="l-btn-ghost sr-sim-replay" id="sr-sim-replay">↻ Repetir animación</button>
+               </div>
+               <div class="sr-sim-live">
+                 <div class="sr-sim-live-row">
+                   <div class="sr-sim-live-item"><span>Recorrido</span><b id="sr-sim-live-km"></b></div>
+                   <div class="sr-sim-live-item"><span>Batería</span><b id="sr-sim-live-bat"></b></div>
+                   <div class="sr-sim-live-item"><span>Tiempo de viaje</span><b id="sr-sim-live-time"></b></div>
+                 </div>
+                 <div class="sr-sim-progress-track"><div class="sr-sim-progress-fill" id="sr-sim-live-fill"></div></div>
+                 <div class="sr-sim-status" id="sr-sim-live-status">Arrancando…</div>
+               </div>
+             </div>`
+          : ""
+      }
       <p class="sr-sim-veredicto sr-si">Llega</p>
       <p class="sr-sim-detalle"></p>
 
@@ -664,6 +1068,8 @@
       if (parada.conector) datos.push(parada.conector);
       fila.querySelector(".sr-parada-datos").textContent = datos.join(" · ");
     });
+
+    if (tieneMapa) iniciarSimulacionMapa(destino, resultado, model, bateria);
   }
 
   // --- Busqueda por IA --------------------------------------------------

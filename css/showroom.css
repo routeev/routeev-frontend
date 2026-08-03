@@ -810,6 +810,221 @@
   color: var(--ok);
 }
 
+/* --- Animacion del viaje simulado ------------------------------------------
+   El resto de la ficha ya cuenta el viaje en numeros; esto lo muestra
+   pasando: un auto recorriendo la ruta real sobre el mapa, con paradas de
+   carga marcadas donde de verdad caen. Sin cuenta y sin GPS -- a diferencia
+   del seguimiento en vivo de la app (ver liveTrip.js), aca no hay nadie
+   manejando de verdad, asi que se anima con un cronometro en vez de
+   watchPosition. Reusa el lenguaje visual del seguimiento en vivo (marcador
+   con pulso, franja de progreso) para que se lea como el mismo producto. */
+
+.sr-sim-anim {
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.sr-sim-map-wrap {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.sr-sim-map {
+  height: 280px;
+  background: var(--bg);
+}
+
+/* Leaflet inyecta su propia fuente/tamano de letra en los popups y controles;
+   se homologa a la tipografia del resto del producto. */
+.sr-sim-map .leaflet-popup-content,
+.sr-sim-map .leaflet-control {
+  font-family: var(--font-body, inherit);
+}
+
+.sr-sim-replay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 500;
+  padding: 7px 12px;
+  font-size: 12px;
+  background: rgba(10, 14, 19, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.sr-sim-live {
+  margin-top: 12px;
+}
+
+.sr-sim-live-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-bottom: 8px;
+}
+
+.sr-sim-live-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sr-sim-live-item span {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.sr-sim-live-item b {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-astar);
+}
+
+/* Franja de progreso y estado: mismo patron que .trip-progress-* /
+   .trip-status del mapa con cuenta (ver css/app.css), duplicado aca porque
+   el showroom no carga esa hoja de estilos. */
+.sr-sim-progress-track {
+  position: relative;
+  height: 9px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.sr-sim-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-astar-dim), var(--accent-astar));
+  transition: width 0.12s linear;
+}
+
+.sr-sim-progress-fill.charging {
+  background: linear-gradient(90deg, var(--accent-dijkstra-dim), var(--accent-dijkstra));
+}
+
+.sr-sim-status {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.sr-sim-status.charging {
+  color: var(--accent-dijkstra);
+}
+
+.sr-sim-status.done {
+  color: var(--accent-astar);
+}
+
+/* Marcadores propios (DivIcon) del mini-mapa: mismos colores que el mapa
+   principal (ver .node-marker / .station-marker en css/app.css), duplicados
+   aca por la misma razon que arriba. */
+.sr-node-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: #06231d;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.sr-node-marker.sr-origin {
+  background: var(--point-origin);
+}
+
+.sr-node-marker.sr-destination {
+  background: var(--point-dest);
+  color: #1c0f33;
+}
+
+.sr-station-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dijkstra);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 8px rgba(242, 161, 84, 0.6);
+}
+
+.sr-station-marker svg {
+  width: 11px;
+  height: 11px;
+  fill: #241d00;
+}
+
+/* Auto animado: mismo patron de punto + pulso + auto apilado que el
+   seguimiento en vivo real (ver .live-location-* en css/app.css). */
+.sr-car-marker {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.sr-car-dot,
+.sr-car-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-live);
+  transform: translate(-50%, -50%);
+}
+
+.sr-car-dot {
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(58, 160, 255, 0.8);
+}
+
+.sr-car-pulse {
+  opacity: 0.55;
+  animation: sr-car-pulse-anim 1.8s ease-out infinite;
+}
+
+@keyframes sr-car-pulse-anim {
+  to {
+    transform: translate(-50%, -50%) scale(3.2);
+    opacity: 0;
+  }
+}
+
+.sr-car-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  line-height: 0;
+  z-index: 2;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+}
+
+.sr-car-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-car-pulse {
+    animation: none;
+  }
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 900px) {
@@ -844,5 +1059,17 @@
   }
   .sr-sim-tramos li {
     grid-template-columns: 1fr auto;
+  }
+  .sr-sim-map {
+    height: 220px;
+  }
+  .sr-sim-replay {
+    top: 8px;
+    right: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .sr-sim-live-row {
+    gap: 6px 16px;
   }
 }
