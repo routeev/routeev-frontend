@@ -278,16 +278,11 @@ function projectOntoRoute(coords, cum, lat, lon) {
 
 let liveTrip = null; // ver startLiveTrip() -- null cuando no se esta siguiendo activamente
 let liveMarker = null; // separado de liveTrip: al llegar a destino se deja el marcador puesto
-let liveAccuracyCircle = null;
 
 function removeLiveMarker() {
   if (liveMarker) {
     map.removeLayer(liveMarker);
     liveMarker = null;
-  }
-  if (liveAccuracyCircle) {
-    map.removeLayer(liveAccuracyCircle);
-    liveAccuracyCircle = null;
   }
 }
 
@@ -326,7 +321,7 @@ function handleLiveError(err) {
 
 function handleLivePosition(pos) {
   if (!liveTrip) return;
-  const { latitude, longitude, accuracy } = pos.coords;
+  const { latitude, longitude } = pos.coords;
 
   if (!liveMarker) {
     liveMarker = L.marker([latitude, longitude], {
@@ -339,19 +334,10 @@ function handleLivePosition(pos) {
       }),
       zIndexOffset: 1000,
     }).addTo(map);
-    liveAccuracyCircle = L.circle([latitude, longitude], {
-      radius: accuracy || 0,
-      color: "#3aa0ff",
-      weight: 1,
-      fillColor: "#3aa0ff",
-      fillOpacity: 0.12,
-    }).addTo(map);
     map.setView([latitude, longitude], Math.max(map.getZoom(), 15));
     liveTrip.startedRealMs = Date.now();
   } else {
     liveMarker.setLatLng([latitude, longitude]);
-    liveAccuracyCircle.setLatLng([latitude, longitude]);
-    liveAccuracyCircle.setRadius(accuracy || 0);
   }
 
   const { traveledKm, offRouteM } = projectOntoRoute(liveTrip.coords, liveTrip.cum, latitude, longitude);
