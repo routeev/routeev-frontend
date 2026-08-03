@@ -28,40 +28,8 @@
 
   // --- Vehiculos del usuario ---------------------------------------------------
 
-  /**
-   * Color estable derivado del nombre del vehiculo, para la silueta que se
-   * muestra mientras el vehiculo no tiene una foto propia subida.
-   *
-   * No hay fotos de stock: no existe una fuente licenciada de imagenes para
-   * los 880 modelos del catalogo, y la politica de contenido del sitio solo
-   * permite imagenes del propio servidor. En vez de mostrar una foto generica
-   * que no es el auto de nadie, cada vehiculo sin foto propia recibe una
-   * silueta con un color derivado de su nombre (el mismo nombre da siempre el
-   * mismo color, asi que las tarjetas se distinguen de un vistazo) hasta que
-   * su dueño sube una foto real de ESE auto (ver uploadVehiclePhoto en
-   * api.js) -- ahi la silueta se reemplaza por esa foto.
-   */
-  function colorFromName(name) {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = (hash * 31 + name.charCodeAt(i)) | 0;
-    }
-    return `hsl(${Math.abs(hash) % 360}, 62%, 58%)`;
-  }
-
-  function carSvg(name) {
-    const color = colorFromName(name);
-    // Silueta de auto dibujada a mano en SVG: sin dependencias, sin pedidos de
-    // red, y escala sin perder nitidez.
-    return `
-      <svg viewBox="0 0 64 32" class="vehicle-art" aria-hidden="true">
-        <path d="M6 22h52v-5c0-2-1.5-3.5-3.5-4l-7-1-6-6c-1-1-2.3-1.5-3.7-1.5H24c-1.4 0-2.7.5-3.7 1.5l-6 6-7 1C5.5 13.5 4 15 4 17v5h2z"
-              fill="${color}" opacity="0.85" />
-        <path d="M22 7h9v5H17l5-5zm11 0h5.5c.8 0 1.5.3 2 .9L44 12H33V7z" fill="#0d1117" opacity="0.55" />
-        <circle cx="17" cy="23" r="4.5" fill="#0d1117" stroke="${color}" stroke-width="2" />
-        <circle cx="47" cy="23" r="4.5" fill="#0d1117" stroke="${color}" stroke-width="2" />
-      </svg>`;
-  }
+  // La silueta que se muestra mientras un vehiculo no tiene foto propia
+  // subida sale de carSvg (ver js/car-art.js, compartido con el showroom).
 
   /**
    * Achica y comprime la foto elegida ANTES de subirla: un servidor sin

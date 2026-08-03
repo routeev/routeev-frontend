@@ -23,6 +23,7 @@ const ROUTES = {
   "/login": "login.html",
   "/app": "app.html",
   "/profile": "profile.html",
+  "/showroom": "showroom.html",
 };
 
 function readDotEnv() {

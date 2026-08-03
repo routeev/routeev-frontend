@@ -133,9 +133,11 @@ llegar, costo estimado y cada parada de carga con su duración.
 Todavía no tiene el auto. Quiere saber si un modelo concreto le sirve para los viajes que
 realmente hace.
 
-**Cómo lo sirve el producto:** puede cargar cualquiera de los 880 modelos del catálogo y
-simular sus rutas habituales antes de comprar. El catálogo precarga las especificaciones,
-así que no necesita conocerlas.
+**Cómo lo sirve el producto:** el showroom público (§5.7) le deja buscar el modelo por su
+nombre y simular sus viajes habituales **sin crear una cuenta**: ve la ficha con los números
+reales del auto y si llega a donde quiere ir, con las paradas de carga que haga falta. Si
+después decide entrar en serio, ese mismo modelo ya está en el catálogo que precarga el
+formulario de "nuevo vehículo".
 
 ---
 
@@ -195,6 +197,34 @@ Promedios mensuales: cantidad de viajes, distancia, energía, tiempo y costo.
 
 Registro con usuario y contraseña o con Google. Cada usuario ve solo sus vehículos y su
 historial.
+
+---
+
+### 5.7 Showroom público — sin cuenta
+
+Un buscador sobre los 880 modelos, abierto a cualquiera que entre desde la landing: no pide
+registro, ni tarjeta, ni instalar nada.
+
+- **Buscar por nombre.** Se escribe el modelo y aparece, con filtro por marca y orden por
+  autonomía, batería, potencia de carga o consumo. Si el auto no está en el catálogo, la IA
+  lo identifica por su nombre y estima sus especificaciones (marcadas como estimación, no
+  como dato verificado).
+- **Ficha con los números de verdad.** Autonomía calculada con el consumo real (además de
+  la declarada por el fabricante), consumo cada 100 km, costo en pesos cada 100 km y de
+  cargar la batería entera, y cuánto tarda en cargar del 10 % al 80 % en cada potencia que
+  **existe** en la red de UTE — no en un cargador de folleto que en el país no hay.
+- **Foto del auto.** Se busca por el nombre del modelo en Wikimedia y se muestra citando
+  autor y licencia. Si lo que se encuentra no es una foto del auto (una etiqueta de
+  consumo, un logo, un diagrama), se descarta: antes que una foto equivocada, ninguna.
+- **"¿Llego con este auto?"** Con el modelo elegido se calcula un viaje concreto entre dos
+  ciudades del país, con el mismo motor de rutas que usa la app: si llega y con cuánta
+  batería, la distancia, el tiempo abierto en manejo / tráfico / carga, el costo con
+  peajes, y en qué estación hay que parar a cargar, con su dirección, su potencia y cuántos
+  kWh carga ahí. Opcionalmente ida y vuelta, donde la vuelta arranca con la batería que
+  quedó de la ida.
+
+Es la respuesta directa al usuario secundario (§4.2): probar el auto antes de comprarlo, sin
+tener que crear una cuenta para averiguar si le sirve.
 
 ---
 

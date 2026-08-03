@@ -1,0 +1,115 @@
+<title>Showroom eléctrico — RouteEV</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Buscá cualquier auto eléctrico y mirá sus datos reales: batería, autonomía, consumo, costo en pesos y tiempo de carga en la red de UTE en Uruguay." />
+<link rel="icon" type="image/svg+xml" href="/img/logo-mark.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="/css/landing.css" />
+<link rel="stylesheet" href="/css/showroom.css" />
+
+<body class="landing-page showroom-page">
+  <header class="l-nav">
+    <div class="l-nav-inner">
+      <a href="/" class="l-logo brand-lockup">
+        <img src="/img/logo-mark.svg" class="brand-icon" alt="" />
+        <span class="brand-word">Route</span><span class="brand-ai">EV</span>
+      </a>
+      <nav class="l-nav-links">
+        <a href="/">Inicio</a>
+        <a href="/showroom" class="is-current" aria-current="page">Showroom</a>
+      </nav>
+      <div class="l-nav-cta">
+        <a href="/login" class="nav-link">Iniciar sesión</a>
+        <a href="/login?crear=1" class="l-btn-primary">Crear cuenta</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= BUSCADOR ================= -->
+    <section class="sr-head">
+      <div class="eyebrow">Showroom eléctrico</div>
+      <h1>Buscá cualquier auto eléctrico<br />y mirá sus números de verdad.</h1>
+      <p class="sr-sub">
+        <strong class="mono-num" id="sr-total">880</strong> modelos con sus datos de fábrica,
+        el costo real en pesos y cuánto tarda en cargar en las estaciones que existen
+        en Uruguay. La foto de cada auto se busca por su nombre. Sin cuenta, sin instalar nada.
+      </p>
+
+      <div class="sr-searchbar">
+        <svg class="sr-search-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="16.2" y1="16.2" x2="21" y2="21" />
+        </svg>
+        <label class="sr-only" for="sr-q">Buscar un auto eléctrico por marca o modelo</label>
+        <input id="sr-q" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Nissan Leaf, BYD Dolphin, Tesla Model 3…" />
+        <button type="button" id="sr-clear" class="sr-clear hidden" aria-label="Limpiar la búsqueda">&times;</button>
+      </div>
+
+      <div class="sr-filters">
+        <label class="sr-only" for="sr-marca">Filtrar por marca</label>
+        <select id="sr-marca"><option value="">Todas las marcas</option></select>
+
+        <label class="sr-only" for="sr-orden">Ordenar los resultados</label>
+        <select id="sr-orden">
+          <option value="relevancia">Más relevantes</option>
+          <option value="autonomia">Mayor autonomía</option>
+          <option value="bateria">Mayor batería</option>
+          <option value="carga">Carga más rápida</option>
+          <option value="consumo">Menor consumo</option>
+        </select>
+
+        <label class="sr-chip">
+          <input type="checkbox" id="sr-dc" />
+          Solo con carga rápida (50 kW o más)
+        </label>
+
+        <span class="sr-count mono-num" id="sr-count"></span>
+      </div>
+    </section>
+
+    <!-- ================= FICHA DEL AUTO ELEGIDO ================= -->
+    <!-- La arma showroom.js con lo que devuelve /api/showroom/models/{id}. -->
+    <section id="sr-ficha" class="sr-ficha hidden" tabindex="-1" aria-label="Ficha del modelo elegido"></section>
+
+    <!-- ================= RESULTADOS ================= -->
+    <section class="sr-results">
+      <div id="sr-grid" class="sr-grid"></div>
+
+      <div id="sr-empty" class="sr-empty hidden">
+        <p class="sr-empty-title">No hay ningún modelo así en el catálogo.</p>
+        <p class="sr-empty-sub" id="sr-empty-sub">Probá con otro nombre, o sacá los filtros.</p>
+        <div class="sr-ai-box hidden" id="sr-ai-box">
+          <p>
+            El catálogo tiene los modelos que se consiguen en la región. Si el tuyo no está,
+            la IA lo identifica por el nombre y estima sus especificaciones:
+            <strong class="sr-ai-q" id="sr-ai-q"></strong>
+          </p>
+          <button type="button" class="l-btn-primary" id="sr-ai-btn">Identificarlo con IA</button>
+          <p class="sr-ai-error hidden" id="sr-ai-error"></p>
+        </div>
+      </div>
+
+      <div class="sr-more-wrap">
+        <button type="button" id="sr-more" class="l-btn-ghost hidden">Ver más modelos</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="l-footer">
+    <span>RouteEV — Uruguay. Datos de catálogo aproximados de fabricante; fotos de Wikimedia Commons.</span>
+    <div class="l-footer-links">
+      <a href="/">Inicio</a>
+      <a href="/login">Iniciar sesión</a>
+    </div>
+  </footer>
+
+  <script src="/js/env.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/car-art.js"></script>
+  <script src="/js/showroom.js"></script>
+</body>

@@ -145,6 +145,15 @@ const api = {
     return URL.createObjectURL(await res.blob());
   },
 
+  // --- Showroom publico (sin cuenta, ver showroom_routes.py en la API) -----
+  showroomModels: (concesionaria) =>
+    apiFetch("/api/showroom/models" + (concesionaria ? `?concesionaria=${encodeURIComponent(concesionaria)}` : "")),
+  showroomModel: (modelId) => apiFetch(`/api/showroom/models/${encodeURIComponent(modelId)}`),
+  showroomLookupAi: (query) => apiFetch("/api/showroom/lookup-ai", { method: "POST", body: JSON.stringify({ query }) }),
+  showroomImage: (nombre) => apiFetch(`/api/showroom/imagen?q=${encodeURIComponent(nombre)}`),
+  showroomDestinos: () => apiFetch("/api/showroom/destinos"),
+  showroomSimulate: (payload) => apiFetch("/api/showroom/simulate", { method: "POST", body: JSON.stringify(payload) }),
+
   compareRoutes: (payload) => apiFetch("/api/route/compare", { method: "POST", body: JSON.stringify(payload) }),
   logTrip: (payload) => apiFetch("/api/route/log-trip", { method: "POST", body: JSON.stringify(payload) }),
   getHistory: () => apiFetch("/api/route/history"),
