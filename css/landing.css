@@ -215,10 +215,6 @@ body.landing-page {
   fill: var(--accent-dijkstra);
 }
 
-.uy-city-charge::after {
-  content: "";
-}
-
 .uy-city-charge circle:first-of-type {
   animation: uy-pulse 2.4s ease-out infinite;
 }

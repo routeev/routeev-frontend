@@ -28,6 +28,13 @@
     modeLabel.textContent = mode === "login" ? "Iniciar sesion" : "Crear cuenta";
     submitBtn.textContent = mode === "login" ? "Entrar" : "Crear cuenta";
     toggleModeBtn.textContent = mode === "login" ? "Crear una cuenta nueva" : "Ya tengo cuenta";
+    // El minimo de 10 caracteres solo aplica a cuentas nuevas (ver el chequeo
+    // en el submit). Ponerlo como minlength fijo en el HTML bloqueaba el
+    // login nativo del navegador para cualquier cuenta vieja con contraseña
+    // mas corta, antes de que el JS de abajo llegue a correr. Por eso se
+    // setea aca, solo en modo registro, y se saca al volver a login.
+    passwordInput.minLength = mode === "register" ? 10 : 0;
+    passwordInput.autocomplete = mode === "register" ? "new-password" : "current-password";
   }
 
   toggleModeBtn.addEventListener("click", () => {
