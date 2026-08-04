@@ -457,6 +457,56 @@ body.landing-page {
   transform: translateY(0);
 }
 
+/* --- Quien esta atras ------------------------------------------------------
+   Deliberadamente NO es un grid de cards como el resto de la pagina: es una
+   columna de texto angosta, mas parecida a una carta que a una seccion de
+   marketing. La ruptura del patron es la idea. */
+
+.l-author {
+  max-width: 620px;
+  padding-top: 80px;
+  padding-bottom: 80px;
+  border-top: 1px solid var(--border);
+}
+
+.l-author h2 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.2;
+  margin: 0 0 20px;
+  color: var(--text);
+}
+
+.l-author p {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+/* Decir en voz alta lo que el producto todavia NO hace. Cuesta escribirlo y
+   por eso mismo funciona: ninguna plantilla lo trae. */
+.l-author-honest {
+  border-left: 2px solid var(--accent-dijkstra);
+  padding-left: 16px;
+  margin-top: 24px !important;
+}
+
+.l-author-honest strong {
+  color: var(--text);
+}
+
+/* --- Utilidades ------------------------------------------------------------
+   Reemplazan los style="" inline que habia en landing.html. */
+
+.eyebrow-center {
+  text-align: center;
+}
+
+.l-hero-actions-center {
+  justify-content: center;
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 900px) {

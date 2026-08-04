@@ -1,12 +1,39 @@
-<title>RouteEV — Movilidad eléctrica inteligente en Uruguay</title>
+<!DOCTYPE html>
+<html lang="es-UY">
+<head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="description" content="RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el mapa real de Uruguay, con las estaciones de carga necesarias en el camino." />
+<title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
+<meta name="description" content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 209 estaciones de UTE. 880 modelos precargados, sin crear cuenta." />
+<link rel="canonical" href="https://routeev.uy/" />
+
+<!-- Open Graph: sin esto, compartir el link en WhatsApp o LinkedIn muestra
+     una URL pelada sin imagen ni titulo, y casi nadie hace click. -->
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="es_UY" />
+<meta property="og:site_name" content="RouteEV" />
+<meta property="og:url" content="https://routeev.uy/" />
+<meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+<meta property="og:description" content="Elegí uno de 880 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay." />
+<meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Ruta de Montevideo a Rivera calculada en RouteEV, con la parada de carga marcada en Tacuarembó." />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+<meta name="twitter:description" content="880 modelos, el mapa vial real de Uruguay y las estaciones de UTE. Sin crear cuenta." />
+<meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" />
+
+<meta name="theme-color" content="#0a0e13" />
+
 <link rel="icon" type="image/svg+xml" href="/img/logo-mark.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="stylesheet" href="/css/landing.css" />
+</head>
 
 <body class="landing-page">
   <header class="l-nav">
@@ -31,14 +58,14 @@
     <!-- ================= HERO ================= -->
     <section class="l-hero">
       <div class="l-hero-copy">
-        <div class="eyebrow"> Movilidad eléctrica</div>
+        <div class="eyebrow">Movilidad eléctrica</div>
         <h1>Tu viaje por Uruguay<br />no se detiene; tu batería tampoco.</h1>
         <p class="l-hero-sub">
           RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el
           mapa vial real del país, revisando tu batería tramo a tramo y sumando las
           paradas de carga que hagan falta en el camino.
         </p>
-      
+
         <div class="l-hero-actions">
           <a href="/showroom" class="l-btn-primary l-btn-large">Ver el catálogo y simular un viaje</a>
           <a href="/login?crear=1" class="l-btn-ghost l-btn-large">Crear cuenta gratis</a>
@@ -160,14 +187,14 @@
 
     <!-- ================= COMO FUNCIONA ================= -->
     <section class="l-steps l-reveal" id="como-funciona">
-      <div class="eyebrow" style="text-align:center">Cómo funciona</div>
+      <div class="eyebrow eyebrow-center">Cómo funciona</div>
       <h2 class="l-steps-title">Cuatro pasos, un viaje calculado.</h2>
 
       <ol class="l-steps-list">
         <li>
           <span class="l-step-num">01</span>
           <h3>Cargá tu vehículo</h3>
-          <p>Elegí un modelo real de un catálogo de autos eléctricos (Nissan Leaf, Tesla, BYD, y más) o cargá los datos de bateria y consumo a mano.</p>
+          <p>Elegí un modelo real de un catálogo de autos eléctricos (Nissan Leaf, Tesla, BYD, y más) o cargá los datos de batería y consumo a mano.</p>
         </li>
         <li>
           <span class="l-step-num">02</span>
@@ -187,23 +214,48 @@
       </ol>
     </section>
 
+    <!-- ================= QUIEN LO HIZO =================
+         La seccion mas dificil de falsificar de toda la pagina: una persona
+         con nombre, una fecha y un motivo concreto. Un sitio generado no
+         tiene esto, porque no tiene a nadie atras. -->
+    <section class="l-author l-reveal" id="quien">
+      <div class="eyebrow">Quién está atrás</div>
+      <h2>Lo hice yo, y todavía lo estoy haciendo.</h2>
+      <p>
+        Me llamo Matías Filgueiras, estudio informática en la ORT y vivo en Montevideo.
+        Empecé RouteEV porque hablando con gente que tiene eléctrico me repetían todos
+        la misma escena: salir a ruta sin saber si el cargador iba a estar libre, o
+        siquiera funcionando. Varios me contaron que llegaron muy justos.
+      </p>
+      <p>
+        En julio de 2026 le pregunté a ocho personas con auto eléctrico qué les
+        preocupaba de un viaje largo. Seis dijeron lo mismo: no encontrar cargador
+        disponible. Eso es lo que estoy tratando de resolver, y lo que todavía
+        no resuelvo del todo.
+      </p>
+      <p class="l-author-honest">
+        Lo que <strong>no</strong> hace RouteEV hoy: no sabe si un cargador está ocupado
+        o fuera de servicio en este momento. Es lo próximo, y es lo más pedido.
+      </p>
+    </section>
+
     <!-- ================= CTA FINAL ================= -->
     <section class="l-final-cta l-reveal">
-      <h2>Andá directo al mapa.</h2>
-      <p>Creá tu cuenta y calculá tu primera ruta en menos de un minuto.</p>
-      <div class="l-hero-actions" style="justify-content:center">
-        <a href="/login?crear=1" class="l-btn-primary l-btn-large">Crear cuenta gratis</a>
-        <a href="/showroom" class="l-btn-ghost l-btn-large">Probar sin cuenta en el showroom</a>
+      <h2>Probalo con tu auto.</h2>
+      <p>Elegí un modelo, marcá un viaje que hagas de verdad y fijate si llega. No pide cuenta.</p>
+      <div class="l-hero-actions l-hero-actions-center">
+        <a href="/showroom" class="l-btn-primary l-btn-large">Calcular un viaje</a>
+        <a href="/login?crear=1" class="l-btn-ghost l-btn-large">Crear cuenta gratis</a>
       </div>
     </section>
   </main>
 
   <footer class="l-footer">
-    <span>RouteEV — Uruguay.</span>
+    <span>RouteEV — hecho en Montevideo, Uruguay.</span>
     <div class="l-footer-links">
       <a href="/showroom">Showroom</a>
       <a href="/login">Iniciar sesión</a>
-      <a href="/login?crear=1">Crear cuenta</a>
+      <a href="mailto:filgueirasmatiasf@gmail.com">Escribime</a>
     </div>
   </footer>
 
@@ -212,3 +264,4 @@
   <script src="/js/api.js"></script>
   <script src="/js/landing.js"></script>
 </body>
+</html>

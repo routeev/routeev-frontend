@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="es-UY">
+<head>
 <title>RouteEV · Mapa</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,6 +10,9 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="stylesheet" href="/css/app.css" />
+<meta name="robots" content="noindex" />
+<meta name="theme-color" content="#0a0e13" />
+</head>
 
 <body class="app-page map-page">
   <header class="topbar">
@@ -19,7 +25,7 @@
     <div class="topbar-right">
       <a href="/profile" class="ghost nav-link">Mi perfil</a>
       <span class="user-chip" id="user-chip">-</span>
-      <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      <button class="ghost" id="logout-btn">Cerrar sesión</button>
     </div>
   </header>
 
@@ -130,7 +136,7 @@
               <input id="v-name" required placeholder="ej. Nissan Leaf" />
             </div>
             <div class="field">
-              <label for="v-capacity">Capacidad de bateria (kWh)</label>
+              <label for="v-capacity">Capacidad de batería (kWh)</label>
               <input id="v-capacity" type="number" step="any" min="0.1" required placeholder="40" />
             </div>
             <div class="field">
@@ -210,3 +216,4 @@
   <script src="/js/api.js"></script>
   <script type="module" src="/js/map.js"></script>
 </body>
+</html>
