@@ -24,6 +24,8 @@ const ROUTES = {
   "/app": "app.html",
   "/profile": "profile.html",
   "/showroom": "showroom.html",
+  "/privacidad": "privacidad.html",
+  "/terminos": "terminos.html",
 };
 
 function readDotEnv() {
