@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/img/logo-mark.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="stylesheet" href="/css/app.css" />
 <link rel="stylesheet" href="/css/profile.css" />
@@ -39,6 +39,15 @@
       <p class="hint">Los vehiculos que podes elegir al calcular una ruta.</p>
 
       <form id="add-vehicle-form" class="hidden inline-form">
+        <div class="photo-id-row">
+          <label for="p-photo-input" class="photo-id-btn">
+            <span aria-hidden="true">&#128247;</span> Identificar con una foto
+          </label>
+          <input type="file" accept="image/*" capture="environment" id="p-photo-input" hidden />
+          <img id="p-photo-preview" class="photo-id-preview hidden" alt="" />
+        </div>
+        <div id="p-photo-id-status" class="hint hidden"></div>
+        <div class="form-divider"><span>o buscá / completá a mano</span></div>
         <div class="field">
           <label for="p-model-search">Modelo (opcional, precarga los datos)</label>
           <input

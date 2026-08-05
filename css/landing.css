@@ -207,7 +207,7 @@ body.landing-page {
 .uy-city-hub text {
   fill: var(--text);
   font-weight: 600;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 14px;
 }
 
@@ -374,7 +374,7 @@ body.landing-page {
 }
 
 .l-step-num {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-faint);
   letter-spacing: 0.08em;
