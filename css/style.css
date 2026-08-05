@@ -245,6 +245,18 @@ label {
   margin-bottom: 14px;
 }
 
+/* Variante neutral de .error-banner para avisos que no son un error, p. ej.
+   "te reenviamos el codigo" en el login. */
+.info-banner {
+  background: rgba(52, 227, 168, 0.12);
+  border: 1px solid var(--accent-astar);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
 .hidden {
   display: none !important;
 }

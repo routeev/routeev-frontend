@@ -59,6 +59,25 @@ function formatDate(isoString) {
   return d.toLocaleString("es-UY", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+// El "detail" de un error de FastAPI casi siempre es un string, pero en un
+// 422 (fallo de validacion de Pydantic) es un ARRAY de objetos
+// {loc, msg, type} -- uno por campo que no paso. Pasar eso directo a
+// `new Error(...)` lo convierte a texto con el .toString() por defecto de
+// cada objeto, que da "[object Object]" (uno por cada error, separados por
+// coma). Aca nos quedamos solo con los mensajes, que son lo unico legible
+// para quien usa la pagina.
+function normalizeDetail(detail) {
+  if (!detail) return null;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((e) => (e && typeof e === "object" ? e.msg : String(e)))
+      .filter(Boolean)
+      .join(" ");
+  }
+  return null;
+}
+
 async function apiFetch(path, options = {}) {
   const headers = Object.assign({}, options.headers || {});
   // FormData (subida de foto de vehiculo, ver uploadVehiclePhoto): el propio
@@ -91,11 +110,13 @@ async function apiFetch(path, options = {}) {
     let detail = "Error " + res.status;
     try {
       const data = await res.json();
-      detail = data.detail || detail;
+      detail = normalizeDetail(data.detail) || detail;
     } catch (e) {
       /* respuesta sin cuerpo JSON */
     }
-    throw new Error(detail);
+    const error = new Error(detail);
+    error.status = res.status;
+    throw error;
   }
 
   if (res.status === 204) return null;
@@ -103,10 +124,18 @@ async function apiFetch(path, options = {}) {
 }
 
 const api = {
-  register: (username, password) =>
-    apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ username, password }) }),
-  login: (username, password) =>
-    apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  // El usuario se identifica por correo (no por un nombre de usuario que el
+  // elige): ver RegisterRequest/LoginRequest en backend/app/schemas.py.
+  register: (email, password) =>
+    apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
+  login: (email, password) =>
+    apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  // Solo hace falta cuando el registro devuelve confirmation_required=true
+  // (el servidor tiene mail de confirmacion activo, ver /api/auth/config).
+  confirmEmail: (email, code) =>
+    apiFetch("/api/auth/confirm-email", { method: "POST", body: JSON.stringify({ email, code }) }),
+  resendConfirmation: (email) =>
+    apiFetch("/api/auth/resend-confirmation", { method: "POST", body: JSON.stringify({ email }) }),
   authConfig: () => apiFetch("/api/auth/config"),
   googleLogin: (idToken) => apiFetch("/api/auth/google", { method: "POST", body: JSON.stringify({ id_token: idToken }) }),
 

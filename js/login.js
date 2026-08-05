@@ -4,23 +4,45 @@
     return;
   }
 
+  const loginView = document.getElementById("login-view");
+  const confirmView = document.getElementById("confirm-view");
   const form = document.getElementById("login-form");
   const errorBanner = document.getElementById("error-banner");
+  const infoBanner = document.getElementById("info-banner");
   const submitBtn = document.getElementById("submit-btn");
   const toggleModeBtn = document.getElementById("toggle-mode");
   const modeLabel = document.getElementById("mode-label");
-  const usernameInput = document.getElementById("username");
+  const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
 
+  const confirmForm = document.getElementById("confirm-form");
+  const confirmCopy = document.getElementById("confirm-copy");
+  const confirmCodeInput = document.getElementById("confirm-code");
+  const confirmSubmitBtn = document.getElementById("confirm-submit-btn");
+  const resendCodeBtn = document.getElementById("resend-code-btn");
+  const backToLoginBtn = document.getElementById("back-to-login-btn");
+
   let mode = "login";
+  // Correo pendiente de confirmacion mientras se muestra confirm-view (el
+  // que vino en la respuesta del backend, no lo que haya en el input de
+  // login -- puede haber cambiado de vista de por medio).
+  let pendingConfirmEmail = null;
 
   function showError(msg) {
+    infoBanner.classList.add("hidden");
     errorBanner.textContent = msg;
     errorBanner.classList.remove("hidden");
   }
 
-  function clearError() {
+  function showInfo(msg) {
     errorBanner.classList.add("hidden");
+    infoBanner.textContent = msg;
+    infoBanner.classList.remove("hidden");
+  }
+
+  function clearBanners() {
+    errorBanner.classList.add("hidden");
+    infoBanner.classList.add("hidden");
   }
 
   function setMode(newMode) {
@@ -37,10 +59,36 @@
     passwordInput.autocomplete = mode === "register" ? "new-password" : "current-password";
   }
 
+  // Muestra el paso de "ingresa el codigo que te mandamos" y esconde el
+  // formulario de login/registro. Se llega aca desde dos lugares: un
+  // registro con confirmation_required=true, o un login que pega contra una
+  // cuenta valida pero todavia sin confirmar (ver el 403 mas abajo).
+  function showConfirmView(email) {
+    pendingConfirmEmail = email;
+    confirmCodeInput.value = "";
+    confirmCopy.textContent = `Te mandamos un codigo de 6 digitos a ${email}. Ingresalo para confirmar tu cuenta.`;
+    modeLabel.textContent = "Confirma tu correo";
+    loginView.classList.add("hidden");
+    confirmView.classList.remove("hidden");
+  }
+
+  function showLoginView() {
+    pendingConfirmEmail = null;
+    confirmView.classList.add("hidden");
+    loginView.classList.remove("hidden");
+    setMode(mode);
+    clearBanners();
+  }
+
   toggleModeBtn.addEventListener("click", () => {
     setMode(mode === "login" ? "register" : "login");
-    clearError();
-    usernameInput.focus();
+    clearBanners();
+    emailInput.focus();
+  });
+
+  backToLoginBtn.addEventListener("click", () => {
+    showLoginView();
+    emailInput.focus();
   });
 
   // La landing (y el footer/CTA) enlazan a /login?crear=1 para arrancar
@@ -51,21 +99,17 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    clearError();
+    clearBanners();
 
-    const username = usernameInput.value.trim();
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
 
     // Espejo de las reglas de backend/app/schemas.py. Esto es solo para dar un
     // mensaje inmediato y claro: la validacion que realmente cuenta es la del
-    // servidor, porque cualquiera puede llamar a la API sin pasar por esta
-    // pantalla.
-    if (username.length < 3) {
-      showError("El usuario necesita al menos 3 caracteres.");
-      return;
-    }
-    if (mode === "register" && !/^[A-Za-z0-9._-]+$/.test(username)) {
-      showError("El usuario solo puede tener letras, numeros, puntos, guiones y guiones bajos.");
+    // servidor (EmailStr), porque cualquiera puede llamar a la API sin pasar
+    // por esta pantalla.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("Ingresa un correo electronico valido.");
       return;
     }
     // Al entrar no se exige el minimo actual: las cuentas creadas antes de que
@@ -82,13 +126,66 @@
     submitBtn.disabled = true;
     submitBtn.textContent = "Un momento...";
     try {
-      const result = mode === "login" ? await api.login(username, password) : await api.register(username, password);
+      const result = mode === "login" ? await api.login(email, password) : await api.register(email, password);
+      if (result.confirmation_required) {
+        // Cuenta creada pero todavia sin token: falta el codigo de
+        // confirmacion que se acaba de mandar por mail (ver RegisterResponse
+        // en backend/app/schemas.py).
+        showConfirmView(result.email);
+        submitBtn.disabled = false;
+        submitBtn.textContent = mode === "login" ? "Entrar" : "Crear cuenta";
+        return;
+      }
       setSession(result.access_token, result.username);
       window.location.href = "/app";
     } catch (err) {
-      showError(err.message || "No se pudo completar la operacion");
+      if (mode === "login" && err.status === 403) {
+        // Credenciales correctas pero el correo todavia no fue confirmado: en
+        // vez de dejar a quien intento entrar sin salida, lo mandamos directo
+        // al paso de confirmacion, con la opcion de reenviar el codigo.
+        showConfirmView(email);
+        showInfo("Tu correo todavia no esta confirmado. Si no tenes el codigo a mano, pedi que te lo reenviemos.");
+      } else {
+        showError(err.message || "No se pudo completar la operacion");
+      }
       submitBtn.disabled = false;
       submitBtn.textContent = mode === "login" ? "Entrar" : "Crear cuenta";
+    }
+  });
+
+  confirmForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearBanners();
+
+    const code = confirmCodeInput.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      showError("El codigo tiene 6 digitos.");
+      return;
+    }
+
+    confirmSubmitBtn.disabled = true;
+    confirmSubmitBtn.textContent = "Confirmando...";
+    try {
+      const result = await api.confirmEmail(pendingConfirmEmail, code);
+      setSession(result.access_token, result.username);
+      window.location.href = "/app";
+    } catch (err) {
+      showError(err.message || "No se pudo confirmar el correo");
+      confirmSubmitBtn.disabled = false;
+      confirmSubmitBtn.textContent = "Confirmar";
+    }
+  });
+
+  resendCodeBtn.addEventListener("click", async () => {
+    clearBanners();
+    resendCodeBtn.disabled = true;
+    try {
+      await api.resendConfirmation(pendingConfirmEmail);
+      showInfo("Te reenviamos el codigo. Puede tardar unos minutos en llegar.");
+    } catch (err) {
+      showError(err.message || "No se pudo reenviar el codigo");
+    } finally {
+      resendCodeBtn.disabled = false;
     }
   });
 
@@ -108,7 +205,7 @@
     google.accounts.id.initialize({
       client_id: cfg.google_client_id,
       callback: async (response) => {
-        clearError();
+        clearBanners();
         try {
           const result = await api.googleLogin(response.credential);
           setSession(result.access_token, result.username);

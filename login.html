@@ -59,24 +59,42 @@
     <div class="mode-label" id="mode-label">Iniciar sesión</div>
 
     <div id="error-banner" class="error-banner hidden"></div>
+    <div id="info-banner" class="info-banner hidden"></div>
 
-    <form id="login-form">
-      <div class="field">
-        <label for="username">Usuario</label>
-        <input id="username" name="username" type="text" autocomplete="username" required minlength="3" placeholder="ej. mfilgueiras" />
-      </div>
-      <div class="field">
-        <label for="password">Contraseña</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
-      </div>
-      <div class="login-actions">
-        <button type="submit" id="submit-btn" class="primary">Entrar</button>
-        <button type="button" id="toggle-mode" class="toggle-mode">Crear una cuenta nueva</button>
-      </div>
-    </form>
+    <div id="login-view">
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" autocomplete="email" required placeholder="ej. nombre@dominio.com" />
+        </div>
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+        </div>
+        <div class="login-actions">
+          <button type="submit" id="submit-btn" class="primary">Entrar</button>
+          <button type="button" id="toggle-mode" class="toggle-mode">Crear una cuenta nueva</button>
+        </div>
+      </form>
 
-    <div class="google-divider hidden" id="google-divider"><span>o</span></div>
-    <div id="google-signin-btn"></div>
+      <div class="google-divider hidden" id="google-divider"><span>o</span></div>
+      <div id="google-signin-btn"></div>
+    </div>
+
+    <div id="confirm-view" class="hidden">
+      <p class="tagline" id="confirm-copy">Te mandamos un código de 6 dígitos por correo. Ingresalo para confirmar tu cuenta.</p>
+      <form id="confirm-form">
+        <div class="field">
+          <label for="confirm-code">Código de confirmación</label>
+          <input id="confirm-code" name="code" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required placeholder="123456" />
+        </div>
+        <div class="login-actions">
+          <button type="submit" id="confirm-submit-btn" class="primary">Confirmar</button>
+          <button type="button" id="resend-code-btn" class="toggle-mode">Reenviar código</button>
+          <button type="button" id="back-to-login-btn" class="toggle-mode">Volver a iniciar sesión</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
