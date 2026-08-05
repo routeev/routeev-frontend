@@ -5,8 +5,17 @@
    significado fijo en toda la app (no decorativos):
      --accent-astar     cian/electrico -> A* (algoritmo principal)
      --accent-dijkstra  ambar/calido   -> Dijkstra (baseline de referencia)
-   Tipografia: monoespaciada para marca y datos/telemetria (cuesta, tiempos,
-   nodos expandidos), sans para texto de interfaz.
+
+   Tipografia, tres roles (mismo criterio en routeev-movil/src/theme/colors.ts):
+     --font-display  Space Grotesk. SOLO titulares reales (h1/h2/h3, el
+                      wordmark de marca, el veredicto del showroom). Deriva
+                      de Space Mono, asi que emparienta con --font-mono sin
+                      duplicarlo.
+     --font-mono     JetBrains Mono. Datos/telemetria (costos, kWh, %,
+                      distancias, nodos) Y etiquetas chicas en mayuscula
+                      (eyebrows, badges, marcadores de mapa) -- la lectura
+                      de "instrumento" que ya tenia el sistema.
+     --font-body     Inter. Texto de interfaz corrido.
 --------------------------------------------------------------------------- */
 
 :root {
@@ -41,7 +50,8 @@
   --ok: #34e3a8;
   --accent-live: #3aa0ff;
 
-  --font-display: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --font-display: "Space Grotesk", "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --font-body: "Inter", system-ui, "Segoe UI", sans-serif;
 
   --radius: 12px;
@@ -78,7 +88,7 @@ a {
 }
 
 .eyebrow {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -340,7 +350,7 @@ label {
 
 /* Numeros de telemetria: siempre monoespaciados, en toda la app */
 .mono-num {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 

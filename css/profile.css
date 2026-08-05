@@ -37,7 +37,7 @@ body.app-page {
 
 .data-table th {
   text-align: left;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -50,7 +50,7 @@ body.app-page {
 .data-table td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--border-soft);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   color: var(--text);
   white-space: nowrap;
 }
@@ -72,6 +72,71 @@ body.app-page {
 
 .data-table td.cell-recharge {
   color: var(--accent-dijkstra);
+}
+
+/* --- Identificar vehiculo por foto ------------------------------------------
+   Mismo endpoint que el flujo de camara de la app movil (ver
+   POST /api/vehicles/lookup-ai-photo y identifyVehiclePhoto en profile.js).
+   El <label> dispara el selector de archivo del navegador; "capture=environment"
+   en el <input> abre la camara trasera directo en un celular, en vez de la
+   galeria. */
+.photo-id-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.photo-id-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.photo-id-btn:hover {
+  border-color: var(--accent-astar);
+  color: var(--accent-astar);
+}
+
+.photo-id-preview {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* Separa el atajo de foto del resto del formulario sin otro panel anidado:
+   una linea con texto centrado alcanza, y no compite visualmente con los
+   campos de abajo. */
+.form-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.form-divider::before,
+.form-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 /* --- Mis vehiculos ---------------------------------------------------------

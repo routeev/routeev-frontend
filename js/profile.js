@@ -167,7 +167,68 @@
   document.getElementById("toggle-add-vehicle").addEventListener("click", () => {
     addForm.classList.toggle("hidden");
     addError.classList.add("hidden");
-    if (!addForm.classList.contains("hidden")) document.getElementById("p-name").focus();
+    if (addForm.classList.contains("hidden")) {
+      resetPhotoId();
+    } else {
+      document.getElementById("p-name").focus();
+    }
+  });
+
+  // --- Identificar vehiculo por foto (misma IA que la busqueda por nombre) --
+  //
+  // El navegador ya la redimensiona con resizePhotoForUpload antes de
+  // mandarla (mismo motivo que subir la foto de un vehiculo existente): unos
+  // cientos de KB en vez de los varios MB que saca una camara de celular.
+  // Si identifica el auto, esa MISMA foto queda guardada como pendiente y se
+  // sube como foto del vehiculo recien creado al enviar el formulario --
+  // igual que en la app movil (ver identifyPhoto en vehiculos/agregar.tsx).
+  let pendingPhotoBlob = null;
+  let _photoIdPreviewUrl = null;
+  const photoInput = document.getElementById("p-photo-input");
+  const photoPreview = document.getElementById("p-photo-preview");
+  const photoStatus = document.getElementById("p-photo-id-status");
+
+  function resetPhotoId() {
+    pendingPhotoBlob = null;
+    if (_photoIdPreviewUrl) URL.revokeObjectURL(_photoIdPreviewUrl);
+    _photoIdPreviewUrl = null;
+    photoPreview.classList.add("hidden");
+    photoStatus.classList.add("hidden", "hint-ok");
+    photoInput.value = "";
+  }
+
+  photoInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = ""; // permite elegir la misma foto dos veces seguidas
+    if (!file) return;
+
+    photoStatus.classList.remove("hidden", "hint-ok");
+    photoStatus.textContent = "Identificando el vehiculo con IA...";
+
+    try {
+      const resized = await resizePhotoForUpload(file);
+      const result = await api.lookupVehicleAiPhoto(resized);
+      if (!result.existe) {
+        photoStatus.textContent = "No pudimos identificar un vehiculo electrico en esa foto. Proba con otro angulo o buscalo por nombre.";
+        return;
+      }
+
+      pendingPhotoBlob = resized;
+      if (_photoIdPreviewUrl) URL.revokeObjectURL(_photoIdPreviewUrl);
+      _photoIdPreviewUrl = URL.createObjectURL(resized);
+      photoPreview.src = _photoIdPreviewUrl;
+      photoPreview.classList.remove("hidden");
+
+      document.getElementById("p-name").value = [result.marca, result.modelo].filter(Boolean).join(" ");
+      if (result.bateria_kwh != null) document.getElementById("p-capacity").value = result.bateria_kwh;
+      if (result.consumo_kwh_km != null) document.getElementById("p-consumption").value = result.consumo_kwh_km;
+      if (result.potencia_carga_kw != null) document.getElementById("p-charging-power").value = result.potencia_carga_kw;
+
+      photoStatus.textContent = `Identificado: ${result.marca} ${result.modelo}. Revisa los datos y guarda.`;
+      photoStatus.classList.add("hint-ok");
+    } catch (err) {
+      photoStatus.textContent = err.message || "No se pudo identificar el vehiculo con esa foto.";
+    }
   });
 
   async function loadModelCatalog() {
@@ -200,12 +261,24 @@
     e.preventDefault();
     addError.classList.add("hidden");
     try {
-      await api.createVehicle({
+      const vehicle = await api.createVehicle({
         name: document.getElementById("p-name").value.trim(),
         battery_capacity_kwh: Number(document.getElementById("p-capacity").value),
         consumption_kwh_per_km: Number(document.getElementById("p-consumption").value),
         charging_power_kw: Number(document.getElementById("p-charging-power").value),
       });
+      if (pendingPhotoBlob) {
+        // La foto que identifico el auto queda como su foto. Si falla (red,
+        // foto invalida) el vehiculo ya quedo creado igual: no bloqueamos el
+        // flujo principal por un paso secundario (mismo criterio que la app
+        // movil, ver AddVehicleScreen.handleSave).
+        try {
+          await api.uploadVehiclePhoto(vehicle.id, pendingPhotoBlob);
+        } catch {
+          /* no bloquea: el vehiculo ya se guardo */
+        }
+      }
+      resetPhotoId();
       addForm.reset();
       addForm.classList.add("hidden");
       await loadVehicles();

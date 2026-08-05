@@ -152,6 +152,15 @@ const api = {
   listVehicles: () => apiFetch("/api/vehicles"),
   listEvModels: () => apiFetch("/api/vehicles/models"),
   lookupVehicleAi: (query) => apiFetch("/api/vehicles/lookup-ai", { method: "POST", body: JSON.stringify({ query }) }),
+  // Identifica el modelo a partir de una FOTO (camara del celular o galeria)
+  // en vez de un nombre escrito -- misma IA que lookupVehicleAi, ver
+  // /api/vehicles/lookup-ai-photo. `blob` ya viene redimensionado (ver
+  // resizePhotoForUpload) para no subir varios MB desde una foto de celular.
+  lookupVehicleAiPhoto: (blob) => {
+    const form = new FormData();
+    form.append("file", blob, "vehiculo.jpg");
+    return apiFetch("/api/vehicles/lookup-ai-photo", { method: "POST", body: form });
+  },
   createVehicle: (payload) => apiFetch("/api/vehicles", { method: "POST", body: JSON.stringify(payload) }),
   deleteVehicle: (id) => apiFetch(`/api/vehicles/${id}`, { method: "DELETE" }),
 
