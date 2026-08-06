@@ -189,6 +189,29 @@
     }
   });
 
+  // El script de Google (<script src="https://accounts.google.com/gsi/client"
+  // async> en login.html) es "async" a proposito, para no bloquear el resto
+  // de la pagina -- pero eso significa que puede terminar de cargar DESPUES
+  // de que este archivo se ejecute. Un solo chequeo de "typeof google" en ese
+  // momento es una carrera: si perdemos la carrera, el boton no aparece
+  // aunque el script cargue bien un instante despues, porque nadie vuelve a
+  // intentarlo. Se espera un rato corto en vez de chequear una unica vez.
+  function waitForGoogleIdentityServices(timeoutMs = 4000) {
+    if (typeof google !== "undefined") return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (typeof google !== "undefined") {
+          clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - start > timeoutMs) {
+          clearInterval(interval);
+          resolve(false); // script bloqueado o muy lento: sin boton, el login usuario/contraseña sigue andando igual
+        }
+      }, 50);
+    });
+  }
+
   // "Iniciar sesion con Google": el boton solo aparece si el servidor tiene
   // un Client ID configurado (ver /api/auth/config). Sin eso, esta consulta
   // simplemente no muestra nada mas -- el login usuario/contraseña sigue
@@ -200,7 +223,8 @@
     } catch (e) {
       return; // sin conexion o backend viejo: no rompemos el login normal por esto
     }
-    if (!cfg.google_client_id || typeof google === "undefined") return;
+    if (!cfg.google_client_id) return;
+    if (!(await waitForGoogleIdentityServices())) return;
 
     google.accounts.id.initialize({
       client_id: cfg.google_client_id,
