@@ -141,7 +141,13 @@ const api = {
 
   getGraph: () => apiFetch("/api/graph"),
   getStations: () => apiFetch("/api/graph/stations"),
-  getSearchableNodes: () => apiFetch("/api/graph/searchable-nodes?limit=500"),
+  // 3000 es el tope que acepta el backend (ver GRAPH_QUERY en graph_routes.py):
+  // con 500 el autocompletado local (mientras se tipea, sin ir al servidor)
+  // solo conocia las intersecciones "mas importantes" y una calle comun no
+  // aparecia hasta buscarla como direccion completa. Con 3000 cubre muchas
+  // mas calles reales sin tocar el backend -- el payload extra se paga una
+  // sola vez al abrir el mapa, no en cada tecla.
+  getSearchableNodes: () => apiFetch("/api/graph/searchable-nodes?limit=3000"),
   // POST aunque solo consulte: la coordenada puede ser la ubicacion real del
   // usuario, y en la URL de un GET quedaria registrada en los logs de acceso
   // del servidor y de cualquier proxy. Ver NearestNodeRequest en schemas.py.
