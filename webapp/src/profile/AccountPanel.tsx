@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { deleteMyPhoto, getMe, uploadMyPhoto } from "../api/user";
 import { Banner } from "../shared/Banner";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import styles from "./ProfilePage.module.css";
 
@@ -38,9 +39,11 @@ export function AccountPanel() {
       <div className={styles.accountRow}>
         <div className={styles.avatarWrap}>
           {user?.photo_url ? (
-            <img src={user.photo_url} className={styles.avatar} alt="" />
+            <img src={cloudinaryResize(user.photo_url, 150)} className={styles.avatar} alt="" />
           ) : (
-            <div className={styles.avatarFallback}>{(user?.username ?? "?").charAt(0).toUpperCase()}</div>
+            <div className={styles.avatarFallback}>
+              {(user?.username ?? "?").charAt(0).toUpperCase()}
+            </div>
           )}
           <label className={styles.photoEdit} title="Cambiar foto de perfil">
             <input

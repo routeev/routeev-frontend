@@ -1,5 +1,6 @@
 import type { ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { num } from "./num";
 import { useModelPhoto } from "./useModelPhoto";
 import styles from "./ModelCard.module.css";
@@ -32,8 +33,17 @@ export function ModelCard({ model, eager, onSelect }: ModelCardProps) {
       }}
     >
       <div className={styles.art} ref={ref}>
-        {!(photo?.encontrada && photo.url) && <CarSilhouette name={nombre} className={styles.silueta} />}
-        {photo?.encontrada && photo.url && <img className={styles.foto} src={photo.url} alt="" />}
+        {!(photo?.encontrada && photo.url) && (
+          <CarSilhouette name={nombre} className={styles.silueta} />
+        )}
+        {photo?.encontrada && photo.url && (
+          <img
+            className={styles.foto}
+            src={cloudinaryResize(photo.url, 400)}
+            alt=""
+            loading="lazy"
+          />
+        )}
         {model.fuente === "ia" && <span className={styles.badge}>IA</span>}
       </div>
       <div className={styles.body}>

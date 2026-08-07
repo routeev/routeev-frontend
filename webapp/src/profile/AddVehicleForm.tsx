@@ -1,7 +1,14 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { createVehicle, listEvModels, lookupVehicleAiPhoto, uploadVehiclePhoto, type EvModel } from "../api/vehicles";
+import {
+  createVehicle,
+  listEvModels,
+  lookupVehicleAiPhoto,
+  uploadVehiclePhoto,
+  type EvModel,
+} from "../api/vehicles";
 import { Banner } from "../shared/Banner";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import styles from "./ProfilePage.module.css";
 
@@ -55,10 +62,17 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
         consumption: model.consumo_kwh_km != null ? String(model.consumo_kwh_km) : "",
         chargingPower: model.potencia_carga_kw != null ? String(model.potencia_carga_kw) : "",
       });
-      setPhotoStatus({ text: `Identificado: ${model.marca} ${model.modelo}. Revisá los datos y guardá.`, ok: true });
+      setPhotoStatus({
+        text: `Identificado: ${model.marca} ${model.modelo}. Revisá los datos y guardá.`,
+        ok: true,
+      });
     },
     onError: (err) => {
-      setPhotoStatus({ text: err instanceof Error ? err.message : "No se pudo identificar el vehículo con esa foto.", ok: false });
+      setPhotoStatus({
+        text:
+          err instanceof Error ? err.message : "No se pudo identificar el vehículo con esa foto.",
+        ok: false,
+      });
     },
   });
 
@@ -95,7 +109,8 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
     },
     // Acá cae, entre otros, el 409 de nombre repetido: el backend ya manda un
     // mensaje explicando cuál es el nombre que choca.
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo crear el vehículo."),
+    onError: (err) =>
+      setError(err instanceof Error ? err.message : "No se pudo crear el vehículo."),
   });
 
   function onModelSearchChange(value: string) {
@@ -108,7 +123,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       consumption: String(model.consumo_kwh_km),
       chargingPower: String(model.potencia_carga_kw),
     });
-    setModelPhoto(model.foto_url ?? null);
+    setModelPhoto(cloudinaryResize(model.foto_url, 100) ?? null);
   }
 
   return (
@@ -139,7 +154,11 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
         </label>
         {photoPreview && <img src={photoPreview} className={styles.photoIdPreview} alt="" />}
       </div>
-      {photoStatus && <div className={["hint", photoStatus.ok ? "hint-ok" : ""].join(" ")}>{photoStatus.text}</div>}
+      {photoStatus && (
+        <div className={["hint", photoStatus.ok ? "hint-ok" : ""].join(" ")}>
+          {photoStatus.text}
+        </div>
+      )}
 
       <div className={styles.formDivider}>
         <span>o buscá / completá a mano</span>

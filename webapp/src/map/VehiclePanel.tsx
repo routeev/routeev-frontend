@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { authConfig } from "../api/auth";
 import { createVehicle, lookupVehicleAi } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { useMapStore, vehicleAutonomyKm } from "./mapStore";
 import { useEvModels } from "./useMapLoaders";
 import styles from "./VehiclePanel.module.css";
@@ -48,16 +49,31 @@ export function VehiclePanel() {
       })()
     : "Elegí o creá un vehículo primero.";
 
-  function prefill(name: string, capacityKwh: number, consumptionKwhKm: number, chargingPowerKw: number) {
-    setForm({ name, capacity: String(capacityKwh), consumption: String(consumptionKwhKm), chargingPower: String(chargingPowerKw) });
+  function prefill(
+    name: string,
+    capacityKwh: number,
+    consumptionKwhKm: number,
+    chargingPowerKw: number
+  ) {
+    setForm({
+      name,
+      capacity: String(capacityKwh),
+      consumption: String(consumptionKwhKm),
+      chargingPower: String(chargingPowerKw),
+    });
   }
 
   function onModelSearchChange(v: string) {
     setModelSearch(v);
     const model = evModelsByLabel.get(v.trim());
     if (!model) return;
-    prefill(`${model.marca} ${model.modelo}`, model.bateria_kwh, model.consumo_kwh_km, model.potencia_carga_kw);
-    setModelPhoto(model.foto_url ?? null);
+    prefill(
+      `${model.marca} ${model.modelo}`,
+      model.bateria_kwh,
+      model.consumo_kwh_km,
+      model.potencia_carga_kw
+    );
+    setModelPhoto(cloudinaryResize(model.foto_url, 100) ?? null);
   }
 
   async function searchVehicleAi() {
@@ -67,14 +83,22 @@ export function VehiclePanel() {
     setAiResult(null);
     try {
       const model = await lookupVehicleAi(query);
-      prefill(`${model.marca} ${model.modelo}`, model.bateria_kwh, model.consumo_kwh_km, model.potencia_carga_kw);
+      prefill(
+        `${model.marca} ${model.modelo}`,
+        model.bateria_kwh,
+        model.consumo_kwh_km,
+        model.potencia_carga_kw
+      );
       setModelSearch("");
       setAiResult({
         text: `Encontrado: ${model.marca} ${model.modelo} (autonomía aprox. ${Math.round(model.autonomia_aprox_km)} km). Revisá los campos antes de crear el vehículo.`,
         error: false,
       });
     } catch (err) {
-      setAiResult({ text: err instanceof Error ? err.message : "No se pudo consultar la IA.", error: true });
+      setAiResult({
+        text: err instanceof Error ? err.message : "No se pudo consultar la IA.",
+        error: true,
+      });
     } finally {
       setAiBusy(false);
     }
@@ -115,11 +139,15 @@ export function VehiclePanel() {
           onChange={(e) => selectVehicle(Number(e.target.value))}
         >
           {vehicles.length === 0 ? (
-            <option value="">{vehiclesLoaded ? "No hay vehículos: creá uno abajo" : "Cargando vehículos..."}</option>
+            <option value="">
+              {vehiclesLoaded ? "No hay vehículos: creá uno abajo" : "Cargando vehículos..."}
+            </option>
           ) : (
             vehicles.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.name.includes(`${v.battery_capacity_kwh} kWh`) ? v.name : `${v.name} (${v.battery_capacity_kwh} kWh)`}
+                {v.name.includes(`${v.battery_capacity_kwh} kWh`)
+                  ? v.name
+                  : `${v.name} (${v.battery_capacity_kwh} kWh)`}
               </option>
             ))
           )}
@@ -181,7 +209,12 @@ export function VehiclePanel() {
                     }
                   }}
                 />
-                <button type="button" className="ghost small" disabled={aiBusy} onClick={() => void searchVehicleAi()}>
+                <button
+                  type="button"
+                  className="ghost small"
+                  disabled={aiBusy}
+                  onClick={() => void searchVehicleAi()}
+                >
                   {aiBusy ? "Buscando..." : "Buscar"}
                 </button>
               </div>

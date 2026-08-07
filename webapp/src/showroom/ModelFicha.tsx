@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { showroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDuration, formatUyu } from "../shared/format";
 import { num } from "./num";
 import { SimulationForm } from "./SimulationForm";
@@ -13,7 +14,10 @@ interface ModelFichaProps {
 }
 
 export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
-  const query = useQuery({ queryKey: ["showroomModel", modelId], queryFn: () => showroomModel(modelId) });
+  const query = useQuery({
+    queryKey: ["showroomModel", modelId],
+    queryFn: () => showroomModel(modelId),
+  });
   const model = query.data?.model;
   // useModelPhoto se llama siempre, antes de cualquier return condicional
   // (reglas de hooks) -- con nombre vacio mientras no hay datos, el propio
@@ -36,7 +40,9 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
     return (
       <section className={styles.ficha} aria-label="Ficha del modelo elegido">
         <p className="error-banner">
-          {query.error instanceof Error ? query.error.message : "No se pudo cargar la ficha de este modelo."}
+          {query.error instanceof Error
+            ? query.error.message
+            : "No se pudo cargar la ficha de este modelo."}
         </p>
       </section>
     );
@@ -48,13 +54,22 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
 
   return (
     <section className={styles.ficha} aria-label="Ficha del modelo elegido" tabIndex={-1}>
-      <button type="button" className={styles.cerrar} aria-label="Cerrar la ficha" onClick={onClose}>
+      <button
+        type="button"
+        className={styles.cerrar}
+        aria-label="Cerrar la ficha"
+        onClick={onClose}
+      >
         &times;
       </button>
 
       <div className={styles.foto} ref={ref}>
-        {!(photo?.encontrada && photo.url) && <CarSilhouette name={nombre} className={styles.silueta} />}
-        {photo?.encontrada && photo.url && <img className={styles.fotoImg} src={photo.url} alt="" />}
+        {!(photo?.encontrada && photo.url) && (
+          <CarSilhouette name={nombre} className={styles.silueta} />
+        )}
+        {photo?.encontrada && photo.url && (
+          <img className={styles.fotoImg} src={cloudinaryResize(photo.url, 800)} alt="" />
+        )}
         <p className={styles.credito}>
           {photo?.encontrada ? (
             <>
@@ -80,7 +95,9 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
         <p className={["eyebrow", styles.marca].join(" ")}>{model.marca}</p>
         <h2 className={styles.modelo}>{model.modelo}</h2>
         {model.nota && (
-          <p className={[styles.nota, model.fuente === "ia" ? styles.notaIa : ""].join(" ")}>{model.nota}</p>
+          <p className={[styles.nota, model.fuente === "ia" ? styles.notaIa : ""].join(" ")}>
+            {model.nota}
+          </p>
         )}
 
         <dl className={styles.stats}>
@@ -131,9 +148,9 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
             <small>+{num(metricas.carga_km_recuperados)} km de autonomía</small>
           </h3>
           <p className={styles.bloqueSub}>
-            En las potencias que existen de verdad en la red uruguaya, sobre las {num(metricas.estaciones_red)}{" "}
-            estaciones de UTE del mapa. La potencia baja sola cerca del 80%: por eso el tramo final tarda tanto
-            y conviene seguir viaje.
+            En las potencias que existen de verdad en la red uruguaya, sobre las{" "}
+            {num(metricas.estaciones_red)} estaciones de UTE del mapa. La potencia baja sola cerca
+            del 80%: por eso el tramo final tarda tanto y conviene seguir viaje.
           </p>
           <table className={styles.carga}>
             <thead>
@@ -149,7 +166,12 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
                   <td className="mono-num">
                     {num(fila.potencia_kw)} kW <small>· {num(fila.estaciones)} estaciones</small>
                   </td>
-                  <td className={["mono-num", fila.potencia_efectiva_kw < fila.potencia_kw ? styles.limitado : ""].join(" ")}>
+                  <td
+                    className={[
+                      "mono-num",
+                      fila.potencia_efectiva_kw < fila.potencia_kw ? styles.limitado : "",
+                    ].join(" ")}
+                  >
                     {num(fila.potencia_efectiva_kw)} kW
                   </td>
                   <td className="mono-num">{formatDuration(fila.minutos)}</td>
@@ -159,8 +181,8 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
           </table>
           {hayLimite && (
             <p className={styles.notaCarga}>
-              Este auto acepta hasta {num(model.potencia_carga_kw)} kW: en una estación más potente carga igual
-              de rápido que en una de {num(model.potencia_carga_kw)} kW, no más.
+              Este auto acepta hasta {num(model.potencia_carga_kw)} kW: en una estación más potente
+              carga igual de rápido que en una de {num(model.potencia_carga_kw)} kW, no más.
             </p>
           )}
         </div>
