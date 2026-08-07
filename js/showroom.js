@@ -239,7 +239,7 @@
     card.innerHTML = `
       <div class="sr-card-art">
         <div class="sr-card-silueta">${carSvg(nombre)}</div>
-        <img class="sr-card-foto hidden" alt="" />
+        <img class="sr-card-foto hidden" alt="" loading="lazy" />
       </div>
       <div class="sr-card-body">
         <p class="sr-card-marca"></p>
@@ -270,7 +270,9 @@
       // Ya esta precargada en Cloudinary (ver scripts/warm_vehicle_photos.py
       // y GET /api/showroom/models): se muestra directo, sin pedirsela al
       // vuelo a /api/showroom/imagen ni pasar por el observer de scroll.
-      mostrarFoto(art, { encontrada: true, url: model.foto_url });
+      // Redimensionada a como se ve de verdad la tarjeta -- la original
+      // ronda 1000px de ancho, mucho mas de lo que hace falta aca.
+      mostrarFoto(art, { encontrada: true, url: cloudinaryResize(model.foto_url, 400) });
     } else if (fotoYa || fotos.has(nombre)) {
       // Las de la primera pantalla se piden ya (estan a la vista y no tiene
       // sentido esperar a un evento de scroll que puede no llegar nunca); las
@@ -458,8 +460,10 @@
     const marco = els.ficha.querySelector(".sr-ficha-foto");
     if (model.foto_url) {
       // Ya esta precargada (ver el mismo chequeo en tarjeta() mas arriba):
-      // se muestra directo, sin pedirla de nuevo a /api/showroom/imagen.
-      const meta = { encontrada: true, url: model.foto_url, credito: model.foto_credito };
+      // se muestra directo, sin pedirla de nuevo a /api/showroom/imagen. Mas
+      // grande que la tarjeta (esta es la vista de detalle) pero igual bien
+      // por debajo de la original.
+      const meta = { encontrada: true, url: cloudinaryResize(model.foto_url, 800), credito: model.foto_credito };
       mostrarFoto(marco, meta);
       pintarCredito(marco.querySelector(".sr-credito"), meta);
     } else {

@@ -34,7 +34,7 @@
     document.getElementById("user-chip").textContent = user.username;
 
     if (user.photo_url) {
-      accountAvatarImg.src = user.photo_url;
+      accountAvatarImg.src = cloudinaryResize(user.photo_url, 150);
       accountAvatarImg.classList.remove("hidden");
       accountAvatarFallback.classList.add("hidden");
       accountRemovePhotoBtn.classList.remove("hidden");
@@ -320,7 +320,7 @@
         // que va a quedar en el vehiculo: esa la sube el dueño por separado
         // (ver vehicle-photo-input mas abajo) o via "Identificar con foto".
         if (elegido.foto_url) {
-          modelPhoto.src = elegido.foto_url;
+          modelPhoto.src = cloudinaryResize(elegido.foto_url, 100);
           modelPhoto.classList.remove("hidden");
         } else {
           modelPhoto.classList.add("hidden");

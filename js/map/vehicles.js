@@ -118,7 +118,7 @@ els.modelSearch.addEventListener("input", () => {
   // solo informativa. La foto del vehiculo en si se sube aparte, ya creado
   // (ver profile.js), o se identifica con una foto propia.
   if (model.foto_url) {
-    els.modelPhoto.src = model.foto_url;
+    els.modelPhoto.src = cloudinaryResize(model.foto_url, 100);
     els.modelPhoto.classList.remove("hidden");
   } else {
     els.modelPhoto.classList.add("hidden");

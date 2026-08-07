@@ -16,6 +16,24 @@ function apiUrl(path) {
   return API_BASE_URL + path;
 }
 
+/**
+ * Pide a Cloudinary una version redimensionada/optimizada de una foto en vez
+ * de la original -- se sirve siempre a resolucion completa (~1000px de
+ * ancho), pero un avatar de 72px o una tarjeta chica no necesitan eso.
+ * w_ = ancho maximo, q_auto = Cloudinary elige la calidad segun el contenido,
+ * f_auto = WebP/AVIF si el navegador lo soporta, JPEG si no -- todo sin subir
+ * nada de nuevo, la transformacion es parte de la URL de lectura.
+ *
+ * No hace nada (devuelve la URL tal cual) si no es una URL de Cloudinary --
+ * el camino de respaldo del showroom (fotos servidas desde nuestro propio
+ * disco, /api/showroom/imagen/...) no tiene este problema, ya se sirven en
+ * el tamaño que pide showroom_images.py.
+ */
+function cloudinaryResize(url, width) {
+  if (!url || !url.includes("res.cloudinary.com")) return url;
+  return url.replace("/upload/", `/upload/w_${width},q_auto,f_auto/`);
+}
+
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
