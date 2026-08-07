@@ -456,10 +456,18 @@
     els.ficha.querySelector(".sr-ficha-cerrar").addEventListener("click", cerrarFicha);
 
     const marco = els.ficha.querySelector(".sr-ficha-foto");
-    foto(nombre).then((meta) => {
+    if (model.foto_url) {
+      // Ya esta precargada (ver el mismo chequeo en tarjeta() mas arriba):
+      // se muestra directo, sin pedirla de nuevo a /api/showroom/imagen.
+      const meta = { encontrada: true, url: model.foto_url, credito: model.foto_credito };
       mostrarFoto(marco, meta);
       pintarCredito(marco.querySelector(".sr-credito"), meta);
-    });
+    } else {
+      foto(nombre).then((meta) => {
+        mostrarFoto(marco, meta);
+        pintarCredito(marco.querySelector(".sr-credito"), meta);
+      });
+    }
 
     prepararSimulador(model);
     els.ficha.focus({ preventScroll: true });
