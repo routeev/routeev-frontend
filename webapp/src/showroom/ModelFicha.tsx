@@ -1,0 +1,174 @@
+import { useQuery } from "@tanstack/react-query";
+import { showroomModel } from "../api/showroom";
+import { CarSilhouette } from "../shared/CarSilhouette";
+import { formatDuration, formatUyu } from "../shared/format";
+import { num } from "./num";
+import { SimulationForm } from "./SimulationForm";
+import { useModelPhoto } from "./useModelPhoto";
+import styles from "./ModelFicha.module.css";
+
+interface ModelFichaProps {
+  modelId: string;
+  onClose: () => void;
+}
+
+export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
+  const query = useQuery({ queryKey: ["showroomModel", modelId], queryFn: () => showroomModel(modelId) });
+  const model = query.data?.model;
+  // useModelPhoto se llama siempre, antes de cualquier return condicional
+  // (reglas de hooks) -- con nombre vacio mientras no hay datos, el propio
+  // hook no dispara ningun pedido (ver el guard `!nombre` ahi adentro).
+  const { ref, photo } = useModelPhoto(
+    model ? `${model.marca} ${model.modelo}` : "",
+    true,
+    model?.foto_url ? { url: model.foto_url, credito: model.foto_credito } : undefined
+  );
+
+  if (query.isLoading) {
+    return (
+      <section className={styles.ficha} aria-label="Ficha del modelo elegido">
+        <p className={styles.cargando}>Cargando ficha…</p>
+      </section>
+    );
+  }
+
+  if (query.isError || !query.data || !model) {
+    return (
+      <section className={styles.ficha} aria-label="Ficha del modelo elegido">
+        <p className="error-banner">
+          {query.error instanceof Error ? query.error.message : "No se pudo cargar la ficha de este modelo."}
+        </p>
+      </section>
+    );
+  }
+
+  const { metricas } = query.data;
+  const nombre = `${model.marca} ${model.modelo}`;
+  const hayLimite = metricas.carga.some((f) => f.potencia_efectiva_kw < f.potencia_kw);
+
+  return (
+    <section className={styles.ficha} aria-label="Ficha del modelo elegido" tabIndex={-1}>
+      <button type="button" className={styles.cerrar} aria-label="Cerrar la ficha" onClick={onClose}>
+        &times;
+      </button>
+
+      <div className={styles.foto} ref={ref}>
+        {!(photo?.encontrada && photo.url) && <CarSilhouette name={nombre} className={styles.silueta} />}
+        {photo?.encontrada && photo.url && <img className={styles.fotoImg} src={photo.url} alt="" />}
+        <p className={styles.credito}>
+          {photo?.encontrada ? (
+            <>
+              Foto: Wikimedia Commons
+              {photo.credito?.autor ? ` · ${photo.credito.autor}` : ""}
+              {photo.credito?.licencia ? ` · ${photo.credito.licencia}` : ""}
+              {photo.credito?.archivo_url && (
+                <>
+                  {" · "}
+                  <a href={photo.credito.archivo_url} target="_blank" rel="noopener noreferrer">
+                    ver original
+                  </a>
+                </>
+              )}
+            </>
+          ) : (
+            "Sin foto libre de este modelo."
+          )}
+        </p>
+      </div>
+
+      <div>
+        <p className={["eyebrow", styles.marca].join(" ")}>{model.marca}</p>
+        <h2 className={styles.modelo}>{model.modelo}</h2>
+        {model.nota && (
+          <p className={[styles.nota, model.fuente === "ia" ? styles.notaIa : ""].join(" ")}>{model.nota}</p>
+        )}
+
+        <dl className={styles.stats}>
+          <div className={styles.stat}>
+            <dt>Batería</dt>
+            <dd className="mono-num">
+              {num(model.bateria_kwh, 1)}
+              <small> kWh</small>
+            </dd>
+          </div>
+          <div className={styles.stat}>
+            <dt>Autonomía real</dt>
+            <dd className="mono-num">
+              {num(metricas.autonomia_calculada_km)}
+              <small> km</small>
+            </dd>
+            <p className={styles.statSub}>Fabricante: {num(model.autonomia_aprox_km)} km</p>
+          </div>
+          <div className={styles.stat}>
+            <dt>Consumo</dt>
+            <dd className="mono-num">
+              {num(metricas.consumo_kwh_100km, 1)}
+              <small> kWh/100 km</small>
+            </dd>
+          </div>
+          <div className={styles.stat}>
+            <dt>Carga máxima</dt>
+            <dd className="mono-num">
+              {num(model.potencia_carga_kw)}
+              <small> kW</small>
+            </dd>
+          </div>
+          <div className={[styles.stat, styles.statCosto].join(" ")}>
+            <dt>Costo cada 100 km</dt>
+            <dd className="mono-num">{formatUyu(metricas.costo_uyu_100km)}</dd>
+            <p className={styles.statSub}>A $ {num(metricas.energia_uyu_kwh, 2)} el kWh</p>
+          </div>
+          <div className={[styles.stat, styles.statCosto].join(" ")}>
+            <dt>Cargar la batería entera</dt>
+            <dd className="mono-num">{formatUyu(metricas.costo_carga_completa_uyu)}</dd>
+            <p className={styles.statSub}>{num(model.bateria_kwh, 1)} kWh de punta a punta</p>
+          </div>
+        </dl>
+
+        <div className={styles.bloque}>
+          <h3>
+            Cargar del {metricas.carga_desde_pct}% al {metricas.carga_hasta_pct}%
+            <small>+{num(metricas.carga_km_recuperados)} km de autonomía</small>
+          </h3>
+          <p className={styles.bloqueSub}>
+            En las potencias que existen de verdad en la red uruguaya, sobre las {num(metricas.estaciones_red)}{" "}
+            estaciones de UTE del mapa. La potencia baja sola cerca del 80%: por eso el tramo final tarda tanto
+            y conviene seguir viaje.
+          </p>
+          <table className={styles.carga}>
+            <thead>
+              <tr>
+                <th>Estación</th>
+                <th>Le entrega</th>
+                <th>Tarda</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metricas.carga.map((fila, i) => (
+                <tr key={i}>
+                  <td className="mono-num">
+                    {num(fila.potencia_kw)} kW <small>· {num(fila.estaciones)} estaciones</small>
+                  </td>
+                  <td className={["mono-num", fila.potencia_efectiva_kw < fila.potencia_kw ? styles.limitado : ""].join(" ")}>
+                    {num(fila.potencia_efectiva_kw)} kW
+                  </td>
+                  <td className="mono-num">{formatDuration(fila.minutos)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {hayLimite && (
+            <p className={styles.notaCarga}>
+              Este auto acepta hasta {num(model.potencia_carga_kw)} kW: en una estación más potente carga igual
+              de rápido que en una de {num(model.potencia_carga_kw)} kW, no más.
+            </p>
+          )}
+        </div>
+
+        <div className={styles.bloque}>
+          <SimulationForm model={model} />
+        </div>
+      </div>
+    </section>
+  );
+}

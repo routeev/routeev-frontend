@@ -1,0 +1,81 @@
+/* Porta css/legal.css: columna angosta de lectura, la gente escanea buscando una respuesta concreta. */
+
+.legal {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 56px 22px 90px;
+}
+
+.legal h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.15;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.fecha {
+  font-size: 13px;
+  color: var(--text-faint);
+  margin: 0 0 28px;
+}
+
+.resumen {
+  border-left: 2px solid var(--accent-astar);
+  background: rgba(52, 227, 168, 0.06);
+  border-radius: 0 6px 6px 0;
+  padding: 16px 18px;
+  margin: 0 0 36px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.legal h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  margin: 34px 0 10px;
+  color: var(--text);
+}
+
+.legal h3 {
+  font-size: 15px;
+  margin: 22px 0 6px;
+  color: var(--accent-astar);
+}
+
+.legal p,
+.legal li {
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: var(--text-muted);
+}
+
+.legal p {
+  margin: 0 0 12px;
+}
+
+.legal ul {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+
+.legal li {
+  margin-bottom: 7px;
+}
+
+.legal strong {
+  color: var(--text);
+}
+
+.legal a {
+  color: var(--accent-astar);
+}
+
+.nota {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 13px !important;
+  color: var(--text-faint) !important;
+}

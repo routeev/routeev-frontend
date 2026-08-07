@@ -1,0 +1,39 @@
+.lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  text-decoration: none;
+  color: var(--text);
+  line-height: 1;
+}
+
+.lockup:hover .word {
+  color: var(--accent-astar);
+}
+
+.icon {
+  width: 1.375em;
+  height: 1.375em;
+  flex-shrink: 0;
+}
+
+.word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  transition: color 0.15s ease;
+}
+
+.ai {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.65em;
+  letter-spacing: 0.04em;
+  color: var(--accent-astar);
+  border: 1.5px solid var(--accent-astar);
+  border-radius: 5px;
+  padding: 0.05em 0.35em;
+  margin-left: 0.3em;
+}

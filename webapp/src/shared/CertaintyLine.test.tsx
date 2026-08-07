@@ -1,0 +1,32 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { CertaintyLine, type CertaintyPoint } from "./CertaintyLine";
+
+const feasibleTrip: CertaintyPoint[] = [
+  { km: 0, batteryPct: 90 },
+  { km: 200, batteryPct: 25 },
+  { km: 200, batteryPct: 80, chargeStop: true },
+  { km: 340, batteryPct: 45 },
+];
+
+const infeasibleTrip: CertaintyPoint[] = [
+  { km: 0, batteryPct: 60 },
+  { km: 250, batteryPct: -5 },
+];
+
+describe("CertaintyLine", () => {
+  it("renders a feasible trip with a neutral label", () => {
+    render(<CertaintyLine points={feasibleTrip} scale="macro" />);
+    expect(screen.getByRole("img", { name: /perfil de batería a lo largo del viaje/i })).toBeInTheDocument();
+  });
+
+  it("flags an infeasible trip in its accessible name", () => {
+    render(<CertaintyLine points={infeasibleTrip} scale="macro" />);
+    expect(screen.getByRole("img", { name: /no es factible/i })).toBeInTheDocument();
+  });
+
+  it("renders nothing with fewer than two points", () => {
+    const { container } = render(<CertaintyLine points={[{ km: 0, batteryPct: 90 }]} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});

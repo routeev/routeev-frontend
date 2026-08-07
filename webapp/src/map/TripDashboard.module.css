@@ -1,0 +1,256 @@
+.dashboard {
+  flex-shrink: 0;
+  max-height: 46%;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  padding: 16px 20px 20px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+}
+
+.routeLabel {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+}
+
+.statLabel {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.statValueLarge {
+  font-size: 25px;
+  line-height: 1.15;
+}
+
+.statSub {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+.notFound {
+  color: var(--danger);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.chargingStops h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 4px 0 10px;
+}
+
+.chargingStops {
+  margin-bottom: 16px;
+}
+
+.stopCard {
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+
+.stopHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--accent-dijkstra);
+}
+
+.stopHeader svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: currentColor;
+  stroke: none;
+}
+
+.stopRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+  color: var(--text-muted);
+}
+
+.stopRow b {
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+
+.control {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.startBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+}
+
+.startBtn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.live {
+  margin-top: 12px;
+}
+
+.liveRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-bottom: 8px;
+}
+
+.liveItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.liveLabel {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.liveValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-astar);
+}
+
+.progressTrack {
+  position: relative;
+  height: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-astar-dim), var(--accent-astar));
+  transition: width 0.15s linear;
+}
+
+.progressFillCharging {
+  background: linear-gradient(90deg, var(--accent-dijkstra-dim), var(--accent-dijkstra));
+}
+
+.status {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.statusCharging {
+  color: var(--accent-dijkstra);
+}
+
+.statusDone {
+  color: var(--accent-astar);
+}
+
+.statusWarn {
+  color: var(--danger);
+}
+
+.advisory {
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.advisoryOk {
+  color: var(--accent-astar);
+  border-color: var(--accent-astar-dim);
+}
+
+.advisoryTight {
+  color: var(--accent-live);
+  border-color: var(--accent-live);
+}
+
+.advisoryWarn {
+  color: var(--accent-dijkstra);
+  border-color: var(--accent-dijkstra-dim);
+}
+
+.advisoryDanger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+@media (max-width: 860px) {
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

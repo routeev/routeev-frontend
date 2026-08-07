@@ -1,0 +1,19 @@
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 128px;
+  gap: 12px;
+}
+
+.form :global(.field) {
+  margin-bottom: 8px;
+}
+
+.checkField {
+  margin: 4px 0 14px;
+}
+
+@media (max-width: 900px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,288 @@
+/* Porta css/landing.css (secciones propias de la landing; nav/footer/botones
+   ya son componentes compartidos en src/shared/). */
+
+.page {
+  overflow-x: hidden;
+}
+
+.section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.eyebrowCenter {
+  text-align: center;
+}
+
+/* --- Hero --- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(320px, 460px) 1fr;
+  gap: 40px;
+  align-items: center;
+  padding-top: 72px;
+  padding-bottom: 48px;
+  min-height: 560px;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4.2vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 14px 0 20px;
+}
+
+.heroSub {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-muted);
+  max-width: 46ch;
+  margin: 0 0 28px;
+}
+
+.heroActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.heroActionsCenter {
+  justify-content: center;
+}
+
+.heroNote {
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.heroVisual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.heroVisualCaption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* --- Stats --- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.stat {
+  background: var(--bg-panel);
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  color: var(--accent-astar);
+}
+
+.statLabel {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* --- Problema / Solucion --- */
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.split h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.25;
+  margin: 12px 0 16px;
+  letter-spacing: -0.01em;
+}
+
+.split p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* --- Showroom teaser --- */
+
+.showroom {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 56px;
+  align-items: center;
+  padding-top: 20px;
+  padding-bottom: 80px;
+}
+
+.showroom h2 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 12px 0 16px;
+}
+
+.showroom p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-size: 15px;
+  margin: 0 0 16px;
+  max-width: 56ch;
+}
+
+.showroomSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.showroomSteps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-panel);
+  padding: 18px 20px;
+  font-size: 14px;
+}
+
+.stepNum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-astar);
+  letter-spacing: 0.08em;
+}
+
+/* --- Como funciona --- */
+
+.steps {
+  padding-top: 40px;
+  padding-bottom: 90px;
+}
+
+.stepsTitle {
+  font-family: var(--font-display);
+  text-align: center;
+  font-size: clamp(24px, 3vw, 34px);
+  margin: 10px 0 48px;
+  letter-spacing: -0.01em;
+}
+
+.stepsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+.stepsList li {
+  border-top: 2px solid var(--accent-astar);
+  padding-top: 16px;
+}
+
+.stepsList .stepNum {
+  color: var(--text-faint);
+}
+
+.stepsList h3 {
+  font-size: 16px;
+  margin: 10px 0 8px;
+}
+
+.stepsList p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* --- CTA final --- */
+
+.finalCta {
+  text-align: center;
+  padding-top: 70px;
+  padding-bottom: 90px;
+  border-top: 1px solid var(--border);
+}
+
+.finalCta h2 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 38px);
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.finalCta p {
+  color: var(--text-muted);
+  margin: 0 0 28px;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 40px;
+    min-height: 0;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .split,
+  .showroom {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .stepsList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .stepsList {
+    grid-template-columns: 1fr;
+  }
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}

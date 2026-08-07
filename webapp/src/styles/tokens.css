@@ -1,0 +1,61 @@
+/* ---------------------------------------------------------------------------
+   RouteEV -- tokens de diseno, portados 1:1 desde css/style.css del sitio
+   estatico (ver front2.md, Parte 3.2). Mismos nombres, mismos valores --
+   no se relitigan aca. La escala tipografica y de espaciado que agrega el
+   rebuild (Parte 3.2) se declara debajo de la seccion portada.
+--------------------------------------------------------------------------- */
+
+:root {
+  --bg: #0a0e13;
+  --bg-panel: #121821;
+  --bg-panel-raised: #1a212c;
+  --border: #232c38;
+  --border-soft: #1a212c;
+
+  --text: #e9eef3;
+  --text-muted: #8b97a5;
+  --text-faint: #808d9d;
+
+  --accent-astar: #34e3a8;
+  --accent-astar-dim: #1d7d5c;
+  --accent-dijkstra: #f2a154;
+  --accent-dijkstra-dim: #8a5c2e;
+
+  --point-origin: #ffffff;
+  --point-dest: #b18cf2;
+
+  --danger: #ef5b5b;
+  --danger-dim: #4a2626;
+  --ok: #34e3a8;
+  --accent-live: #3aa0ff;
+
+  --font-display: "Space Grotesk", "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --font-body: "Inter", system-ui, "Segoe UI", sans-serif;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+  --shadow-panel: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.28), 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  /* Escala tipografica formal (front2.md 3.2) */
+  --text-display-xl: 700 56px/1.05 var(--font-display);
+  --text-display-l: 600 36px/1.1 var(--font-display);
+  --text-display-m: 600 22px/1.25 var(--font-display);
+  --text-body-l: 400 17px/1.5 var(--font-body);
+  --text-body: 400 14px/1.5 var(--font-body);
+  --text-mono-data: 500 14px/1.4 var(--font-mono);
+  --text-eyebrow: 500 11px/1.4 var(--font-mono);
+
+  /* Escala de espaciado, grid de 4px (front2.md 3.2) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+}

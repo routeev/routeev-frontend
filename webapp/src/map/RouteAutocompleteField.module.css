@@ -1,0 +1,137 @@
+.slot {
+  display: grid;
+  grid-template-columns: 12px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+}
+
+.autocomplete {
+  position: relative;
+  min-width: 0;
+}
+
+.slot input {
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 12px 0;
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
+
+.slot input:hover {
+  border-color: transparent;
+}
+
+.slot input:focus-visible {
+  outline-offset: -2px;
+}
+
+.marker {
+  width: 10px;
+  height: 10px;
+  justify-self: center;
+  flex-shrink: 0;
+}
+
+.markerOrigin {
+  border-radius: 50%;
+  background: var(--point-origin);
+}
+
+.markerDest {
+  border-radius: 2px;
+  background: var(--point-dest);
+}
+
+.pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border-color: transparent;
+  background: none;
+  color: var(--text-faint);
+}
+
+.pin:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.pin:global(.active) {
+  background: var(--bg-panel-raised);
+  border-color: var(--accent-astar);
+  color: var(--accent-astar);
+}
+
+.list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -34px;
+  right: -12px;
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.item {
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.item:hover,
+.itemActive {
+  background: var(--bg);
+}
+
+.itemGeocode {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 10px;
+  color: var(--accent-astar);
+  font-weight: 500;
+}
+
+.itemEmpty {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.result {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.resultWarn {
+  color: var(--accent-dijkstra);
+  border-color: var(--accent-dijkstra-dim);
+}
+
+.resultError {
+  color: var(--danger);
+  border-color: var(--danger);
+}

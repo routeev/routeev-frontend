@@ -1,0 +1,57 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.list li {
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-weight: 400;
+}
+
+.header:hover {
+  color: var(--accent-astar);
+  border-color: transparent;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.name svg {
+  color: var(--accent-dijkstra);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: currentColor;
+  stroke: none;
+}
+
+.power {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  white-space: nowrap;
+}

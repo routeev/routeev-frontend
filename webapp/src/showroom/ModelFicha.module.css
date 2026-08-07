@@ -1,0 +1,240 @@
+.ficha {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: 32px;
+  margin: 8px 0 64px;
+  padding: 24px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-panel);
+  scroll-margin-top: 80px;
+}
+
+.cargando {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  margin: 0;
+  padding: 32px 0;
+  text-align: center;
+}
+
+.cerrar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: var(--bg-panel-raised);
+}
+
+.foto {
+  position: relative;
+  align-self: start;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.silueta {
+  width: 60%;
+  height: auto;
+  opacity: 0.5;
+}
+
+.fotoImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.credito {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  background: linear-gradient(to top, rgba(10, 14, 19, 0.92), rgba(10, 14, 19, 0));
+}
+
+.credito a {
+  color: var(--text-muted);
+}
+
+.credito a:hover {
+  color: var(--accent-astar);
+}
+
+.marca {
+  margin: 0;
+}
+
+.modelo {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 6px 0 10px;
+}
+
+.nota {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+  max-width: 62ch;
+}
+
+.notaIa {
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent-dijkstra);
+  background: rgba(242, 161, 84, 0.07);
+  color: var(--accent-dijkstra);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 0 0 26px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.stat {
+  background: var(--bg-panel);
+  padding: 14px 14px 12px;
+}
+
+.stat dt {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.stat dd {
+  margin: 6px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-astar);
+  line-height: 1.1;
+}
+
+.stat dd small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.statCosto dd {
+  color: var(--accent-dijkstra);
+}
+
+.statSub {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.bloque {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.bloque h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bloque h3 small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-astar);
+}
+
+.bloqueSub {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+  max-width: 68ch;
+}
+
+.carga {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.carga th {
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-faint);
+  padding: 0 10px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.carga td {
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.carga td small {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.carga tr td:last-child {
+  color: var(--accent-astar);
+  font-weight: 600;
+}
+
+.limitado {
+  color: var(--accent-dijkstra);
+}
+
+.notaCarga {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--accent-dijkstra);
+}
+
+@media (max-width: 900px) {
+  .ficha {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

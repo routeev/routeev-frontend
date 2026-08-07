@@ -1,0 +1,12 @@
+.routeInput {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+.connector {
+  height: 14px;
+  margin-left: 5px;
+  border-left: 1px dashed var(--text-faint);
+}

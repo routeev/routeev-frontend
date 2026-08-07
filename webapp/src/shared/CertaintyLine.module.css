@@ -1,0 +1,32 @@
+.root {
+  display: block;
+}
+
+.label {
+  font: var(--text-eyebrow);
+  fill: var(--text-faint);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Modo hero (front2.md 3.4): se "dibuja" una vez al cargar. pathLength={1}
+   en el <path> normaliza el largo real a 1, asi el dasharray no depende de
+   la geometria de cada viaje. */
+.animated path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 700ms ease-out forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

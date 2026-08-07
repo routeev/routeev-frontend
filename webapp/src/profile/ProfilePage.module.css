@@ -1,0 +1,327 @@
+/* Portado de css/profile.css (+ el shell de .app-page en css/app.css). */
+
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.main :global(.panel) {
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.main :global(.panel) h2 {
+  font-family: var(--font-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panelHeader h2 {
+  margin: 0;
+}
+
+/* --- Tablas de datos --- */
+
+.tableScroll {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-mono);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: var(--bg);
+}
+
+.cellRoute {
+  font-family: var(--font-body) !important;
+  color: var(--text-muted) !important;
+  white-space: normal !important;
+  min-width: 220px;
+}
+
+.cellDanger {
+  color: var(--danger) !important;
+}
+
+.cellRecharge {
+  color: var(--accent-dijkstra) !important;
+}
+
+.cellTotal {
+  color: var(--accent-astar) !important;
+  font-weight: 600;
+}
+
+.cellVehicle {
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+
+/* Sparkline del perfil de batería (front2.md 3.4, escala "micro"). */
+.cellProfile {
+  padding-right: 0 !important;
+}
+
+/* --- Mi cuenta --- */
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.avatarWrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+}
+
+.avatar,
+.avatarFallback {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.avatar {
+  object-fit: cover;
+}
+
+.avatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.avatarWrap .photoEdit {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.accountUsername {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* --- Vehículos --- */
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.vehicleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.vehicleCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.artWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.art {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+}
+
+.vehiclePhoto {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.photoEdit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  margin: 0;
+}
+
+.photoEdit:hover {
+  border-color: var(--accent-astar);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vehicleName {
+  margin: 0 0 8px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.vehicleSpecs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.vehicleSpecs dt {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.vehicleSpecs dd {
+  margin: 0;
+}
+
+/* --- Identificar vehículo por foto --- */
+
+.photoIdRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.photoIdBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.photoIdBtn:hover {
+  border-color: var(--accent-astar);
+  color: var(--accent-astar);
+}
+
+.photoIdPreview {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.modelPhotoPreview {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+.formDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.formDivider::before,
+.formDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}

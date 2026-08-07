@@ -1,0 +1,46 @@
+.main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.head {
+  padding: 56px 0 28px;
+}
+
+.head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 14px 0 16px;
+}
+
+.sub {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 62ch;
+  margin: 0 0 28px;
+}
+
+.sub strong {
+  color: var(--accent-astar);
+  font-weight: 700;
+}
+
+.results {
+  padding-bottom: 72px;
+}
+
+@media (max-width: 900px) {
+  .head {
+    padding-top: 36px;
+  }
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: 0 16px;
+  }
+}

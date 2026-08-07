@@ -1,0 +1,8 @@
+.photoPreview {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+  margin-top: 6px;
+}
