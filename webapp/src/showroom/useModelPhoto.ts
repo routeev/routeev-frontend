@@ -4,22 +4,33 @@ import { getPhoto, observePhoto } from "./photoQueue";
 
 /**
  * Resuelve la foto de un modelo: si ya vino precargada del catálogo
- * (`model.foto_url`, ver GET /api/showroom/models) se usa directo; si no,
- * se pide ansiosa (tarjetas de la primera pantalla, la ficha) o recién
- * cuando el elemento referenciado entra en viewport (el resto del grid).
+ * (`model.foto_url`, ver GET /api/showroom/models) se usa directo -- se
+ * deriva en cada render, no vía efecto+estado, porque es un dato que ya
+ * tenemos completo (no algo que sincronizar con un sistema externo). Sin
+ * eso, ModelFicha (que recibe el modelo de su propio useQuery, no como prop
+ * ya lista como ModelCard) mostraba "sin foto" para siempre: en el primer
+ * render `precached` todavía es undefined, y un estado inicializado una
+ * sola vez en el montaje no se vuelve a sincronizar solo cuando el fetch
+ * termina.
+ *
+ * Si no hay precache, se pide ansiosa (tarjetas de la primera pantalla, la
+ * ficha) o recién cuando el elemento referenciado entra en viewport (el
+ * resto del grid).
  */
-export function useModelPhoto(nombre: string, eager: boolean, precached?: { url: string; credito?: PhotoCredit }) {
+export function useModelPhoto(
+  nombre: string,
+  eager: boolean,
+  precached?: { url: string; credito?: PhotoCredit }
+) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [photo, setPhoto] = useState<PhotoLookup | null>(
-    precached ? { encontrada: true, url: precached.url, credito: precached.credito } : null
-  );
+  const [fetchedPhoto, setFetchedPhoto] = useState<PhotoLookup | null>(null);
 
   useEffect(() => {
     if (precached || !nombre) return;
     if (eager) {
       let cancelled = false;
       getPhoto(nombre).then((meta) => {
-        if (!cancelled) setPhoto(meta);
+        if (!cancelled) setFetchedPhoto(meta);
       });
       return () => {
         cancelled = true;
@@ -27,11 +38,15 @@ export function useModelPhoto(nombre: string, eager: boolean, precached?: { url:
     }
     const el = ref.current;
     if (!el) return;
-    return observePhoto(el, nombre, setPhoto);
+    return observePhoto(el, nombre, setFetchedPhoto);
     // precached es estable por identidad de objeto solo si el llamador lo memoiza;
-    // acá alcanza con su url, que es lo único que decide la rama "ya resuelta".
+    // acá alcanza con su url, que es lo único que decide si hace falta pedirla.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nombre, eager, precached?.url]);
+
+  const photo: PhotoLookup | null = precached
+    ? { encontrada: true, url: precached.url, credito: precached.credito }
+    : fetchedPhoto;
 
   return { ref, photo };
 }
