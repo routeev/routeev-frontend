@@ -139,6 +139,18 @@ const api = {
   authConfig: () => apiFetch("/api/auth/config"),
   googleLogin: (idToken) => apiFetch("/api/auth/google", { method: "POST", body: JSON.stringify({ id_token: idToken }) }),
 
+  // Perfil del usuario logueado (nombre, correo, foto -- ver
+  // backend/app/routes/user_routes.py). La foto de perfil vive en
+  // Cloudinary y es publica (a diferencia de la foto de un vehiculo
+  // puntual): se puede poner directo en un <img src>, sin fetch() ni blob.
+  getMe: () => apiFetch("/api/users/me"),
+  uploadMyPhoto: (blob) => {
+    const form = new FormData();
+    form.append("file", blob, "perfil.jpg");
+    return apiFetch("/api/users/me/photo", { method: "POST", body: form });
+  },
+  deleteMyPhoto: () => apiFetch("/api/users/me/photo", { method: "DELETE" }),
+
   getGraph: () => apiFetch("/api/graph"),
   getStations: () => apiFetch("/api/graph/stations"),
   // 3000 es el tope que acepta el backend (ver GRAPH_QUERY en graph_routes.py):

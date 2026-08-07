@@ -139,6 +139,64 @@ body.app-page {
   background: var(--border);
 }
 
+/* --- Mi cuenta (foto de perfil) --------------------------------------------
+   Avatar circular + nombre/correo. El circulo de iniciales (account-avatar-
+   fallback) se ve mientras no hay foto subida; account-avatar lo reemplaza
+   cuando existe (misma logica que la silueta de un vehiculo sin foto propia,
+   ver .vehicle-photo mas abajo). */
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+}
+
+.account-avatar,
+.account-avatar-fallback {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.account-avatar {
+  object-fit: cover;
+}
+
+.account-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  background: var(--panel-2, rgba(255, 255, 255, 0.05));
+}
+
+.avatar-wrap .vehicle-photo-edit {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-username {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 /* --- Mis vehiculos ---------------------------------------------------------
    Tarjetas en grilla: cada vehiculo con su silueta (coloreada a partir del
    nombre, ver carSvg en profile.js), sus especificaciones y el boton de

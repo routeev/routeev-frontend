@@ -16,6 +16,69 @@
     window.location.href = "/";
   });
 
+  // --- Mi cuenta: foto de perfil -----------------------------------------------
+  //
+  // A diferencia de la foto de un vehiculo (blob privado, se pide con fetch()
+  // + Authorization), la de perfil vive en Cloudinary y es publica: se puede
+  // poner directo en el <img src>, sin pasar por api.vehiclePhotoUrl.
+
+  const accountAvatarImg = document.getElementById("account-avatar");
+  const accountAvatarFallback = document.getElementById("account-avatar-fallback");
+  const accountPhotoInput = document.getElementById("account-photo-input");
+  const accountRemovePhotoBtn = document.getElementById("account-remove-photo");
+  const accountPhotoError = document.getElementById("account-photo-error");
+
+  function renderAccount(user) {
+    document.getElementById("account-username").textContent = user.username;
+    document.getElementById("account-email").textContent = user.email;
+    document.getElementById("user-chip").textContent = user.username;
+
+    if (user.photo_url) {
+      accountAvatarImg.src = user.photo_url;
+      accountAvatarImg.classList.remove("hidden");
+      accountAvatarFallback.classList.add("hidden");
+      accountRemovePhotoBtn.classList.remove("hidden");
+    } else {
+      accountAvatarImg.classList.add("hidden");
+      accountAvatarFallback.textContent = (user.username || "?").charAt(0).toUpperCase();
+      accountAvatarFallback.classList.remove("hidden");
+      accountRemovePhotoBtn.classList.add("hidden");
+    }
+  }
+
+  async function loadAccount() {
+    const user = await api.getMe();
+    renderAccount(user);
+  }
+
+  accountPhotoInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = ""; // permite elegir el mismo archivo dos veces seguidas
+    if (!file) return;
+    accountPhotoError.classList.add("hidden");
+    try {
+      const resized = await resizePhotoForUpload(file);
+      const user = await api.uploadMyPhoto(resized);
+      renderAccount(user);
+    } catch (err) {
+      accountPhotoError.textContent = err.message || "No se pudo subir la foto.";
+      accountPhotoError.classList.remove("hidden");
+    }
+  });
+
+  accountRemovePhotoBtn.addEventListener("click", async () => {
+    if (!confirm("¿Quitar tu foto de perfil?")) return;
+    accountPhotoError.classList.add("hidden");
+    try {
+      await api.deleteMyPhoto();
+      const user = await api.getMe();
+      renderAccount(user);
+    } catch (err) {
+      accountPhotoError.textContent = err.message || "No se pudo quitar la foto.";
+      accountPhotoError.classList.remove("hidden");
+    }
+  });
+
   const MONTH_NAMES = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -244,6 +307,7 @@
         opt.value = etiqueta;
         datalist.appendChild(opt);
       }
+      const modelPhoto = document.getElementById("p-model-photo");
       document.getElementById("p-model-search").addEventListener("input", (e) => {
         const elegido = porEtiqueta.get(e.target.value);
         if (!elegido) return; // todavia escribiendo, o no coincide con ningun modelo
@@ -251,6 +315,16 @@
         document.getElementById("p-capacity").value = elegido.bateria_kwh;
         document.getElementById("p-consumption").value = elegido.consumo_kwh_km;
         document.getElementById("p-charging-power").value = elegido.potencia_carga_kw;
+        // Foto de stock del modelo (precargada en Cloudinary, ver
+        // scripts/warm_vehicle_photos.py) -- solo informativa, no es la foto
+        // que va a quedar en el vehiculo: esa la sube el dueño por separado
+        // (ver vehicle-photo-input mas abajo) o via "Identificar con foto".
+        if (elegido.foto_url) {
+          modelPhoto.src = elegido.foto_url;
+          modelPhoto.classList.remove("hidden");
+        } else {
+          modelPhoto.classList.add("hidden");
+        }
       });
     } catch (e) {
       /* sin catalogo se puede cargar igual a mano */
@@ -383,6 +457,7 @@
   }
 
   Promise.allSettled([
+    loadAccount(),
     loadVehicles(),
     loadModelCatalog(),
     loadMonthlyStats(),

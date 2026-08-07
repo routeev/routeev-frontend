@@ -869,6 +869,20 @@ button.small {
   color: var(--text);
 }
 
+/* Foto de stock del modelo elegido en el buscador de catalogo (Cloudinary,
+   ver scripts/warm_vehicle_photos.py) -- compartida por app.html (nuevo
+   vehiculo) y profile.html (alta desde el perfil), por eso vive aca y no en
+   profile.css. Solo informativa: se ve al lado del campo de busqueda cuando
+   el modelo elegido tiene una foto libre resuelta. */
+.model-photo-preview {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+  margin-top: 6px;
+}
+
 /* Debajo de este ancho el panel flotante ya no cabe al lado del mapa sin
    comerselo entero, asi que pasa a ser una hoja anclada abajo -- el mapa
    arriba, los controles al alcance del pulgar. */

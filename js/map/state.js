@@ -38,6 +38,7 @@ export const els = {
   newVehicleForm: document.getElementById("new-vehicle-form"),
   modelSearch: document.getElementById("v-model-search"),
   modelDatalist: document.getElementById("v-model-datalist"),
+  modelPhoto: document.getElementById("v-model-photo"),
   aiLookupField: document.getElementById("ai-lookup-field"),
   aiQuery: document.getElementById("v-ai-query"),
   aiSearchBtn: document.getElementById("v-ai-search-btn"),

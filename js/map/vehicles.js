@@ -114,6 +114,15 @@ els.modelSearch.addEventListener("input", () => {
   const model = evModelsByLabel.get(els.modelSearch.value.trim());
   if (!model) return; // todavia escribiendo, o no matchea ningun modelo: no toca los campos
   prefillVehicleForm(`${model.marca} ${model.modelo}`, model.bateria_kwh, model.consumo_kwh_km, model.potencia_carga_kw);
+  // Foto de stock del modelo (Cloudinary, ver scripts/warm_vehicle_photos.py):
+  // solo informativa. La foto del vehiculo en si se sube aparte, ya creado
+  // (ver profile.js), o se identifica con una foto propia.
+  if (model.foto_url) {
+    els.modelPhoto.src = model.foto_url;
+    els.modelPhoto.classList.remove("hidden");
+  } else {
+    els.modelPhoto.classList.add("hidden");
+  }
 });
 
 // Buscar "cualquier auto" por nombre via IA (solo visible si el servidor

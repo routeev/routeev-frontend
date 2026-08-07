@@ -33,6 +33,28 @@
   <main class="profile-main">
     <section class="panel">
       <div class="panel-header">
+        <h2>Mi cuenta</h2>
+      </div>
+      <div class="account-row">
+        <div class="avatar-wrap">
+          <img id="account-avatar" class="account-avatar hidden" alt="" />
+          <div id="account-avatar-fallback" class="account-avatar-fallback"></div>
+          <label class="vehicle-photo-edit" title="Cambiar foto de perfil">
+            <input type="file" accept="image/*" id="account-photo-input" hidden />
+            <span aria-hidden="true">&#9998;</span>
+          </label>
+        </div>
+        <div class="account-info">
+          <div class="account-username" id="account-username">-</div>
+          <div class="account-email hint" id="account-email"></div>
+          <button type="button" class="ghost small hidden" id="account-remove-photo">Quitar foto</button>
+        </div>
+      </div>
+      <div id="account-photo-error" class="error-banner hidden"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
         <h2>Mis vehiculos</h2>
         <button type="button" class="primary small" id="toggle-add-vehicle">+ Agregar vehiculo</button>
       </div>
@@ -58,6 +80,7 @@
             placeholder="Escribi para buscar (ej. Nissan Leaf, Tesla Model 3)..."
           />
           <datalist id="p-model-datalist"></datalist>
+          <img id="p-model-photo" class="model-photo-preview hidden" alt="" />
         </div>
         <div class="field">
           <label for="p-name">Nombre</label>
