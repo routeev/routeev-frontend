@@ -266,11 +266,19 @@
 
     const art = card.querySelector(".sr-card-art");
     art.dataset.nombre = nombre;
-    // Las de la primera pantalla se piden ya (estan a la vista y no tiene
-    // sentido esperar a un evento de scroll que puede no llegar nunca); las
-    // de mas abajo, cuando el scroll las acerque. Si esa foto ya se resolvio
-    // antes, se reusa esa promesa y no se vuelve a pedir nada.
-    if (fotoYa || fotos.has(nombre)) {
+    if (model.foto_url) {
+      // Ya esta precargada en Cloudinary (ver scripts/warm_vehicle_photos.py
+      // y GET /api/showroom/models): se muestra directo, sin pedirsela al
+      // vuelo a /api/showroom/imagen ni pasar por el observer de scroll.
+      mostrarFoto(art, { encontrada: true, url: model.foto_url });
+    } else if (fotoYa || fotos.has(nombre)) {
+      // Las de la primera pantalla se piden ya (estan a la vista y no tiene
+      // sentido esperar a un evento de scroll que puede no llegar nunca); las
+      // de mas abajo, cuando el scroll las acerque. Si esa foto ya se
+      // resolvio antes, se reusa esa promesa y no se vuelve a pedir nada.
+      // Este camino es el respaldo para lo que no se pudo precargar (autos
+      // identificados por IA, que no existen hasta que alguien los busca, o
+      // modelos que se agregaron al catalogo despues de la ultima precarga).
       foto(nombre).then((meta) => mostrarFoto(art, meta));
     } else {
       observer.observe(art);
