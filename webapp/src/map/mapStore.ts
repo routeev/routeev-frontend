@@ -66,7 +66,11 @@ interface MapState {
   setDestination: (node: GraphNode) => void;
   setPickMode: (mode: PickMode) => void;
 
-  setLastResult: (result: CompareRoutesResult | null, payload: CompareRoutesPayload | null, replaySuffix?: string) => void;
+  setLastResult: (
+    result: CompareRoutesResult | null,
+    payload: CompareRoutesPayload | null,
+    replaySuffix?: string
+  ) => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -110,7 +114,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   setStations: (stations) => {
     set((s) => {
       for (const st of stations) {
-        s.nodesById.set(st.node_id, { id: st.node_id, name: st.nombre, lat: st.lat, lon: st.lon, is_charging_station: true });
+        s.nodesById.set(st.node_id, {
+          id: st.node_id,
+          name: st.nombre,
+          lat: st.lat,
+          lon: st.lon,
+          is_charging_station: true,
+        });
       }
       return { stations, nodesById: s.nodesById };
     });
@@ -129,7 +139,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       const vehicles = s.vehicles.filter((v) => v.id !== id);
       return {
         vehicles,
-        selectedVehicleId: s.selectedVehicleId === id ? (vehicles[0]?.id ?? null) : s.selectedVehicleId,
+        selectedVehicleId:
+          s.selectedVehicleId === id ? (vehicles[0]?.id ?? null) : s.selectedVehicleId,
       };
     }),
   setEvModels: (evModels) => set({ evModels }),
@@ -148,7 +159,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     }),
   setPickMode: (mode) => set({ pickMode: mode }),
 
-  setLastResult: (result, payload, replaySuffix) => set({ lastResult: result, lastRoutePayload: payload, replaySuffix }),
+  setLastResult: (result, payload, replaySuffix) =>
+    set({ lastResult: result, lastRoutePayload: payload, replaySuffix }),
 }));
 
 export function selectedVehicle(state: MapState): Vehicle | null {
@@ -163,14 +175,30 @@ export function vehicleAutonomyKm(vehicle: Vehicle): number {
   return vehicle.battery_capacity_kwh / vehicle.consumption_kwh_per_km;
 }
 
-/** Falta para poder calcular una ruta, en el mismo orden que calculateGate.js. */
-export function calculateGateMissing(s: MapState): string[] {
+/**
+ * Falta para poder calcular una ruta, en el mismo orden que calculateGate.js.
+ *
+ * Toma primitivos sueltos, no el MapState entero, a propósito: arma un array
+ * nuevo en cada llamada (por diseño, es una lista de strings derivada), así
+ * que usarla directo como selector de Zustand (`useMapStore(calculateGateMissing)`)
+ * le devuelve a React una referencia distinta en cada chequeo aunque nada
+ * haya cambiado -- exactamente el patrón que dispara un loop de renders
+ * infinito ("Maximum update depth exceeded"). El llamador selecciona los
+ * primitivos individualmente y memoiza el resultado (ver MapPage.tsx).
+ */
+export function calculateGateMissing(params: {
+  vehiclesLoaded: boolean;
+  hasSelectedVehicle: boolean;
+  originId: number | null;
+  destinationId: number | null;
+}): string[] {
+  const { vehiclesLoaded, hasSelectedVehicle, originId, destinationId } = params;
   const missing: string[] = [];
-  if (!s.vehiclesLoaded) missing.push("cargando vehículos...");
-  else if (!s.selectedVehicleId) missing.push("elegí o creá un vehículo");
-  if (!s.originId) missing.push("fijá un origen");
-  if (!s.destinationId) missing.push("fijá un destino");
-  if (s.originId && s.destinationId && s.originId === s.destinationId) {
+  if (!vehiclesLoaded) missing.push("cargando vehículos...");
+  else if (!hasSelectedVehicle) missing.push("elegí o creá un vehículo");
+  if (!originId) missing.push("fijá un origen");
+  if (!destinationId) missing.push("fijá un destino");
+  if (originId && destinationId && originId === destinationId) {
     missing.push("origen y destino no pueden ser el mismo punto");
   }
   return missing;

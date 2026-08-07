@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
@@ -22,7 +22,19 @@ export function MapPage() {
   const liveTrip = useLiveTrip();
   const calc = useCalculateRoute();
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
-  const missing = useMapStore(calculateGateMissing);
+  const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
+  const originId = useMapStore((s) => s.originId);
+  const destinationId = useMapStore((s) => s.destinationId);
+  const missing = useMemo(
+    () =>
+      calculateGateMissing({
+        vehiclesLoaded,
+        hasSelectedVehicle: !!selectedVehicleId,
+        originId,
+        destinationId,
+      }),
+    [vehiclesLoaded, selectedVehicleId, originId, destinationId]
+  );
   useReplayFromHistory(vehiclesLoaded);
 
   // Un error de "Calcular ruta" pisa uno viejo de click-en-el-mapa: es el
