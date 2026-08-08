@@ -1,8 +1,6 @@
 # RouteEV Web — rebuild (Vite + React + TypeScript)
 
-Rebuild incremental del frontend estático de `routeev-web` (ver `../front2.md` para el plan completo: inventario del sitio actual, stack elegido y por qué, sistema de diseño, y la estrategia de migración página por página).
-
-Mientras dura la migración, este proyecto convive con el sitio estático original apuntando a la misma API — no se toca nada fuera de esta carpeta.
+Rebuild del frontend estático original de `routeev-web` (HTML/CSS/JS vanilla) a Vite + React + TypeScript. El sitio estático viejo ya se dio de baja de producción y se retiró del repo — esta carpeta es la app.
 
 ## Correr localmente
 
@@ -27,11 +25,11 @@ No hace falta `.env`: por defecto, en dev, el propio servidor de Vite proxea `/a
 
 ## Estado
 
-**Pasos 1–7 completos** (`front2.md`, Parte 2): las 7 pantallas del sitio están migradas. Queda el paso 8 (cutover en producción).
+Migración completa: las 7 pantallas del sitio están portadas y el cutover en producción ya se hizo (el sitio estático viejo se dio de baja y se retiró del repo).
 
-- Tokens de diseño portados 1:1 desde `css/style.css` (`src/styles/tokens.css`), más la escala tipográfica/espaciado formalizada en la Parte 3.2.
-- Cliente de API tipado (`src/api/`), misma sesión en `localStorage` que el sitio viejo (mismas claves — necesario para que ambos convivan durante el cutover).
-- Router con las 7 rutas del sitio y los guards de sesión (`ProtectedRoute` / `GuestOnlyRoute`), reemplazando la tabla `ROUTES` de `scripts/dev-server.js`. `vercel.json` resuelve el SPA fallback nativamente (el motivo original de esta migración: rutas limpias que 404 en producción).
+- Tokens de diseño portados 1:1 desde el `style.css` del sitio viejo (`src/styles/tokens.css`), más una escala tipográfica/espaciado formalizada.
+- Cliente de API tipado (`src/api/`), mismas claves de `localStorage` que usaba el sitio viejo.
+- Router con las 7 rutas del sitio y los guards de sesión (`ProtectedRoute` / `GuestOnlyRoute`), con code-splitting por ruta (`React.lazy` + `Suspense`, `src/lazyPages.tsx`). `vercel.json` resuelve el SPA fallback nativamente (el motivo original de esta migración: rutas limpias que 404 en producción).
 - `CertaintyLine` (`src/shared/`): el elemento de firma del sistema de diseño (Parte 3.4), en sus tres escalas: `hero` en landing (datos de ejemplo), `macro` en el resultado del simulador del showroom (datos reales de la simulación).
 - **`/`, `/privacidad`, `/terminos`**: contenido y copy completos, SEO por ruta con `react-helmet-async` (sumado durante la implementación, ver Parte 2), reveal-on-scroll formalizado (`Reveal`, `useInViewOnce`).
 - **`/login`**: toggle login/registro, confirmación por código de 6 dígitos, Google Sign-In vía `@react-oauth/google` (reemplaza el polling manual de `waitForGoogleIdentityServices()`), formularios con React Hook Form.
@@ -41,6 +39,4 @@ No hace falta `.env`: por defecto, en dev, el propio servidor de Vite proxea `/a
 
 ### Pendiente
 
-- **Paso 8 — cutover**: el sitio estático original sigue siendo el que está publicado. Los 27 endpoints y sus contratos no cambiaron, así que ambos pueden convivir contra la misma API mientras se corta pantalla por pantalla.
-- **CORS en producción**: en dev el proxy de Vite lo evita, pero para publicar esta app hay que agregar su origen a `CORS_ALLOW_ORIGINS` en el backend (`routeev-api`, otro repo).
-- **Tamaño del bundle**: ~650 kB (~200 kB gzip) en un solo chunk; el build avisa. Se resuelve con code-splitting por ruta (`React.lazy` + `Suspense`), que además sacaría Leaflet del bundle inicial de la landing.
+- **CORS en producción**: en dev el proxy de Vite lo evita, pero hay que confirmar que el origen de producción de esta app esté en `CORS_ALLOW_ORIGINS` del backend (`routeev-api`, otro repo).

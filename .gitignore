@@ -7,6 +7,7 @@ Thumbs.db
 
 # Material interno (docs de producto/negocio, no parte del codigo)
 docs/
+front2.md
 
 # Artefactos temporales de editores y herramientas
 .cache/

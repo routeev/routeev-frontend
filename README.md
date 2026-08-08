@@ -7,10 +7,7 @@ TypeScript, en `webapp/`. La API (FastAPI) vive en otro repo, `routeev-api`.
 ## Estructura
 
 ```
-webapp/     # la app: código fuente, tests, config de build/deploy
-front2.md   # inventario del sitio estático original, stack elegido y
-            # sistema de diseño del rebuild (documento histórico del proceso
-            # de migración)
+webapp/   # la app: código fuente, tests, config de build/deploy
 ```
 
 El sitio estático original (HTML/CSS/JS vanilla, sin build) fue reemplazado
