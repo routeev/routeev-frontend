@@ -1,17 +1,27 @@
-.DS_Store
-Thumbs.db
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Secretos/configuracion local no versionada
+node_modules
+dist
+dist-ssr
+*.local
+
 .env
-.env.*
+!.env.example
 
-# Material interno (docs de producto/negocio, no parte del codigo)
-docs/
-front2.md
-mobile.md
-
-# Artefactos temporales de editores y herramientas
-.cache/
-dist/
-build/
-node_modules/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
