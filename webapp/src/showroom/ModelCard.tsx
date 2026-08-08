@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
@@ -11,7 +12,10 @@ interface ModelCardProps {
   onSelect: (id: string) => void;
 }
 
-export function ModelCard({ model, eager, onSelect }: ModelCardProps) {
+// memo: hasta ~24 de estas quedan montadas en ModelGrid a la vez; sin esto
+// cada una se reconciliaba en cada tecla del buscador aunque su `model` no
+// hubiera cambiado (solucion.md 2.11).
+function ModelCardComponent({ model, eager, onSelect }: ModelCardProps) {
   const nombre = `${model.marca} ${model.modelo}`;
   const { ref, photo } = useModelPhoto(
     nombre,
@@ -67,3 +71,5 @@ export function ModelCard({ model, eager, onSelect }: ModelCardProps) {
     </article>
   );
 }
+
+export const ModelCard = memo(ModelCardComponent);

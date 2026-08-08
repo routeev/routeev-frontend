@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showroomModels, type ShowroomModel } from "../api/showroom";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
@@ -86,34 +86,38 @@ export function useShowroomCatalog() {
     return lista.map((x) => x.model);
   }, [indexado, debouncedQuery, marca, orden, soloDc]);
 
-  const visible = filtrados.slice(0, visibles);
+  // Memoizado (no un simple .slice() suelto): sin esto, cada tecla en el
+  // buscador genera un array nuevo aunque el contenido no haya cambiado, y
+  // eso le gana de mano al React.memo de ModelGrid (solucion.md 2.11).
+  const visible = useMemo(() => filtrados.slice(0, visibles), [filtrados, visibles]);
   const hayMas = visibles < filtrados.length;
 
-  function verMas() {
-    setVisibles((v) => v + PAGINA);
-  }
+  // Referencias estables (useCallback): las consume ModelGrid, que ahora
+  // esta memoizado -- una funcion nueva en cada render volveria a invalidar
+  // ese memo aunque nada mas haya cambiado.
+  const verMas = useCallback(() => setVisibles((v) => v + PAGINA), []);
 
-  function addModel(model: ShowroomModel) {
+  const addModel = useCallback((model: ShowroomModel) => {
     setExtraModels((prev) => (prev.some((m) => m.id === model.id) ? prev : [...prev, model]));
-  }
+  }, []);
 
   // Cualquier cambio de filtro reinicia la paginación (mismo criterio que filtrar()).
-  function updateQuery(v: string) {
+  const updateQuery = useCallback((v: string) => {
     setQuery(v);
     setVisibles(PAGINA);
-  }
-  function updateMarca(v: string) {
+  }, []);
+  const updateMarca = useCallback((v: string) => {
     setMarca(v);
     setVisibles(PAGINA);
-  }
-  function updateOrden(v: Orden) {
+  }, []);
+  const updateOrden = useCallback((v: Orden) => {
     setOrden(v);
     setVisibles(PAGINA);
-  }
-  function updateSoloDc(v: boolean) {
+  }, []);
+  const updateSoloDc = useCallback((v: boolean) => {
     setSoloDc(v);
     setVisibles(PAGINA);
-  }
+  }, []);
 
   return {
     isLoading: catalogQuery.isLoading,

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { geocode } from "../api/graph";
 import type { GraphNode } from "../api/graph";
 import { normalizeForSearch } from "../shared/geo";
+import { useDebouncedValue } from "../shared/useDebouncedValue";
 import { useMapStore, type SearchableNode } from "./mapStore";
 import styles from "./RouteAutocompleteField.module.css";
 
@@ -40,13 +41,20 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
   const blurTimeout = useRef<number | null>(null);
 
   const value = editingText ?? node?.name ?? "";
+  // El input queda controlado por editingText (sin lag visual); el escaneo
+  // sobre searchableNodes (hasta 3000 items, solucion.md 2.2/2.11) espera a
+  // que la persona deje de tipear un instante, mismo patron que ya usa
+  // useShowroomCatalog con useDebouncedValue.
+  const debouncedEditingText = useDebouncedValue(editingText, 120);
   const items = useMemo<Item[]>(() => {
-    const q = (editingText ?? "").trim();
+    const q = (debouncedEditingText ?? "").trim();
     if (!q) return [];
-    const matches = localMatches(editingText ?? "", searchableNodes).map((n): Item => ({ type: "node", node: n }));
+    const matches = localMatches(debouncedEditingText ?? "", searchableNodes).map(
+      (n): Item => ({ type: "node", node: n })
+    );
     if (q.length >= 3) matches.push({ type: "geocode", label: q });
     return matches;
-  }, [editingText, searchableNodes]);
+  }, [debouncedEditingText, searchableNodes]);
 
   function chooseNode(n: GraphNode) {
     setNode(n);

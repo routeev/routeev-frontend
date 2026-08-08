@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { memo } from "react";
 import { showroomLookupAi, type ShowroomFicha, type ShowroomModel } from "../api/showroom";
 import { ModelCard } from "./ModelCard";
 import styles from "./ModelGrid.module.css";
@@ -20,7 +21,12 @@ interface ModelGridProps {
   onAiModelFound: (ficha: ShowroomFicha) => void;
 }
 
-export function ModelGrid({
+// memo: esta grilla puede tener hasta ~24 tarjetas montadas a la vez, y sin
+// esto React las reconciliaba en cada tecla del buscador aunque la lista
+// visible no hubiera cambiado (solucion.md 2.11) -- funciona porque las
+// props que le llegan (models, onLoadMore, onSelectModel, onAiModelFound)
+// ya son referencias estables desde useShowroomCatalog/ShowroomPage.
+function ModelGridComponent({
   isLoading,
   isError,
   errorMessage,
@@ -93,3 +99,5 @@ export function ModelGrid({
     </>
   );
 }
+
+export const ModelGrid = memo(ModelGridComponent);

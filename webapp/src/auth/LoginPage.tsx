@@ -7,8 +7,8 @@ import { ApiError } from "../api/client";
 import { setSession } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { Brand } from "../shared/Brand";
+import { GraphBackground } from "../shared/GraphBackground";
 import { GoogleSignIn } from "./GoogleSignIn";
-import { LoginBackground } from "./LoginBackground";
 import styles from "./LoginPage.module.css";
 
 type Mode = "login" | "register";
@@ -120,7 +120,7 @@ export function LoginPage() {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <LoginBackground />
+      <GraphBackground />
 
       <div className={styles.card}>
         <Link to="/" className={styles.backLink}>

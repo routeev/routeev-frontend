@@ -26,7 +26,14 @@
 
 /* --- Hero --- */
 
+.heroWrap {
+  position: relative;
+  overflow: hidden;
+}
+
 .hero {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(320px, 460px) 1fr;
   gap: 40px;
@@ -81,36 +88,18 @@
   color: var(--text-faint);
 }
 
-/* --- Stats --- */
+/* --- Stats ---
+   Cada stat es su propia SpotlightCard (radius + borde + fondo propios,
+   src/shared/SpotlightCard.module.css) en vez de celdas de grilla pegadas
+   con lineas de 1px -- con cards redondeadas ese truco de "gap:1px +
+   background:var(--border)" para las divisiones se ve roto en las esquinas. */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--border);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.stat {
-  background: var(--bg-panel);
-  padding: 28px 24px;
-  text-align: center;
-}
-
-.statValue {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 700;
-  color: var(--accent-astar);
-}
-
-.statLabel {
-  margin-top: 6px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  line-height: 1.4;
+  gap: 16px;
+  padding-top: 64px;
+  padding-bottom: 64px;
 }
 
 /* --- Problema / Solucion --- */

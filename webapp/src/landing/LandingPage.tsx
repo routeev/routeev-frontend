@@ -2,28 +2,24 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { getToken } from "../api/session";
 import buttons from "../shared/buttons.module.css";
-import { CertaintyLine, type CertaintyPoint } from "../shared/CertaintyLine";
+import { GradientWaves } from "../shared/GradientWaves";
 import { Reveal } from "../shared/Reveal";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
+import { UruguayGraph } from "../shared/UruguayGraph";
+import { StatCard } from "./StatCard";
 import styles from "./LandingPage.module.css";
 
-// Viaje de ejemplo Montevideo -> Rivera, la misma ruta que usa el og:image
-// actual (front2.md 3.4): el hero corre en modo "hero" con datos reales de
-// forma, aunque no venga todavia de POST /api/route/compare.
-const EXAMPLE_TRIP: CertaintyPoint[] = [
-  { km: 0, batteryPct: 92, label: "Montevideo" },
-  { km: 180, batteryPct: 38 },
-  { km: 180, batteryPct: 85, chargeStop: true, label: "Tacuarembó · carga" },
-  { km: 344, batteryPct: 41 },
-  { km: 497, batteryPct: 20, label: "Rivera" },
-];
-
 const STATS = [
-  { value: "63.800+", label: "Intersecciones reales de OpenStreetMap" },
-  { value: "19", label: "Departamentos cubiertos" },
-  { value: "209", label: "Estaciones de carga UTE en el mapa" },
-  { value: "880", label: "Modelos de auto eléctrico precargados" },
+  {
+    value: 63800,
+    places: [10000, 1000, ".", 100, 10, 1] as const,
+    suffix: "+",
+    label: "Intersecciones reales de OpenStreetMap",
+  },
+  { value: 19, label: "Departamentos cubiertos" },
+  { value: 209, label: "Estaciones de carga UTE en el mapa" },
+  { value: 880, label: "Modelos de auto eléctrico precargados" },
 ];
 
 const HOW_IT_WORKS = [
@@ -103,44 +99,60 @@ export function LandingPage() {
       </SiteHeader>
 
       <main>
-        <section className={[styles.section, styles.hero].join(" ")}>
-          <div>
-            <p className={styles.eyebrow}>Movilidad eléctrica</p>
-            <h1>
-              Tu viaje por Uruguay
-              <br />
-              no se detiene; tu batería tampoco.
-            </h1>
-            <p className={styles.heroSub}>
-              RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el mapa vial real del
-              país, revisando tu batería tramo a tramo y sumando las paradas de carga que hagan falta en el
-              camino.
-            </p>
-            <div className={styles.heroActions}>
-              <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-                Ver el catálogo y simular un viaje
-              </Link>
-              <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-                Crear cuenta gratis
-              </Link>
+        <section className={styles.heroWrap}>
+          <GradientWaves
+            horizonColor="#0a0e13"
+            waveColor="#1a212c"
+            crestColor="#34e3a8"
+            speed={0.3}
+            amplitude={2}
+            opacity={0.85}
+            brightness={0.9}
+            grainIntensity={0.035}
+          />
+          <div className={[styles.section, styles.hero].join(" ")}>
+            <div>
+              <p className={styles.eyebrow}>Movilidad eléctrica</p>
+              <h1>
+                Tu viaje por Uruguay
+                <br />
+                no se detiene; tu batería tampoco.
+              </h1>
+              <p className={styles.heroSub}>
+                RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el mapa vial real del
+                país, revisando tu batería tramo a tramo y sumando las paradas de carga que hagan falta en el
+                camino.
+              </p>
+              <div className={styles.heroActions}>
+                <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
+                  Ver el catálogo y simular un viaje
+                </Link>
+                <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
+                  Crear cuenta gratis
+                </Link>
+              </div>
+              <p className={styles.heroNote}>
+                El catálogo no pide cuenta: entrás, elegís un auto y calculás el viaje.
+              </p>
             </div>
-            <p className={styles.heroNote}>
-              El catálogo no pide cuenta: entrás, elegís un auto y calculás el viaje.
-            </p>
-          </div>
 
-          <div className={styles.heroVisual}>
-            <CertaintyLine points={EXAMPLE_TRIP} scale="hero" />
-            <p className={styles.heroVisualCaption}>Montevideo → Rivera · 497 km, 1 parada de carga</p>
+            <div className={styles.heroVisual}>
+              <UruguayGraph />
+              <p className={styles.heroVisualCaption}>Montevideo → Rivera · 497 km, 1 parada de carga</p>
+            </div>
           </div>
         </section>
 
         <Reveal id="datos-reales" className={[styles.section, styles.stats].join(" ")}>
-          {STATS.map((stat) => (
-            <div className={styles.stat} key={stat.label}>
-              <div className={styles.statValue}>{stat.value}</div>
-              <div className={styles.statLabel}>{stat.label}</div>
-            </div>
+          {STATS.map((stat, i) => (
+            <StatCard
+              key={stat.label}
+              index={i}
+              value={stat.value}
+              places={stat.places ? [...stat.places] : undefined}
+              suffix={stat.suffix}
+              label={stat.label}
+            />
           ))}
         </Reveal>
 

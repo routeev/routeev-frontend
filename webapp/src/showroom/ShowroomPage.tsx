@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { authConfig } from "../api/auth";
+import type { ShowroomFicha } from "../api/showroom";
 import buttons from "../shared/buttons.module.css";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
@@ -15,26 +16,44 @@ import { useShowroomCatalog } from "./useShowroomCatalog";
 
 export function ShowroomPage() {
   const catalog = useShowroomCatalog();
+  const { addModel } = catalog;
   const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
   const [searchParams, setSearchParams] = useSearchParams();
   const fichaId = searchParams.get("modelo");
   const fichaRef = useRef<HTMLDivElement | null>(null);
 
-  function selectModel(id: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("modelo", id);
-      return next;
-    });
-  }
+  // useCallback: referencia estable para que el React.memo de ModelGrid
+  // (solucion.md 2.11) no se invalide en cada render por esto.
+  const selectModel = useCallback(
+    (id: string) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("modelo", id);
+        return next;
+      });
+    },
+    [setSearchParams]
+  );
 
-  function closeFicha() {
+  const closeFicha = useCallback(() => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete("modelo");
       return next;
     });
-  }
+  }, [setSearchParams]);
+
+  // useCallback: misma razon que selectModel/closeFicha arriba. Se
+  // desestructura addModel (en vez de usar catalog.addModel) porque `catalog`
+  // es un objeto nuevo en cada render -- exhaustive-deps no puede saber que
+  // esa propiedad puntual ya es estable si el objeto entero no lo es.
+  const onAiModelFound = useCallback(
+    (ficha: ShowroomFicha) => {
+      addModel(ficha.model);
+      selectModel(ficha.model.id);
+    },
+    [addModel, selectModel]
+  );
 
   useEffect(() => {
     if (fichaId) fichaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -126,10 +145,7 @@ export function ShowroomPage() {
             query={catalog.query}
             hasActiveFilters={Boolean(catalog.marca || catalog.soloDc)}
             aiEnabled={Boolean(cfg?.ai_vehicle_lookup_enabled)}
-            onAiModelFound={(ficha) => {
-              catalog.addModel(ficha.model);
-              selectModel(ficha.model.id);
-            }}
+            onAiModelFound={onAiModelFound}
           />
         </section>
       </main>
