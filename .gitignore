@@ -5,6 +5,9 @@ Thumbs.db
 .env
 .env.*
 
+# Material interno (docs de producto/negocio, no parte del codigo)
+docs/
+
 # Artefactos temporales de editores y herramientas
 .cache/
 dist/

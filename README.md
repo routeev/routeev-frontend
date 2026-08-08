@@ -1,64 +1,41 @@
 # RouteEV Web
 
-Frontend estatico de RouteEV: HTML, CSS y JavaScript vanilla con Leaflet.
+Frontend de **RouteEV**, planificador de rutas para autos eléctricos en Uruguay
+que verifica batería tramo a tramo sobre el mapa vial real. Vite + React +
+TypeScript, en `webapp/`. La API (FastAPI) vive en otro repo, `routeev-api`.
 
-Este repo contiene la interfaz web. La API vive en `routeev-api`.
+## Estructura
+
+```
+webapp/     # la app: código fuente, tests, config de build/deploy
+front2.md   # inventario del sitio estático original, stack elegido y
+            # sistema de diseño del rebuild (documento histórico del proceso
+            # de migración)
+```
+
+El sitio estático original (HTML/CSS/JS vanilla, sin build) fue reemplazado
+por completo por el rebuild en `webapp/`.
 
 ## Correr localmente
 
-Copiar la configuracion local:
-
 ```bash
-copy .env.example .env
+cd webapp
+npm install
+npm run dev
 ```
 
-En `.env`, elegir que backend usar:
-
-```env
-ROUTEEV_API_BASE_URL=https://routeev-api-production.up.railway.app
-```
-
-Levantar el servidor local:
-
-```bash
-node scripts/dev-server.js
-```
-
-Abrir `http://127.0.0.1:5500`.
-
-## Paginas
-
-| Ruta | Archivo | Cuenta |
-|---|---|---|
-| `/` | `landing.html` | No |
-| `/showroom` | `showroom.html` | No |
-| `/login` | `login.html` | No |
-| `/app` | `app.html` | Si |
-| `/profile` | `profile.html` | Si |
-
-`/showroom` es la unica pantalla completa que funciona sin cuenta: buscador sobre los 880
-modelos, ficha con los datos calculados por la API, foto del modelo buscada por su nombre y
-simulacion de un viaje real ("¿llego a Salto con este auto?"). Consume `/api/showroom/*`.
-
-## Conectar con la API
-
-En **desarrollo**, `scripts/dev-server.js` lee `ROUTEEV_API_BASE_URL` de `.env` y
-sintetiza `/js/env.js` en cada pedido. Ese archivo no existe en el repo.
-
-En **produccion** no corre el dev-server, asi que `/js/env.js` da 404 y manda el
-fallback de `js/config.js`, que apunta a la API de produccion. Si la API cambia de
-URL hay que actualizar `ROUTEEV_API_PRODUCCION` en ese archivo.
-
-El backend debe permitir el origen del frontend con `CORS_ALLOW_ORIGINS`.
+`webapp/README.md` tiene el resto de los scripts (`build`, `lint`, `test`) y
+cómo conectar con un backend distinto al de producción.
 
 ## Deploy
 
-Este repo se publica como sitio estatico (Netlify, Vercel, GitHub Pages,
-Cloudflare Pages: cualquiera sirve la carpeta tal cual). No hace falta build.
+`webapp/` se publica en Vercel: Root Directory = `webapp`, build `npm run
+build`, output `dist`. `webapp/vercel.json` resuelve el SPA fallback (rutas
+limpias tipo `/showroom` sin depender de un servidor propio).
 
-Al publicarlo:
+Al publicar:
 
-1. Agregar el origen del frontend a `CORS_ALLOW_ORIGINS` del backend.
-2. Verificar que `ROUTEEV_API_PRODUCCION` en `js/config.js` apunte a la API viva.
-3. Actualizar los `og:url` y `og:image` de `landing.html` y `showroom.html` con
-   el dominio real, y subir `img/og-cover.png` (1200x630).
+1. Agregar el origen del frontend a `CORS_ALLOW_ORIGINS` del backend
+   (`routeev-api`).
+2. Confirmar que `VITE_API_BASE_URL` (o el proxy de `vite.config.ts` en dev)
+   apunte a la API viva.

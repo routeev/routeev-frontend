@@ -1,0 +1,11 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-muted);
+  font: var(--text-eyebrow);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
