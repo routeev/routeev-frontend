@@ -1,8 +1,20 @@
 {
   "name": "routeev-web",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "Rebuild del frontend estático original de `routeev-web` (HTML/CSS/JS vanilla) a Vite + React + TypeScript. El sitio estático viejo ya se dio de baja de producción y se retiró del repo — esta carpeta es la app.",
+  "homepage": "https://github.com/codewitheduardo/routeev-web#readme",
+  "bugs": {
+    "url": "https://github.com/codewitheduardo/routeev-web/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codewitheduardo/routeev-web.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "eslint.config.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
