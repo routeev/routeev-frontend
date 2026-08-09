@@ -86,14 +86,28 @@
   right: 14px;
   bottom: 14px;
   left: calc(372px + 42px);
-  max-height: min(52%, 460px);
+  /* `height`, not `max-height`: TripDashboard's own `height: 100%` (see
+     TripDashboard.module.css) needs a containing block with an explicit
+     height to resolve against, or the percentage is ignored, the inner
+     `overflow-y: auto` never kicks in, and the trip stats/live-trip row
+     silently overflow past .page's `overflow: hidden` with no scrollbar to
+     reach them (visible on shorter viewports, e.g. 100% browser zoom vs.
+     80%). */
+  height: min(52%, 460px);
   z-index: 500;
+  /* .dashboardWrap now always claims this box (see the `height` comment
+     above), even before a route is calculated, when TripDashboard renders
+     nothing. Without this, the empty wrapper would sit on top of the map
+     and swallow clicks meant for ClickToPick's Leaflet handler. The actual
+     panel re-enables pointer events on itself once it has content. */
+  pointer-events: none;
 }
 
 .dashboardWrap :global(section) {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-float);
+  pointer-events: auto;
 }
 
 @media (max-width: 860px) {
@@ -136,7 +150,7 @@
   .dashboardWrap {
     position: absolute;
     inset: auto 10px 10px 10px;
-    max-height: 62%;
+    height: 62%;
     left: 10px;
   }
 }

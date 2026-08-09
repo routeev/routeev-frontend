@@ -4,6 +4,7 @@ import { authConfig } from "../api/auth";
 import { createVehicle, lookupVehicleAi } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { readNumberInput } from "../shared/readNumberInput";
 import { useMapStore, vehicleAutonomyKm } from "./mapStore";
 import { useEvModels } from "./useMapLoaders";
 import styles from "./VehiclePanel.module.css";
@@ -163,7 +164,7 @@ export function VehiclePanel() {
           step={1}
           disabled={!vehicle}
           value={vehicle ? startBatteryPct : ""}
-          onChange={(e) => setStartBatteryPct(Number(e.target.value))}
+          onChange={(e) => setStartBatteryPct(readNumberInput(e))}
         />
         <div className="hint">{batteryHint}</div>
       </div>

@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { showroomDestinos, showroomSimulate, type ShowroomModel } from "../api/showroom";
 import { Banner } from "../shared/Banner";
+import { readNumberInput } from "../shared/readNumberInput";
 import { SimulationResult } from "./SimulationResult";
 import styles from "./SimulationForm.module.css";
 
@@ -93,7 +94,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
               max={100}
               step={5}
               value={bateria}
-              onChange={(e) => setBateria(Number(e.target.value))}
+              onChange={(e) => setBateria(readNumberInput(e))}
             />
           </div>
         </div>
