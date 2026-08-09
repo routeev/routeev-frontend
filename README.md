@@ -2,6 +2,8 @@
 
 Frontend de RouteEV — planificador de rutas para autos eléctricos en Uruguay. Vite + React + TypeScript.
 
+En producción: [routeev.uy](https://routeev.uy).
+
 ## Correr localmente
 
 ```bash
