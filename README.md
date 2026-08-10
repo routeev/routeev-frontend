@@ -50,3 +50,4 @@ No hace falta `.env` para desarrollo normal (ver `.env.example` solo si necesit�
 - Tokens de diseño en `src/styles/tokens.css`.
 - `CertaintyLine` (`src/shared/`) es el elemento visual de firma del sistema de diseño.
 - Cliente de API tipado en `src/api/`.
+- `RouteErrorBoundary` (`src/shared/`) atrapa errores de carga de los chunks lazy por ruta (`routes.tsx`) y ofrece recargar — cubre el caso de un deploy nuevo mientras alguien tiene la app vieja abierta.
