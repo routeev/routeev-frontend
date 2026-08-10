@@ -51,3 +51,4 @@ No hace falta `.env` para desarrollo normal (ver `.env.example` solo si necesit�
 - `CertaintyLine` (`src/shared/`) es el elemento visual de firma del sistema de diseño.
 - Cliente de API tipado en `src/api/`.
 - `RouteErrorBoundary` (`src/shared/`) atrapa errores de carga de los chunks lazy por ruta (`routes.tsx`) y ofrece recargar — cubre el caso de un deploy nuevo mientras alguien tiene la app vieja abierta.
+- Meta tags OG/Twitter estáticos en `index.html` (no via `react-helmet`): los crawlers de WhatsApp/Twitter/Instagram no ejecutan JS, así que necesitan las tags ya presentes en el HTML servido para armar la preview del link.
