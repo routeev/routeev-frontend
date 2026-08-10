@@ -1,0 +1,32 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 100vh;
+  padding: var(--space-6);
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.eyebrow {
+  font: var(--text-eyebrow);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.wrap h1 {
+  font: var(--text-display-m);
+  margin: 0;
+}
+
+.body {
+  font: var(--text-body);
+  color: var(--text-muted);
+  max-width: 360px;
+  margin: 0 0 var(--space-2);
+}
