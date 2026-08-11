@@ -121,12 +121,25 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
-.mobileMenu a:last-child {
+.mobileMenu a:last-of-type {
   border-bottom: none;
 }
 
 .mobileMenu a:hover {
   color: var(--accent-astar);
+}
+
+.mobileMenuActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mobileMenuActions > :global(a),
+.mobileMenuActions > :global(button) {
+  width: 100%;
+  text-align: center;
 }
 
 @media (max-width: 900px) {
@@ -138,5 +151,11 @@
   }
   .mobileMenu {
     display: flex;
+  }
+  /* Solo cuando hay hamburguesa (paginas con navLinks, hoy la landing): sin
+     esto, LegalLayout -- que no tiene navLinks ni hamburguesa, un unico link
+     "Showroom" como .cta -- tambien perderia su unico link en mobile. */
+  .inner:has(.menuToggle) .cta {
+    display: none;
   }
 }

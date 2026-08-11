@@ -65,6 +65,14 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               </Link>
             )
           )}
+          {/* .cta se esconde en la barra en mobile (ver .hasMenu .cta en el
+              CSS) -- se repite acá adentro para no perder "Iniciar sesión" /
+              "Crear cuenta" del todo, solo movidos de lugar. */}
+          {children && (
+            <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
+              {children}
+            </div>
+          )}
         </nav>
       )}
     </header>

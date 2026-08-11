@@ -63,7 +63,11 @@ button {
   border-radius: var(--radius-sm);
   padding: 11px 18px;
   font-weight: 600;
-  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, transform 0.08s ease;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.08s ease;
 }
 
 button:hover {
@@ -211,6 +215,17 @@ label {
 button.small {
   padding: 6px 10px;
   font-size: 12.5px;
+}
+
+/* En mobile el dedo apunta, no el mouse: button.small queda en ~28px de alto
+   con el padding de arriba, bien debajo de los ~44px que recomienda el
+   criterio de touch target. Se agranda el area de toque con padding real
+   (no un truco de margen negativo) sin tocar el tamano visual en desktop,
+   donde el diseño compacto es intencional. */
+@media (max-width: 640px) {
+  button.small {
+    padding: 11px 14px;
+  }
 }
 
 .inline-form {
