@@ -23,6 +23,20 @@ function CaptureMap() {
     // Intentionally depend only on `map` — the setter is read directly
     // from the store to avoid re-running if selector returns a new ref.
   }, [map]);
+
+  useEffect(() => {
+    // Leaflet mide su contenedor una sola vez al montar y no vuelve a
+    // hacerlo solo porque el layout de alrededor cambie de tamaño (p. ej.
+    // AppTopbar crece cuando se abre el menú móvil, o el bottom sheet del
+    // sidebar se expande/colapsa en mobile): sin este aviso explícito, el
+    // mapa queda con el tamaño viejo cacheado y los tiles se ven
+    // cortados/desplazados hasta el próximo resize real de la ventana.
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
   return null;
 }
 
