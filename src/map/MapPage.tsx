@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
 import { Banner } from "../shared/Banner";
 import buttons from "../shared/buttons.module.css";
+import { IconUser } from "../shared/NavIcons";
 import { MapCanvas } from "./MapCanvas";
 import { RouteInputPanel } from "./RouteInputPanel";
 import { StationsPanel } from "./StationsPanel";
@@ -52,6 +53,7 @@ export function MapPage() {
 
       <AppTopbar>
         <Link to="/profile" className={buttons.navLink}>
+          <IconUser />
           Mi perfil
         </Link>
       </AppTopbar>

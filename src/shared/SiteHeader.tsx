@@ -2,12 +2,22 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "./Brand";
+import { IconCar, IconChart, IconInfo } from "./NavIcons";
 import styles from "./SiteHeader.module.css";
 
 interface SiteHeaderProps {
   navLinks?: { href: string; label: string }[];
   children?: ReactNode;
 }
+
+// Ícono por link del menú móvil, por href -- hoy solo la landing pasa
+// navLinks (3 fijos), así que un mapa local alcanza sin sumar una prop de
+// ícono por link a la interfaz pública del componente.
+const NAV_ICONS: Record<string, ReactNode> = {
+  "/showroom": <IconCar />,
+  "#como-funciona": <IconInfo />,
+  "#datos-reales": <IconChart />,
+};
 
 /**
  * Nav sticky compartido por landing y las páginas legales (css/landing.css .l-nav).
@@ -56,18 +66,31 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
         <nav className={styles.mobileMenu}>
           {navLinks!.map((link) =>
             link.href.startsWith("#") ? (
-              <a key={link.href} href={link.href} onClick={() => setOpen(false)}>
+              <a
+                key={link.href}
+                href={link.href}
+                className={styles.mobileLink}
+                onClick={() => setOpen(false)}
+              >
+                {NAV_ICONS[link.href]}
                 {link.label}
               </a>
             ) : (
-              <Link key={link.href} to={link.href} onClick={() => setOpen(false)}>
+              <Link
+                key={link.href}
+                to={link.href}
+                className={styles.mobileLink}
+                onClick={() => setOpen(false)}
+              >
+                {NAV_ICONS[link.href]}
                 {link.label}
               </Link>
             )
           )}
           {/* .cta se esconde en la barra en mobile (ver .hasMenu .cta en el
               CSS) -- se repite acá adentro para no perder "Iniciar sesión" /
-              "Crear cuenta" del todo, solo movidos de lugar. */}
+              "Crear cuenta" del todo, solo movidos de lugar y separados con
+              más aire para que no se lean como un link más de la lista. */}
           {children && (
             <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
               {children}

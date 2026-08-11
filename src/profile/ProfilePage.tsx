@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { getMe } from "../api/user";
 import { AppTopbar } from "../shared/AppTopbar";
 import buttons from "../shared/buttons.module.css";
+import { IconMapPin } from "../shared/NavIcons";
 import { AccountPanel } from "./AccountPanel";
 import { HistoryPanel } from "./HistoryPanel";
 import { MonthlyStatsPanel, VehicleStatsPanel } from "./StatsPanels";
@@ -24,7 +25,8 @@ export function ProfilePage() {
 
       <AppTopbar subtitle="Mi perfil" username={meQuery.data?.username}>
         <Link to="/app" className={buttons.navLink}>
-          ← Volver al mapa
+          <IconMapPin />
+          Volver al mapa
         </Link>
       </AppTopbar>
 

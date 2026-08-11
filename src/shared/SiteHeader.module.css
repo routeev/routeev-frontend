@@ -112,8 +112,11 @@
   border-top: 1px solid var(--border-soft);
 }
 
-.mobileMenu a {
-  padding: 12px 4px;
+.mobileLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
   color: var(--text-muted);
   text-decoration: none;
   font-size: 15px;
@@ -121,19 +124,32 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
-.mobileMenu a:last-of-type {
+.mobileLink svg {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.mobileLink:last-of-type {
   border-bottom: none;
 }
 
-.mobileMenu a:hover {
+.mobileLink:hover {
   color: var(--accent-astar);
 }
 
+.mobileLink:hover svg {
+  color: var(--accent-astar);
+}
+
+/* Separada del bloque de links con su propio borde + aire, para que se lea
+   como "acá empieza lo de tu cuenta" y no como dos links más de la lista. */
 .mobileMenuActions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .mobileMenuActions > :global(a),

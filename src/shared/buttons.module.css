@@ -3,6 +3,7 @@
 .navLink {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -11,7 +12,9 @@
   font-size: 13.5px;
   color: var(--text);
   text-decoration: none;
-  transition: border-color 0.16s ease, color 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
 
 .navLink:hover {
@@ -29,7 +32,10 @@
   text-decoration: none;
   padding: 9px 16px;
   font-size: 13.5px;
-  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.1s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .primary {
