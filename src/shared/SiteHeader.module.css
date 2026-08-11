@@ -39,8 +39,104 @@
   gap: 10px;
 }
 
+.menuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.menuToggle:hover {
+  border-color: var(--accent-astar);
+}
+
+/* Icono de hamburguesa/cerrar en CSS puro (una sola barra + dos pseudo-elementos),
+   asi no hace falta un ícono SVG aparte solo para esto. */
+.menuIcon,
+.menuIconOpen {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
+.menuIcon::before,
+.menuIcon::after,
+.menuIconOpen::before,
+.menuIconOpen::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.16s ease;
+}
+
+.menuIcon::before {
+  top: -6px;
+}
+
+.menuIcon::after {
+  top: 6px;
+}
+
+.menuIconOpen {
+  background: transparent;
+}
+
+.menuIconOpen::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.menuIconOpen::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+.mobileMenu {
+  display: none;
+  flex-direction: column;
+  padding: 4px 28px 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.mobileMenu a {
+  padding: 12px 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mobileMenu a:last-child {
+  border-bottom: none;
+}
+
+.mobileMenu a:hover {
+  color: var(--accent-astar);
+}
+
 @media (max-width: 900px) {
   .links {
     display: none;
+  }
+  .menuToggle {
+    display: flex;
+  }
+  .mobileMenu {
+    display: flex;
   }
 }

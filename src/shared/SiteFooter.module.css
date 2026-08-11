@@ -14,10 +14,13 @@
 
 .links {
   display: flex;
-  gap: 18px;
+  gap: 12px;
 }
 
 .links a {
+  display: inline-block;
+  padding: 10px 6px;
+  margin: -10px -6px;
   color: var(--text-faint);
 }
 
