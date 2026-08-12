@@ -111,12 +111,18 @@ export interface SimulateResult {
   llega: boolean;
   tiempo_total_min: number;
   bateria_llegada_pct: number;
+  // false: ni agregando recargas se pudo respetar el margen de seguridad --
+  // el plan mostrado es el mejor SIN margen. Opcional por si el backend
+  // deployado todavía no manda el campo.
+  margen_alcanzado?: boolean;
   costo_uyu: number;
   detalle: RouteDetalle;
   paradas: Parada[];
 }
 
 export interface SimulateResponse {
+  // % de la capacidad que el plan mantiene como piso (default del backend: 10).
+  margen_bateria_pct?: number;
   resultados: SimulateResult[];
 }
 
@@ -134,7 +140,10 @@ export function showroomImage(nombre: string): Promise<PhotoLookup> {
 }
 
 export function showroomLookupAi(consulta: string): Promise<ShowroomFicha> {
-  return apiFetch<ShowroomFicha>("/api/showroom/lookup-ai", { method: "POST", body: { consulta } });
+  // El campo se llama "query" en ShowroomLookupRequest (schemas.py); mandarlo
+  // como "consulta" devolvía 422 ("Field required, Extra inputs are not
+  // permitted") y rompía el botón "Identificarlo con IA".
+  return apiFetch<ShowroomFicha>("/api/showroom/lookup-ai", { method: "POST", body: { query: consulta } });
 }
 
 export function showroomDestinos(): Promise<Destino[]> {

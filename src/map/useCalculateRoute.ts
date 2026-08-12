@@ -10,6 +10,9 @@ export function useCalculateRoute() {
     mutationFn: async () => {
       const state = useMapStore.getState();
       const vehicle = selectedVehicle(state);
+      // El margen de seguridad NO se manda: lo fija el backend (10% por
+      // defecto, ver schemas.py) y el resultado vuelve en `bateria`. Mandar
+      // el campo rompería contra un backend deployado sin él (extra=forbid).
       const payload = {
         origin_id: state.originId!,
         destination_id: state.destinationId!,

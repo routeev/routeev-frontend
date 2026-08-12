@@ -35,6 +35,25 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const summary = summarizeTrip(vehicle, startBatteryKwh, primary);
   const routeLabel = `${result.origin.name} → ${result.destination.name}${replaySuffix ?? ""}`;
 
+  // Semáforo del margen de batería (viene del backend; ausente en replays de
+  // rutas guardadas antes de esta versión). Crítico < 5% SIEMPRE, aunque el
+  // margen esté desactivado; "bajo" entre 5% y el margen configurado.
+  const bateria = result.bateria ?? null;
+  const llegadaPct = bateria?.llegada_pct ?? null;
+  const marginTone =
+    llegadaPct === null ? null : llegadaPct < 5 ? "danger" : llegadaPct < (bateria?.margen_pct ?? 0) ? "warn" : "ok";
+  const showMarginBanner = marginTone !== null && !(marginTone === "ok" && (bateria?.margen_pct ?? 0) === 0);
+  const marginText =
+    marginTone === "danger"
+      ? `🔴 Margen crítico: llegarías con ~${llegadaPct?.toFixed(1)}% de batería. Cualquier desvío o consumo extra te puede dejar sin carga.`
+      : marginTone === "warn"
+        ? `🟠 Margen bajo: llegarías con ~${llegadaPct?.toFixed(1)}%, por debajo del margen de seguridad del ${bateria?.margen_pct}%.`
+        : `🟢 Llegás con ~${llegadaPct?.toFixed(1)}% de batería, dentro del margen de seguridad (${bateria?.margen_pct}%).`;
+  const marginFallbackText =
+    bateria && !bateria.margen_alcanzado && llegadaPct !== null
+      ? ` No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.`
+      : "";
+
   return (
     <section className={styles.dashboard}>
       <div className={styles.header}>
@@ -48,6 +67,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
         </div>
       ) : (
         <>
+          {showMarginBanner && (
+            <div
+              className={[
+                styles.advisory,
+                marginTone === "danger" ? styles.advisoryDanger : marginTone === "warn" ? styles.advisoryWarn : styles.advisoryOk,
+              ].join(" ")}
+              style={{ marginTop: 0, marginBottom: 10 }}
+            >
+              {marginText}
+              {marginFallbackText}
+            </div>
+          )}
           <div className={styles.stats}>
             <TripStatCard label="Distancia total" value={`${summary.distanceKm.toFixed(1)} km`} large />
             <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} large />

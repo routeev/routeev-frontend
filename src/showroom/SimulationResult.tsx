@@ -14,9 +14,11 @@ interface SimulationResultProps {
   desde: string;
   hasta: string;
   bateria: number;
+  /** Margen de seguridad (% de batería) que el plan intenta mantener como piso. */
+  margenPct?: number;
 }
 
-export function SimulationResult({ resultado, model, desde, hasta, bateria }: SimulationResultProps) {
+export function SimulationResult({ resultado, model, desde, hasta, bateria, margenPct = 10 }: SimulationResultProps) {
   const tramosInfo = useMemo(() => armarTramos(resultado), [resultado]);
   const tieneMapa = resultado.detalle.tramos.every((t) => Array.isArray(t.route_coords) && t.route_coords.length > 1);
   const certaintyPoints = useMemo(() => {
@@ -64,6 +66,24 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria }: Si
         {desde} → {hasta}, saliendo con {bateria}% de batería
         {d.tramos.length > 1 ? ", ida y vuelta." : "."}
       </p>
+
+      {/* Semáforo del margen: crítico < 5% siempre; "bajo" hasta el margen que
+          el plan intentó mantener (el backend ya sumó las recargas que pudo). */}
+      {resultado.bateria_llegada_pct < 5 ? (
+        <p className={[styles.margenAviso, styles.margenCritico].join(" ")}>
+          🔴 Margen crítico: llega con apenas {num(resultado.bateria_llegada_pct, 1)}% de batería. Cualquier desvío o
+          consumo extra puede dejarlo sin carga antes de llegar.
+        </p>
+      ) : resultado.bateria_llegada_pct < margenPct ? (
+        <p className={[styles.margenAviso, styles.margenBajo].join(" ")}>
+          🟠 Margen bajo: llega con {num(resultado.bateria_llegada_pct, 1)}%, por debajo del margen de seguridad del{" "}
+          {num(margenPct)}%{resultado.margen_alcanzado === false ? " — no hay plan de cargas que lo respete en este viaje" : ""}.
+        </p>
+      ) : (
+        <p className={[styles.margenAviso, styles.margenOk].join(" ")}>
+          🟢 Llega con {num(resultado.bateria_llegada_pct, 1)}% de batería, dentro del margen de seguridad ({num(margenPct)}%).
+        </p>
+      )}
 
       <dl className={styles.cifras}>
         <div>

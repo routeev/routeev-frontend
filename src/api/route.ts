@@ -34,9 +34,20 @@ export interface RouteResult {
   recharges: Recharge[];
 }
 
+export interface RouteBattery {
+  llegada_kwh: number | null;
+  llegada_pct: number | null;
+  margen_pct: number;
+  // false: ni agregando recargas se pudo respetar el margen pedido -- la ruta
+  // devuelta es la mejor SIN margen y hay que mostrar la advertencia.
+  margen_alcanzado: boolean;
+}
+
 export interface CompareRoutesResult {
   origin: { name: string };
   destination: { name: string };
+  // Ausente en respuestas guardadas por versiones viejas (replay del historial).
+  bateria?: RouteBattery;
   dijkstra: RouteResult | null;
   astar: RouteResult;
 }
