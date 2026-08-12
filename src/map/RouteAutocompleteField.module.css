@@ -58,6 +58,16 @@
   color: var(--text-faint);
 }
 
+/* El fill por default de un <path>/<circle> de SVG es negro (initial value
+   de la spec), no currentColor -- sin esto el icono ignoraba por completo
+   el `color` de .pin/.pin:hover/.pin.active de arriba y quedaba siempre
+   negro, casi invisible contra el panel oscuro. */
+.pin svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
 @media (max-width: 640px) {
   .slot {
     grid-template-columns: 12px 1fr 40px;
