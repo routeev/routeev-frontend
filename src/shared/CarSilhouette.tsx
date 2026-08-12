@@ -1,4 +1,4 @@
-// Portado de js/car-art.js: sin foto de stock (no la hay para 880 modelos),
+// Portado de js/car-art.js: sin foto de stock (no la hay para 895 modelos),
 // cada auto sin foto recibe una silueta con un color derivado de su nombre
 // -- mismo nombre, mismo color siempre, asi las tarjetas se distinguen entre
 // si de un vistazo. Compartido por el showroom y (mas adelante) los

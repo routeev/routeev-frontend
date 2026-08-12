@@ -4,6 +4,7 @@ import { authConfig } from "../api/auth";
 import { createVehicle, lookupVehicleAi } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { MODEL_SEARCH_MIN_CHARS, filterModelLabels } from "../shared/evModelSearch";
 import { readNumberInput } from "../shared/readNumberInput";
 import { useMapStore, vehicleAutonomyKm } from "./mapStore";
 import { useEvModels } from "./useMapLoaders";
@@ -39,6 +40,10 @@ export function VehiclePanel() {
     for (const m of evModels) map.set(`${m.marca} ${m.modelo}`, m);
     return map;
   }, [evModels]);
+  const modelOptions = useMemo(
+    () => filterModelLabels(evModelsByLabel.keys(), modelSearch),
+    [evModelsByLabel, modelSearch]
+  );
 
   const vehicle = vehicles.find((v) => v.id === selectedVehicleId) ?? null;
   const batteryHint = vehicle
@@ -181,12 +186,12 @@ export function VehiclePanel() {
               type="text"
               list="v-model-datalist"
               autoComplete="off"
-              placeholder="Escribí para buscar entre 880 modelos (ej. Nissan Leaf, Tesla Model 3)..."
+              placeholder={`Escribí al menos ${MODEL_SEARCH_MIN_CHARS} letras (ej. Nissan Leaf, Tesla Model 3)...`}
               value={modelSearch}
               onChange={(e) => onModelSearchChange(e.target.value)}
             />
             <datalist id="v-model-datalist">
-              {[...evModelsByLabel.keys()].map((label) => (
+              {modelOptions.map((label) => (
                 <option key={label} value={label} />
               ))}
             </datalist>

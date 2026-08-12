@@ -42,6 +42,25 @@
   margin: 0 0 16px;
 }
 
+/* Semaforo del margen de bateria (bajo el veredicto "Llega"). */
+.margenAviso {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: -8px 0 16px;
+}
+
+.margenOk {
+  color: var(--ok);
+}
+
+.margenBajo {
+  color: var(--accent-dijkstra);
+}
+
+.margenCritico {
+  color: var(--danger);
+}
+
 .cifras {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

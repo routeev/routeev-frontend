@@ -130,6 +130,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
           desde={`${origenNombre.nombre} (${origenNombre.departamento})`}
           hasta={`${destinoNombre.nombre} (${destinoNombre.departamento})`}
           bateria={Math.max(10, Math.min(100, bateria || 100))}
+          margenPct={simulate.data.margen_bateria_pct ?? 10}
         />
       )}
     </>

@@ -54,6 +54,22 @@
   background: var(--accent-astar);
 }
 
+/* "N versiones" en la esquina opuesta al badge de IA. */
+.badgeVersiones {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  background: rgba(10, 14, 19, 0.82);
+  border: 1px solid var(--border);
+}
+
 .body {
   padding: 14px 14px 16px;
 }

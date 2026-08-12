@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { showroomModel } from "../api/showroom";
+import { useMemo } from "react";
+import { showroomModel, type ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDuration, formatUyu } from "../shared/format";
+import { groupFamilies, versionLabel } from "./modelFamily";
 import { num } from "./num";
 import { SimulationForm } from "./SimulationForm";
 import { useModelPhoto } from "./useModelPhoto";
@@ -11,9 +13,18 @@ import styles from "./ModelFicha.module.css";
 interface ModelFichaProps {
   modelId: string;
   onClose: () => void;
+  /** Todas las versiones de la familia de este modelo (incluida esta). */
+  versiones?: ShowroomModel[];
+  onSelectVersion?: (id: string) => void;
 }
 
-export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
+export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: ModelFichaProps) {
+  // La familia se rearma acá solo para el nombre limpio y las etiquetas de
+  // versión ("48 kWh", "GT"); las versiones ya vienen agrupadas del catálogo.
+  const familia = useMemo(
+    () => (versiones && versiones.length > 1 ? groupFamilies(versiones)[0] : null),
+    [versiones]
+  );
   const query = useQuery({
     queryKey: ["showroomModel", modelId],
     queryFn: () => showroomModel(modelId),
@@ -94,6 +105,35 @@ export function ModelFicha({ modelId, onClose }: ModelFichaProps) {
       <div>
         <p className={["eyebrow", styles.marca].join(" ")}>{model.marca}</p>
         <h2 className={styles.modelo}>{model.modelo}</h2>
+
+        {familia && (
+          <div className={styles.versiones} role="group" aria-label="Versiones de este modelo">
+            <p className={styles.versionesTitulo}>Este auto viene en {familia.versiones.length} versiones — elegí la tuya:</p>
+            <div className={styles.versionesLista}>
+              {familia.versiones.map((v) => {
+                const etiqueta = versionLabel(familia, v) || `${num(v.bateria_kwh, 1)} kWh`;
+                const activa = v.id === model.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    className={[styles.version, activa ? styles.versionActiva : ""].join(" ")}
+                    aria-pressed={activa}
+                    onClick={() => {
+                      if (!activa) onSelectVersion?.(v.id);
+                    }}
+                  >
+                    <span className={styles.versionNombre}>{etiqueta}</span>
+                    <span className={["mono-num", styles.versionDatos].join(" ")}>
+                      {num(v.bateria_kwh, 1)} kWh · {num(v.autonomia_aprox_km)} km
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {model.nota && (
           <p className={[styles.nota, model.fuente === "ia" ? styles.notaIa : ""].join(" ")}>
             {model.nota}

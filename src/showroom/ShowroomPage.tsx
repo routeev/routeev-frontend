@@ -81,7 +81,7 @@ export function ShowroomPage() {
         <meta property="og:locale" content="es_UY" />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/showroom" />
-        <meta property="og:title" content="Showroom: 880 autos eléctricos con sus números reales" />
+        <meta property="og:title" content="Showroom: 895 autos eléctricos con sus números reales" />
         <meta
           property="og:description"
           content="Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de UTE. Sin crear cuenta."
@@ -122,13 +122,20 @@ export function ShowroomPage() {
             onOrdenChange={catalog.setOrden}
             soloDc={catalog.soloDc}
             onSoloDcChange={catalog.setSoloDc}
-            count={catalog.filtrados.length}
+            count={catalog.familias.length}
           />
         </section>
 
         {fichaId && (
           <div ref={fichaRef}>
-            <ModelFicha modelId={fichaId} onClose={closeFicha} />
+            <ModelFicha
+              modelId={fichaId}
+              onClose={closeFicha}
+              // La familia completa (sin filtros de búsqueda): la ficha
+              // siempre ofrece TODAS las versiones de este auto.
+              versiones={catalog.familiaPorId.get(fichaId)?.versiones}
+              onSelectVersion={selectModel}
+            />
           </div>
         )}
 
@@ -137,8 +144,8 @@ export function ShowroomPage() {
             isLoading={catalog.isLoading}
             isError={catalog.isError}
             errorMessage={catalog.error instanceof Error ? catalog.error.message : undefined}
-            models={catalog.visible}
-            hasResults={catalog.filtrados.length > 0}
+            familias={catalog.visible}
+            hasResults={catalog.familias.length > 0}
             hasMore={catalog.hayMas}
             onLoadMore={catalog.verMas}
             onSelectModel={selectModel}

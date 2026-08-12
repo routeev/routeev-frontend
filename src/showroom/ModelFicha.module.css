@@ -98,6 +98,58 @@
   margin: 6px 0 10px;
 }
 
+/* Selector de version dentro de la ficha ("elegí la tuya"). */
+.versiones {
+  margin: 0 0 18px;
+}
+
+.versionesTitulo {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  margin: 0 0 8px;
+}
+
+.versionesLista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.version {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.version:hover {
+  border-color: var(--accent-astar-dim);
+}
+
+.versionActiva {
+  border-color: var(--accent-astar);
+  background: rgba(52, 227, 168, 0.08);
+  cursor: default;
+}
+
+.versionNombre {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.versionDatos {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .nota {
   color: var(--text-muted);
   font-size: 13px;

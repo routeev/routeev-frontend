@@ -1,22 +1,34 @@
 import { memo } from "react";
-import type { ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import type { ModelFamily } from "./modelFamily";
 import { num } from "./num";
 import { useModelPhoto } from "./useModelPhoto";
 import styles from "./ModelCard.module.css";
 
 interface ModelCardProps {
-  model: ShowroomModel;
+  familia: ModelFamily;
   eager: boolean;
   onSelect: (id: string) => void;
 }
 
+/** "44,9" o "44,9–60,5" cuando las versiones difieren. */
+function rango(familia: ModelFamily, valor: (m: ModelFamily["representante"]) => number, decimales = 0): string {
+  const valores = familia.versiones.map(valor);
+  const min = Math.min(...valores);
+  const max = Math.max(...valores);
+  return max - min > 0.05 ? `${num(min, decimales)}–${num(max, decimales)}` : num(min, decimales);
+}
+
 // memo: hasta ~24 de estas quedan montadas en ModelGrid a la vez; sin esto
-// cada una se reconciliaba en cada tecla del buscador aunque su `model` no
+// cada una se reconciliaba en cada tecla del buscador aunque su `familia` no
 // hubiera cambiado (solucion.md 2.11).
-function ModelCardComponent({ model, eager, onSelect }: ModelCardProps) {
-  const nombre = `${model.marca} ${model.modelo}`;
+function ModelCardComponent({ familia, eager, onSelect }: ModelCardProps) {
+  // Una tarjeta por AUTO: la familia agrupa sus versiones (48/63 kWh, GT...)
+  // y la ficha deja elegir cuál. La foto se busca por el nombre limpio de la
+  // familia, que es el que mejor matchea en Wikimedia.
+  const model = familia.representante;
+  const nombre = `${familia.marca} ${familia.nombre}`;
   const { ref, photo } = useModelPhoto(
     nombre,
     eager,
@@ -49,22 +61,25 @@ function ModelCardComponent({ model, eager, onSelect }: ModelCardProps) {
           />
         )}
         {model.fuente === "ia" && <span className={styles.badge}>IA</span>}
+        {familia.versiones.length > 1 && (
+          <span className={styles.badgeVersiones}>{familia.versiones.length} versiones</span>
+        )}
       </div>
       <div className={styles.body}>
-        <p className={styles.marca}>{model.marca}</p>
-        <h3 className={styles.modelo}>{model.modelo}</h3>
+        <p className={styles.marca}>{familia.marca}</p>
+        <h3 className={styles.modelo}>{familia.nombre}</h3>
         <dl className={styles.specs}>
           <div>
             <dt>Batería</dt>
-            <dd className="mono-num">{num(model.bateria_kwh, 1)} kWh</dd>
+            <dd className="mono-num">{rango(familia, (m) => m.bateria_kwh, 1)} kWh</dd>
           </div>
           <div>
             <dt>Autonomía</dt>
-            <dd className="mono-num">{num(model.autonomia_aprox_km)} km</dd>
+            <dd className="mono-num">{rango(familia, (m) => m.autonomia_aprox_km)} km</dd>
           </div>
           <div>
             <dt>Carga</dt>
-            <dd className="mono-num">{num(model.potencia_carga_kw)} kW</dd>
+            <dd className="mono-num">{rango(familia, (m) => m.potencia_carga_kw)} kW</dd>
           </div>
         </dl>
       </div>
