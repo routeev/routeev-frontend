@@ -5,12 +5,42 @@ const BOLT_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z"/></svg>';
 const CAR_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 15.4h12.8v2.3a.9.9 0 0 1-.9.9h-1.3a.9.9 0 0 1-.9-.9v-.6H8.7v.6a.9.9 0 0 1-.9.9H6.5a.9.9 0 0 1-.9-.9v-2.3Z"/><path d="M4.9 10.6 6.4 6.4a1.7 1.7 0 0 1 1.6-1.1h8a1.7 1.7 0 0 1 1.6 1.1l1.5 4.2a2 2 0 0 1 .1.7v3.3a.8.8 0 0 1-.8.8H5.6a.8.8 0 0 1-.8-.8v-3.3a2 2 0 0 1 .1-.7Z"/><circle cx="8.1" cy="12.8" r="1.05" fill="#0a0e13"/><circle cx="15.9" cy="12.8" r="1.05" fill="#0a0e13"/></svg>';
+// Bandera a cuadros para el destino: mas reconocible a simple vista que una
+// letra chica ("D") en un circulo, y de silueta bien distinta del origen
+// (circulo/target) para diferenciarlos incluso sin leer el color.
+const FLAG_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h11l-2.2 3.5L17 11H6"/></svg>';
 
-export function nodeIcon(kind: "origin" | "destination", label: string): L.DivIcon {
-  const cls = kind === "origin" ? styles.origin : styles.destination;
+/**
+ * Origen: circulo tipo "target" (punto de partida). Destino: pin clasico
+ * tipo Google Maps con una banderita adentro. Formas deliberadamente
+ * distintas entre si (no solo el color) para que se distingan de un
+ * vistazo, y bastante mas grandes que el "O"/"D" de 22px que habia antes
+ * -- ese texto se perdia contra el mapa.
+ */
+export function originIcon(): L.DivIcon {
   return L.divIcon({
     className: "",
-    html: `<div class="${styles.node} ${cls}">${label}</div>`,
+    html: `<div class="${styles.originMarker}"><div class="${styles.originRing}"></div><div class="${styles.originDot}"></div></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+}
+
+export function destinationIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<div class="${styles.destPin}"><div class="${styles.destPinShape}"></div><div class="${styles.destPinIcon}">${FLAG_SVG}</div></div>`,
+    iconSize: [30, 40],
+    iconAnchor: [15, 38],
+  });
+}
+
+/** "Estás acá": pulso azul en la ubicacion real del usuario al abrir /app. */
+export function myLocationIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<div class="${styles.liveMarker}"><div class="${styles.livePulse}"></div><div class="${styles.liveDot}"></div></div>`,
     iconSize: [22, 22],
     iconAnchor: [11, 11],
   });

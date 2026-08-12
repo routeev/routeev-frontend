@@ -1,27 +1,81 @@
 /* Marcadores propios (DivIcon) del mapa principal, portados de css/app.css. */
 
-.node {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #06231d;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+/* Origen: circulo "target" (punto + anillo), mas grande y con borde blanco
+   para que resalte contra el mapa oscuro -- reemplaza al circulo con la
+   letra "O" en 10px, que se perdia de vista. */
+.originMarker {
+  position: relative;
   width: 100%;
   height: 100%;
 }
 
-.origin {
+.originRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* --point-origin es blanco (ver tokens.css) -- un borde tambien blanco
+     lo dejaba invisible contra si mismo. El contorno oscuro es lo que le
+     da forma visible contra el mapa. */
   background: var(--point-origin);
+  border: 3px solid #06231d;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.55);
 }
 
-.destination {
+.originDot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #06231d;
+  transform: translate(-50%, -50%);
+}
+
+/* Destino: pin clasico (cuadrado rotado 45°, tres esquinas redondeadas) con
+   una banderita adentro -- silueta bien distinta del circulo de origen, para
+   que se puedan diferenciar de un vistazo sin depender solo del color. La
+   punta del pin es la que ancla la coordenada exacta (ver iconAnchor en
+   markerIcons.ts). */
+.destPin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.destPinShape {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  transform: rotate(-45deg);
+  border-radius: 50% 50% 50% 0;
   background: var(--point-dest);
+  border: 2px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.destPinIcon {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
   color: #1c0f33;
+  z-index: 1;
+}
+
+.destPinIcon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .station {

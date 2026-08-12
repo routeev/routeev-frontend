@@ -1,12 +1,13 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
 import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
 import { StationsLayer } from "./layers/StationsLayer";
+import { myLocationIcon } from "./markerIcons";
 import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
@@ -19,6 +20,8 @@ interface CaptureMapProps {
 
 function CaptureMap({ onLocateFail }: CaptureMapProps) {
   const map = useMap();
+  const [myPosition, setMyPosition] = useState<[number, number] | null>(null);
+
   useEffect(() => {
     // Use the store setter via getState inside the effect to avoid
     // subscribing this component to the whole store and creating
@@ -47,7 +50,9 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     getCurrentPositionWithFallback(
       (pos) => {
         if (cancelled) return;
-        map.setView([pos.coords.latitude, pos.coords.longitude], AUTO_LOCATE_ZOOM);
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        map.setView(coords, AUTO_LOCATE_ZOOM);
+        setMyPosition(coords);
       },
       (err) => {
         if (cancelled) return;
@@ -78,7 +83,10 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     return () => observer.disconnect();
   }, [map]);
 
-  return null;
+  if (!myPosition) return null;
+  return (
+    <Marker position={myPosition} icon={myLocationIcon()} zIndexOffset={400} interactive={false} />
+  );
 }
 
 interface MapCanvasProps {
