@@ -56,8 +56,9 @@ export function AppTopbar({ subtitle, children, username }: AppTopbarProps) {
       </button>
       {open && (
         <div className={styles.mobileMenu}>
-          <div onClick={() => setOpen(false)}>{children}</div>
-          <span className={styles.userChip}>{username ?? getUsername() ?? "usuario"}</span>
+          <div className={styles.mobileMenuLink} onClick={() => setOpen(false)}>
+            {children}
+          </div>
           <button type="button" className="ghost" onClick={logout}>
             <IconLogout />
             Cerrar sesión

@@ -141,7 +141,14 @@
     border-bottom: 1px solid var(--border);
     box-shadow: var(--shadow-float);
   }
-  .mobileMenu :global(a.navLink) {
+  /* El link que pasa cada pantalla (Mi perfil / Volver al mapa) llega como
+     `children` ya armado con su propia clase de CSS Module (buttons.navLink)
+     -- un selector :global(a.navLink) nunca matchea eso (CSS Modules hashea
+     el nombre), asi que se apunta al `<a>` por posicion en vez de por clase. */
+  .mobileMenuLink > :global(a) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
   }
   .mobileMenu :global(button.ghost) {
@@ -150,9 +157,6 @@
     justify-content: center;
     gap: 6px;
     width: 100%;
-  }
-  .mobileMenu .userChip {
-    align-self: flex-start;
   }
 }
 
