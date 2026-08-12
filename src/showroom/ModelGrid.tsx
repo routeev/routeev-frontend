@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { memo } from "react";
-import { showroomLookupAi, type ShowroomFicha, type ShowroomModel } from "../api/showroom";
+import { showroomLookupAi, type ShowroomFicha } from "../api/showroom";
 import { ModelCard } from "./ModelCard";
+import type { ModelFamily } from "./modelFamily";
 import styles from "./ModelGrid.module.css";
 
 const FOTOS_SIN_ESPERAR = 8;
@@ -10,7 +11,7 @@ interface ModelGridProps {
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
-  models: ShowroomModel[];
+  familias: ModelFamily[];
   hasResults: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
@@ -30,7 +31,7 @@ function ModelGridComponent({
   isLoading,
   isError,
   errorMessage,
-  models,
+  familias,
   hasResults,
   hasMore,
   onLoadMore,
@@ -85,8 +86,8 @@ function ModelGridComponent({
   return (
     <>
       <div className={styles.grid}>
-        {models.map((model, i) => (
-          <ModelCard key={model.id} model={model} eager={i < FOTOS_SIN_ESPERAR} onSelect={onSelectModel} />
+        {familias.map((familia, i) => (
+          <ModelCard key={familia.key} familia={familia} eager={i < FOTOS_SIN_ESPERAR} onSelect={onSelectModel} />
         ))}
       </div>
       {hasMore && (

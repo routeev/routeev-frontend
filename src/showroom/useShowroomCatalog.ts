@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { showroomModels, type ShowroomModel } from "../api/showroom";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
+import { groupFamilies, type ModelFamily } from "./modelFamily";
 
 const PAGINA = 24;
 
@@ -86,11 +87,27 @@ export function useShowroomCatalog() {
     return lista.map((x) => x.model);
   }, [indexado, debouncedQuery, marca, orden, soloDc]);
 
+  // Una tarjeta por AUTO, no por versión: las versiones de un mismo modelo
+  // ("ORA 03 48/63 kWh/GT") se agrupan y la elección de cuál es queda en la
+  // ficha, a criterio del usuario. El orden de las familias es el de su
+  // mejor versión según el orden elegido (la lista ya viene ordenada).
+  const familias = useMemo(() => groupFamilies(filtrados), [filtrados]);
+
+  // La familia COMPLETA de cada modelo, sin filtros: la ficha ofrece todas
+  // las versiones aunque la búsqueda haya matcheado una sola.
+  const familiaPorId = useMemo(() => {
+    const map = new Map<string, ModelFamily>();
+    for (const familia of groupFamilies(modelos)) {
+      for (const version of familia.versiones) map.set(version.id, familia);
+    }
+    return map;
+  }, [modelos]);
+
   // Memoizado (no un simple .slice() suelto): sin esto, cada tecla en el
   // buscador genera un array nuevo aunque el contenido no haya cambiado, y
   // eso le gana de mano al React.memo de ModelGrid (solucion.md 2.11).
-  const visible = useMemo(() => filtrados.slice(0, visibles), [filtrados, visibles]);
-  const hayMas = visibles < filtrados.length;
+  const visible = useMemo(() => familias.slice(0, visibles), [familias, visibles]);
+  const hayMas = visibles < familias.length;
 
   // Referencias estables (useCallback): las consume ModelGrid, que ahora
   // esta memoizado -- una funcion nueva en cada render volveria a invalidar
@@ -133,7 +150,8 @@ export function useShowroomCatalog() {
     setOrden: updateOrden,
     soloDc,
     setSoloDc: updateSoloDc,
-    filtrados,
+    familias,
+    familiaPorId,
     visible,
     hayMas,
     verMas,
