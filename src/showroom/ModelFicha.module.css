@@ -286,7 +286,14 @@
 
 @media (max-width: 900px) {
   .ficha {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), no 1fr a secas: un track de grid no se achica mas
+       alla del min-content de lo que tiene adentro por default, y algo
+       aca (el grid de .stats mas abajo) pedia mas ancho del disponible en
+       mobile -- en vez de wrappear, empujaba TODA la ficha (foto incluida)
+       bien mas ancha que la pantalla ("grid blowout" clasico de CSS).
+       minmax(0, ...) le saca ese piso al track y deja que el contenido de
+       adentro se acomode/wrappee en vez de forzar el ancho del grid. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
   }
 }

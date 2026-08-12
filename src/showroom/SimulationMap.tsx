@@ -52,6 +52,22 @@ function FitBounds({ bounds }: { bounds: [number, number][] }) {
     // Solo al montar: es la unica vez que hace falta encuadrar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // Leaflet mide su contenedor una unica vez al montar. Este mapa aparece
+    // dentro del resultado de la simulacion, que se muestra recien despues
+    // de "Calcular el viaje" -- si el layout de alrededor todavia no
+    // termino de asentarse en ese momento (fuentes/imagenes cargando,
+    // animacion de entrada del panel), Leaflet queda con un tamaño viejo
+    // cacheado y el mapa se ve cortado/mal encuadrado. Mismo fix que
+    // MapCanvas.tsx (mapa de /app): un ResizeObserver que avisa cada vez
+    // que el contenedor realmente cambia de tamaño.
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
   return null;
 }
 
@@ -62,13 +78,14 @@ interface SimulationMapProps {
   tiempoTotalMin: number;
 }
 
-export function SimulationMap({ tramosInfo, capacidadKwh, bateriaInicialPct, tiempoTotalMin }: SimulationMapProps) {
-  const { markerRef, kmRef, batRef, timeRef, fillRef, statusRef, playing, play } = useSimulationAnimation(
-    tramosInfo,
-    capacidadKwh,
-    bateriaInicialPct,
-    tiempoTotalMin
-  );
+export function SimulationMap({
+  tramosInfo,
+  capacidadKwh,
+  bateriaInicialPct,
+  tiempoTotalMin,
+}: SimulationMapProps) {
+  const { markerRef, kmRef, batRef, timeRef, fillRef, statusRef, playing, play } =
+    useSimulationAnimation(tramosInfo, capacidadKwh, bateriaInicialPct, tiempoTotalMin);
 
   const bounds = useMemo(() => tramosInfo.flatMap((t) => t.coords), [tramosInfo]);
   const origen = tramosInfo[0]!.coords[0]!;
@@ -83,7 +100,13 @@ export function SimulationMap({ tramosInfo, capacidadKwh, bateriaInicialPct, tie
   return (
     <div className={styles.wrap}>
       <div className={styles.map}>
-        <MapContainer center={[-32.5, -56]} zoom={6} zoomControl={false} scrollWheelZoom={false} style={{ height: "100%" }}>
+        <MapContainer
+          center={[-32.5, -56]}
+          zoom={6}
+          zoomControl={false}
+          scrollWheelZoom={false}
+          style={{ height: "100%" }}
+        >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -106,7 +129,12 @@ export function SimulationMap({ tramosInfo, capacidadKwh, bateriaInicialPct, tie
           ))}
           {tramosInfo.flatMap((tramo) =>
             tramo.paradas.map((parada, i) => (
-              <Marker key={`${tramo.nombre}-${i}`} position={[parada.lat, parada.lon]} icon={stationIcon()} zIndexOffset={300}>
+              <Marker
+                key={`${tramo.nombre}-${i}`}
+                position={[parada.lat, parada.lon]}
+                icon={stationIcon()}
+                zIndexOffset={300}
+              >
                 <Popup>
                   <b>{parada.nombre}</b>
                   <br />+{num(parada.kwh, 1)} kWh · {formatDuration(parada.minutos)}
@@ -115,11 +143,20 @@ export function SimulationMap({ tramosInfo, capacidadKwh, bateriaInicialPct, tie
             ))
           )}
           <Marker position={origen} icon={nodeIcon(styles.origin, "O")} zIndexOffset={500} />
-          <Marker position={destinoFinal} icon={nodeIcon(styles.destination, "D")} zIndexOffset={500} />
+          <Marker
+            position={destinoFinal}
+            icon={nodeIcon(styles.destination, "D")}
+            zIndexOffset={500}
+          />
           <Marker position={origen} icon={carIcon()} zIndexOffset={1000} ref={markerRef} />
         </MapContainer>
       </div>
-      <button type="button" className={["ghost", styles.replay].join(" ")} onClick={play} disabled={playing}>
+      <button
+        type="button"
+        className={["ghost", styles.replay].join(" ")}
+        onClick={play}
+        disabled={playing}
+      >
         ↻ Repetir animación
       </button>
 
