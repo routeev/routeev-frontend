@@ -18,7 +18,7 @@ const COMPARADORES: Partial<Record<Orden, (a: ShowroomModel, b: ShowroomModel) =
 /**
  * Estado y lógica de búsqueda/filtro/orden del showroom, portados de
  * filtrar() en js/showroom.js. El catálogo se baja una sola vez (TanStack
- * Query lo cachea) y todo lo demás es 100% client-side -- con 880 entradas
+ * Query lo cachea) y todo lo demás es 100% client-side -- con 895 entradas
  * no hace falta ir al servidor en cada tecla.
  */
 export function useShowroomCatalog() {

@@ -9,6 +9,7 @@ import {
 } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { MODEL_SEARCH_MIN_CHARS, filterModelLabels } from "../shared/evModelSearch";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import styles from "./ProfilePage.module.css";
 
@@ -19,9 +20,18 @@ interface AddVehicleFormProps {
 }
 
 export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
-  const modelsQuery = useQuery({ queryKey: ["evModels"], queryFn: listEvModels });
   const [form, setForm] = useState(emptyForm);
   const [modelSearch, setModelSearch] = useState("");
+  // El catálogo se pide recién cuando el usuario escribió lo suficiente como
+  // para ofrecerle opciones: abrir el perfil (o clickear el campo) ya no
+  // descarga los 895 modelos. Una vez traído no se vuelve a pedir
+  // (staleTime): el catálogo no cambia mientras el backend esté corriendo.
+  const modelsQuery = useQuery({
+    queryKey: ["evModels"],
+    queryFn: listEvModels,
+    enabled: modelSearch.trim().length >= MODEL_SEARCH_MIN_CHARS,
+    staleTime: Infinity,
+  });
   const [modelPhoto, setModelPhoto] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +53,10 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
     for (const m of models ?? []) map.set(`${m.marca} ${m.modelo}`, m);
     return map;
   }, [models]);
+  const modelOptions = useMemo(
+    () => filterModelLabels(modelsByLabel.keys(), modelSearch),
+    [modelsByLabel, modelSearch]
+  );
 
   const identify = useMutation({
     mutationFn: async (file: File) => {
@@ -171,12 +185,12 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
           type="text"
           list="p-model-datalist"
           autoComplete="off"
-          placeholder="Escribí para buscar (ej. Nissan Leaf, Tesla Model 3)..."
+          placeholder={`Escribí al menos ${MODEL_SEARCH_MIN_CHARS} letras (ej. Nissan Leaf, Tesla Model 3)...`}
           value={modelSearch}
           onChange={(e) => onModelSearchChange(e.target.value)}
         />
         <datalist id="p-model-datalist">
-          {[...modelsByLabel.keys()].map((label) => (
+          {modelOptions.map((label) => (
             <option key={label} value={label} />
           ))}
         </datalist>
