@@ -7,9 +7,11 @@ import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
 import { StationsLayer } from "./layers/StationsLayer";
+import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
+const AUTO_LOCATE_ZOOM = 15;
 
 function CaptureMap() {
   const map = useMap();
@@ -22,6 +24,30 @@ function CaptureMap() {
     return () => useMapStore.getState().setLeafletMap(null);
     // Intentionally depend only on `map` — the setter is read directly
     // from the store to avoid re-running if selector returns a new ref.
+  }, [map]);
+
+  useEffect(() => {
+    // Centra el mapa en la ubicacion real del usuario apenas abre /app, en
+    // vez de arrancar siempre en Montevideo -- a diferencia del boton "Usar
+    // mi ubicacion" (useGeolocation.ts), esto NO fija origen ni mueve el
+    // pickMode: es solo la vista inicial. Silencioso a proposito: si el
+    // usuario no dio permiso o no hay ubicacion disponible, se queda con la
+    // vista por defecto sin mostrar ningun error -- no lo pidio explicitamente
+    // el, es solo una comodidad al entrar.
+    if (!navigator.geolocation) return;
+    let cancelled = false;
+    getCurrentPositionWithFallback(
+      (pos) => {
+        if (cancelled) return;
+        map.setView([pos.coords.latitude, pos.coords.longitude], AUTO_LOCATE_ZOOM);
+      },
+      () => {
+        /* sin permiso o sin ubicacion: se queda con la vista por defecto */
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
   }, [map]);
 
   useEffect(() => {
