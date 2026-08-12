@@ -13,7 +13,11 @@ import { useMapStore } from "./mapStore";
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
 const AUTO_LOCATE_ZOOM = 15;
 
-function CaptureMap() {
+interface CaptureMapProps {
+  onLocateFail: (msg: string) => void;
+}
+
+function CaptureMap({ onLocateFail }: CaptureMapProps) {
   const map = useMap();
   useEffect(() => {
     // Use the store setter via getState inside the effect to avoid
@@ -30,10 +34,14 @@ function CaptureMap() {
     // Centra el mapa en la ubicacion real del usuario apenas abre /app, en
     // vez de arrancar siempre en Montevideo -- a diferencia del boton "Usar
     // mi ubicacion" (useGeolocation.ts), esto NO fija origen ni mueve el
-    // pickMode: es solo la vista inicial. Silencioso a proposito: si el
-    // usuario no dio permiso o no hay ubicacion disponible, se queda con la
-    // vista por defecto sin mostrar ningun error -- no lo pidio explicitamente
-    // el, es solo una comodidad al entrar.
+    // pickMode: es solo la vista inicial. Si falla (permiso denegado, sin
+    // GPS/ubicacion del dispositivo, etc.) se queda con la vista por
+    // defecto -- pero SI avisa por que, con el mismo banner que usa
+    // ClickToPick (variant "warn", no bloquea nada): en la practica el caso
+    // mas comun es el permiso del navegador nunca llega a preguntarse
+    // porque la ubicacion esta apagada a nivel sistema operativo, y sin
+    // este aviso no hay forma de que el usuario se entere de que existe
+    // ese paso a revisar.
     if (!navigator.geolocation) return;
     let cancelled = false;
     getCurrentPositionWithFallback(
@@ -41,14 +49,21 @@ function CaptureMap() {
         if (cancelled) return;
         map.setView([pos.coords.latitude, pos.coords.longitude], AUTO_LOCATE_ZOOM);
       },
-      () => {
-        /* sin permiso o sin ubicacion: se queda con la vista por defecto */
+      (err) => {
+        if (cancelled) return;
+        const reason =
+          err.code === err.PERMISSION_DENIED
+            ? "no diste permiso de ubicación (o está apagada en el dispositivo/sistema)"
+            : "no se pudo determinar tu ubicación";
+        onLocateFail(
+          `No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`
+        );
       }
     );
     return () => {
       cancelled = true;
     };
-  }, [map]);
+  }, [map, onLocateFail]);
 
   useEffect(() => {
     // Leaflet mide su contenedor una sola vez al montar y no vuelve a
@@ -80,7 +95,7 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       zoomControl
       style={{ height: "100%", width: "100%" }}
     >
-      <CaptureMap />
+      <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
