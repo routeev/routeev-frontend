@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import type { TarifaRecarga } from "./showroom";
 
 export interface PeajePunto {
   lat: number;
@@ -14,8 +15,20 @@ export interface RouteBreakdown {
   peaje: number;
   peaje_uyu: number;
   peajes_puntos?: PeajePunto[];
+  // OJO semántica: cuando costo_uyu_recargas está presente (backend nuevo),
+  // esto es SOLO la energía cargada en casa.
   costo_uyu_energia: number;
   costo_uyu_total: number;
+  // Todo lo de abajo es opcional: el backend viejo en producción no lo manda,
+  // y los replays del historial guardados antes de esta versión tampoco.
+  energia_casa_kwh?: number;
+  energia_recargada_kwh?: number;
+  costo_uyu_recargas?: number;
+  // Recargas en operadores sin tarifario publicado: quedan FUERA del total.
+  recargas_sin_tarifa?: number;
+  // Alineado 1 a 1 con `recharges` (mismo orden); trae node_id por si los
+  // largos no coinciden y hay que caer a matchear por estación.
+  recargas_costos?: ({ node_id: string } & TarifaRecarga)[];
 }
 
 export interface Recharge {

@@ -18,11 +18,44 @@ export interface ShowroomCatalog {
   models: ShowroomModel[];
 }
 
+// Cotización de una recarga en ruta con el tarifario real del operador
+// (pliego UTE 2026: cargo por conexión + energía, con AC y DC a precios
+// distintos). Si el operador no publica tarifario, TODO viene null y
+// tarifa_conocida en false: el costo "no se sabe", nunca se inventa.
+export interface TarifaRecarga {
+  tarifa_conocida: boolean;
+  operador_tarifa: string | null;
+  modalidad: "AC" | "DC" | null;
+  tarifa_uyu_kwh: number | null;
+  cargo_base_uyu: number | null;
+  costo_energia_uyu: number | null;
+  // Cargo base + energía; null si no hay tarifario publicado.
+  costo_uyu: number | null;
+  // $/min por quedarse enchufado SIN cargar, pasada la tolerancia de abajo.
+  // Informativo (depende del conductor): NO va sumado a ningún total.
+  ocupacion_uyu_min: number | null;
+  ocupacion_tolerancia_min: number | null;
+  // Cargos de operadores privados (UMT); también informativos.
+  estacionamiento_uyu_min: number | null;
+  reserva_uyu: number | null;
+}
+
 export interface ChargeCurveRow {
   potencia_kw: number;
   estaciones: number;
   potencia_efectiva_kw: number;
   minutos: number;
+  // Opcionales: el backend viejo en producción no los manda.
+  modalidad?: "AC" | "DC";
+  costo_uyu?: number | null;
+}
+
+// Precios publicados de una modalidad de carga (AC o DC) en la red pública.
+export interface TarifaRedModalidad {
+  cargo_base_uyu: number;
+  energia_uyu_kwh: number;
+  ocupacion_uyu_min: number;
+  ocupacion_tolerancia_min: number;
 }
 
 export interface ShowroomMetrics {
@@ -36,6 +69,15 @@ export interface ShowroomMetrics {
   carga_km_recuperados: number;
   estaciones_red: number;
   carga: ChargeCurveRow[];
+  // Tarifario vigente de la red (pliego UTE). Opcional: backend viejo no lo
+  // manda, y en ese caso los costos de la ficha siguen siendo "a precio de casa".
+  tarifas_red?: {
+    operador: string | null;
+    vigencia: string;
+    casa_uyu_kwh: number;
+    ac: TarifaRedModalidad | null;
+    dc: TarifaRedModalidad | null;
+  };
 }
 
 export interface ShowroomFicha {
@@ -76,9 +118,16 @@ export interface RouteTramo {
   trafico_min: number;
   recarga_min: number;
   costo_uyu_total: number;
+  // OJO semántica: cuando costo_uyu_recargas está presente (backend nuevo),
+  // esto es SOLO la energía cargada en casa; las recargas en ruta van aparte,
+  // cotizadas con el tarifario de cada operador.
   costo_uyu_energia: number;
   energia_kwh: number;
   route_coords: [number, number][];
+  // Opcionales: el backend viejo en producción no los manda.
+  costo_uyu_recargas?: number;
+  // Recargas en operadores sin tarifario publicado: quedan FUERA del total.
+  recargas_sin_tarifa?: number;
 }
 
 export interface RouteDetalle {
@@ -87,10 +136,14 @@ export interface RouteDetalle {
   trafico_min: number;
   recarga_min: number;
   energia_kwh: number;
+  // Misma semántica nueva que en RouteTramo: solo energía de casa cuando
+  // costo_uyu_recargas está presente.
   costo_uyu_energia: number;
   peaje_uyu: number;
   peajes?: string;
   tramos: RouteTramo[];
+  costo_uyu_recargas?: number;
+  recargas_sin_tarifa?: number;
 }
 
 export interface Parada {
@@ -105,6 +158,9 @@ export interface Parada {
   lat: number;
   lon: number;
   tramo: "ida" | "vuelta";
+  // Costo de ESTA recarga según el tarifario del operador; null si no publica.
+  costo_uyu?: number | null;
+  tarifa?: TarifaRecarga | null;
 }
 
 export interface SimulateResult {

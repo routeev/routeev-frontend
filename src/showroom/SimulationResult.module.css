@@ -135,6 +135,17 @@
   color: var(--text);
 }
 
+/* Aviso de recargas en operador sin tarifario: es una nota, no un monto --
+   display block (sin flex) para que el texto largo wrappee normal, y el
+   selector compuesto para ganarle en especificidad a ".desglose li". */
+.desglose li.desgloseNota {
+  display: block;
+  padding-top: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .tramos {
   list-style: none;
   margin: 16px 0 0;
@@ -231,6 +242,15 @@
 
 .paradaDatos {
   color: var(--accent-dijkstra);
+}
+
+/* Tarifa del operador bajo los datos de la parada: contexto del costo, no
+   dato principal -- por eso va muted y un punto mas chica. */
+.paradaTarifa {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 .sinParadas {
