@@ -8,6 +8,7 @@ const BOLT_SVG_PATH = "M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z";
 export function StationsPanel() {
   const stations = useMapStore((s) => s.stations);
   const leafletMap = useMapStore((s) => s.leafletMap);
+  const selectStation = useMapStore((s) => s.selectStation);
   const [openId, setOpenId] = useState<number | null>(null);
 
   return (
@@ -24,6 +25,7 @@ export function StationsPanel() {
                 onClick={() => {
                   const next = open ? null : st.node_id;
                   setOpenId(next);
+                  selectStation(next);
                   if (next) leafletMap?.setView([st.lat, st.lon], 16);
                 }}
               >

@@ -32,6 +32,10 @@ interface MapState {
   nodesById: Map<number, GraphNode>;
   searchableNodes: SearchableNode[];
   stations: Station[];
+  // Estación elegida a mano en StationsPanel (lista "todas las estaciones").
+  // El mapa no dibuja las 200+ estaciones de una: solo esta, o -- si ya hay
+  // una ruta calculada -- las que esa ruta realmente usa (ver StationsLayer).
+  selectedStationId: number | null;
 
   vehicles: Vehicle[];
   vehiclesLoaded: boolean;
@@ -54,6 +58,7 @@ interface MapState {
   addNode: (node: GraphNode) => void;
   setSearchableNodes: (nodes: GraphNode[]) => void;
   setStations: (stations: Station[]) => void;
+  selectStation: (id: number | null) => void;
 
   setVehicles: (vehicles: Vehicle[]) => void;
   addVehicle: (vehicle: Vehicle) => void;
@@ -80,6 +85,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   nodesById: new Map(),
   searchableNodes: [],
   stations: [],
+  selectedStationId: null,
 
   vehicles: [],
   vehiclesLoaded: false,
@@ -125,6 +131,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       return { stations, nodesById: s.nodesById };
     });
   },
+  selectStation: (id) => set({ selectedStationId: id }),
 
   setVehicles: (vehicles) =>
     set(() => ({
@@ -150,17 +157,34 @@ export const useMapStore = create<MapState>((set, get) => ({
   setOrigin: (node) =>
     set((s) => {
       s.nodesById.set(node.id, node);
-      return { originId: node.id, originNode: node, nodesById: s.nodesById };
+      // Cambiar el origen invalida cualquier ruta ya calculada: sin esto,
+      // la polyline vieja (y sus paradas de recarga) quedaban dibujadas
+      // sobre un origen/destino que ya no corresponden hasta el próximo
+      // "Calcular ruta". Solo se limpia si el punto realmente cambió, para
+      // no pisar un resultado válido si se re-selecciona el mismo nodo.
+      const changed = node.id !== s.originId;
+      return {
+        originId: node.id,
+        originNode: node,
+        nodesById: s.nodesById,
+        ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      };
     }),
   setDestination: (node) =>
     set((s) => {
       s.nodesById.set(node.id, node);
-      return { destinationId: node.id, destinationNode: node, nodesById: s.nodesById };
+      const changed = node.id !== s.destinationId;
+      return {
+        destinationId: node.id,
+        destinationNode: node,
+        nodesById: s.nodesById,
+        ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      };
     }),
   setPickMode: (mode) => set({ pickMode: mode }),
 
   setLastResult: (result, payload, replaySuffix) =>
-    set({ lastResult: result, lastRoutePayload: payload, replaySuffix }),
+    set({ lastResult: result, lastRoutePayload: payload, replaySuffix, selectedStationId: null }),
 }));
 
 export function selectedVehicle(state: MapState): Vehicle | null {

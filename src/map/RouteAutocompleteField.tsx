@@ -40,6 +40,21 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
   const [busy, setBusy] = useState(false);
   const blurTimeout = useRef<number | null>(null);
 
+  // Si el nodo cambia por una vía externa al propio input -- click en el
+  // mapa (ClickToPick), "usar mi ubicación", o un replay de historial --
+  // hay que soltar cualquier texto tipeado sin confirmar, o el input queda
+  // mostrando ese texto viejo para siempre en vez del nombre real del punto
+  // recién elegido (editingText solo se limpiaba en chooseNode/chooseGeocode,
+  // que son el camino "interno"; ver bug reportado en destino). Se ajusta
+  // durante el render (patrón de React para "resetear estado cuando cambia
+  // un prop") en vez de en un efecto, para no pagar un commit extra.
+  const nodeId = node?.id ?? null;
+  const [prevNodeId, setPrevNodeId] = useState(nodeId);
+  if (nodeId !== prevNodeId) {
+    setPrevNodeId(nodeId);
+    setEditingText(null);
+  }
+
   const value = editingText ?? node?.name ?? "";
   // El input queda controlado por editingText (sin lag visual); el escaneo
   // sobre searchableNodes (hasta 3000 items, solucion.md 2.2/2.11) espera a

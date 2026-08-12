@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { useEffect, useRef, useState } from "react";
 import { authConfig } from "../api/auth";
 import styles from "./LoginPage.module.css";
 
@@ -19,6 +20,25 @@ interface GoogleSignInProps {
  */
 export function GoogleSignIn({ onCredential }: GoogleSignInProps) {
   const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
+  const containerRef = useRef<HTMLDivElement>(null);
+  // El prop `width` de GoogleLogin es un ancho fijo en px que Google usa tal
+  // cual para dibujar el iframe del botón -- no es responsive. En celulares
+  // angostos, un valor fijo (antes 320) se pasaba del ancho real disponible
+  // dentro de la tarjeta de login y quedaba recortado por el `overflow:
+  // hidden` de .page (LoginPage.module.css), o directamente no se veía. Acá
+  // se mide el contenedor real y se lo pasa como ancho, así siempre entra.
+  const [btnWidth, setBtnWidth] = useState(320);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setBtnWidth(Math.round(Math.min(320, width)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   if (!cfg?.google_client_id) return null;
 
@@ -27,12 +47,12 @@ export function GoogleSignIn({ onCredential }: GoogleSignInProps) {
       <div className={styles.googleDivider}>
         <span>o</span>
       </div>
-      <div className={styles.googleBtn}>
+      <div className={styles.googleBtn} ref={containerRef}>
         <GoogleLogin
           theme="filled_black"
           shape="pill"
           size="large"
-          width="320"
+          width={btnWidth}
           onSuccess={(response) => {
             if (response.credential) onCredential(response.credential);
           }}

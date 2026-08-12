@@ -17,8 +17,12 @@ import { useMapLoaders } from "./useMapLoaders";
 import { useReplayFromHistory } from "./useReplayFromHistory";
 import styles from "./MapPage.module.css";
 
+type MapBanner = { message: string; variant: "error" | "warn" } | null;
+
 export function MapPage() {
-  const [mapError, setMapError] = useState<string | null>(null);
+  const [mapBanner, setMapBanner] = useState<MapBanner>(null);
+  const handleMapNotice = (msg: string | null, severity: "error" | "warn" = "error") =>
+    setMapBanner(msg ? { message: msg, variant: severity } : null);
   const loaders = useMapLoaders();
   const liveTrip = useLiveTrip();
   const calc = useCalculateRoute();
@@ -40,7 +44,7 @@ export function MapPage() {
 
   // Un error de "Calcular ruta" pisa uno viejo de click-en-el-mapa: es el
   // mas reciente de los dos flujos que escriben este banner.
-  const routeError = calc.error ?? mapError;
+  const banner: MapBanner = calc.error ? { message: calc.error, variant: "error" } : mapBanner;
 
   const ready = missing.length === 0;
 
@@ -61,7 +65,7 @@ export function MapPage() {
       <div className={styles.layout}>
         <aside className={styles.sidebar}>
           <div className={styles.sidebarScroll}>
-            <RouteInputPanel routeError={routeError} />
+            <RouteInputPanel banner={banner} />
             <VehiclePanel />
             <StationsPanel />
             {loaders.failed.length > 0 && (
@@ -81,7 +85,7 @@ export function MapPage() {
               className="primary"
               disabled={!ready || calc.isPending}
               onClick={() => {
-                setMapError(null);
+                setMapBanner(null);
                 calc.calculate();
               }}
             >
@@ -95,7 +99,7 @@ export function MapPage() {
 
         <main className={styles.mainArea}>
           <div className={styles.mapWrap}>
-            <MapCanvas liveTripPosition={liveTrip.ui.livePosition} onMapError={setMapError} />
+            <MapCanvas liveTripPosition={liveTrip.ui.livePosition} onMapError={handleMapNotice} />
           </div>
           <div className={styles.dashboardWrap}>
             <TripDashboard liveTrip={liveTrip} />

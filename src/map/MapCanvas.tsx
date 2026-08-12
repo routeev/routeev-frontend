@@ -42,7 +42,7 @@ function CaptureMap() {
 
 interface MapCanvasProps {
   liveTripPosition: [number, number] | null;
-  onMapError: (msg: string) => void;
+  onMapError: (msg: string | null, severity?: "error" | "warn") => void;
 }
 
 export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {

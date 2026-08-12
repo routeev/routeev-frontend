@@ -5,10 +5,10 @@ import { useMapStore } from "./mapStore";
 import styles from "./RouteInputPanel.module.css";
 
 interface RouteInputPanelProps {
-  routeError: string | null;
+  banner: { message: string; variant: "error" | "warn" } | null;
 }
 
-export function RouteInputPanel({ routeError }: RouteInputPanelProps) {
+export function RouteInputPanel({ banner }: RouteInputPanelProps) {
   const pickMode = useMapStore((s) => s.pickMode);
   const setPickMode = useMapStore((s) => s.setPickMode);
   const geolocation = useGeolocation();
@@ -51,7 +51,7 @@ export function RouteInputPanel({ routeError }: RouteInputPanelProps) {
         </div>
       )}
 
-      {routeError && <Banner variant="error">{routeError}</Banner>}
+      {banner && <Banner variant={banner.variant}>{banner.message}</Banner>}
     </section>
   );
 }

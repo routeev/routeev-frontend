@@ -168,6 +168,16 @@ label {
   margin-bottom: 14px;
 }
 
+.warn-banner {
+  background: rgba(242, 161, 84, 0.12);
+  border: 1px solid var(--accent-dijkstra);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 11px;
