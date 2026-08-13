@@ -24,6 +24,12 @@ interface StationReviewsProps {
 export function StationReviews({ nodeId }: StationReviewsProps) {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["stationReviews", nodeId], queryFn: () => getStationReviews(nodeId) });
+  // Con reseña propia ya publicada, lo que se muestra es la reseña -- no el
+  // formulario para volver a escribirla. Editarla es un paso explicito. Va
+  // antes de los returns condicionales de abajo (reglas de hooks), y no hace
+  // falta resetearlo al cambiar de estacion: el panel monta un
+  // StationReviews por estacion y desmonta el anterior al abrir otra.
+  const [editing, setEditing] = useState(false);
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: ["stationReviews", nodeId] });
@@ -53,7 +59,21 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
         )}
       </div>
 
-      <ReviewForm key={myReview?.id ?? "new"} nodeId={nodeId} existing={myReview} onSaved={invalidate} />
+      {myReview && !editing ? (
+        <MyReview review={myReview} onEdit={() => setEditing(true)} />
+      ) : (
+        <ReviewForm
+          key={myReview?.id ?? "new"}
+          nodeId={nodeId}
+          existing={myReview}
+          onSaved={() => {
+            setEditing(false);
+            invalidate();
+          }}
+          // Sin reseña previa no hay a que volver: el formulario es la vista.
+          onCancel={myReview ? () => setEditing(false) : undefined}
+        />
+      )}
 
       {otherReviews.length > 0 && (
         <ul className={styles.list}>
@@ -66,13 +86,41 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
   );
 }
 
+/**
+ * La reseña propia ya publicada, en modo lectura: las estrellas, el
+ * comentario y la foto tal como quedaron. El formulario (con su textarea y
+ * sus botones de foto/borrar) aparece solo al tocar "Editar".
+ */
+function MyReview({ review, onEdit }: { review: StationReview; onEdit: () => void }) {
+  const photoUrl = useStationReviewPhoto(review.id, review.has_photo);
+
+  return (
+    <div className={styles.form}>
+      <div className={styles.formHeader}>
+        <span className={styles.formLabel}>Tu reseña</span>
+        <Stars value={review.rating} size={16} />
+      </div>
+      {review.comment && <p className={styles.itemComment}>{review.comment}</p>}
+      {photoUrl && <img src={photoUrl} alt="" className={styles.itemPhoto} />}
+      <div className={styles.mineFooter}>
+        <span className={styles.itemDate}>{formatDate(review.updated_at)}</span>
+        <button type="button" className="ghost small" onClick={onEdit}>
+          Editar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface ReviewFormProps {
   nodeId: string;
   existing: StationReview | null;
   onSaved: () => void;
+  /** Solo al editar una reseña que ya existe: vuelve al modo lectura. */
+  onCancel?: () => void;
 }
 
-function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
+function ReviewForm({ nodeId, existing, onSaved, onCancel }: ReviewFormProps) {
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -157,6 +205,11 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
               }}
             />
           </label>
+        )}
+        {onCancel && (
+          <button type="button" className="ghost small" disabled={busy} onClick={onCancel}>
+            Cancelar
+          </button>
         )}
         <button type="submit" className="primary small" disabled={busy}>
           {upsert.isPending ? "Guardando..." : existing ? "Actualizar" : "Publicar"}

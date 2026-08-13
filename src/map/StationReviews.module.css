@@ -75,6 +75,22 @@
   margin-right: auto;
 }
 
+/* Pie de la reseña propia en modo lectura: la fecha a la izquierda y el
+   unico control ("Editar") a la derecha. */
+.mineFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* .itemDate trae su propio margen superior porque en la lista de reseñas
+   ajenas va debajo del texto; aca ya lo separa el gap del flex. */
+.mineFooter .itemDate {
+  margin-top: 0;
+}
+
 .list {
   list-style: none;
   margin: 10px 0 0;
