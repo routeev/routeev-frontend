@@ -114,6 +114,47 @@
   pointer-events: auto;
 }
 
+/* Contenido del sidebar mas compacto en desktop: el panel fijo de 372px
+   usaba la misma tipografia/espaciado pensada para pantallas sueltas
+   (login, /profile) y dentro de esta columna angosta se sentia "zoomeado",
+   forzando a scrollear para ver Vehiculo/Estaciones. Solo en desktop -- en
+   mobile el bottom sheet ya se resuelve deslizando (ver .sidebarHandle) y
+   los botones/inputs mas grandes ahi son touch targets a proposito. */
+@media (min-width: 861px) {
+  .sidebarScroll :global(.panel) h2 {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .sidebarScroll :global(.field) {
+    margin-bottom: 8px;
+  }
+  .sidebarScroll label {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  /* Escopado a inputs/selects dentro de .field (los de VehiclePanel) y no a
+     "input, select" a secas: el input de origen/destino vive en .slot
+     (RouteAutocompleteField), que ya define su propio padding horizontal
+     cero a proposito (el marcador y el boton de pin ocupan ese espacio via
+     grid, no via padding) -- una regla generica lo pisaba y desalineaba
+     esos dos campos. */
+  .sidebarScroll :global(.field) input,
+  .sidebarScroll :global(.field) select {
+    padding: 8px 10px;
+  }
+  .sidebarScroll :global(.hint) {
+    font-size: 11px;
+    margin: 4px 0 8px;
+  }
+  .sidebarScroll > :global(.panel) {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+  .sidebarScroll > :global(.panel):last-child {
+    padding-bottom: 4px;
+  }
+}
+
 @media (max-width: 860px) {
   .page {
     height: 100dvh;
