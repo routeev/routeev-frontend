@@ -7,6 +7,13 @@ import styles from "./TripDashboard.module.css";
 const BOLT_PATH = "M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z";
 const PLAY_PATH = "M8 5.2v13.6L19 12 8 5.2Z";
 
+// Precio unitario ($/min) con dos decimales es-UY. El mapa no importa nada del
+// showroom (donde vive num()) y no vale la pena cruzar módulos por una línea:
+// mismo criterio de formato, helper local.
+function precioUnitario(valor: number): string {
+  return valor.toLocaleString("es-UY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function TripStatCard({ label, value, sub, large }: { label: string; value: string; sub?: string | null; large?: boolean }) {
   return (
     <div className={styles.stat}>
@@ -53,6 +60,24 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
     bateria && !bateria.margen_alcanzado && llegadaPct !== null
       ? ` No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.`
       : "";
+
+  // Desglose del costo. El texto de peajes es el mismo de siempre (con o sin
+  // montos desconocidos); lo que cambia con el backend nuevo es la energía:
+  // costo_uyu_recargas presente significa que costo_uyu_energia es SOLO lo
+  // cargado en casa y las recargas en ruta van cotizadas aparte, con el
+  // tarifario de cada operador. Backend viejo: un solo renglón de energía.
+  const bd = primary.breakdown;
+  const peajesSub = hayPeajeSinMonto(bd)
+    ? bd.peaje_uyu > 0
+      ? `${formatUyu(bd.peaje_uyu)} y otros sin monto conocido`
+      : "sin monto conocido"
+    : formatUyu(bd.peaje_uyu);
+  const sinTarifa = bd.recargas_sin_tarifa ?? 0;
+  const costoSub =
+    bd.costo_uyu_recargas != null
+      ? `energía de casa ${formatUyu(bd.costo_uyu_energia)} + recargas ${formatUyu(bd.costo_uyu_recargas)} + peajes ${peajesSub}` +
+        (sinTarifa > 0 ? ` · ${sinTarifa} recarga${sinTarifa === 1 ? "" : "s"} sin tarifario` : "")
+      : `energía ${formatUyu(bd.costo_uyu_energia)} + peajes ${peajesSub}`;
 
   return (
     <section className={styles.dashboard}>
@@ -106,15 +131,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
             />
             <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
-            <TripStatCard
-              label="Costo estimado"
-              value={formatUyu(summary.costUyu)}
-              sub={
-                hayPeajeSinMonto(primary.breakdown)
-                  ? `energía ${formatUyu(primary.breakdown.costo_uyu_energia)} + peajes ${primary.breakdown.peaje_uyu > 0 ? formatUyu(primary.breakdown.peaje_uyu) + " y otros sin monto conocido" : "sin monto conocido"}`
-                  : `energía ${formatUyu(primary.breakdown.costo_uyu_energia)} + peajes ${formatUyu(primary.breakdown.peaje_uyu)}`
-              }
-            />
+            <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
           </div>
 
           <div className={styles.chargingStops}>
@@ -128,6 +145,15 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 {primary.recharges.map((rc, i) => {
                   const detail = findStationDetail(stations, rc.node_id);
                   const addedPct = pctOfCapacity(rc.added_kwh, vehicle);
+                  // recargas_costos viene alineado 1 a 1 con recharges, y la
+                  // misma estación puede aparecer dos veces (ida y vuelta):
+                  // por eso el índice es el criterio primario y el node_id
+                  // queda de fallback por si los largos no coinciden.
+                  const costos = bd.recargas_costos;
+                  const rcTarifa =
+                    costos && costos.length === primary.recharges.length
+                      ? costos[i]
+                      : costos?.find((c) => c.node_id === String(rc.node_id));
                   return (
                     <div className={styles.stopCard} key={i}>
                       <div className={styles.stopHeader}>
@@ -144,6 +170,24 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                         <span>Tiempo de carga</span>
                         <b>{rc.time_min.toFixed(1)} min</b>
                       </div>
+                      {rcTarifa && (
+                        <div className={styles.stopRow}>
+                          <span>Costo</span>
+                          <b>{rcTarifa.costo_uyu != null ? formatUyu(rcTarifa.costo_uyu) : "Tarifa no publicada"}</b>
+                        </div>
+                      )}
+                      {/* Ocupación: informativa (corre si te quedás enchufado
+                          sin cargar), por eso no está sumada en ningún costo. */}
+                      {rcTarifa?.tarifa_conocida &&
+                        rcTarifa.ocupacion_uyu_min != null &&
+                        rcTarifa.ocupacion_tolerancia_min != null && (
+                          <div className={styles.stopRow}>
+                            <span>Ocupación</span>
+                            <b>
+                              $ {precioUnitario(rcTarifa.ocupacion_uyu_min)}/min pasados {rcTarifa.ocupacion_tolerancia_min} min
+                            </b>
+                          </div>
+                        )}
                       {detail && (
                         <div className={styles.stopRow}>
                           <span>Dirección</span>

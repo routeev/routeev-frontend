@@ -284,6 +284,16 @@
   color: var(--accent-dijkstra);
 }
 
+/* Pliego tarifario de la red bajo la tabla de carga: contexto de la columna
+   "Cuesta", informativo -- muted, no el acento de advertencia de .notaCarga. */
+.notaTarifas {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+
 @media (max-width: 900px) {
   .ficha {
     /* minmax(0, 1fr), no 1fr a secas: un track de grid no se achica mas

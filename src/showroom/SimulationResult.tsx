@@ -6,6 +6,7 @@ import { certaintyPointsFromSegments } from "./certaintyProfile";
 import { num } from "./num";
 import { SimulationMap } from "./SimulationMap";
 import { armarSegmentos, armarTramos } from "./simulationTimeline";
+import { tarifaLinea } from "./tarifaTexto";
 import styles from "./SimulationResult.module.css";
 
 interface SimulationResultProps {
@@ -41,6 +42,16 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
 
   const d = resultado.detalle;
   const paradas = resultado.paradas ?? [];
+
+  // Backend nuevo: costo_uyu_recargas presente significa que costo_uyu_energia
+  // es SOLO la energía de casa y cada recarga en ruta viene cotizada con el
+  // tarifario de su operador. Backend viejo en producción: nada de esto llega
+  // y el desglose queda como siempre.
+  const conTarifas = d.costo_uyu_recargas != null;
+  // El detalle no trae los kWh de casa por separado: se derivan restando lo
+  // recargado en ruta (suma de las paradas) del total consumido.
+  const kwhCasa = Math.max(0, d.energia_kwh - paradas.reduce((acc, p) => acc + p.kwh, 0));
+  const sinTarifa = d.recargas_sin_tarifa ?? 0;
 
   return (
     <div className={styles.out}>
@@ -126,9 +137,21 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
           <h5>La plata</h5>
           <ul>
             <li>
-              <span>Energía ({num(d.energia_kwh, 1)} kWh)</span>
+              <span>{conTarifas ? `Energía de casa (${num(kwhCasa, 1)} kWh)` : `Energía (${num(d.energia_kwh, 1)} kWh)`}</span>
               <span className="mono-num">{formatUyu(d.costo_uyu_energia)}</span>
             </li>
+            {conTarifas && paradas.length > 0 && (
+              <li>
+                <span>Recargas en ruta ({paradas.length})</span>
+                <span className="mono-num">{formatUyu(d.costo_uyu_recargas ?? 0)}</span>
+              </li>
+            )}
+            {sinTarifa > 0 && (
+              <li className={styles.desgloseNota}>
+                + {sinTarifa} recarga{sinTarifa === 1 ? "" : "s"} en operador sin tarifario publicado — no{" "}
+                {sinTarifa === 1 ? "incluida" : "incluidas"} en el total
+              </li>
+            )}
             <li>
               <span>Peajes{d.peajes ? ` (${d.peajes})` : ""}</span>
               <span className="mono-num">{formatUyu(d.peaje_uyu)}</span>
@@ -168,6 +191,7 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
                 );
               }
               if (parada.conector) datos.push(parada.conector);
+              if (parada.costo_uyu != null) datos.push(formatUyu(parada.costo_uyu));
 
               return (
                 <li key={i}>
@@ -177,6 +201,9 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
                   </div>
                   <p className={styles.paradaDir}>{[parada.direccion, parada.operador].filter(Boolean).join(" · ")}</p>
                   <p className={["mono-num", styles.paradaDatos].join(" ")}>{datos.join(" · ")}</p>
+                  {/* De dónde sale el costo de arriba (o por qué no hay costo).
+                      Sin `tarifa` (backend viejo) no se muestra nada. */}
+                  {parada.tarifa && <p className={styles.paradaTarifa}>{tarifaLinea(parada.tarifa)}</p>}
                 </li>
               );
             })}

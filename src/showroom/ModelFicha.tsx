@@ -63,6 +63,22 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
   const nombre = `${model.marca} ${model.modelo}`;
   const hayLimite = metricas.carga.some((f) => f.potencia_efectiva_kw < f.potencia_kw);
 
+  // Tarifario de la red (pliego UTE): opcional porque el backend viejo en
+  // producción no lo manda. Sin él, la ficha sigue cotizando todo "a precio
+  // de casa" como siempre y no se aclara nada.
+  const tarifasRed = metricas.tarifas_red;
+  const hayCosto = metricas.carga.some((f) => f.costo_uyu != null);
+  // DC y AC por separado: el backend puede publicar una sola modalidad.
+  const preciosRed = tarifasRed
+    ? [
+        tarifasRed.dc &&
+          `DC $ ${num(tarifasRed.dc.energia_uyu_kwh, 2)}/kWh + ${formatUyu(tarifasRed.dc.cargo_base_uyu)} de conexión`,
+        tarifasRed.ac && `AC $ ${num(tarifasRed.ac.energia_uyu_kwh, 2)}/kWh + ${formatUyu(tarifasRed.ac.cargo_base_uyu)}`,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+
   return (
     <section className={styles.ficha} aria-label="Ficha del modelo elegido" tabIndex={-1}>
       <button
@@ -173,12 +189,18 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
           <div className={[styles.stat, styles.statCosto].join(" ")}>
             <dt>Costo cada 100 km</dt>
             <dd className="mono-num">{formatUyu(metricas.costo_uyu_100km)}</dd>
-            <p className={styles.statSub}>A $ {num(metricas.energia_uyu_kwh, 2)} el kWh</p>
+            {/* Con tarifario de red a la vista hay que aclarar que estos dos
+                costos son al precio de casa, no al de las estaciones. */}
+            <p className={styles.statSub}>
+              A $ {num(metricas.energia_uyu_kwh, 2)} el kWh{tarifasRed ? ", cargando en casa" : ""}
+            </p>
           </div>
           <div className={[styles.stat, styles.statCosto].join(" ")}>
             <dt>Cargar la batería entera</dt>
             <dd className="mono-num">{formatUyu(metricas.costo_carga_completa_uyu)}</dd>
-            <p className={styles.statSub}>{num(model.bateria_kwh, 1)} kWh de punta a punta</p>
+            <p className={styles.statSub}>
+              {num(model.bateria_kwh, 1)} kWh de punta a punta{tarifasRed ? ", en casa" : ""}
+            </p>
           </div>
         </dl>
 
@@ -198,6 +220,9 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
                 <th>Estación</th>
                 <th>Le entrega</th>
                 <th>Tarda</th>
+                {/* Solo si alguna fila trae costo (backend nuevo): sin datos,
+                    la tabla queda exactamente como estaba. */}
+                {hayCosto && <th>Cuesta</th>}
               </tr>
             </thead>
             <tbody>
@@ -215,6 +240,9 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
                     {num(fila.potencia_efectiva_kw)} kW
                   </td>
                   <td className="mono-num">{formatDuration(fila.minutos)}</td>
+                  {hayCosto && (
+                    <td className="mono-num">{fila.costo_uyu != null ? formatUyu(fila.costo_uyu) : "—"}</td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -223,6 +251,12 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
             <p className={styles.notaCarga}>
               Este auto acepta hasta {num(model.potencia_carga_kw)} kW: en una estación más potente
               carga igual de rápido que en una de {num(model.potencia_carga_kw)} kW, no más.
+            </p>
+          )}
+          {tarifasRed && (
+            <p className={styles.notaTarifas}>
+              Precios de red según pliego {tarifasRed.operador ?? "UTE"} {tarifasRed.vigencia}
+              {preciosRed ? `: ${preciosRed}` : ""}. En casa: $ {num(tarifasRed.casa_uyu_kwh, 2)}/kWh.
             </p>
           )}
         </div>
