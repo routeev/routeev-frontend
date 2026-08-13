@@ -2,9 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
-import { listStationReviewSummaries } from "../../api/stationReviews";
-import { RatingSummary } from "../RatingSummary";
 import { StationDetailRows } from "../StationDetailRows";
+import { StationReviews } from "../StationReviews";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
 
@@ -52,7 +51,6 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
  */
 export function StationsLayer() {
   const query = useQuery({ queryKey: ["stations"], queryFn: getStations });
-  const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const lastResult = useMapStore((s) => s.lastResult);
@@ -82,15 +80,38 @@ export function StationsLayer() {
       {query.data
         .filter((st) => visibleIds.has(st.node_id))
         .map((st) => (
-          <Marker key={st.node_id} position={[st.lat, st.lon]} icon={stationIcon()}>
-            <Popup>
-              <b>{st.nombre}</b>
-              <br />
-              <RatingSummary summary={summariesQuery.data?.[String(st.node_id)]} size={12} />
-              <StationDetailRows station={st} />
-            </Popup>
-          </Marker>
+          <StationMarker key={st.node_id} station={st} />
         ))}
     </>
+  );
+}
+
+/**
+ * El popup completo (detalle + reseñas: formulario, fotos, lista) es una
+ * seccion pesada -- solo tiene sentido pedirla cuando el usuario de verdad
+ * clickeo ESTE marcador puntual, no en cuanto el marcador se dibuja. Sin el
+ * gate de `popupOpen`, cada uno de los marcadores visibles (hasta varias
+ * decenas) dispararia su propio GET /reviews apenas entra en pantalla --
+ * exactamente el N+1 que el endpoint de resumen (ver RatingSummary/
+ * StationsPanel) ya evita para la lista del sidebar.
+ */
+function StationMarker({ station }: { station: Station }) {
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  return (
+    <Marker
+      position={[station.lat, station.lon]}
+      icon={stationIcon()}
+      eventHandlers={{
+        popupopen: () => setPopupOpen(true),
+        popupclose: () => setPopupOpen(false),
+      }}
+    >
+      <Popup minWidth={280} maxWidth={340} maxHeight={420}>
+        <b>{station.nombre}</b>
+        <StationDetailRows station={station} />
+        {popupOpen && <StationReviews nodeId={String(station.node_id)} />}
+      </Popup>
+    </Marker>
   );
 }
