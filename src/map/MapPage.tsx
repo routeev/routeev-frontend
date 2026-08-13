@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
@@ -7,6 +7,7 @@ import buttons from "../shared/buttons.module.css";
 import { IconUser } from "../shared/NavIcons";
 import { MapCanvas } from "./MapCanvas";
 import { RouteInputPanel } from "./RouteInputPanel";
+import { StationDetailPanel } from "./StationDetailPanel";
 import { StationsPanel } from "./StationsPanel";
 import { TripDashboard } from "./TripDashboard";
 import { VehiclePanel } from "./VehiclePanel";
@@ -38,6 +39,7 @@ export function MapPage() {
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
   const originId = useMapStore((s) => s.originId);
   const destinationId = useMapStore((s) => s.destinationId);
+  const selectedStationId = useMapStore((s) => s.selectedStationId);
   const missing = useMemo(
     () =>
       calculateGateMissing({
@@ -49,6 +51,14 @@ export function MapPage() {
     [vehiclesLoaded, selectedVehicleId, originId, destinationId]
   );
   useReplayFromHistory(vehiclesLoaded);
+
+  useEffect(() => {
+    // Clickear un cargador en el mapa mientras el bottom sheet esta
+    // colapsado (mobile) no serviria de nada si el detalle que se acaba de
+    // abrir queda escondido debajo -- se lo revela solo, nunca al reves (no
+    // se colapsa cuando se deselecciona, eso lo decide el usuario).
+    if (selectedStationId != null) setSidebarCollapsed(false);
+  }, [selectedStationId]);
 
   // Un error de "Calcular ruta" pisa uno viejo de click-en-el-mapa: es el
   // mas reciente de los dos flujos que escriben este banner.
@@ -103,7 +113,7 @@ export function MapPage() {
           <div className={styles.sidebarScroll}>
             <RouteInputPanel banner={banner} />
             <VehiclePanel />
-            <StationsPanel />
+            {selectedStationId != null ? <StationDetailPanel /> : <StationsPanel />}
             {loaders.failed.length > 0 && (
               <Banner variant="error">
                 {`No se pudo cargar: ${loaders.failed.join(", ")}. Revisá tu conexión y volvé a intentar.`}
