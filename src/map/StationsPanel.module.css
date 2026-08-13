@@ -6,6 +6,16 @@
   overflow-y: auto;
 }
 
+/* Con una estacion abierta, la fila expandida (detalle + reseñas, que puede
+   traer formulario + fotos + varios comentarios) no entra comoda en los
+   220px pensados para una lista plana de nombres -- se deja crecer y el
+   scroll lo maneja el sidebar entero (.sidebarScroll en MapPage), no este
+   box chico anidado. */
+.list.open {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .list li {
   border-bottom: 1px solid var(--border);
   font-size: 12.5px;
@@ -48,6 +58,13 @@
   flex-shrink: 0;
   fill: currentColor;
   stroke: none;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .power {

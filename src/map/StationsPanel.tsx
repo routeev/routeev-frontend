@@ -1,5 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { listStationReviewSummaries } from "../api/stationReviews";
+import { RatingSummary } from "./RatingSummary";
 import { StationDetailRows } from "./StationDetailRows";
+import { StationReviews } from "./StationReviews";
 import { useMapStore } from "./mapStore";
 import styles from "./StationsPanel.module.css";
 
@@ -10,13 +14,15 @@ export function StationsPanel() {
   const leafletMap = useMapStore((s) => s.leafletMap);
   const selectStation = useMapStore((s) => s.selectStation);
   const [openId, setOpenId] = useState<number | null>(null);
+  const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
 
   return (
     <section className="panel" id="stations-panel">
       <h2>Estaciones de carga</h2>
-      <ul className={styles.list}>
+      <ul className={openId != null ? `${styles.list} ${styles.open}` : styles.list}>
         {stations.map((st) => {
           const open = openId === st.node_id;
+          const nodeId = String(st.node_id);
           return (
             <li key={st.node_id}>
               <button
@@ -35,9 +41,17 @@ export function StationsPanel() {
                   </svg>
                   {st.nombre}
                 </span>
-                <span className={styles.power}>{st.potencia_kw} kW</span>
+                <span className={styles.meta}>
+                  <RatingSummary summary={summariesQuery.data?.[nodeId]} size={11} compact />
+                  <span className={styles.power}>{st.potencia_kw} kW</span>
+                </span>
               </button>
-              {open && <StationDetailRows station={st} />}
+              {open && (
+                <>
+                  <StationDetailRows station={st} />
+                  <StationReviews nodeId={nodeId} />
+                </>
+              )}
             </li>
           );
         })}

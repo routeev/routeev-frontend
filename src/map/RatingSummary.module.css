@@ -1,0 +1,11 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-faint);
+}
+
+.text {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}

@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
+import { listStationReviewSummaries } from "../../api/stationReviews";
+import { RatingSummary } from "../RatingSummary";
 import { StationDetailRows } from "../StationDetailRows";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
@@ -50,6 +52,7 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
  */
 export function StationsLayer() {
   const query = useQuery({ queryKey: ["stations"], queryFn: getStations });
+  const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const lastResult = useMapStore((s) => s.lastResult);
@@ -83,6 +86,7 @@ export function StationsLayer() {
             <Popup>
               <b>{st.nombre}</b>
               <br />
+              <RatingSummary summary={summariesQuery.data?.[String(st.node_id)]} size={12} />
               <StationDetailRows station={st} />
             </Popup>
           </Marker>

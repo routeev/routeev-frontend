@@ -1,0 +1,124 @@
+.wrap {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.summaryLine {
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+
+.form {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.formLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.photoPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.photoPreview {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.formActions label {
+  cursor: pointer;
+  margin-right: auto;
+}
+
+.list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.item {
+  padding: 8px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.itemUser {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.itemComment {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.itemPhoto {
+  display: block;
+  margin-top: 6px;
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
+.itemDate {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
