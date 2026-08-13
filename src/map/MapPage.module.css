@@ -26,6 +26,10 @@
   background: var(--bg-panel);
 }
 
+.sidebarHandle {
+  display: none;
+}
+
 .sidebarScroll {
   flex: 1;
   min-height: 0;
@@ -131,14 +135,36 @@
     border-top: 1px solid var(--border);
     border-radius: var(--radius) var(--radius) 0 0;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.28), 0 -16px 48px rgba(0, 0, 0, 0.4);
+    transition: max-height 0.22s ease;
   }
-  .sidebar::before {
-    content: "";
-    display: block;
+  /* Colapsado: deslizando el handle hacia abajo (o tocandolo) se achica el
+     panel a la franja del handle nomas, asi el mapa queda visible completo
+     sin perder el punto de partida/llegada ya cargados en el sidebar. */
+  .sidebar.collapsed {
+    max-height: 40px;
+  }
+  .sidebar.collapsed .sidebarScroll,
+  .sidebar.collapsed .sidebarCta {
+    display: none;
+  }
+  .sidebarHandle {
+    display: flex;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    cursor: grab;
+    /* none, no manipulation: este handle es el que interpreta el gesto de
+       arrastre a mano (pointerdown/up) -- dejarle el touch-action por
+       default del body competiria con eso y el navegador se comeria el
+       gesto como scroll. */
+    touch-action: none;
+  }
+  .sidebarHandle::before {
+    content: "";
     width: 36px;
     height: 4px;
-    margin: 8px auto 2px;
     border-radius: var(--radius-pill);
     background: var(--border);
   }

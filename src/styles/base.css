@@ -18,6 +18,13 @@ body {
   color: var(--text);
   font: var(--text-body);
   -webkit-font-smoothing: antialiased;
+  /* Sin esto, tocar dos veces seguidas cualquier boton/link en mobile (un
+     tap normal que el navegador interpreta como doble-tap) dispara el zoom
+     nativo de la pagina -- "manipulation" deja el pinch-zoom real (accesibi-
+     lidad) intacto, solo saca el doble-tap-zoom y el delay de 300ms. No pisa
+     el touch-action propio de Leaflet (.leaflet-container), que sigue
+     manejando el pan/pinch del mapa. */
+  touch-action: manipulation;
 }
 
 a {
@@ -112,6 +119,18 @@ select {
 input:hover,
 select:hover {
   border-color: var(--text-faint);
+}
+
+/* iOS Safari zoomea la pagina entera al enfocar un input/select con
+   font-size menor a 16px -- de ahi el "hago click y hace zoom" en mobile.
+   Solo se sube el tamano en mobile para no tocar el look compacto de
+   desktop. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 input::placeholder {

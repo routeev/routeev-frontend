@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
@@ -19,8 +19,16 @@ import styles from "./MapPage.module.css";
 
 type MapBanner = { message: string; variant: "error" | "warn" } | null;
 
+// Umbral en px para que un arrastre del handle cuente como swipe (arriba
+// muestra, abajo esconde); por debajo de esto se trata como un tap simple
+// que alterna el estado, asi el gesto sirve tanto para deslizar como para
+// tocar.
+const SIDEBAR_SWIPE_THRESHOLD = 30;
+
 export function MapPage() {
   const [mapBanner, setMapBanner] = useState<MapBanner>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const handleDragStartY = useRef<number | null>(null);
   const handleMapNotice = (msg: string | null, severity: "error" | "warn" = "error") =>
     setMapBanner(msg ? { message: msg, variant: severity } : null);
   const loaders = useMapLoaders();
@@ -48,6 +56,21 @@ export function MapPage() {
 
   const ready = missing.length === 0;
 
+  function onHandlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    handleDragStartY.current = e.clientY;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onHandlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const startY = handleDragStartY.current;
+    handleDragStartY.current = null;
+    if (startY == null) return;
+    const delta = e.clientY - startY;
+    if (delta > SIDEBAR_SWIPE_THRESHOLD) setSidebarCollapsed(true);
+    else if (delta < -SIDEBAR_SWIPE_THRESHOLD) setSidebarCollapsed(false);
+    else setSidebarCollapsed((v) => !v);
+  }
+
   return (
     <div className={styles.page}>
       <Helmet>
@@ -63,7 +86,20 @@ export function MapPage() {
       </AppTopbar>
 
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}>
+          <div
+            className={styles.sidebarHandle}
+            role="button"
+            tabIndex={0}
+            aria-label={sidebarCollapsed ? "Mostrar panel" : "Ocultar panel"}
+            onPointerDown={onHandlePointerDown}
+            onPointerUp={onHandlePointerUp}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              setSidebarCollapsed((v) => !v);
+            }}
+          />
           <div className={styles.sidebarScroll}>
             <RouteInputPanel banner={banner} />
             <VehiclePanel />
