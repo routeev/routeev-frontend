@@ -127,9 +127,20 @@ export function MapPage() {
                 </button>
               </>
             )}
-            <RouteInputPanel banner={banner} />
-            <VehiclePanel />
-            {selectedStationId != null ? <StationDetailPanel /> : <StationsPanel />}
+            {selectedStationId != null ? (
+              // Seccion propia, no una mas al lado de las demas: elegir un
+              // cargador tapa "Tu viaje"/"Vehiculo" en vez de compartir
+              // espacio con ellas, para que el detalle + reseñas tengan
+              // lugar de sobra. El boton "volver" de StationDetailPanel
+              // (selectStation(null)) es lo unico que las trae de vuelta.
+              <StationDetailPanel />
+            ) : (
+              <>
+                <RouteInputPanel banner={banner} />
+                <VehiclePanel />
+                <StationsPanel />
+              </>
+            )}
           </div>
           <div className={styles.sidebarCta}>
             <button
