@@ -5,11 +5,16 @@
   border-top: 1px solid var(--border);
   padding: 16px 20px 20px;
   /* .dashboardWrap (MapPage.module.css) le da todo el ancho libre entre el
-     sidebar de 372px y el borde de la pantalla -- en desktop eso es mucho
-     más de lo que este contenido angosto (tarjetas de stat, texto) necesita
-     para leerse cómodo. Sin este tope el panel flotante quedaba
-     desproporcionadamente ancho. */
-  max-width: 660px;
+     sidebar de 372px y el borde de la pantalla -- en una pantalla ancha de
+     verdad (1920px+) eso puede pasar los 1400px, mucho mas de lo que un
+     texto/tarjetas de stat aguantan legibles antes de sentirse una franja
+     finita perdida en el medio de la nada. Tope generoso, no angosto: las
+     tarjetas (ver .statSectionGrid) ya se reparten TODO el ancho que
+     tengan disponible sin dejar huecos, así que no hace falta angostar el
+     panel para evitar espacios muertos -- esto es nada más un techo para
+     que no se sienta gigante en monitores ultra anchos.
+     */
+  max-width: 960px;
 }
 
 .header {
@@ -63,24 +68,45 @@
 }
 
 .stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: 10px;
   margin-bottom: 16px;
 }
 
+.statBlock {
+  margin-bottom: 14px;
+}
+
+.statBlock:last-child {
+  margin-bottom: 0;
+}
+
 .statSectionTitle {
-  grid-column: 1 / -1;
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-faint);
-  margin: 6px 0 -2px;
+  margin: 0 0 6px;
 }
 
-.statSectionTitle:first-child {
-  margin-top: 0;
+/* Una fila de grid por sección, con tantas columnas como tarjetas tenga esa
+   sección puntual (data-cols, seteado en TripDashboard.tsx) -- así cada
+   tarjeta se reparte una fracción pareja del ancho disponible sin dejar
+   columnas vacías cuando una sección tiene menos tarjetas que otra. */
+.statSectionGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.statSectionGrid[data-cols="1"] {
+  grid-template-columns: 1fr;
+}
+
+.statSectionGrid[data-cols="2"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.statSectionGrid[data-cols="3"] {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .stat {
@@ -291,13 +317,13 @@
 }
 
 @media (max-width: 860px) {
-  .stats {
-    grid-template-columns: 1fr 1fr;
+  .statSectionGrid[data-cols="3"] {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .stats {
+  .statSectionGrid[data-cols] {
     grid-template-columns: 1fr;
   }
 }

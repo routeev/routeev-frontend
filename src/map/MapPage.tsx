@@ -57,10 +57,24 @@ export function MapPage() {
     // singleton de modulo, no se resetea solo al navegar a /profile y
     // volver (React Router remonta MapPage, pero Zustand vive afuera de
     // eso). Sin esto, origen/destino/resultado de la visita anterior
-    // seguian ahi. Deps vacios: una sola vez por montaje, ANTES de que
-    // useReplayFromHistory (arriba) aplique un "ver viaje pasado" si vino
-    // por ahi -- ese efecto recien hace algo cuando vehiclesLoaded pasa a
-    // true, en un render posterior, asi que nunca lo pisa.
+    // seguian ahi.
+    //
+    // Salvo si se viene de "Ver" un viaje pasado (?replay=1): el comentario
+    // original acá asumía que este reset SIEMPRE corre antes de que
+    // useReplayFromHistory (arriba) haga algo, porque ese efecto "recién
+    // hace algo cuando vehiclesLoaded pasa a true, en un render posterior".
+    // Eso es cierto solo si vehiclesLoaded arranca en false -- pero "Ver"
+    // navega player desde /profile, que ya pidió los vehículos (misma
+    // queryKey, TanStack Query los sirve del cache), así que vehiclesLoaded
+    // puede llegar en true YA en el primer render. Ahí los dos efectos
+    // corren en el mismo commit, en el orden en que aparecen abajo en el
+    // código -- useReplayFromHistory primero (arma origen/destino/
+    // resultado), este reset después, pisándolo todo de vuelta a blanco.
+    // Confirmado en vivo: navegar /app (carga fría) -> "Mi perfil" (SPA) ->
+    // "Ver" reproduce el mapa vacío que reportó el usuario. Con replay=1 en
+    // la URL, useReplayFromHistory es la única fuente de verdad para el
+    // estado inicial -- este efecto no tiene nada que limpiar.
+    if (new URLSearchParams(window.location.search).get("replay") === "1") return;
     useMapStore.getState().resetTripPlanning();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
