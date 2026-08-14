@@ -14,6 +14,19 @@ function precioUnitario(valor: number): string {
   return valor.toLocaleString("es-UY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// "Tiempo estimado" era un solo numero (manejo + trafico + carga sumados)
+// aunque el backend ya los manda separados -- esto arma el desglose como
+// sub-texto. Si un viaje tiene un solo componente real (lo mas comun: sin
+// trafico ni recargas), mostrar el desglose no aporta nada sobre el numero
+// grande de arriba, asi que se omite.
+function formatTimeBreakdown(drivingMin: number, trafficMin: number, chargingMin: number): string | null {
+  const parts: string[] = [];
+  if (drivingMin > 0.5) parts.push(`${formatDuration(drivingMin)} manejando`);
+  if (trafficMin > 0.5) parts.push(`${formatDuration(trafficMin)} de tráfico`);
+  if (chargingMin > 0.5) parts.push(`${formatDuration(chargingMin)} cargando`);
+  return parts.length > 1 ? parts.join(" + ") : null;
+}
+
 function TripStatCard({ label, value, sub, large }: { label: string; value: string; sub?: string | null; large?: boolean }) {
   return (
     <div className={styles.stat}>
@@ -22,6 +35,10 @@ function TripStatCard({ label, value, sub, large }: { label: string; value: stri
       {sub && <div className={["mono-num", styles.statSub].join(" ")}>{sub}</div>}
     </div>
   );
+}
+
+function StatSection({ title }: { title: string }) {
+  return <div className={styles.statSectionTitle}>{title}</div>;
 }
 
 interface TripDashboardProps {
@@ -80,6 +97,20 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
         (sinTarifa > 0 ? ` · ${sinTarifa} recarga${sinTarifa === 1 ? "" : "s"} sin tarifario` : "")
       : `energía ${formatUyu(bd.costo_uyu_energia)} + peajes ${peajesSub}`;
 
+  const timeBreakdown = summary
+    ? formatTimeBreakdown(summary.drivingMin, summary.trafficMin, summary.chargingMin)
+    : null;
+  // Igual que costoSub arriba: energia_recargada_kwh > 0 es la señal de que
+  // hubo carga en ruta ademas de la de casa (backend nuevo). Sin eso, el
+  // desglose casa/ruta seria identico al numero de arriba, redundante.
+  const energySub = !summary
+    ? null
+    : summary.publicEnergyKwh != null && summary.publicEnergyKwh > 0
+      ? `${summary.consumedKwh.toFixed(2)} kWh · casa ${summary.homeEnergyKwh?.toFixed(2)} + ruta ${summary.publicEnergyKwh.toFixed(2)}`
+      : summary.consumedPct !== null
+        ? `${summary.consumedKwh.toFixed(2)} kWh`
+        : null;
+
   return (
     <section className={styles.dashboard}>
       <div className={styles.header}>
@@ -126,13 +157,28 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             </div>
           )}
           <div className={styles.stats}>
+            <StatSection title="Recorrido" />
             <TripStatCard label="Distancia total" value={`${summary.distanceKm.toFixed(1)} km`} large />
-            <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} large />
+            <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} sub={timeBreakdown} large />
+            {summary.avgSpeedKmh !== null && (
+              <TripStatCard label="Velocidad promedio" value={`${Math.round(summary.avgSpeedKmh)} km/h`} />
+            )}
+
+            <StatSection title="Batería" />
             <TripStatCard
               label="Batería consumida"
               value={summary.consumedPct !== null ? `${summary.consumedPct.toFixed(0)}%` : `${summary.consumedKwh.toFixed(2)} kWh`}
-              sub={summary.consumedPct !== null ? `${summary.consumedKwh.toFixed(2)} kWh` : null}
+              sub={energySub}
             />
+            <TripStatCard
+              label="Batería al llegar"
+              value={summary.arrivalPct !== null ? `${summary.arrivalPct.toFixed(0)}%` : `${summary.arrivalKwh.toFixed(1)} kWh`}
+              sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
+            />
+            <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
+
+            <StatSection title="Costo y peajes" />
+            <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
             <TripStatCard
               label="Peajes"
               value={summary.hasTolls ? `${summary.tollCount} en la ruta` : "Sin peajes"}
@@ -146,13 +192,6 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                   : null
               }
             />
-            <TripStatCard
-              label="Batería al llegar"
-              value={summary.arrivalPct !== null ? `${summary.arrivalPct.toFixed(0)}%` : `${summary.arrivalKwh.toFixed(1)} kWh`}
-              sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
-            />
-            <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
-            <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
           </div>
 
           <div className={styles.chargingStops}>

@@ -53,6 +53,19 @@ export function MapPage() {
   useReplayFromHistory(vehiclesLoaded);
 
   useEffect(() => {
+    // Entrar (o volver) al mapa arranca en blanco -- el store es un
+    // singleton de modulo, no se resetea solo al navegar a /profile y
+    // volver (React Router remonta MapPage, pero Zustand vive afuera de
+    // eso). Sin esto, origen/destino/resultado de la visita anterior
+    // seguian ahi. Deps vacios: una sola vez por montaje, ANTES de que
+    // useReplayFromHistory (arriba) aplique un "ver viaje pasado" si vino
+    // por ahi -- ese efecto recien hace algo cuando vehiclesLoaded pasa a
+    // true, en un render posterior, asi que nunca lo pisa.
+    useMapStore.getState().resetTripPlanning();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     // Clickear un cargador en el mapa mientras el bottom sheet esta
     // colapsado (mobile) no serviria de nada si el detalle que se acaba de
     // abrir queda escondido debajo -- se lo revela solo, nunca al reves (no

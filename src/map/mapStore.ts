@@ -87,6 +87,7 @@ interface MapState {
     payload: CompareRoutesPayload | null,
     replaySuffix?: string
   ) => void;
+  resetTripPlanning: () => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -227,6 +228,27 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setLastResult: (result, payload, replaySuffix) =>
     set({ lastResult: result, lastRoutePayload: payload, replaySuffix, selectedStationId: null }),
+
+  // El store es un singleton a nivel de modulo: no se resetea solo al
+  // navegar entre /app y /profile (React Router desmonta/remonta las
+  // paginas, pero Zustand vive afuera de eso) -- sin esto, volver al mapa
+  // seguia mostrando el origen/destino/resultado de la visita anterior.
+  // Se llama al montar MapPage (ver MapPage.tsx). No toca vehiculo ni
+  // bateria elegidos: eso es mas "preferencia de la sesion" que "busqueda
+  // de este viaje puntual", y perderlo cada vez que se entra al mapa
+  // seria mas molesto que util.
+  resetTripPlanning: () =>
+    set({
+      originId: null,
+      originNode: null,
+      destinationId: null,
+      destinationNode: null,
+      pickMode: "origin",
+      lastResult: null,
+      lastRoutePayload: null,
+      replaySuffix: undefined,
+      selectedStationId: null,
+    }),
 }));
 
 export function selectedVehicle(state: MapState): Vehicle | null {
