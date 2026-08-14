@@ -81,7 +81,7 @@ export function ShowroomPage() {
         <meta property="og:locale" content="es_UY" />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/showroom" />
-        <meta property="og:title" content="Showroom: 895 autos eléctricos con sus números reales" />
+        <meta property="og:title" content="Showroom: 630 autos eléctricos con sus números reales" />
         <meta
           property="og:description"
           content="Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de carga. Sin crear cuenta."
