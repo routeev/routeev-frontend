@@ -34,6 +34,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const stations = useMapStore((s) => s.stations);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const vehicle = useMapStore(selectedVehicle);
+  const setLastResult = useMapStore((s) => s.setLastResult);
 
   if (!result) return null;
 
@@ -82,8 +83,28 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   return (
     <section className={styles.dashboard}>
       <div className={styles.header}>
-        <h2>Datos del viaje</h2>
-        <div className={styles.routeLabel}>{routeLabel}</div>
+        <div>
+          <h2>Datos del viaje</h2>
+          <div className={styles.routeLabel}>{routeLabel}</div>
+        </div>
+        {!liveTrip.ui.active && (
+          // Escondido durante un viaje en vivo a proposito: "Cancelar
+          // viaje" (mas abajo) es la salida correcta ahi -- liveTrip no se
+          // entera de que el dashboard se cerro, asi que dejar cerrar esto
+          // en medio del seguimiento dejaria el GPS corriendo sin ruta
+          // dibujada en el mapa (RouteLayers depende de lastResult).
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={() => setLastResult(null, null, undefined)}
+            aria-label="Cerrar datos del viaje"
+            title="Cerrar"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {!summary ? (

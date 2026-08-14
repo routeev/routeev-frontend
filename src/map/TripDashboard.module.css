@@ -8,7 +8,7 @@
 
 .header {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
@@ -26,6 +26,34 @@
 .routeLabel {
   font-size: 12.5px;
   color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.closeBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+}
+
+.closeBtn:hover {
+  color: var(--text);
+  border-color: transparent;
+}
+
+.closeBtn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .stats {
