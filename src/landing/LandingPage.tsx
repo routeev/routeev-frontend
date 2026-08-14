@@ -18,7 +18,7 @@ const STATS = [
     label: "Intersecciones reales de OpenStreetMap",
   },
   { value: 19, label: "Departamentos cubiertos" },
-  { value: 267, label: "Estaciones de carga en el mapa" },
+  { value: 259, label: "Estaciones de carga en el mapa" },
   { value: 630, label: "Modelos de auto eléctrico precargados" },
 ];
 
@@ -50,7 +50,7 @@ export function LandingPage() {
         <title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
         <meta
           name="description"
-          content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 267 estaciones de carga de UTE y de operadores privados. 630 modelos precargados, sin crear cuenta."
+          content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 259 estaciones de carga de UTE y de operadores privados. 630 modelos precargados, sin crear cuenta."
         />
         <link rel="canonical" href="https://routeev.uy/" />
         <meta property="og:type" content="website" />
