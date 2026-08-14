@@ -73,13 +73,18 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
       },
       (err) => {
         if (cancelled) return;
+        // Mismo nivel de detalle que ERROR_MESSAGES en useGeolocation.ts (el
+        // boton "Usar mi ubicacion"): el mensaje generico de antes ("no
+        // diste permiso...") no le daba a nadie un paso concreto para
+        // arreglarlo. PERMISSION_DENIED en el navegador casi siempre es una
+        // decision YA GUARDADA de una vez anterior (por eso nunca vuelve a
+        // preguntar) -- el candado en la barra de direcciones es el unico
+        // lugar para revertirla.
         const reason =
           err.code === err.PERMISSION_DENIED
-            ? "no diste permiso de ubicación (o está apagada en el dispositivo/sistema)"
-            : "no se pudo determinar tu ubicación";
-        onLocateFailRef.current(
-          `No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`
-        );
+            ? "no le diste permiso de ubicación a este sitio, o quedó bloqueado de una visita anterior. Para habilitarlo: tocá el candado 🔒 junto a la dirección del sitio y activá la ubicación (o revisá que la ubicación esté encendida en el dispositivo)"
+            : "no se pudo determinar tu ubicación (revisá que el GPS o la ubicación del dispositivo estén encendidos)";
+        onLocateFailRef.current(`No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`);
       }
     );
     return () => {

@@ -77,6 +77,8 @@ interface MapState {
 
   setOrigin: (node: GraphNode) => void;
   setDestination: (node: GraphNode) => void;
+  clearOrigin: () => void;
+  clearDestination: () => void;
   setPickMode: (mode: PickMode) => void;
 
   setLastResult: (
@@ -192,6 +194,23 @@ export const useMapStore = create<MapState>((set, get) => ({
         ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
       };
     }),
+  // El "x" para borrar un pin ya elegido: vuelve a pickMode a ese rol para
+  // que el proximo click en el mapa lo fije de nuevo, mismo criterio que
+  // setOrigin ya usa para AVANZAR el pickMode al elegir (ver arriba).
+  clearOrigin: () =>
+    set((s) => ({
+      originId: null,
+      originNode: null,
+      pickMode: "origin",
+      ...(s.originId != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+    })),
+  clearDestination: () =>
+    set((s) => ({
+      destinationId: null,
+      destinationNode: null,
+      pickMode: "destination",
+      ...(s.destinationId != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+    })),
   setPickMode: (mode) => set({ pickMode: mode }),
 
   setLastResult: (result, payload, replaySuffix) =>

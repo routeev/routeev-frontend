@@ -1,6 +1,11 @@
 .slot {
   display: grid;
-  grid-template-columns: 12px 1fr 36px;
+  /* El "x" de borrar solo se renderiza si hay un pin puesto -- grid-column
+     explicito en .clear/.pin (mas abajo) para que .pin quede siempre en la
+     ultima columna sin importar si .clear esta en el DOM o no (el
+     auto-placement por orden de aparicion lo hubiera corrido a la columna
+     de .clear cuando falta, con el ancho equivocado). */
+  grid-template-columns: 12px 1fr 28px 36px;
   align-items: center;
   gap: 10px;
 }
@@ -46,6 +51,7 @@
 }
 
 .pin {
+  grid-column: 4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,13 +74,49 @@
   fill: currentColor;
 }
 
+.clear {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border-color: transparent;
+  background: none;
+  color: var(--text-faint);
+}
+
+.clear:hover {
+  color: var(--danger);
+  border-color: transparent;
+}
+
+.clear svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 @media (max-width: 640px) {
   .slot {
-    grid-template-columns: 12px 1fr 40px;
+    grid-template-columns: 12px 1fr 40px 40px;
   }
   .pin {
     width: 40px;
     height: 40px;
+  }
+  .clear {
+    width: 40px;
+    height: 40px;
+  }
+  .clear svg {
+    width: 17px;
+    height: 17px;
   }
 }
 

@@ -31,6 +31,7 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
   const searchableNodes = useMapStore((s) => s.searchableNodes);
   const node = useMapStore((s) => (role === "origin" ? s.originNode : s.destinationNode));
   const setNode = useMapStore((s) => (role === "origin" ? s.setOrigin : s.setDestination));
+  const clearNode = useMapStore((s) => (role === "origin" ? s.clearOrigin : s.clearDestination));
   const setPickMode = useMapStore((s) => s.setPickMode);
 
   const [editingText, setEditingText] = useState<string | null>(null);
@@ -177,6 +178,19 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
             </ul>
           )}
         </div>
+        {node && (
+          <button
+            type="button"
+            className={styles.clear}
+            title={`Borrar ${role === "origin" ? "el origen" : "el destino"}`}
+            onClick={() => clearNode()}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+            <span className="sr-only">Borrar {role === "origin" ? "el origen" : "el destino"}</span>
+          </button>
+        )}
         <button
           type="button"
           className={[styles.pin, isPickTarget ? "active" : ""].join(" ")}
