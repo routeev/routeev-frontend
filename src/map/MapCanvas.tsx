@@ -63,13 +63,23 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
       (pos) => {
         if (cancelled) return;
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        map.setView(coords, AUTO_LOCATE_ZOOM);
+        // El GPS puede tardar bastante en resolver (varios segundos no es
+        // raro) -- si para cuando esto llega la persona ya fijó un origen/
+        // destino o ya calculó una ruta, mover la cámara acá se la pisa de
+        // golpe, el mismo problema que ya se arregló para el grafo (ver
+        // GraphLayer.tsx) pero del lado del auto-locate. myPosition SI se
+        // guarda igual (lo sigue necesitando, p. ej., el botón "volver" de
+        // StationDetailPanel), solo la vista de la cámara se salta.
+        const state = useMapStore.getState();
+        if (!state.lastResult && state.originId == null && state.destinationId == null) {
+          map.setView(coords, AUTO_LOCATE_ZOOM);
+        }
         setMyPosition(coords);
         // Tambien al store, no solo al estado local: es lo que le permite a
         // StationDetailPanel volver a centrar aca al salir del detalle de
         // una estacion, sin que ese componente tenga que ser descendiente
         // de CaptureMap.
-        useMapStore.getState().setMyPosition(coords);
+        state.setMyPosition(coords);
       },
       (err) => {
         if (cancelled) return;

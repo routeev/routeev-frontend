@@ -1,5 +1,5 @@
-import { Children } from "react";
 import { formatDuration, formatUyu } from "../shared/format";
+import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { useMapStore, selectedVehicle, batteryPctToKwh } from "./mapStore";
 import { findStationDetail, pctOfCapacity, hayPeajeSinMonto, summarizeTrip } from "./tripStats";
 import type { LiveTripUi } from "./useLiveTrip";
@@ -34,25 +34,6 @@ function TripStatCard({ label, value, sub, large }: { label: string; value: stri
       <div className={styles.statLabel}>{label}</div>
       <div className={["mono-num", styles.statValue, large ? styles.statValueLarge : ""].join(" ")}>{value}</div>
       {sub && <div className={["mono-num", styles.statSub].join(" ")}>{sub}</div>}
-    </div>
-  );
-}
-
-// Cada tarjeta ocupa una fracción igual del ancho disponible (data-cols,
-// ver TripDashboard.module.css) en vez de un tope de columnas fijo para
-// todo el panel: "Recorrido"/"Batería" tienen 3 tarjetas, "Costo y peajes"
-// 2 -- con un grid único de N columnas, la sección con menos tarjetas que
-// el máximo quedaba con un hueco vacío pegado a la derecha (visible sobre
-// todo en el panel ancho de desktop, que no tiene el límite angosto del
-// sidebar de 372px).
-function StatSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const count = Children.toArray(children).filter(Boolean).length;
-  return (
-    <div className={styles.statBlock}>
-      <div className={styles.statSectionTitle}>{title}</div>
-      <div className={styles.statSectionGrid} data-cols={count}>
-        {children}
-      </div>
     </div>
   );
 }
@@ -143,7 +124,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
           <button
             type="button"
             className={styles.closeBtn}
-            onClick={() => setLastResult(null, null, undefined)}
+            onClick={() => {
+              setLastResult(null, null, undefined);
+              // Mismo criterio que el popupclose de StationsLayer: cerrar
+              // "Datos del viaje" saca el recorrido del mapa (RouteLayers
+              // depende de lastResult, ya lo hacía), pero sin esto la cámara
+              // se quedaba mirando fija donde estaba el viaje anterior --
+              // visualmente seguía "mostrándolo" aunque la línea ya no
+              // estuviera. Volver a la ubicación real es lo que de verdad
+              // se siente como "arrancar de nuevo".
+              const state = useMapStore.getState();
+              if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
+            }}
             aria-label="Cerrar datos del viaje"
             title="Cerrar"
           >
@@ -173,44 +165,36 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             </div>
           )}
           <div className={styles.stats}>
-            <StatSection title="Recorrido">
-              <TripStatCard label="Distancia total" value={`${summary.distanceKm.toFixed(1)} km`} large />
-              <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} sub={timeBreakdown} large />
-              {summary.avgSpeedKmh !== null && (
-                <TripStatCard label="Velocidad promedio" value={`${Math.round(summary.avgSpeedKmh)} km/h`} />
-              )}
-            </StatSection>
-
-            <StatSection title="Batería">
-              <TripStatCard
-                label="Batería consumida"
-                value={summary.consumedPct !== null ? `${summary.consumedPct.toFixed(0)}%` : `${summary.consumedKwh.toFixed(2)} kWh`}
-                sub={energySub}
-              />
-              <TripStatCard
-                label="Batería al llegar"
-                value={summary.arrivalPct !== null ? `${summary.arrivalPct.toFixed(0)}%` : `${summary.arrivalKwh.toFixed(1)} kWh`}
-                sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
-              />
-              <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
-            </StatSection>
-
-            <StatSection title="Costo y peajes">
-              <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
-              <TripStatCard
-                label="Peajes"
-                value={summary.hasTolls ? `${summary.tollCount} en la ruta` : "Sin peajes"}
-                sub={
-                  summary.hasTolls
-                    ? hayPeajeSinMonto(primary.breakdown)
-                      ? primary.breakdown.peaje_uyu > 0
-                        ? `${formatUyu(primary.breakdown.peaje_uyu)} y otros sin monto conocido`
-                        : "monto no disponible"
-                      : formatUyu(primary.breakdown.peaje_uyu)
-                    : null
-                }
-              />
-            </StatSection>
+            <TripStatCard label="Distancia total" value={`${summary.distanceKm.toFixed(1)} km`} large />
+            <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} sub={timeBreakdown} large />
+            {summary.avgSpeedKmh !== null && (
+              <TripStatCard label="Velocidad promedio" value={`${Math.round(summary.avgSpeedKmh)} km/h`} />
+            )}
+            <TripStatCard
+              label="Batería consumida"
+              value={summary.consumedPct !== null ? `${summary.consumedPct.toFixed(0)}%` : `${summary.consumedKwh.toFixed(2)} kWh`}
+              sub={energySub}
+            />
+            <TripStatCard
+              label="Batería al llegar"
+              value={summary.arrivalPct !== null ? `${summary.arrivalPct.toFixed(0)}%` : `${summary.arrivalKwh.toFixed(1)} kWh`}
+              sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
+            />
+            <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
+            <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
+            <TripStatCard
+              label="Peajes"
+              value={summary.hasTolls ? `${summary.tollCount} en la ruta` : "Sin peajes"}
+              sub={
+                summary.hasTolls
+                  ? hayPeajeSinMonto(primary.breakdown)
+                    ? primary.breakdown.peaje_uyu > 0
+                      ? `${formatUyu(primary.breakdown.peaje_uyu)} y otros sin monto conocido`
+                      : "monto no disponible"
+                    : formatUyu(primary.breakdown.peaje_uyu)
+                  : null
+              }
+            />
           </div>
 
           <div className={styles.chargingStops}>

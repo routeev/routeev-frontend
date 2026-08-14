@@ -56,46 +56,18 @@
   stroke-linecap: round;
 }
 
+/* Un solo grid para las 8 tarjetas (ya no separadas por sección "Recorrido/
+   Batería/Costo y peajes" -- cada label ya es autodescriptivo, y partirlas
+   en bloques forzaba un salto de fila por sección aunque sobrara ancho).
+   auto-fit acomoda tantas columnas como entren: cuanto más ancho el panel
+   (ver .dashboard, sin tope de ancho), menos filas hacen falta para
+   mostrarlas todas -- en un panel bien ancho de desktop entran las 8 en una
+   sola fila, sin escribir ningún media query a mano para eso. */
 .stats {
-  margin-bottom: 16px;
-}
-
-.statBlock {
-  margin-bottom: 14px;
-}
-
-.statBlock:last-child {
-  margin-bottom: 0;
-}
-
-.statSectionTitle {
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-faint);
-  margin: 0 0 6px;
-}
-
-/* Una fila de grid por sección, con tantas columnas como tarjetas tenga esa
-   sección puntual (data-cols, seteado en TripDashboard.tsx) -- así cada
-   tarjeta se reparte una fracción pareja del ancho disponible sin dejar
-   columnas vacías cuando una sección tiene menos tarjetas que otra. */
-.statSectionGrid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
-}
-
-.statSectionGrid[data-cols="1"] {
-  grid-template-columns: 1fr;
-}
-
-.statSectionGrid[data-cols="2"] {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.statSectionGrid[data-cols="3"] {
-  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 16px;
 }
 
 .stat {
@@ -306,13 +278,13 @@
 }
 
 @media (max-width: 860px) {
-  .statSectionGrid[data-cols="3"] {
+  .stats {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 480px) {
-  .statSectionGrid[data-cols] {
+  .stats {
     grid-template-columns: 1fr;
   }
 }
