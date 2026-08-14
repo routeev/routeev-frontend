@@ -32,20 +32,23 @@ export function GraphLayer() {
   // vez que llegan los datos" como decia el comentario -- nada lo
   // garantizaba) y SIEMPRE hacia fitBounds a Uruguay entero, sin mirar si
   // CaptureMap ya habia centrado el mapa en la ubicacion real del usuario
-  // (MapCanvas.tsx). El grafo pesa ~1,6 MB/63.800 nodos: en la practica es
-  // una carrera contra la geolocalizacion, y cuando el grafo terminaba de
-  // cargar DESPUES del auto-locate exitoso, este fitBounds lo pisaba --
-  // pareciera que "la ubicacion no funciona" cuando en realidad si
-  // funciono, y esto la deshizo un instante despues.
+  // (MapCanvas.tsx) O si ya habia un viaje armado/calculado (RouteLayers).
+  // El grafo pesa ~1,6 MB/63.800 nodos: si tarda mas en llegar que
+  // cualquiera de esas dos cosas -- nada raro con ese peso, sobre todo en
+  // el celular -- este fitBounds las deshacia un instante despues de que
+  // ya habian funcionado bien. Por eso el chequeo de abajo mira los TRES
+  // estados mas especificos, no solo la ubicacion.
   const hasFitOnce = useRef(false);
   useEffect(() => {
     if (!query.data || hasFitOnce.current) return;
     addNodes(query.data.nodes);
     hasFitOnce.current = true;
-    // Si el auto-locate ya centro el mapa en la ubicacion real, esa vista
-    // gana -- fitBounds a todo el pais es solo el respaldo para cuando la
-    // geolocalizacion no esta disponible o el usuario aun no la resolvio.
-    if (useMapStore.getState().myPosition) return;
+    const state = useMapStore.getState();
+    // fitBounds a todo el pais es solo el respaldo para cuando no hay
+    // nada mas especifico todavia -- si ya hay ubicacion real, un origen/
+    // destino en camino, o un viaje ya calculado/repetido del historial,
+    // esa vista gana siempre.
+    if (state.myPosition || state.lastResult || state.originId != null || state.destinationId != null) return;
     const bounds = L.latLngBounds(query.data.nodes.map((n): [number, number] => [n.lat, n.lon]));
     map.fitBounds(bounds, { padding: [20, 20] });
   }, [query.data, map, addNodes]);
