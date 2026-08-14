@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { listStationReviewSummaries } from "../api/stationReviews";
+import { esPrivada } from "./esPrivada";
 import { RatingSummary } from "./RatingSummary";
 import { useMapStore } from "./mapStore";
 import styles from "./StationsPanel.module.css";
@@ -16,6 +17,7 @@ export function StationsPanel() {
   return (
     <section className="panel" id="stations-panel">
       <h2>Estaciones de carga</h2>
+      <p className={styles.leyenda}>De la red de UTE y de operadores privados.</p>
       <ul className={styles.list}>
         {stations.map((st) => {
           const nodeId = String(st.node_id);
@@ -37,6 +39,10 @@ export function StationsPanel() {
                 </span>
                 <span className={styles.meta}>
                   <RatingSummary summary={summariesQuery.data?.[nodeId]} size={11} compact />
+                  {/* De quién es el cargador: con qué app se paga y a qué
+                      tarifa. Solo se marca el privado -- UTE es la mayoría de
+                      la red y etiquetarla en cada fila sería ruido. */}
+                  {esPrivada(st.operador) && <span className={styles.privada}>{st.operador}</span>}
                   <span className={styles.power}>{st.potencia_kw} kW</span>
                 </span>
               </button>

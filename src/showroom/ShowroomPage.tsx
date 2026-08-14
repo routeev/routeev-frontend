@@ -74,17 +74,17 @@ export function ShowroomPage() {
         <title>Showroom eléctrico — RouteEV</title>
         <meta
           name="description"
-          content="Buscá cualquier auto eléctrico y mirá sus datos reales: batería, autonomía, consumo, costo en pesos y tiempo de carga en la red de UTE en Uruguay."
+          content="Buscá cualquier auto eléctrico y mirá sus datos reales: batería, autonomía, consumo, costo en pesos y tiempo de carga en la red de carga de Uruguay."
         />
         <link rel="canonical" href="https://routeev.uy/showroom" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="es_UY" />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/showroom" />
-        <meta property="og:title" content="Showroom: 895 autos eléctricos con sus números reales" />
+        <meta property="og:title" content="Showroom: 630 autos eléctricos con sus números reales" />
         <meta
           property="og:description"
-          content="Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de UTE. Sin crear cuenta."
+          content="Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de carga. Sin crear cuenta."
         />
         <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />

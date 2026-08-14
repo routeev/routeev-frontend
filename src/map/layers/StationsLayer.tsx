@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
+import { esPrivada } from "../esPrivada";
 import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
 import { stationIcon } from "../markerIcons";
@@ -92,7 +93,7 @@ export function StationsLayer() {
           <Marker
             key={st.node_id}
             position={[st.lat, st.lon]}
-            icon={stationIcon()}
+            icon={stationIcon(esPrivada(st.operador))}
             // El detalle completo (formulario de reseña, fotos, lista de
             // comentarios) ya no vive en este popup -- clickear el marcador
             // selecciona la estacion, y eso abre StationDetailPanel en el

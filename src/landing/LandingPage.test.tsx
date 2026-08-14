@@ -39,7 +39,7 @@ describe("LandingPage", () => {
 
   it("renders all four real stats", () => {
     renderLanding();
-    expect(screen.getByText("895")).toBeInTheDocument();
-    expect(screen.getByText("209")).toBeInTheDocument();
+    expect(screen.getByText("630")).toBeInTheDocument();
+    expect(screen.getByText("259")).toBeInTheDocument();
   });
 });

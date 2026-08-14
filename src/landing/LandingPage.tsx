@@ -18,8 +18,8 @@ const STATS = [
     label: "Intersecciones reales de OpenStreetMap",
   },
   { value: 19, label: "Departamentos cubiertos" },
-  { value: 209, label: "Estaciones de carga UTE en el mapa" },
-  { value: 895, label: "Modelos de auto eléctrico precargados" },
+  { value: 259, label: "Estaciones de carga en el mapa" },
+  { value: 630, label: "Modelos de auto eléctrico precargados" },
 ];
 
 const HOW_IT_WORKS = [
@@ -50,7 +50,7 @@ export function LandingPage() {
         <title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
         <meta
           name="description"
-          content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 209 estaciones de UTE. 895 modelos precargados, sin crear cuenta."
+          content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 259 estaciones de carga de UTE y de operadores privados. 630 modelos precargados, sin crear cuenta."
         />
         <link rel="canonical" href="https://routeev.uy/" />
         <meta property="og:type" content="website" />
@@ -60,7 +60,7 @@ export function LandingPage() {
         <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
         <meta
           property="og:description"
-          content="Elegí uno de 895 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+          content="Elegí uno de 630 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
         />
         <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -184,7 +184,7 @@ export function LandingPage() {
             <p className={styles.eyebrow}>Showroom · sin cuenta</p>
             <h2>Antes de comprarlo, fijate si llega.</h2>
             <p>
-              Buscá cualquiera de los 895 autos eléctricos del catálogo y mirá sus números de verdad:
+              Buscá cualquiera de los 630 autos eléctricos del catálogo y mirá sus números de verdad:
               batería, autonomía real, consumo, cuánto cuesta cada 100 km en pesos y cuánto tarda en cargar
               en las estaciones que existen en Uruguay.
             </p>
