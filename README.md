@@ -74,4 +74,4 @@ npx vercel deploy --prebuilt --prod --yes
 - Cliente de API tipado en `src/api/`.
 - `RouteErrorBoundary` (`src/shared/`) atrapa errores de carga de los chunks lazy por ruta (`routes.tsx`) y ofrece recargar — cubre el caso de un deploy nuevo mientras alguien tiene la app vieja abierta.
 - Meta tags OG/Twitter estáticos en `index.html` (no via `react-helmet`): los crawlers de WhatsApp/Twitter/Instagram no ejecutan JS, así que necesitan las tags ya presentes en el HTML servido para armar la preview del link.
-- `StationsLayer` (`src/map/layers/`) no dibuja las ~265 estaciones de carga de una: sin ruta calculada solo muestra la elegida a mano en `StationsPanel`, y con ruta calculada solo las paradas que esa ruta realmente usa — dibujarlas todas saturaba el mapa apenas se abría `/app`.
+- `StationsLayer` (`src/map/layers/`) no dibuja las ~267 estaciones de carga de una: sin ruta calculada solo muestra la elegida a mano en `StationsPanel`, y con ruta calculada solo las paradas que esa ruta realmente usa — dibujarlas todas saturaba el mapa apenas se abría `/app`.
