@@ -1,3 +1,4 @@
+import L from "leaflet";
 import { useCallback, useRef, useState } from "react";
 import { logTrip } from "../api/route";
 import { haversineKm } from "../shared/geo";
@@ -229,6 +230,15 @@ export function useLiveTrip() {
     const vehicle = selectedVehicle(useMapStore.getState());
     if (!vehicle) return;
     const startBatteryKwh = batteryPctToKwh(vehicle, useMapStore.getState().startBatteryPct);
+
+    // Zoom al recorrido completo apenas se arranca el viaje -- para este
+    // momento el mapa puede estar centrado en cualquier lado (mirando una
+    // estacion, explorando el area, etc.), no necesariamente mostrando la
+    // ruta que se acaba de empezar a seguir.
+    const leafletMap = useMapStore.getState().leafletMap;
+    if (leafletMap) {
+      leafletMap.fitBounds(L.latLngBounds(result.astar.route_coords), { padding: [40, 40] });
+    }
 
     if (!navigator.geolocation) {
       setUi({ ...initialUi, active: true, statusText: "Tu navegador no soporta geolocalización: no se puede seguir el viaje en vivo.", statusKind: "warn" });
