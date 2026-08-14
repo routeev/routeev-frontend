@@ -111,19 +111,25 @@ export function MapPage() {
             }}
           />
           <div className={styles.sidebarScroll}>
+            {loaders.failed.length > 0 && (
+              // Arriba de todo, no al final: con ~200 estaciones en la
+              // lista, este banner quedaba escondido bien abajo del scroll y
+              // solo se notaba "de golpe" al elegir una estacion (el panel
+              // se achica y el banner, que ya estaba ahi, entra en vista) --
+              // parecia que clickear un cargador CAUSABA el error, cuando en
+              // realidad ya habia fallado antes.
+              <>
+                <Banner variant="error">
+                  {`No se pudo cargar: ${loaders.failed.join(", ")}. Revisá tu conexión y volvé a intentar.`}
+                </Banner>
+                <button type="button" className="ghost small full-width" onClick={loaders.retry}>
+                  Reintentar carga
+                </button>
+              </>
+            )}
             <RouteInputPanel banner={banner} />
             <VehiclePanel />
             {selectedStationId != null ? <StationDetailPanel /> : <StationsPanel />}
-            {loaders.failed.length > 0 && (
-              <Banner variant="error">
-                {`No se pudo cargar: ${loaders.failed.join(", ")}. Revisá tu conexión y volvé a intentar.`}
-              </Banner>
-            )}
-            {loaders.failed.length > 0 && (
-              <button type="button" className="ghost small" onClick={loaders.retry}>
-                Reintentar carga
-              </button>
-            )}
           </div>
           <div className={styles.sidebarCta}>
             <button
