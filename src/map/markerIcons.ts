@@ -46,12 +46,21 @@ export function myLocationIcon(): L.DivIcon {
   });
 }
 
+/**
+ * El area clickeable/tocable de un DivIcon de Leaflet es EXACTAMENTE
+ * iconSize -- con el circulo visual de 20x20 a secas, un toque real (no un
+ * click de mouse, mucho mas preciso) facilmente cae al lado y no selecciona
+ * nada. .stationHit agranda el area tocable a 36x36 sin agrandar el
+ * circulo, que sigue viendose igual de chico (centrado adentro, invisible
+ * el resto del wrapper) -- mismo criterio que ya se uso para los botones
+ * chicos en mobile (ver button.small en base.css).
+ */
 export function stationIcon(): L.DivIcon {
   return L.divIcon({
     className: "",
-    html: `<div class="${styles.station}">${BOLT_SVG}</div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    html: `<div class="${styles.stationHit}"><div class="${styles.station}">${BOLT_SVG}</div></div>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 }
 
