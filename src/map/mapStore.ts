@@ -29,6 +29,14 @@ interface MapState {
   leafletMap: L.Map | null;
   setLeafletMap: (map: L.Map | null) => void;
 
+  // Ubicacion real del usuario, resuelta una vez al abrir /app (ver
+  // MapCanvas#CaptureMap). Vive en el store -- no solo como estado local de
+  // ese componente -- para que otras pantallas puedan volver a centrar el
+  // mapa ahi (p. ej. StationDetailPanel: "volver" desde el detalle de una
+  // estacion) sin depender de ser descendientes de CaptureMap.
+  myPosition: [number, number] | null;
+  setMyPosition: (pos: [number, number] | null) => void;
+
   nodesById: Map<number, GraphNode>;
   searchableNodes: SearchableNode[];
   stations: Station[];
@@ -81,6 +89,9 @@ interface MapState {
 export const useMapStore = create<MapState>((set, get) => ({
   leafletMap: null,
   setLeafletMap: (map) => set({ leafletMap: map }),
+
+  myPosition: null,
+  setMyPosition: (pos) => set({ myPosition: pos }),
 
   nodesById: new Map(),
   searchableNodes: [],

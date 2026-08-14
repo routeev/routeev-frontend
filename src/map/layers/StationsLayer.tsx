@@ -4,9 +4,11 @@ import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
 import { RatingSummary } from "../RatingSummary";
-import { StationDetailRows } from "../StationDetailRows";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
+import styles from "./StationPopup.module.css";
+
+const STATION_MARKER_ZOOM = 16;
 
 /**
  * Estaciones que caen dentro del area visible del mapa en este momento --
@@ -56,6 +58,7 @@ export function StationsLayer() {
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const selectStation = useMapStore((s) => s.selectStation);
+  const leafletMap = useMapStore((s) => s.leafletMap);
   const lastResult = useMapStore((s) => s.lastResult);
 
   useEffect(() => {
@@ -91,14 +94,27 @@ export function StationsLayer() {
             // comentarios) ya no vive en este popup -- clickear el marcador
             // selecciona la estacion, y eso abre StationDetailPanel en el
             // sidebar (ver MapPage), con lugar de sobra para todo eso. El
-            // popup queda como un vistazo rapido nomas.
-            eventHandlers={{ click: () => selectStation(st.node_id) }}
+            // popup queda como un vistazo rapido nomas. Tambien centra el
+            // mapa ahi, mismo comportamiento que elegirla desde la lista
+            // (StationsPanel), para que da igual por donde se entre.
+            eventHandlers={{
+              click: () => {
+                selectStation(st.node_id);
+                leafletMap?.setView([st.lat, st.lon], STATION_MARKER_ZOOM);
+              },
+            }}
           >
-            <Popup>
-              <b>{st.nombre}</b>
-              <br />
-              <RatingSummary summary={summariesQuery.data?.[String(st.node_id)]} size={12} />
-              <StationDetailRows station={st} />
+            <Popup minWidth={200} maxWidth={260}>
+              <div className={styles.teaser}>
+                <b className={styles.teaserName}>{st.nombre}</b>
+                <RatingSummary summary={summariesQuery.data?.[String(st.node_id)]} size={12} />
+                <div className={styles.teaserMeta}>
+                  <span className="mono-num">{st.potencia_kw} kW</span>
+                  <span>{st.operador}</span>
+                </div>
+                <div className={styles.teaserAddress}>{st.direccion}</div>
+                <div className={styles.teaserHint}>Tocá para ver el detalle completo y dejar tu reseña.</div>
+              </div>
             </Popup>
           </Marker>
         ))}

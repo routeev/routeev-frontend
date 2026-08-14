@@ -22,3 +22,45 @@
   font-size: 11.5px;
   line-height: 1.5;
 }
+
+/* Vistazo rapido del marcador (StationsLayer): el detalle completo (mismas
+   filas que .detail arriba, mas reseñas) vive ahora en StationDetailPanel,
+   asi que este popup solo necesita dar lo justo para reconocer la estacion
+   y una razon para clickear -- no repetir la ficha entera. */
+.teaser {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.teaserName {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.teaserMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.teaserMeta :global(.mono-num) {
+  color: var(--accent-dijkstra);
+}
+
+.teaserAddress {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.teaserHint {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px;
+  color: var(--accent-astar);
+}

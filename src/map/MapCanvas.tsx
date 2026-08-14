@@ -12,7 +12,10 @@ import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
-const AUTO_LOCATE_ZOOM = 15;
+// Exportado: StationDetailPanel vuelve a este mismo zoom al salir del
+// detalle de una estacion, para que la vista de "mi ubicacion" sea
+// consistente sin importar si se llega ahi al abrir /app o al volver atras.
+export const AUTO_LOCATE_ZOOM = 15;
 
 interface CaptureMapProps {
   onLocateFail: (msg: string) => void;
@@ -53,6 +56,11 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         map.setView(coords, AUTO_LOCATE_ZOOM);
         setMyPosition(coords);
+        // Tambien al store, no solo al estado local: es lo que le permite a
+        // StationDetailPanel volver a centrar aca al salir del detalle de
+        // una estacion, sin que ese componente tenga que ser descendiente
+        // de CaptureMap.
+        useMapStore.getState().setMyPosition(coords);
       },
       (err) => {
         if (cancelled) return;

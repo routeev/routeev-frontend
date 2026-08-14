@@ -1,3 +1,4 @@
+import { AUTO_LOCATE_ZOOM } from "./MapCanvas";
 import { StationDetailRows } from "./StationDetailRows";
 import { StationReviews } from "./StationReviews";
 import { useMapStore } from "./mapStore";
@@ -15,13 +16,24 @@ export function StationDetailPanel() {
   const stations = useMapStore((s) => s.stations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const selectStation = useMapStore((s) => s.selectStation);
+  const leafletMap = useMapStore((s) => s.leafletMap);
+  const myPosition = useMapStore((s) => s.myPosition);
 
   const station = stations.find((s) => s.node_id === selectedStationId);
   if (!station) return null;
 
+  function goBack() {
+    selectStation(null);
+    // El mapa quedo centrado/zoomeado en la estacion (StationsLayer/
+    // StationsPanel ya lo llevan ahi al elegirla) -- volver a la lista sin
+    // esto lo dejaria mirando ese punto para siempre, en vez de la vista con
+    // la que se abre /app normalmente.
+    if (myPosition) leafletMap?.setView(myPosition, AUTO_LOCATE_ZOOM);
+  }
+
   return (
     <section className="panel">
-      <button type="button" className={styles.back} onClick={() => selectStation(null)}>
+      <button type="button" className={styles.back} onClick={goBack}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 5 8 12l7 7" />
         </svg>
