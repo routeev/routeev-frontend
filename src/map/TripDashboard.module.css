@@ -4,17 +4,6 @@
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
   padding: 16px 20px 20px;
-  /* .dashboardWrap (MapPage.module.css) le da todo el ancho libre entre el
-     sidebar de 372px y el borde de la pantalla -- en una pantalla ancha de
-     verdad (1920px+) eso puede pasar los 1400px, mucho mas de lo que un
-     texto/tarjetas de stat aguantan legibles antes de sentirse una franja
-     finita perdida en el medio de la nada. Tope generoso, no angosto: las
-     tarjetas (ver .statSectionGrid) ya se reparten TODO el ancho que
-     tengan disponible sin dejar huecos, así que no hace falta angostar el
-     panel para evitar espacios muertos -- esto es nada más un techo para
-     que no se sienta gigante en monitores ultra anchos.
-     */
-  max-width: 960px;
 }
 
 .header {
