@@ -64,6 +64,7 @@ interface MapState {
   replaySuffix: string | undefined;
 
   addNode: (node: GraphNode) => void;
+  addNodes: (nodes: GraphNode[]) => void;
   setSearchableNodes: (nodes: GraphNode[]) => void;
   setStations: (stations: Station[]) => void;
   selectStation: (id: number | null) => void;
@@ -119,6 +120,17 @@ export const useMapStore = create<MapState>((set, get) => ({
   addNode: (node) =>
     set((s) => {
       s.nodesById.set(node.id, node);
+      return { nodesById: s.nodesById };
+    }),
+  // Variante en bloque para GraphLayer: el grafo trae ~63.800 nodos, y
+  // llamar addNode() uno por uno significaba 63.800 set() de Zustand
+  // seguidos apenas cargaba el mapa (cada uno arma un nuevo objeto de
+  // estado y recorre la lista de listeners) -- un tranco real y evitable
+  // en el momento mas sensible (la primera carga). Una sola llamada, un
+  // solo set().
+  addNodes: (nodes) =>
+    set((s) => {
+      for (const n of nodes) s.nodesById.set(n.id, n);
       return { nodesById: s.nodesById };
     }),
 

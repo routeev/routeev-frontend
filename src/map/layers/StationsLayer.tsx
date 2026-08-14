@@ -54,7 +54,9 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
  * esas importan aunque el usuario haya alejado o movido el mapa a otro lado.
  */
 export function StationsLayer() {
-  const query = useQuery({ queryKey: ["stations"], queryFn: getStations });
+  // staleTime: Infinity -- catalogo estatico, ver el comentario en
+  // useMapLoaders.ts (misma key).
+  const query = useQuery({ queryKey: ["stations"], queryFn: getStations, staleTime: Infinity });
   const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);

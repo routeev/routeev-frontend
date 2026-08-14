@@ -15,13 +15,21 @@ import { useMapStore } from "./mapStore";
  * `graph` y `stations` comparten queryKey con GraphLayer/StationsLayer: es
  * la MISMA request cacheada (TanStack Query dedupea por key), esto solo
  * agrega su estado al resumen para el banner de reintentar.
+ *
+ * staleTime: Infinity en las cuatro que son catálogo estático (no cambian
+ * mientras el backend está corriendo): sin esto, TanStack Query las
+ * revalida en segundo plano cada vez que la pestaña recupera el foco --
+ * trivial en la compu, pero en el celular eso es CADA vez que se vuelve de
+ * otra app, y el grafo solo pesa ~1,6 MB comprimidos con ~63.800 nodos.
+ * `vehicles` se deja con el default: el usuario los edita en /profile
+ * mientras el mapa puede seguir montado en otra pestaña.
  */
 export function useMapLoaders() {
-  const graphQ = useQuery({ queryKey: ["graph"], queryFn: getGraph });
-  const stationsQ = useQuery({ queryKey: ["stations"], queryFn: getStations });
-  const nodesQ = useQuery({ queryKey: ["searchableNodes"], queryFn: getSearchableNodes });
+  const graphQ = useQuery({ queryKey: ["graph"], queryFn: getGraph, staleTime: Infinity });
+  const stationsQ = useQuery({ queryKey: ["stations"], queryFn: getStations, staleTime: Infinity });
+  const nodesQ = useQuery({ queryKey: ["searchableNodes"], queryFn: getSearchableNodes, staleTime: Infinity });
   const vehiclesQ = useQuery({ queryKey: ["vehicles"], queryFn: listVehicles });
-  const modelsQ = useQuery({ queryKey: ["evModels"], queryFn: listEvModels });
+  const modelsQ = useQuery({ queryKey: ["evModels"], queryFn: listEvModels, staleTime: Infinity });
 
   const setSearchableNodes = useMapStore((s) => s.setSearchableNodes);
   const setVehicles = useMapStore((s) => s.setVehicles);
