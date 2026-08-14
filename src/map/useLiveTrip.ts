@@ -240,12 +240,18 @@ export function useLiveTrip() {
       leafletMap.fitBounds(L.latLngBounds(result.astar.route_coords), { padding: [40, 40] });
     }
 
+    // active: false en los tres rechazos de abajo (acá y en el chequeo de
+    // distancia al origen más abajo) a propósito: tripRef.current nunca
+    // llega a asignarse, así que cancel() no tendría nada que cancelar --
+    // poner active:true dejaría el botón trabado en "Cancelar viaje" para
+    // siempre, sin ningún evento que lo vuelva a "Iniciar viaje". El texto
+    // se muestra igual (ver el bloque de advertencia en TripDashboard).
     if (!navigator.geolocation) {
-      setUi({ ...initialUi, active: true, statusText: "Tu navegador no soporta geolocalización: no se puede seguir el viaje en vivo.", statusKind: "warn" });
+      setUi({ ...initialUi, statusText: "Tu navegador no soporta geolocalización: no se puede seguir el viaje en vivo.", statusKind: "warn" });
       return;
     }
     if (!window.isSecureContext) {
-      setUi({ ...initialUi, active: true, statusText: "El seguimiento en vivo necesita una conexión segura (HTTPS).", statusKind: "warn" });
+      setUi({ ...initialUi, statusText: "El seguimiento en vivo necesita una conexión segura (HTTPS).", statusKind: "warn" });
       return;
     }
 

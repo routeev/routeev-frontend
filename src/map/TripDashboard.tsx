@@ -293,6 +293,17 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             </button>
           )}
 
+          {/* "Iniciar viaje" puede rechazarse sin llegar a arrancar el
+              seguimiento en vivo (lejos del origen, sin GPS, sin HTTPS) --
+              ese rechazo deja active/finished en false a propósito (no hay
+              nada que cancelar), pero el motivo hay que mostrarlo igual: sin
+              esto, tocar el botón parecía no hacer nada. */}
+          {!liveTrip.ui.active && !liveTrip.ui.finished && liveTrip.ui.statusText && (
+            <div className={[styles.advisory, styles.advisoryWarn].join(" ")} style={{ marginTop: 10 }}>
+              {liveTrip.ui.statusText}
+            </div>
+          )}
+
           {(liveTrip.ui.active || liveTrip.ui.finished) && (
             <div className={styles.live}>
               <div className={styles.liveRow}>

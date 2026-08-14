@@ -4,6 +4,12 @@
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
   padding: 16px 20px 20px;
+  /* .dashboardWrap (MapPage.module.css) le da todo el ancho libre entre el
+     sidebar de 372px y el borde de la pantalla -- en desktop eso es mucho
+     más de lo que este contenido angosto (tarjetas de stat, texto) necesita
+     para leerse cómodo. Sin este tope el panel flotante quedaba
+     desproporcionadamente ancho. */
+  max-width: 660px;
 }
 
 .header {
