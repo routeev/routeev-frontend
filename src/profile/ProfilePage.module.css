@@ -161,6 +161,43 @@
   font-weight: 600;
 }
 
+.usernameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.usernameEditBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.usernameEditBtn:hover {
+  color: var(--text);
+  border-color: transparent;
+}
+
+.usernameEditRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.usernameEditRow input {
+  width: 160px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
 /* --- Vehículos --- */
 
 .fieldRow {

@@ -48,7 +48,6 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const stations = useMapStore((s) => s.stations);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const vehicle = useMapStore(selectedVehicle);
-  const setLastResult = useMapStore((s) => s.setLastResult);
 
   if (!result) return null;
 
@@ -125,15 +124,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             type="button"
             className={styles.closeBtn}
             onClick={() => {
-              setLastResult(null, null, undefined);
-              // Mismo criterio que el popupclose de StationsLayer: cerrar
-              // "Datos del viaje" saca el recorrido del mapa (RouteLayers
-              // depende de lastResult, ya lo hacía), pero sin esto la cámara
-              // se quedaba mirando fija donde estaba el viaje anterior --
-              // visualmente seguía "mostrándolo" aunque la línea ya no
-              // estuviera. Volver a la ubicación real es lo que de verdad
-              // se siente como "arrancar de nuevo".
+              // resetTripPlanning (no solo setLastResult) porque cerrar
+              // "Datos del viaje" tiene que sacar TODO lo del viaje anterior,
+              // no solo el resultado calculado: origen y destino fijados en
+              // los inputs de "Tu viaje" se quedaban puestos, listos para
+              // recalcular la misma ruta por accidente.
               const state = useMapStore.getState();
+              state.resetTripPlanning();
+              // Mismo criterio que el popupclose de StationsLayer: sin esto
+              // la cámara se quedaba mirando fija donde estaba el viaje
+              // anterior -- visualmente seguía "mostrándolo" aunque la línea
+              // ya no estuviera. Volver a la ubicación real es lo que de
+              // verdad se siente como "arrancar de nuevo".
               if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
             }}
             aria-label="Cerrar datos del viaje"

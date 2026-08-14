@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { deleteMyPhoto, getMe, uploadMyPhoto } from "../api/user";
+import { deleteMyPhoto, getMe, updateMyUsername, uploadMyPhoto } from "../api/user";
+import { setUsername as setStoredUsername } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
@@ -16,6 +17,8 @@ export function AccountPanel() {
   const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
   const fileInput = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
 
   const upload = useMutation({
     mutationFn: async (file: File) => uploadMyPhoto(await resizePhotoForUpload(file)),
@@ -27,6 +30,20 @@ export function AccountPanel() {
     mutationFn: deleteMyPhoto,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["me"] }),
     onError: (err) => setError(err instanceof Error ? err.message : "No se pudo quitar la foto."),
+  });
+
+  const rename = useMutation({
+    mutationFn: (username: string) => updateMyUsername(username),
+    onSuccess: (user) => {
+      queryClient.setQueryData(["me"], user);
+      // No solo el cache de la query: /app muestra el chip de usuario con
+      // getUsername() (localStorage) como respaldo cuando no le pasan un
+      // username por prop (ver AppTopbar.tsx) -- sin esto, ahí seguía
+      // mostrando el nombre viejo hasta el próximo login.
+      setStoredUsername(user.username);
+      setEditingUsername(false);
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo cambiar el nombre de usuario."),
   });
 
   const user = meQuery.data;
@@ -64,7 +81,62 @@ export function AccountPanel() {
           </label>
         </div>
         <div className={styles.accountInfo}>
-          <div className={styles.accountUsername}>{user?.username ?? "-"}</div>
+          {editingUsername ? (
+            <form
+              className={styles.usernameEditRow}
+              onSubmit={(e) => {
+                e.preventDefault();
+                setError(null);
+                const trimmed = usernameInput.trim();
+                if (!trimmed || trimmed === user?.username) {
+                  setEditingUsername(false);
+                  return;
+                }
+                rename.mutate(trimmed);
+              }}
+            >
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value)}
+                minLength={3}
+                maxLength={32}
+                autoFocus
+                disabled={rename.isPending}
+              />
+              <button type="submit" className="primary small" disabled={rename.isPending}>
+                {rename.isPending ? "Guardando..." : "Guardar"}
+              </button>
+              <button
+                type="button"
+                className="ghost small"
+                disabled={rename.isPending}
+                onClick={() => {
+                  setError(null);
+                  setEditingUsername(false);
+                }}
+              >
+                Cancelar
+              </button>
+            </form>
+          ) : (
+            <div className={styles.usernameRow}>
+              <span className={styles.accountUsername}>{user?.username ?? "-"}</span>
+              <button
+                type="button"
+                className={styles.usernameEditBtn}
+                title="Cambiar nombre de usuario"
+                onClick={() => {
+                  setError(null);
+                  setUsernameInput(user?.username ?? "");
+                  setEditingUsername(true);
+                }}
+              >
+                <span aria-hidden="true">✎</span>
+                <span className="sr-only">Cambiar nombre de usuario</span>
+              </button>
+            </div>
+          )}
           <div className="hint">{user?.email ?? ""}</div>
           {user?.photo_url && (
             <button
