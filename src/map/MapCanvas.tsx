@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
@@ -24,6 +24,18 @@ interface CaptureMapProps {
 function CaptureMap({ onLocateFail }: CaptureMapProps) {
   const map = useMap();
   const [myPosition, setMyPosition] = useState<[number, number] | null>(null);
+  // MapCanvas pasa un `(msg) => onMapError(msg, "warn")` inline como
+  // onLocateFail: una funcion nueva en CADA render de MapPage/MapCanvas
+  // (ninguno de los dos memoiza). Si el efecto de auto-locate de abajo
+  // dependiera de ese valor directamente, un solo fallo de geolocalizacion
+  // dispara onLocateFail -> setMapBanner en MapPage -> re-render -> nueva
+  // identidad de onLocateFail -> el efecto se vuelve a correr -> nuevo
+  // intento de geolocalizacion -> nuevo fallo -> bucle infinito (medido:
+  // ~1700 pedidos de ubicacion en el tiempo de un solo click). El ref
+  // siempre apunta a la version mas nueva sin forzar al efecto a
+  // re-ejecutarse por eso.
+  const onLocateFailRef = useRef(onLocateFail);
+  onLocateFailRef.current = onLocateFail;
 
   useEffect(() => {
     // Use the store setter via getState inside the effect to avoid
@@ -68,7 +80,7 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
           err.code === err.PERMISSION_DENIED
             ? "no diste permiso de ubicación (o está apagada en el dispositivo/sistema)"
             : "no se pudo determinar tu ubicación";
-        onLocateFail(
+        onLocateFailRef.current(
           `No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`
         );
       }
@@ -76,7 +88,8 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     return () => {
       cancelled = true;
     };
-  }, [map, onLocateFail]);
+    // Solo [map]: ver el comentario de onLocateFailRef arriba.
+  }, [map]);
 
   useEffect(() => {
     // Leaflet mide su contenedor una sola vez al montar y no vuelve a

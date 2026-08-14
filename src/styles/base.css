@@ -317,3 +317,34 @@ button.small {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Tema oscuro para los popups de Leaflet (mapa de /app y el del showroom):
+   leaflet.css los deja con SU fondo por defecto (blanco, texto #333) sin
+   que ningun CSS del proyecto lo pise -- el contenido de esos popups SI usa
+   los colores de esta app (var(--text), var(--text-muted), etc.), pensados
+   para fondo oscuro, asi que sobre blanco quedaban practicamente invisibles
+   (texto casi blanco sobre blanco). Global a proposito: leaflet.css usa
+   estas mismas clases sin importar en que pagina se monte el mapa. */
+/* !important porque leaflet.css define el mismo selector con la misma
+   especificidad (background/color en .leaflet-popup-content-wrapper,
+   .leaflet-popup-tip) -- sin esto, quien gana es pura casualidad de en que
+   orden termine Vite empaquetando el CSS del mapa (import por componente,
+   codigo dividido por ruta) contra el de este archivo, importado global. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--bg-panel-raised) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-float) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid var(--border);
+}
+
+.leaflet-popup-close-button {
+  color: var(--text-faint) !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: var(--text) !important;
+}
