@@ -7,15 +7,12 @@ import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
 import { StationsLayer } from "./layers/StationsLayer";
+import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { myLocationIcon } from "./markerIcons";
 import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
-// Exportado: StationDetailPanel vuelve a este mismo zoom al salir del
-// detalle de una estacion, para que la vista de "mi ubicacion" sea
-// consistente sin importar si se llega ahi al abrir /app o al volver atras.
-export const AUTO_LOCATE_ZOOM = 15;
 
 interface CaptureMapProps {
   onLocateFail: (msg: string) => void;

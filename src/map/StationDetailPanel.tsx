@@ -1,4 +1,4 @@
-import { AUTO_LOCATE_ZOOM } from "./MapCanvas";
+import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { StationDetailRows } from "./StationDetailRows";
 import { StationReviews } from "./StationReviews";
 import { useMapStore } from "./mapStore";
@@ -29,6 +29,10 @@ export function StationDetailPanel() {
     // esto lo dejaria mirando ese punto para siempre, en vez de la vista con
     // la que se abre /app normalmente.
     if (myPosition) leafletMap?.setView(myPosition, AUTO_LOCATE_ZOOM);
+    // Si el popup del marcador seguia abierto (se llego aca por el marcador,
+    // no por la lista), lo cierra tambien -- las dos formas de "salir" del
+    // detalle de una estacion quedan sincronizadas entre si.
+    leafletMap?.closePopup();
   }
 
   return (

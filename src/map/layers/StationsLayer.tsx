@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
+import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
@@ -102,6 +103,20 @@ export function StationsLayer() {
                 selectStation(st.node_id);
                 leafletMap?.setView([st.lat, st.lon], STATION_MARKER_ZOOM);
               },
+              // Cerrar el popup (la x, tocar otro punto del mapa, Escape)
+              // saca tambien el detalle del sidebar y vuelve a mostrar el
+              // menu completo -- son la misma seleccion, cerrar una cosa
+              // cierra la otra. El chequeo de selectedStationId es porque
+              // abrir OTRO marcador cierra este popup como efecto colateral
+              // (autoClose de Leaflet): sin el, ese cierre borraria la
+              // seleccion nueva que el click del otro marcador acaba de
+              // hacer, no importa el orden en que lleguen los dos eventos.
+              popupclose: () => {
+                const state = useMapStore.getState();
+                if (state.selectedStationId !== st.node_id) return;
+                state.selectStation(null);
+                if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
+              },
             }}
           >
             <Popup minWidth={200} maxWidth={260}>
@@ -113,7 +128,7 @@ export function StationsLayer() {
                   <span>{st.operador}</span>
                 </div>
                 <div className={styles.teaserAddress}>{st.direccion}</div>
-                <div className={styles.teaserHint}>Tocá para ver el detalle completo y dejar tu reseña.</div>
+                <div className={styles.teaserHint}>Detalle completo y reseñas en el menú.</div>
               </div>
             </Popup>
           </Marker>
