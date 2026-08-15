@@ -14,12 +14,22 @@ export interface ShowroomModel {
   foto_credito?: PhotoCredit;
   /**
    * Nombre(s) con los que se conoce el auto acá, cuando no coinciden con el
-   * de fábrica. Opcional y de forma laxa a propósito: el backend lo está
-   * agregando en paralelo y el que está en producción todavía no lo manda.
-   * Nunca leerlo directo -- usar modelAliases()/familyAliases() de
-   * showroom/modelAlias.ts, que se bancan las tres formas posibles.
+   * de fábrica ("E2" para el BYD Dolphin). Sale de la curaduría propia en
+   * `data/nombres_locales.json`.
+   *
+   * Opcional y de forma laxa a propósito: el que está en producción todavía no
+   * lo manda. Nunca leerlo directo -- usar modelAliases()/familyAliases() de
+   * showroom/modelAlias.ts, que se bancan que falte, que venga como string
+   * suelto o que traiga basura adentro.
    */
-  alias?: string | string[] | null;
+  nombres_locales?: string[] | null;
+  /**
+   * Línea del modelo y versión dentro de esa línea, separadas por el backend
+   * ("Dolphin" + "60,4 kWh"). Antes la versión venía embutida dentro de
+   * `modelo` como texto y no había forma de agrupar variantes sin adivinar.
+   */
+  linea?: string;
+  version?: string;
 }
 
 export interface ShowroomCatalog {

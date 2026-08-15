@@ -118,3 +118,56 @@ describe("versionLabel", () => {
     expect(versionLabel(dolphin, dolphin.versiones[0]!)).toBe("");
   });
 });
+
+describe("groupFamilies con `linea` del backend", () => {
+  function conLinea(id: string, marca: string, modelo: string, linea: string, bateria: number): ShowroomModel {
+    return { ...mk(id, marca, modelo, bateria), linea } as ShowroomModel;
+  }
+
+  it("agrupa por la linea curada y no por lo que diga el nombre del modelo", () => {
+    // Las cuatro filas reales de BYD. Por heuristica de strings, "Yuan Pro GS"
+    // y "Yuan Plus GS" se parecen muchisimo; por `linea` son dos autos y punto.
+    const familias = groupFamilies([
+      conLinea("byd-yuan-plus", "BYD", "Yuan Plus (Atto 3)", "Yuan Plus", 60.5),
+      conLinea("byd-yuan-plus-gl", "BYD", "Yuan Plus GL", "Yuan Plus", 60.5),
+      conLinea("byd-yuan-plus-gs", "BYD", "Yuan Plus GS", "Yuan Plus", 60.5),
+      conLinea("byd-yuan-pro-gs", "BYD", "Yuan Pro GS", "Yuan Pro", 45.12),
+    ]);
+
+    expect(familias).toHaveLength(2);
+    expect(familias.map((f) => f.nombre)).toEqual(["Yuan Plus", "Yuan Pro"]);
+    expect(familias[0]!.versiones).toHaveLength(3);
+    expect(familias[1]!.versiones.map((v) => v.id)).toEqual(["byd-yuan-pro-gs"]);
+  });
+
+  it("el titulo de la tarjeta sale de la linea, no de la primera version que aparezca", () => {
+    // Sin esto, la tarjeta se titulaba con el nombre de la fila que viniera
+    // primera y podia contradecir el rango de bateria que mostraba debajo.
+    const familias = groupFamilies([
+      conLinea("mg4-77", "MG", "MG4 Electric 77 kWh", "MG4 Electric", 74.4),
+      conLinea("mg4-51", "MG", "MG4 Electric 51 kWh", "MG4 Electric", 50.8),
+    ]);
+
+    expect(familias).toHaveLength(1);
+    expect(familias[0]!.nombre).toBe("MG4 Electric");
+  });
+
+  it("una linea distinta con el mismo nombre base no se mezcla entre marcas", () => {
+    const familias = groupFamilies([
+      conLinea("a", "BYD", "Seagull EV300", "Seagull", 30.08),
+      conLinea("b", "BYD", "Seagull EV380", "Seagull", 38),
+      conLinea("c", "Otra", "Seagull", "Seagull", 30),
+    ]);
+
+    expect(familias).toHaveLength(2);
+    expect(familias[0]!.marca).toBe("BYD");
+    expect(familias[0]!.versiones).toHaveLength(2);
+  });
+
+  it("si el backend no manda linea, sigue valiendo la heuristica de siempre", () => {
+    const familias = groupFamilies([mk("a", "GWM", "ORA 03 (48 kWh)", 45.4), mk("b", "GWM", "ORA 03 (63 kWh)", 59.3)]);
+
+    expect(familias).toHaveLength(1);
+    expect(familias[0]!.nombre).toBe("ORA 03");
+  });
+});

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { ShowroomModel } from "../api/showroom";
 import { familyAliases, modelAliases } from "./modelAlias";
 
-function mk(alias?: unknown): ShowroomModel {
-  return { id: "x", marca: "BYD", modelo: "Yuan Plus", alias } as ShowroomModel;
+function mk(nombres_locales?: unknown): ShowroomModel {
+  return { id: "x", marca: "BYD", modelo: "Yuan Plus", nombres_locales } as ShowroomModel;
 }
 
 describe("modelAliases", () => {

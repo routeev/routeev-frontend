@@ -15,7 +15,7 @@ import type { ShowroomModel } from "../api/showroom";
  * resto de la app sigue funcionando exactamente como antes.
  */
 export function modelAliases(model: ShowroomModel | null | undefined): string[] {
-  const raw: unknown = model?.alias;
+  const raw: unknown = model?.nombres_locales;
   if (!raw) return [];
   const lista: unknown[] = Array.isArray(raw) ? raw : [raw];
 

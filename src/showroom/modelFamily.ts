@@ -74,6 +74,15 @@ function baseName(marca: string, modelo: string): string {
 }
 
 export function familyKey(model: ShowroomModel): string {
+  // Si el backend ya separó la línea del modelo, se usa eso y no se adivina.
+  // Es dato curado contra heurística de strings: `linea` dice explícitamente
+  // que "Yuan Pro GS" es de la línea Yuan Pro y no de Yuan Plus, mientras que
+  // acá abajo eso hay que deducirlo de una lista de palabras a ignorar que
+  // nunca va a estar completa. Todo lo que sigue queda como respaldo para el
+  // backend que está hoy en producción, que todavía no manda el campo.
+  const linea = model.linea?.trim();
+  if (linea) return `${normalize(model.marca)}|linea:${normalize(linea)}`;
+
   // Sin nombre base (filas raras tipo "63kwh"), cada fila es su propia
   // familia: mejor una tarjeta de más que agrupar autos distintos.
   const base = baseName(model.marca, model.modelo);
@@ -91,13 +100,19 @@ export function familyKey(model: ShowroomModel): string {
  * es la misma clase de error que el Yuan Plus tragándose al Yuan Pro: la
  * tarjeta dice ser algo más chico de lo que en realidad agrupa.
  */
-function displayName(modelo: string): string {
+function displayName(model: ShowroomModel): string {
+  // Mismo criterio que familyKey: si el backend ya sabe cómo se llama la
+  // línea, ese es el título de la tarjeta. Evita que el nombre salga de la
+  // primera versión que aparezca en la lista.
+  const linea = model.linea?.trim();
+  if (linea) return linea;
+
   return (
-    modelo
+    model.modelo
       .replace(/\s*\([^)]*\)\s*/g, " ")
       .replace(/\s*\b\d+([.,]\d+)?\s*kwh\b/gi, " ")
       .replace(/\s+/g, " ")
-      .trim() || modelo
+      .trim() || model.modelo
   );
 }
 
@@ -107,7 +122,7 @@ export function groupFamilies(models: ShowroomModel[]): ModelFamily[] {
   for (const model of models) {
     const key = familyKey(model);
     const family = byKey.get(key);
-    const nombre = displayName(model.modelo);
+    const nombre = displayName(model);
     if (!family) {
       byKey.set(key, {
         key,
