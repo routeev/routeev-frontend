@@ -22,32 +22,32 @@ export interface ModelFamily {
  * Palabras que NO distinguen un auto de otro: sacarlas es lo que hace que
  * "Dolphin" y "DOLPHIN (60.4 kWh)" caigan en la misma tarjeta.
  *
- * QA MEDIO 8: esta lista tenía adentro "pro", "plus", "max" y "base", que en
- * el mercado que cubre el catálogo no son niveles de equipamiento sino
- * NOMBRES DE MODELO distintos. Con "pro" y "plus" ignorados, las cuatro filas
- * que el catálogo tiene de BYD -- "Yuan Plus (Atto 3)", "Yuan Plus GL", "Yuan
- * Plus GS" y "Yuan Pro GS" -- caían todas en la misma clave y la grilla
- * mostraba UNA tarjeta "Yuan Plus" de 45,1 a 60,5 kWh: el Yuan Pro, que es
- * otro auto (otro tamaño de batería, otra autonomía, otro precio), quedaba
- * escondido adentro y bajo el nombre equivocado. Lo mismo con Geely EX5
- * Pro / EX5 Max. Sacadas de acá, cada línea vuelve a tener su tarjeta.
+ * QA MEDIO 8 (el Yuan Pro escondido dentro del Yuan Plus) NO se arregla acá.
+ * Se intentó, sacando "pro", "plus", "max" y "base" de esta lista, y estuvo
+ * mal: contra el catálogo REAL, esas palabras son equipamiento del mismo auto
+ * mucho más seguido de lo que son un modelo distinto. Sacarlas partía el Geely
+ * EX2 Pro / EX2 Max y el EX5 Pro / EX5 Max en tarjetas duplicadas idénticas
+ * -- misma batería, mismo consumo, misma potencia de carga, y el propio
+ * catálogo anotándolas como "versión full del EX2" -- para arreglar un caso,
+ * el de BYD.
  *
- * "gs" y "gl" sí se quedan, aunque el bug los mencione de pasada: en el
- * catálogo real solo aparecen como sufijo de equipamiento del mismo auto
- * ("Yuan Plus" / "Yuan Plus GL" / "Yuan Plus GS", los tres de 60,5 kWh), o
- * sea que son de la misma familia que "gt" o "gts", que ya estaban acá.
- * Sacarlos habría partido el Yuan Plus en tres tarjetas idénticas.
+ * Ese caso se arregla con dato y no con heurística: familyKey usa el campo
+ * `linea` que ahora manda el backend, que dice explícitamente que "Yuan Pro
+ * GS" es de la línea Yuan Pro y "EX5 Max" es de la línea EX5. Esta lista
+ * quedó como el respaldo para el backend que todavía está en producción, y
+ * como respaldo tiene que hacer lo que hacía antes: agrupar.
  *
- * Las demás que quedan también son equipamiento del MISMO auto y tienen que
- * seguir agrupando: Model 3 Standard Range / Long Range / Performance es un
- * solo Model 3. El criterio, cuando hay duda, es el que ya dejó escrito
- * familyKey más abajo: una tarjeta de más es molesta, una tarjeta que esconde
- * otro auto es información equivocada.
+ * El criterio general sigue siendo el que dejó escrito familyKey más abajo:
+ * una tarjeta de más es molesta, una tarjeta que esconde otro auto es
+ * información equivocada. Pero cuando la única herramienta es adivinar sobre
+ * el nombre, agrupar de más es el error barato y separar de más es el caro:
+ * el usuario ve dos tarjetas idénticas y no entiende cuál es su auto.
  */
 const IGNORAR = new Set([
   // trim / equipamiento
   "active", "boost", "comfort", "design", "excellence", "standard", "premium", "flair", "pure",
   "range", "long", "extended", "sr", "lr", "awd", "rwd", "fwd",
+  "pro", "plus", "max", "base",
   "gl", "gs", "skin", "dual", "motor", "single", "ah", "kw", "ac", "ch", "edition", "launch", "series",
   // deportivas
   "sport", "performance", "plaid", "brabus", "xpower", "amg", "gts", "turbo", "vz", "rs", "gt",

@@ -25,3 +25,26 @@ describe("claimPickRole", () => {
     expect(claimed).toEqual(["origin", "destination", "destination"]);
   });
 });
+
+describe("claimPickRole con un rol pedido a mano", () => {
+  // El caso que rompia: alguien con origen Y destino ya puestos aprieta la
+  // chincheta del ORIGEN para corregirlo, toca, ve que erro por poco y vuelve a
+  // tocar antes de que el primer toque haya aterrizado. Sin esto, el segundo
+  // toque se llevaba "destino" y le borraba el destino que ya tenia.
+  it("no auto-avanza a destino: los dos toques corrigen el origen", () => {
+    expect(claimPickRole("origin", [], "origin")).toBe("origin");
+    expect(claimPickRole("origin", ["origin"], "origin")).toBe("origin");
+    expect(claimPickRole("origin", ["origin", "origin"], "origin")).toBe("origin");
+  });
+
+  it("lo mismo cuando lo pedido es el destino", () => {
+    expect(claimPickRole("destination", ["destination"], "destination")).toBe("destination");
+    // Aunque el store todavia diga "origin" porque el pick anterior no aterrizo.
+    expect(claimPickRole("origin", ["origin"], "destination")).toBe("destination");
+  });
+
+  it("sin rol pedido sigue valiendo el auto-avance de siempre", () => {
+    expect(claimPickRole("origin", ["origin"], null)).toBe("destination");
+    expect(claimPickRole("origin", [], null)).toBe("origin");
+  });
+});

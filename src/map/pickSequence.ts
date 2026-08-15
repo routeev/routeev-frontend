@@ -30,8 +30,21 @@ export const DOUBLE_CLICK_GUARD_MS = 250;
  * @param storeMode  pickMode actual del store (lo que muestra el panel).
  * @param claimed    roles que se llevaron los toques todavía sin aplicar, en
  *                   orden de toque.
+ * @param picking    rol que la persona pidió explícitamente con el botón de
+ *                   chincheta, o null si no pidió ninguno.
  */
-export function claimPickRole(storeMode: PickMode, claimed: readonly PickMode[]): PickMode {
+export function claimPickRole(
+  storeMode: PickMode,
+  claimed: readonly PickMode[],
+  picking: PickMode | null = null
+): PickMode {
+  // Un rol pedido a mano NO se auto-avanza. Quien apretó la chincheta del
+  // origen y toca dos veces (porque el primer toque cayó mal) está corrigiendo
+  // el origen las dos veces; sin esto, el segundo toque se llevaba "destino" y
+  // le borraba el destino que ya tenía puesto, que es justo la pérdida
+  // silenciosa de datos que este módulo existe para evitar.
+  if (picking !== null) return picking;
+
   const last = claimed[claimed.length - 1];
   // Sin nada en vuelo manda el store: es el rol que la persona ve marcado en
   // los botones de chincheta del panel.

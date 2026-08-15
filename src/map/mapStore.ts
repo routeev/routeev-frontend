@@ -240,7 +240,16 @@ export const useMapStore = create<MapState>((set, get) => ({
   setEvModels: (evModels) => set({ evModels }),
   selectVehicle: (id) => set({ selectedVehicleId: id }),
   setStartBatteryPct: (pct) => set({ startBatteryPct: pct }),
-  setCargadorEnDestino: (tiene) => set({ cargadorEnDestino: tiene }),
+  // Cambiar la respuesta invalida el resultado anterior, igual que cambiar el
+  // origen o el destino: la ruta que hay en pantalla se calculó con la otra
+  // respuesta, así que su tarjeta de "dónde cargar al llegar" y su frase sobre
+  // la reserva describirían algo que el usuario ya cambió.
+  setCargadorEnDestino: (tiene) =>
+    set((s) =>
+      s.cargadorEnDestino === tiene
+        ? { cargadorEnDestino: tiene }
+        : { cargadorEnDestino: tiene, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
+    ),
 
   setOrigin: (node) =>
     set((s) => {
@@ -339,6 +348,13 @@ export const useMapStore = create<MapState>((set, get) => ({
       lastRoutePayload: null,
       replaySuffix: undefined,
       selectedStationId: null,
+      // Se resetea junto con el destino, a diferencia del vehículo y la
+      // batería: la respuesta es sobre ESE destino, no una preferencia de la
+      // sesión. Dejarla puesta hacía que planificar la vuelta a casa después
+      // de un viaje a una chacra sin enchufe se calculara con la reserva
+      // inflada del viaje anterior, y hasta metiera una parada de carga que no
+      // hacía falta.
+      cargadorEnDestino: true,
     }),
 }));
 

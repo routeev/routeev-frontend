@@ -46,32 +46,32 @@ describe("groupFamilies", () => {
     expect(familias).toHaveLength(2);
   });
 
-  // QA MEDIO 8: la lista de palabras ignoradas venía con "pro"/"plus"/"max"/
-  // "base" adentro y agrupaba autos que no tienen nada que ver. Estas cuatro
-  // filas son textuales del catálogo que sirve /api/showroom/models.
-  it("Yuan Plus y Yuan Pro son autos distintos, no versiones del mismo (el caso reportado)", () => {
-    const familias = groupFamilies([
-      mk("y1", "BYD", "Yuan Plus (Atto 3)", 60.5),
-      mk("y2", "BYD", "Yuan Plus GL", 60.5),
-      mk("y3", "BYD", "Yuan Plus GS", 60.5),
-      mk("y4", "BYD", "Yuan Pro GS", 45.12),
-    ]);
-    expect(familias).toHaveLength(2);
-    // El Yuan Plus SÍ sigue siendo una sola tarjeta con sus tres versiones...
-    expect(familias[0]!.nombre).toBe("Yuan Plus");
-    expect(familias[0]!.versiones.map((v) => v.id)).toEqual(["y1", "y2", "y3"]);
-    // ...y el Pro deja de estar escondido adentro de ella con el nombre del otro.
-    expect(familias[1]!.nombre).toBe("Yuan Pro GS");
-    expect(familias[1]!.versiones.map((v) => v.id)).toEqual(["y4"]);
-  });
-
-  it("Geely EX5 Pro y EX5 Max tampoco se mezclan (otras dos filas reales)", () => {
+  // QA MEDIO 8 (el Yuan Pro escondido dentro del Yuan Plus) NO se arregla con
+  // la heurística. Se probó sacando "pro"/"plus"/"max"/"base" de IGNORAR y el
+  // remedio salía peor que la enfermedad: partía en dos tarjetas idénticas
+  // pares que el propio catálogo anota como versiones del mismo auto. La
+  // heurística tiene que AGRUPAR; separar bien es trabajo de `linea`, que es
+  // dato curado (ver el bloque de tests de más abajo).
+  it("sin `linea`, dos versiones del mismo auto no se parten en tarjetas duplicadas", () => {
+    // Filas textuales del catálogo: mismo kWh, mismo consumo, misma potencia.
+    // El catálogo las anota como "versión full del EX5".
     const familias = groupFamilies([
       mk("g1", "Geely", "EX5 Pro", 60.22),
       mk("g2", "Geely", "EX5 Max", 60.22),
     ]);
-    expect(familias).toHaveLength(2);
-    expect(familias.map((f) => f.nombre)).toEqual(["EX5 Pro", "EX5 Max"]);
+    expect(familias).toHaveLength(1);
+    expect(familias[0]!.versiones).toHaveLength(2);
+  });
+
+  it("los niveles de equipamiento del MISMO auto agrupan, incluso los que suenan a modelo", () => {
+    const familias = groupFamilies([
+      mk("y1", "BYD", "Yuan Plus (Atto 3)", 60.5),
+      mk("y2", "BYD", "Yuan Plus GL", 60.5),
+      mk("y3", "BYD", "Yuan Plus GS", 60.5),
+    ]);
+    expect(familias).toHaveLength(1);
+    expect(familias[0]!.nombre).toBe("Yuan Plus");
+    expect(familias[0]!.versiones).toHaveLength(3);
   });
 
   it("los niveles de equipamiento del MISMO auto siguen agrupando (la corrección no se pasó de rosca)", () => {

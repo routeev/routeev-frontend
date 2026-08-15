@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { deleteMyPhoto, getMe, updateMyUsername, uploadMyPhoto } from "../api/user";
+import {
+  deleteMyPhoto,
+  getMe,
+  nombreParaMostrar,
+  updateMyDisplayName,
+  updateMyUsername,
+  uploadMyPhoto,
+  type Me,
+} from "../api/user";
 import { setUsername as setStoredUsername } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
@@ -123,6 +131,11 @@ export function AccountPanel() {
                   setUsernameError(
                     `El nombre de usuario tiene que tener entre ${USERNAME_MIN} y ${USERNAME_MAX} caracteres.`
                   );
+                  // El foco se queda en "Guardar" si no se mueve, y el error se
+                  // pinta abajo: quien tiene los ojos en el botón, o usa lector
+                  // de pantalla, no se entera de nada. Mismo patrón que ya usan
+                  // AddVehicleForm y SimulationForm.
+                  requestAnimationFrame(() => document.getElementById("account-username")?.focus());
                   return;
                 }
                 rename.mutate(trimmed);
@@ -183,7 +196,12 @@ export function AccountPanel() {
             </form>
           ) : (
             <div className={styles.usernameRow}>
-              <span className={styles.accountUsername}>{user?.username ?? "-"}</span>
+              {/* El nombre propio manda: es lo que la persona escribió de sí
+                  misma. El nombre de usuario queda debajo, en chico, porque es
+                  un identificador y no como se llama. Sin esto, el registro
+                  prometía "es cómo te vamos a mostrar en la app" y después
+                  todas las pantallas seguían diciendo "pucho1394". */}
+              <span className={styles.accountUsername}>{nombreParaMostrar(user) || "-"}</span>
               <button
                 type="button"
                 className={styles.usernameEditBtn}
@@ -199,6 +217,8 @@ export function AccountPanel() {
               </button>
             </div>
           )}
+          {user?.display_name && <div className="hint">@{user.username}</div>}
+          <DisplayNameField user={user ?? null} onError={setError} />
           <div className="hint">{user?.email ?? ""}</div>
           {user?.photo_url && (
             <button
@@ -228,5 +248,98 @@ export function AccountPanel() {
         </Banner>
       )}
     </section>
+  );
+}
+
+/**
+ * Tu nombre, el propio, el que se muestra en la app.
+ *
+ * QA BAJO 25: el nombre salía del prefijo del correo, así que alguien se veía
+ * "pucho1394" en su propio perfil y en su historial de viajes. El registro ya
+ * lo pide (opcional), y esto es la otra mitad de esa promesa: sin una forma de
+ * editarlo acá, el texto del alta ("lo podés cambiar cuando quieras desde tu
+ * perfil") era mentira.
+ *
+ * Vacío es un valor válido y significa "sacámelo": vuelve a verse el nombre de
+ * usuario. Por eso no hay validación de largo mínimo ni alfabeto -- es un
+ * nombre propio, lleva tildes, espacios y mayúsculas.
+ */
+function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: string | null) => void }) {
+  const queryClient = useQueryClient();
+  const [editando, setEditando] = useState(false);
+  const [valor, setValor] = useState("");
+
+  const guardar = useMutation({
+    mutationFn: updateMyDisplayName,
+    onSuccess: (actualizado) => {
+      queryClient.setQueryData(["me"], actualizado);
+      setEditando(false);
+      toast.ok(actualizado.display_name ? "Listo, ese es tu nombre ahora." : "Listo, sacamos tu nombre.");
+    },
+    onError: (err) => onError(err instanceof Error ? err.message : "No se pudo guardar tu nombre."),
+  });
+
+  if (!editando) {
+    return (
+      <button
+        type="button"
+        className="ghost small"
+        onClick={() => {
+          onError(null);
+          setValor(user?.display_name ?? "");
+          setEditando(true);
+        }}
+      >
+        {user?.display_name ? "Cambiar mi nombre" : "Poné tu nombre"}
+      </button>
+    );
+  }
+
+  return (
+    <form
+      className={styles.usernameEditForm}
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        onError(null);
+        guardar.mutate(valor.trim());
+      }}
+    >
+      <label htmlFor="account-display-name">Tu nombre</label>
+      <div className={styles.usernameEditRow}>
+        <input
+          id="account-display-name"
+          type="text"
+          autoComplete="name"
+          placeholder="ej. Matías Filgueiras"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          maxLength={80}
+          autoFocus
+          disabled={guardar.isPending}
+        />
+        <button type="submit" className="primary small" disabled={guardar.isPending} aria-busy={guardar.isPending}>
+          {guardar.isPending ? (
+            <>
+              <Spinner /> Guardando...
+            </>
+          ) : (
+            "Guardar"
+          )}
+        </button>
+        <button
+          type="button"
+          className="ghost small"
+          disabled={guardar.isPending}
+          onClick={() => {
+            onError(null);
+            setEditando(false);
+          }}
+        >
+          Cancelar
+        </button>
+      </div>
+      <p className="hint">Dejalo vacío si preferís que te mostremos por tu nombre de usuario.</p>
+    </form>
   );
 }

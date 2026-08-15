@@ -78,9 +78,19 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // el número del margen no cierra con el 10% que la persona cree que rige y
   // parece un error de la app en vez de la decisión que ella misma tomó.
   const reserva = bateria?.reserva ?? null;
-  const reservaText =
-    reserva?.motivo === "cargador_destino"
-      ? ` Como dijiste que en el destino no tenés dónde cargar, el viaje se calculó guardando un ${reserva.pct.toFixed(0)}% para que puedas llegar hasta un cargador.`
+  // `reserva` es la que se PIDIÓ, no la que se logró: el backend la arma antes
+  // de buscar, y search_with_reserve reintenta con 0 cuando con esa reserva no
+  // existe ningún plan (ver route_routes.py y margen_alcanzado). Sin este
+  // chequeo, un viaje que no la respeta mostraba las dos frases juntas: "no hay
+  // plan de cargas que respete ese margen" seguido de "el viaje se calculó
+  // guardando un 22% para que puedas llegar hasta un cargador". La segunda es
+  // una promesa de seguridad que la ruta devuelta no cumple, que es la peor
+  // clase de error que puede cometer esta pantalla.
+  const reservaAplicada = reserva?.motivo === "cargador_destino" && bateria?.margen_alcanzado === true;
+  const reservaText = reservaAplicada
+    ? ` Como dijiste que en el destino no tenés dónde cargar, el viaje se calculó guardando un ${reserva!.pct.toFixed(0)}% para que puedas llegar hasta un cargador.`
+    : reserva?.motivo === "cargador_destino"
+      ? ` Tampoco alcanza para llegar hasta un cargador después de llegar: revisá si vas a poder cargar antes.`
       : "";
 
   // El cargador del destino: sólo viene cuando se pidió la ruta declarando que

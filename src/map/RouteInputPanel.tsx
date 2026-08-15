@@ -147,7 +147,17 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
         </div>
       )}
 
-      {banner && <Banner variant={banner.variant}>{banner.message}</Banner>}
+      {/* alert y no un status pasivo: este banner lleva el fallo de "Calcular
+          ruta" y el "no se pudo resolver ese punto del mapa", y vive al fondo
+          del panel, debajo del botón de ubicación y dentro de un contenedor con
+          scroll. En un teléfono, quien aprieta el botón verde de abajo no ve
+          aparecer nada: sin anuncio, la lectura es "no pasó nada" y se cierra
+          la app. */}
+      {banner && (
+        <Banner variant={banner.variant} alert>
+          {banner.message}
+        </Banner>
+      )}
     </section>
   );
 }
