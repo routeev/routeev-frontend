@@ -3,6 +3,7 @@ import { memo } from "react";
 import { showroomLookupAi, type ShowroomFicha } from "../api/showroom";
 import { ModelCard } from "./ModelCard";
 import type { ModelFamily } from "./modelFamily";
+import { ModelGridSkeleton } from "./Skeletons";
 import styles from "./ModelGrid.module.css";
 
 const FOTOS_SIN_ESPERAR = 8;
@@ -11,6 +12,8 @@ interface ModelGridProps {
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
+  /** Volver a pedir el catálogo. Sin esto el error es una pantalla sin salida. */
+  onRetry?: () => void;
   familias: ModelFamily[];
   hasResults: boolean;
   hasMore: boolean;
@@ -31,6 +34,7 @@ function ModelGridComponent({
   isLoading,
   isError,
   errorMessage,
+  onRetry,
   familias,
   hasResults,
   hasMore,
@@ -44,11 +48,36 @@ function ModelGridComponent({
   const aiLookup = useMutation({ mutationFn: (consulta: string) => showroomLookupAi(consulta) });
 
   if (isError) {
-    return <p className="error-banner">{`No se pudo cargar el catálogo: ${errorMessage ?? "error desconocido"}`}</p>;
+    // Con botón de reintentar, no solo el texto del error. Un catálogo que no
+    // carga deja la pantalla entera vacía: sin una salida, la única opción que
+    // le queda a la persona es recargar la página a mano o irse. Y el caso más
+    // común es transitorio (el servidor de la API tarda cerca de un minuto en
+    // arrancar), o sea que reintentar suele alcanzar.
+    return (
+      <div className="error-banner" role="alert">
+        <p>{errorMessage ?? "No se pudo cargar el catálogo."}</p>
+        {onRetry && (
+          <button type="button" className="primary small" onClick={onRetry} style={{ marginTop: 10 }}>
+            Reintentar
+          </button>
+        )}
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <p className={styles.cargando}>Cargando catálogo…</p>;
+    return (
+      <div aria-busy="true">
+        {/* El esqueleto es aria-hidden, así que el estado "estoy cargando" hay
+            que decirlo con palabras para quien no lo ve. role="status" y no
+            "alert": es información de fondo, no interrumpe lo que se esté
+            leyendo. */}
+        <p className="sr-only" role="status">
+          Cargando el catálogo de modelos…
+        </p>
+        <ModelGridSkeleton />
+      </div>
+    );
   }
 
   if (!hasResults) {

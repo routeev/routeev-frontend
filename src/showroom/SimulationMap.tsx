@@ -1,7 +1,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
 import type { TramoInfo } from "./simulationTimeline";
@@ -45,10 +45,25 @@ function carIcon() {
   });
 }
 
+/**
+ * Encuadra el trayecto entero. Es la misma operacion que corre al montar y la
+ * que dispara el boton "Ver el trayecto completo", por eso vive suelta acá y
+ * no adentro de FitBounds: son el mismo "volver a la vista de siempre".
+ *
+ * animate se apaga con prefers-reduced-motion: el vuelo de camara de Leaflet
+ * es movimiento en pantalla como cualquier otro, y el reset de base.css solo
+ * alcanza a las transiciones de CSS.
+ */
+function fitTrayecto(map: L.Map, bounds: [number, number][]) {
+  if (!bounds.length) return;
+  const animate = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], animate });
+}
+
 function FitBounds({ bounds }: { bounds: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (bounds.length) map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24] });
+    fitTrayecto(map, bounds);
     // Solo al montar: es la unica vez que hace falta encuadrar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -91,6 +106,15 @@ export function SimulationMap({
   const origen = tramosInfo[0]!.coords[0]!;
   const destinoFinal = tramosInfo[0]!.coords[tramosInfo[0]!.coords.length - 1]!;
 
+  // La instancia real de Leaflet, para que el boton de "ver todo" (que vive
+  // AFUERA del <MapContainer>, junto al de repetir) pueda reencuadrar. Es
+  // estado y no un ref porque el primer render todavia no tiene mapa y el
+  // boton tiene que quedar deshabilitado hasta que exista.
+  const [map, setMap] = useState<L.Map | null>(null);
+  const verTodo = useCallback(() => {
+    if (map) fitTrayecto(map, bounds);
+  }, [map, bounds]);
+
   useEffect(() => {
     play();
     // Arranca sola al montar, como el original: no algo que haya que ir a buscar con otro click.
@@ -103,10 +127,20 @@ export function SimulationMap({
         <MapContainer
           center={[-32.5, -56]}
           zoom={6}
+          // El control de zoom por defecto se apaga para poner el nuestro con
+          // titulos en castellano y arriba a la izquierda (arriba a la derecha
+          // ya viven los botones de repetir/ver todo).
           zoomControl={false}
+          // A proposito: la rueda del mouse tiene que seguir scrolleando la
+          // pagina, no acercando el mapa -- este mapa esta en el medio de una
+          // pagina larga. Por eso mismo hacian falta botones de zoom: sin
+          // rueda y sin botones no habia NINGUNA forma de acercarse, y quien
+          // se acercaba con doble click no tenia como volver.
           scrollWheelZoom={false}
+          ref={setMap}
           style={{ height: "100%" }}
         >
+          <ZoomControl position="topleft" zoomInTitle="Acercar el mapa" zoomOutTitle="Alejar el mapa" />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -151,14 +185,24 @@ export function SimulationMap({
           <Marker position={origen} icon={carIcon()} zIndexOffset={1000} ref={markerRef} />
         </MapContainer>
       </div>
-      <button
-        type="button"
-        className={["ghost", styles.replay].join(" ")}
-        onClick={play}
-        disabled={playing}
-      >
-        ↻ Repetir animación
-      </button>
+      <div className={styles.mapActions}>
+        <button
+          type="button"
+          className={["ghost", styles.mapAction].join(" ")}
+          onClick={verTodo}
+          disabled={!map}
+        >
+          ⤢ Ver el trayecto completo
+        </button>
+        <button
+          type="button"
+          className={["ghost", styles.mapAction].join(" ")}
+          onClick={play}
+          disabled={playing}
+        >
+          ↻ Repetir animación
+        </button>
+      </div>
 
       <div className={styles.live}>
         <div className={styles.liveRow}>

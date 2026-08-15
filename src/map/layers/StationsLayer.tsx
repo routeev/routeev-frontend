@@ -64,6 +64,7 @@ export function StationsLayer() {
   const selectStation = useMapStore((s) => s.selectStation);
   const leafletMap = useMapStore((s) => s.leafletMap);
   const lastResult = useMapStore((s) => s.lastResult);
+  const picking = useMapStore((s) => s.picking);
 
   useEffect(() => {
     if (query.data) setStations(query.data);
@@ -91,9 +92,22 @@ export function StationsLayer() {
         .filter((st) => visibleIds.has(st.node_id))
         .map((st) => (
           <Marker
-            key={st.node_id}
+            // El sufijo del key fuerza a Leaflet a rehacer el marcador cuando
+            // se entra o se sale del modo "marcar un punto": `interactive` es
+            // una opción de construcción del marcador y react-leaflet no la
+            // vuelve a aplicar sobre uno ya creado (a diferencia de position,
+            // icon u opacity), así que sin remontarlo el cargador seguía
+            // comiéndose el toque destinado al mapa.
+            key={`${st.node_id}-${picking ? "picking" : "idle"}`}
             position={[st.lat, st.lon]}
             icon={stationIcon(esPrivada(st.operador))}
+            // Mientras se está marcando origen/destino, las ~200 chinchetas de
+            // carga son estorbo puro: tapan la calle que la persona quiere
+            // tocar y se llevan el click. Se atenúan (no se ocultan: siguen
+            // sirviendo de referencia de dónde hay cargadores) y dejan pasar
+            // el toque al mapa.
+            opacity={picking ? 0.3 : 1}
+            interactive={!picking}
             // El detalle completo (formulario de reseña, fotos, lista de
             // comentarios) ya no vive en este popup -- clickear el marcador
             // selecciona la estacion, y eso abre StationDetailPanel en el

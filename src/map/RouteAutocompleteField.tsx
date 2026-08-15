@@ -20,14 +20,39 @@ function localMatches(query: string, nodes: SearchableNode[]): SearchableNode[] 
   return scored.slice(0, 8).map((s) => s.node);
 }
 
+// Mira/cruz para el estado "apretado" de la chincheta. El icono cambia de
+// FORMA, no solo de color: el estado activo tiene que leerse igual con
+// daltonismo, con el brillo al mínimo o en una pantalla lavada por el sol.
+const PIN_SVG = (
+  <>
+    <path d="M12 21s7-6.03 7-11a7 7 0 1 0-14 0c0 4.97 7 11 7 11Z" />
+    <circle cx="12" cy="10" r="2.6" />
+  </>
+);
+const CROSSHAIR_SVG = (
+  <>
+    <path d="M11 2h2v4h-2zM11 18h2v4h-2zM2 11h4v2H2zM18 11h4v2h-4z" />
+    <path d="M12 6.6a5.4 5.4 0 1 0 0 10.8 5.4 5.4 0 0 0 0-10.8Zm0 2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8Z" />
+  </>
+);
+
 interface RouteAutocompleteFieldProps {
   role: "origin" | "destination";
   placeholder: string;
-  isPickTarget: boolean;
+  /** Este rol se está marcando AHORA: el mapa está esperando un toque. */
+  isPicking: boolean;
+  /** Sin nadie marcando, a este rol le toca el próximo toque del mapa. */
+  isNextTarget: boolean;
   onPickTarget: () => void;
 }
 
-export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPickTarget }: RouteAutocompleteFieldProps) {
+export function RouteAutocompleteField({
+  role,
+  placeholder,
+  isPicking,
+  isNextTarget,
+  onPickTarget,
+}: RouteAutocompleteFieldProps) {
   const searchableNodes = useMapStore((s) => s.searchableNodes);
   const node = useMapStore((s) => (role === "origin" ? s.originNode : s.destinationNode));
   const setNode = useMapStore((s) => (role === "origin" ? s.setOrigin : s.setDestination));
@@ -41,19 +66,31 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
   const [busy, setBusy] = useState(false);
   const blurTimeout = useRef<number | null>(null);
 
-  // Si el nodo cambia por una vía externa al propio input -- click en el
-  // mapa (ClickToPick), "usar mi ubicación", o un replay de historial --
-  // hay que soltar cualquier texto tipeado sin confirmar, o el input queda
+  // Si el punto se fija por una vía externa al propio input -- click en el
+  // mapa (ClickToPick), "usar mi ubicación", o un replay de historial -- hay
+  // que soltar cualquier texto tipeado sin confirmar, o el input queda
   // mostrando ese texto viejo para siempre en vez del nombre real del punto
   // recién elegido (editingText solo se limpiaba en chooseNode/chooseGeocode,
   // que son el camino "interno"; ver bug reportado en destino). Se ajusta
   // durante el render (patrón de React para "resetear estado cuando cambia
   // un prop") en vez de en un efecto, para no pagar un commit extra.
-  const nodeId = node?.id ?? null;
-  const [prevNodeId, setPrevNodeId] = useState(nodeId);
-  if (nodeId !== prevNodeId) {
-    setPrevNodeId(nodeId);
+  //
+  // Se mira la REVISION del store, no el id del nodo. Con el id, un toque del
+  // mapa que resuelve al mismo nodo del grafo ya guardado no cambiaba nada --
+  // el texto viejo se quedaba pegado encima de una chincheta que igual se
+  // movió, y la persona veía su búsqueda a medio escribir sobre un punto que
+  // ya no era el que había buscado. La revisión sube con cada escritura, sin
+  // importar si el nodo resultó ser el mismo (ver mapStore.ts).
+  const revision = useMapStore((s) => (role === "origin" ? s.originRevision : s.destinationRevision));
+  const [prevRevision, setPrevRevision] = useState(revision);
+  if (revision !== prevRevision) {
+    setPrevRevision(revision);
     setEditingText(null);
+    // La lista de sugerencias no se cerraba por este camino: después de un
+    // toque en el mapa quedaba desplegada tapando el campo que se acababa de
+    // completar sola.
+    setOpen(false);
+    setActiveIndex(-1);
   }
 
   const value = editingText ?? node?.name ?? "";
@@ -107,6 +144,8 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
     if (item.type === "node") chooseNode(item.node);
     else void chooseGeocode(item.label);
   }
+
+  const etiqueta = role === "origin" ? "origen" : "destino";
 
   return (
     <div>
@@ -182,27 +221,44 @@ export function RouteAutocompleteField({ role, placeholder, isPickTarget, onPick
           <button
             type="button"
             className={styles.clear}
-            title={`Borrar ${role === "origin" ? "el origen" : "el destino"}`}
+            title={`Borrar el ${etiqueta}`}
             onClick={() => clearNode()}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
-            <span className="sr-only">Borrar {role === "origin" ? "el origen" : "el destino"}</span>
+            <span className="sr-only">Borrar el {etiqueta}</span>
           </button>
         )}
+        {/* Cada chincheta lleva el color de SU rol (el mismo blanco/violeta de
+            la viñeta a la izquierda del campo y de las chinchetas del mapa):
+            antes las dos eran del mismo gris apagado, así que ni se leían como
+            botones ni se sabía cuál era cuál. El estado apretado cambia además
+            de forma (chincheta -> mira) y de texto, no solo de color. */}
         <button
           type="button"
-          className={[styles.pin, isPickTarget ? "active" : ""].join(" ")}
-          aria-pressed={isPickTarget}
-          title={`Marcar el ${role === "origin" ? "origen" : "destino"} tocando el mapa`}
+          className={[
+            styles.pin,
+            role === "destination" ? styles.pinDest : "",
+            isPicking ? styles.pinActive : "",
+            isNextTarget ? styles.pinNext : "",
+          ].join(" ")}
+          aria-pressed={isPicking}
+          title={
+            isPicking
+              ? `Tocá el mapa para marcar el ${etiqueta}, o tocá acá para cancelar`
+              : `Marcar el ${etiqueta} tocando el mapa`
+          }
           onClick={onPickTarget}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 21s7-6.03 7-11a7 7 0 1 0-14 0c0 4.97 7 11 7 11Z" />
-            <circle cx="12" cy="10" r="2.6" />
+            {isPicking ? CROSSHAIR_SVG : PIN_SVG}
           </svg>
-          <span className="sr-only">Marcar el {role === "origin" ? "origen" : "destino"} tocando el mapa</span>
+          <span className="sr-only">
+            {isPicking
+              ? `Tocá el mapa para marcar el ${etiqueta}. Tocá este botón de nuevo para cancelar.`
+              : `Marcar el ${etiqueta} tocando el mapa`}
+          </span>
         </button>
       </div>
       {result && (

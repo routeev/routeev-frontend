@@ -1,8 +1,9 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
+import { ImprecisePickLink } from "./layers/ImprecisePickLink";
 import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
@@ -32,7 +33,15 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
   // siempre apunta a la version mas nueva sin forzar al efecto a
   // re-ejecutarse por eso.
   const onLocateFailRef = useRef(onLocateFail);
-  onLocateFailRef.current = onLocateFail;
+  // La asignacion va en un efecto sin lista de dependencias (corre despues de
+  // CADA commit) y no suelta en el cuerpo del componente: escribir un ref
+  // durante el render rompe la pureza que React necesita para poder descartar
+  // o repetir un render. Queda declarado primero a proposito -- los efectos
+  // corren en orden de declaracion, asi que el ref ya apunta a la version
+  // buena antes de que arranque el auto-locate de abajo.
+  useEffect(() => {
+    onLocateFailRef.current = onLocateFail;
+  });
 
   useEffect(() => {
     // Use the store setter via getState inside the effect to avoid
@@ -133,9 +142,16 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       center={MONTEVIDEO}
       zoom={13}
       preferCanvas
-      zoomControl
+      // El control de zoom por defecto de Leaflet va arriba a la IZQUIERDA, y
+      // ahí es exactamente donde vive el panel "Tu viaje" (372px desde el
+      // borde izquierdo, ver MapPage.module.css) -- quedaba tapado por el
+      // panel o pintando encima de él, según qué caja ganara el z-index.
+      // Arriba a la derecha no compite con nada: el dashboard del viaje está
+      // anclado abajo.
+      zoomControl={false}
       style={{ height: "100%", width: "100%" }}
     >
+      <ZoomControl position="topright" zoomInTitle="Acercar el mapa" zoomOutTitle="Alejar el mapa" />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -147,6 +163,7 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       <StationsLayer />
       <OriginDestinationMarkers />
       <RouteLayers />
+      <ImprecisePickLink />
       <LiveTripMarker position={liveTripPosition} />
       <ClickToPick onError={onMapError} />
     </MapContainer>

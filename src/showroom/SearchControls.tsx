@@ -2,6 +2,15 @@ import type { Orden } from "./useShowroomCatalog";
 import { num } from "./num";
 import styles from "./SearchControls.module.css";
 
+/**
+ * QA MEDIO 14: "Solo con carga rápida" se leía como si filtrara el VIAJE
+ * ("mostrame rutas con cargadores rápidos"), y encima aparece antes de que la
+ * persona haya elegido un auto, así que no había con qué desambiguarlo. La
+ * potencia entre paréntesis ayudó pero no alcanzó: sigue sin decir de qué es
+ * atributo. Por eso el texto de abajo, que sí lo dice con todas las letras.
+ */
+const AYUDA_DC_ID = "sr-dc-ayuda";
+
 interface SearchControlsProps {
   query: string;
   onQueryChange: (v: string) => void;
@@ -83,7 +92,12 @@ export function SearchControls({
         </select>
 
         <label className={styles.chip}>
-          <input type="checkbox" checked={soloDc} onChange={(e) => onSoloDcChange(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={soloDc}
+            onChange={(e) => onSoloDcChange(e.target.checked)}
+            aria-describedby={AYUDA_DC_ID}
+          />
           Solo con carga rápida (50 kW o más)
         </label>
 
@@ -91,6 +105,18 @@ export function SearchControls({
           {count > 0 ? `${num(count)} ${count === 1 ? "modelo" : "modelos"}` : ""}
         </span>
       </div>
+
+      {/* Siempre visible, nunca un tooltip al pasar el mouse: el hover no
+          existe en un celular, y quien más necesita esta aclaración es
+          justamente quien no va a descubrir que hay que apuntarle a un
+          iconito. Va debajo de la fila de filtros para no romper el wrap del
+          flex, y atado al checkbox con aria-describedby para que el lector de
+          pantalla lo lea junto con la etiqueta. */}
+      <p id={AYUDA_DC_ID} className={styles.chipAyuda}>
+        <strong>Es una característica del auto, no del viaje:</strong> deja solo los modelos que
+        aceptan 50 kW o más en un cargador rápido (los de corriente continua, DC). No filtra el
+        recorrido ni las estaciones que vas a encontrar.
+      </p>
     </>
   );
 }

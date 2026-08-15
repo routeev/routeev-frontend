@@ -4,9 +4,11 @@ import { showroomModel, type ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDuration, formatUyu } from "../shared/format";
+import { modelAliases } from "./modelAlias";
 import { groupFamilies, versionLabel } from "./modelFamily";
 import { num } from "./num";
 import { SimulationForm } from "./SimulationForm";
+import { FichaSkeleton } from "./Skeletons";
 import { useModelPhoto } from "./useModelPhoto";
 import styles from "./ModelFicha.module.css";
 
@@ -41,8 +43,11 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
 
   if (query.isLoading) {
     return (
-      <section className={styles.ficha} aria-label="Ficha del modelo elegido">
-        <p className={styles.cargando}>Cargando ficha…</p>
+      <section className={styles.ficha} aria-label="Ficha del modelo elegido" aria-busy="true">
+        <p className="sr-only" role="status">
+          Cargando la ficha del modelo…
+        </p>
+        <FichaSkeleton />
       </section>
     );
   }
@@ -61,6 +66,9 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
 
   const { metricas } = query.data;
   const nombre = `${model.marca} ${model.modelo}`;
+  // Función común, no un hook: puede calcularse acá abajo, después de los
+  // returns tempranos de arriba, sin violar las reglas de hooks.
+  const alias = modelAliases(model);
   const hayLimite = metricas.carga.some((f) => f.potencia_efectiva_kw < f.potencia_kw);
 
   // Tarifario de la red (pliego UTE): opcional porque el backend viejo en
@@ -121,6 +129,15 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
       <div>
         <p className={["eyebrow", styles.marca].join(" ")}>{model.marca}</p>
         <h2 className={styles.modelo}>{model.modelo}</h2>
+        {/* Los nombres locales de este auto, si el backend los manda: acá se
+            listan todos (a diferencia de la tarjeta, que muestra uno solo por
+            falta de lugar) porque es la pantalla donde se confirma que el auto
+            encontrado es efectivamente el que se estaba buscando. */}
+        {alias.length > 0 && (
+          <p className={styles.alias}>
+            Acá también se lo conoce como {alias.map((a) => `«${a}»`).join(" o ")}.
+          </p>
+        )}
 
         {familia && (
           <div className={styles.versiones} role="group" aria-label="Versiones de este modelo">

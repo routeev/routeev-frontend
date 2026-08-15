@@ -144,6 +144,7 @@ export function ShowroomPage() {
             isLoading={catalog.isLoading}
             isError={catalog.isError}
             errorMessage={catalog.error instanceof Error ? catalog.error.message : undefined}
+            onRetry={() => void catalog.refetch()}
             familias={catalog.visible}
             hasResults={catalog.familias.length > 0}
             hasMore={catalog.hayMas}

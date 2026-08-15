@@ -85,6 +85,16 @@
   color: var(--danger);
 }
 
+/* Aclaración de un campo opcional. Deliberadamente NO usa el color de
+   .fieldError: no es un problema, es una explicación, y teñirla de rojo haría
+   que "Nombre (opcional)" pareciera un campo mal llenado. */
+.fieldHint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
 .googleDivider {
   display: flex;
   align-items: center;

@@ -10,3 +10,146 @@
   margin-left: 5px;
   border-left: 1px dashed var(--text-faint);
 }
+
+/* El paso pendiente NO usa .hint (var(--text-faint), 12px): esto ya no es una
+   aclaracion al margen, es la unica instruccion en pantalla cuando la barra de
+   "Calcular ruta" todavia no existe. Contraste y tamaño de texto normal. */
+.step {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 10px 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.stepMark {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--accent-dijkstra);
+}
+
+.stepDone {
+  color: var(--accent-astar);
+}
+
+.stepDone .stepMark {
+  color: var(--accent-astar);
+}
+
+/* Aviso de "el punto quedó lejos de donde tocaste". Naranja como el resto de
+   los avisos que no rompen nada (.warn-banner en base.css) y con el mismo
+   naranja que la linea punteada que se dibuja en el mapa. */
+.impreciseCard {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent-dijkstra-dim);
+  border-left: 3px solid var(--accent-dijkstra);
+  border-radius: var(--radius-sm);
+  background: rgba(242, 161, 84, 0.08);
+}
+
+.impreciseTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-dijkstra);
+  line-height: 1.4;
+}
+
+.impreciseBody {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.impreciseActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* min-height, no solo padding: estos dos botones son la salida del aviso y hay
+   que poder tocarlos sin apuntar. */
+.impreciseActions button {
+  min-height: 40px;
+  padding: 8px 14px;
+}
+
+/* "¿Tenes donde cargar en el destino?" -- la pregunta que cambia que significa
+   el margen de bateria. Aparece recien cuando hay destino puesto, para no ser
+   otra fila fija ocupando pantalla sin aportar (ver RouteInputPanel.tsx).
+
+   Dos opciones visibles y no un checkbox: un checkbox obliga a leer la etiqueta
+   y deducir que significa destildarlo, y esta pregunta la tiene que poder
+   contestar sin pensar alguien que no esta comodo con las apps. */
+.cargador {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-raised);
+}
+
+.cargadorLegend {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cargadorHint {
+  margin: 4px 0 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.cargadorOpciones {
+  display: flex;
+  gap: 8px;
+}
+
+/* 40px de alto: el minimo comodo para un dedo o un click apurado. */
+.cargadorOpcion {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cargadorOpcion:hover {
+  border-color: var(--text-faint);
+}
+
+/* El radio nativo queda visible a proposito: es el segundo indicador de cual
+   esta elegida, ademas del borde. Solo con color no alcanza para quien no lo
+   distingue bien. */
+.cargadorOpcion input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent-astar);
+}
+
+.cargadorOpcionActiva {
+  border-color: var(--accent-astar);
+  background: var(--bg-panel);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.cargadorOpcion:focus-within {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}

@@ -1,0 +1,35 @@
+.spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  /* currentColor: el mismo anillo sirve dentro de un botón .primary (texto
+     oscuro sobre verde) y de uno .ghost (texto claro sobre panel) sin tener
+     que declarar una variante por cada botón de la app. */
+  border: 2px solid currentColor;
+  /* El hueco es lo que hace visible el giro: un anillo entero rotando es
+     indistinguible de un círculo quieto. */
+  border-top-color: transparent;
+  vertical-align: -2px;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* El kill-switch global de base.css (prefers-reduced-motion) baja
+   animation-duration a 0.001ms con !important: el anillo no se apaga, queda
+   congelado en un frame arbitrario y se lee como un adorno roto, no como
+   "esperá". Acá se lo apaga de verdad (animation-name: none, que el
+   !important de la duración ya no puede resucitar) y se lo deja como un
+   anillo punteado quieto. No se pierde información: quien pidió menos
+   movimiento sigue teniendo el texto del botón y el aviso del live region. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+    border-style: dotted;
+    border-top-color: currentColor;
+  }
+}

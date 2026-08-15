@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { showroomModels, type ShowroomModel } from "../api/showroom";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
+import { modelAliases } from "./modelAlias";
 import { groupFamilies, type ModelFamily } from "./modelFamily";
 
 const PAGINA = 24;
@@ -42,13 +43,25 @@ export function useShowroomCatalog() {
     return [...base, ...extraModels.filter((m) => !ids.has(m.id))];
   }, [catalogQuery.data, extraModels]);
 
+  // El índice incluye los nombres locales del modelo cuando el backend los
+  // manda (QA MEDIO 9): buscar el auto como se lo conoce acá tiene que
+  // encontrarlo, no devolver "no hay ningún modelo así en el catálogo".
+  // modelAliases() devuelve [] cuando el campo no viene, así que con el
+  // backend viejo el índice queda idéntico al de antes.
   const indexado = useMemo(
     () =>
-      modelos.map((m) => ({
-        model: m,
-        busqueda: normalizeForSearch(`${m.marca} ${m.modelo}`),
-        modeloNorm: normalizeForSearch(m.modelo),
-      })),
+      modelos.map((m) => {
+        const alias = modelAliases(m);
+        return {
+          model: m,
+          busqueda: normalizeForSearch([m.marca, m.modelo, ...alias].join(" ")),
+          // Los nombres contra los que se mide el "arranca con" del orden por
+          // relevancia. El alias va como uno más y no concatenado al final de
+          // `busqueda`: si no, escribir el nombre local nunca podría empezar
+          // la cadena y el auto buscado quedaba abajo de todo.
+          inicios: [normalizeForSearch(m.modelo), ...alias.map(normalizeForSearch)],
+        };
+      }),
     [modelos]
   );
 
@@ -75,8 +88,8 @@ export function useShowroomCatalog() {
     } else if (consulta) {
       // Relevancia: primero lo que EMPIEZA con lo escrito (marca o modelo),
       // y dentro de cada grupo, mayor autonomía primero.
-      const arranca = ({ busqueda, modeloNorm }: (typeof indexado)[number]) =>
-        Number(busqueda.startsWith(consulta) || modeloNorm.startsWith(consulta));
+      const arranca = ({ busqueda, inicios }: (typeof indexado)[number]) =>
+        Number(busqueda.startsWith(consulta) || inicios.some((i) => i.startsWith(consulta)));
       lista = [...lista].sort(
         (a, b) => arranca(b) - arranca(a) || b.model.autonomia_aprox_km - a.model.autonomia_aprox_km
       );
@@ -140,6 +153,10 @@ export function useShowroomCatalog() {
     isLoading: catalogQuery.isLoading,
     isError: catalogQuery.isError,
     error: catalogQuery.error,
+    // Para el botón "Reintentar" del estado de error: el fallo más común es
+    // transitorio (la API tarda cerca de un minuto en arrancar), así que la
+    // salida tiene que ser volver a pedirlo, no recargar la página a mano.
+    refetch: catalogQuery.refetch,
     total: modelos.length,
     marcas,
     query,
