@@ -153,6 +153,10 @@ export function useShowroomCatalog() {
     isLoading: catalogQuery.isLoading,
     isError: catalogQuery.isError,
     error: catalogQuery.error,
+    // Para el botón "Reintentar" del estado de error: el fallo más común es
+    // transitorio (la API tarda cerca de un minuto en arrancar), así que la
+    // salida tiene que ser volver a pedirlo, no recargar la página a mano.
+    refetch: catalogQuery.refetch,
     total: modelos.length,
     marcas,
     query,
