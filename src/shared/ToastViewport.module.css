@@ -1,0 +1,101 @@
+.viewport {
+  position: fixed;
+  /* Abajo a la derecha en desktop: no tapa el header ni los formularios, que
+     es donde está mirando la persona cuando aprieta el botón. */
+  right: 16px;
+  bottom: 16px;
+  z-index: 4000; /* por encima de los panes y controles de Leaflet (<=1000) */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  /* El contenedor existe SIEMPRE (lo necesita el live region), así que sin
+     esto quedaría una caja invisible robándole clicks al mapa que tiene
+     debajo. Cada aviso se los devuelve con pointer-events: auto. */
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: auto;
+  padding: 12px 12px 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+  box-shadow: var(--shadow-float);
+}
+
+.ok {
+  border-color: var(--accent-astar);
+}
+
+.error {
+  border-color: var(--danger);
+}
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ok .icon {
+  color: #06231d;
+  background: var(--accent-astar);
+}
+
+.error .icon {
+  color: var(--text);
+  background: var(--danger);
+}
+
+.message {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 40px de lado: el aviso se cierra con el dedo, no con el mouse, y este es
+     el único control que trae. */
+  width: 40px;
+  height: 40px;
+  margin: -9px -6px -9px 0;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border-color: transparent;
+}
+
+.close:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* En mobile el aviso ocupa el ancho útil y va abajo del todo, lejos del
+   pulgar que acaba de apretar el botón (para no cerrarlo sin querer). */
+@media (max-width: 640px) {
+  .viewport {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+}

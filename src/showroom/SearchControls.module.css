@@ -107,6 +107,19 @@
   color: var(--text-faint);
 }
 
+.chipAyuda {
+  margin: 10px 0 0;
+  max-width: 70ch;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.chipAyuda strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
 @media (max-width: 560px) {
   .count {
     margin-left: 0;

@@ -18,10 +18,36 @@ export interface ModelFamily {
   representante: ShowroomModel;
 }
 
+/**
+ * Palabras que NO distinguen un auto de otro: sacarlas es lo que hace que
+ * "Dolphin" y "DOLPHIN (60.4 kWh)" caigan en la misma tarjeta.
+ *
+ * QA MEDIO 8: esta lista tenía adentro "pro", "plus", "max" y "base", que en
+ * el mercado que cubre el catálogo no son niveles de equipamiento sino
+ * NOMBRES DE MODELO distintos. Con "pro" y "plus" ignorados, las cuatro filas
+ * que el catálogo tiene de BYD -- "Yuan Plus (Atto 3)", "Yuan Plus GL", "Yuan
+ * Plus GS" y "Yuan Pro GS" -- caían todas en la misma clave y la grilla
+ * mostraba UNA tarjeta "Yuan Plus" de 45,1 a 60,5 kWh: el Yuan Pro, que es
+ * otro auto (otro tamaño de batería, otra autonomía, otro precio), quedaba
+ * escondido adentro y bajo el nombre equivocado. Lo mismo con Geely EX5
+ * Pro / EX5 Max. Sacadas de acá, cada línea vuelve a tener su tarjeta.
+ *
+ * "gs" y "gl" sí se quedan, aunque el bug los mencione de pasada: en el
+ * catálogo real solo aparecen como sufijo de equipamiento del mismo auto
+ * ("Yuan Plus" / "Yuan Plus GL" / "Yuan Plus GS", los tres de 60,5 kWh), o
+ * sea que son de la misma familia que "gt" o "gts", que ya estaban acá.
+ * Sacarlos habría partido el Yuan Plus en tres tarjetas idénticas.
+ *
+ * Las demás que quedan también son equipamiento del MISMO auto y tienen que
+ * seguir agrupando: Model 3 Standard Range / Long Range / Performance es un
+ * solo Model 3. El criterio, cuando hay duda, es el que ya dejó escrito
+ * familyKey más abajo: una tarjeta de más es molesta, una tarjeta que esconde
+ * otro auto es información equivocada.
+ */
 const IGNORAR = new Set([
   // trim / equipamiento
   "active", "boost", "comfort", "design", "excellence", "standard", "premium", "flair", "pure",
-  "range", "long", "extended", "sr", "lr", "awd", "rwd", "fwd", "pro", "max", "plus", "base",
+  "range", "long", "extended", "sr", "lr", "awd", "rwd", "fwd",
   "gl", "gs", "skin", "dual", "motor", "single", "ah", "kw", "ac", "ch", "edition", "launch", "series",
   // deportivas
   "sport", "performance", "plaid", "brabus", "xpower", "amg", "gts", "turbo", "vz", "rs", "gt",
@@ -54,9 +80,25 @@ export function familyKey(model: ShowroomModel): string {
   return base ? `${normalize(model.marca)}|${base}` : `${normalize(model.marca)}|id:${model.id}`;
 }
 
-/** "Model 3 (Performance)" → "Model 3": lo que va antes del calificador. */
+/**
+ * "Model 3 (Performance)" → "Model 3": lo que va antes del calificador.
+ *
+ * El tamaño de batería suelto también se saca, no solo el que está entre
+ * paréntesis: el catálogo trae "MG4 Electric 51 kWh" y "MG4 Electric 77 kWh"
+ * como dos filas de la MISMA familia, y sin esto la tarjeta terminaba
+ * titulada "MG4 Electric 51 kWh" mientras abajo, en sus propios datos, decía
+ * "50,8–74,4 kWh". Un título que se contradice con la ficha que tiene debajo
+ * es la misma clase de error que el Yuan Plus tragándose al Yuan Pro: la
+ * tarjeta dice ser algo más chico de lo que en realidad agrupa.
+ */
 function displayName(modelo: string): string {
-  return modelo.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim() || modelo;
+  return (
+    modelo
+      .replace(/\s*\([^)]*\)\s*/g, " ")
+      .replace(/\s*\b\d+([.,]\d+)?\s*kwh\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim() || modelo
+  );
 }
 
 /** Agrupa preservando el orden de aparición (la lista ya viene ordenada). */

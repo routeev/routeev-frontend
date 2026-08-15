@@ -15,11 +15,48 @@
   font-family: var(--font-body, inherit);
 }
 
-.replay {
+/* Los botones de zoom salen con el tema claro de leaflet.css: sobre este mapa
+   oscuro se ven como un recorte de otra pagina. Y 30px de lado es poco para un
+   dedo -- 40px es el minimo que usamos en toda la app. */
+.map :global(.leaflet-bar) {
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.map :global(.leaflet-bar a) {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 20px;
+  background: rgba(10, 14, 19, 0.9);
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+
+.map :global(.leaflet-bar a:hover),
+.map :global(.leaflet-bar a:focus-visible) {
+  background: var(--bg-panel-raised);
+  color: var(--accent-astar);
+}
+
+.map :global(.leaflet-bar a.leaflet-disabled) {
+  background: rgba(10, 14, 19, 0.9);
+  color: var(--text-faint);
+}
+
+.mapActions {
   position: absolute;
   top: 10px;
   right: 10px;
   z-index: 500;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mapAction {
+  min-height: 40px;
   padding: 7px 12px;
   font-size: 12px;
   background: rgba(10, 14, 19, 0.82);
@@ -198,9 +235,14 @@
   .map {
     height: 220px;
   }
-  .replay {
+  .mapActions {
     top: 8px;
     right: 8px;
+    /* Sin el ancho acotado, los dos botones en una fila tapan medio mapa en un
+       celular: asi se apilan y el mapa sigue mirandose. */
+    max-width: 62%;
+  }
+  .mapAction {
     padding: 6px 10px;
     font-size: 11px;
   }

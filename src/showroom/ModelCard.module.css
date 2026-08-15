@@ -89,6 +89,16 @@
   line-height: 1.3;
 }
 
+/* Margen superior negativo (mismo recurso que .fieldError en el login): el
+   nombre local va pegado al del modelo, como una aclaración de esa línea, no
+   como un dato más de la tarjeta. */
+.alias {
+  margin: -8px 0 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .specs {
   display: flex;
   gap: 14px;

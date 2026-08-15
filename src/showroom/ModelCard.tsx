@@ -1,6 +1,7 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { familyAliases } from "./modelAlias";
 import type { ModelFamily } from "./modelFamily";
 import { num } from "./num";
 import { useModelPhoto } from "./useModelPhoto";
@@ -29,6 +30,10 @@ function ModelCardComponent({ familia, eager, onSelect }: ModelCardProps) {
   // familia, que es el que mejor matchea en Wikimedia.
   const model = familia.representante;
   const nombre = `${familia.marca} ${familia.nombre}`;
+  // El nombre con el que se lo conoce acá, si el backend lo manda: el mismo
+  // auto se vende con distinto nombre según el mercado, y la tarjeta tiene
+  // que dejar claro que "este es el que vos buscabas" (QA MEDIO 9).
+  const alias = useMemo(() => familyAliases(familia.versiones), [familia.versiones]);
   const { ref, photo } = useModelPhoto(
     nombre,
     eager,
@@ -68,6 +73,7 @@ function ModelCardComponent({ familia, eager, onSelect }: ModelCardProps) {
       <div className={styles.body}>
         <p className={styles.marca}>{familia.marca}</p>
         <h3 className={styles.modelo}>{familia.nombre}</h3>
+        {alias.length > 0 && <p className={styles.alias}>Acá le dicen «{alias[0]}»</p>}
         <dl className={styles.specs}>
           <div>
             <dt>Batería</dt>

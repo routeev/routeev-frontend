@@ -185,6 +185,15 @@
   border-color: transparent;
 }
 
+/* El <label> del campo va arriba de la fila, no adentro: si entrara en el
+   flex se sentaría al lado del input y se leería como parte de la fila de
+   botones. */
+.usernameEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .usernameEditRow {
   display: flex;
   align-items: center;
@@ -196,6 +205,24 @@
   width: 160px;
   padding: 6px 8px;
   font-size: 14px;
+}
+
+/* En el celular el campo se toca con el dedo: 44px de alto, el mismo criterio
+   que base.css ya aplica a button.small. En desktop se deja compacto. */
+@media (max-width: 640px) {
+  .usernameEditRow input {
+    min-height: 44px;
+  }
+}
+
+/* Error de un campo puntual. Copia deliberada de .fieldError del login
+   (LoginPage.module.css): era la única convención de la app para esto, y un
+   error de formulario tiene que verse igual en todas las pantallas. */
+.fieldError {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--danger);
 }
 
 /* --- Vehículos --- */

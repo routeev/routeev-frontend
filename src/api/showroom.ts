@@ -12,6 +12,14 @@ export interface ShowroomModel {
   nota?: string;
   foto_url?: string;
   foto_credito?: PhotoCredit;
+  /**
+   * Nombre(s) con los que se conoce el auto acá, cuando no coinciden con el
+   * de fábrica. Opcional y de forma laxa a propósito: el backend lo está
+   * agregando en paralelo y el que está en producción todavía no lo manda.
+   * Nunca leerlo directo -- usar modelAliases()/familyAliases() de
+   * showroom/modelAlias.ts, que se bancan las tres formas posibles.
+   */
+  alias?: string | string[] | null;
 }
 
 export interface ShowroomCatalog {

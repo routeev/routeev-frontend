@@ -3,6 +3,7 @@ import { memo } from "react";
 import { showroomLookupAi, type ShowroomFicha } from "../api/showroom";
 import { ModelCard } from "./ModelCard";
 import type { ModelFamily } from "./modelFamily";
+import { ModelGridSkeleton } from "./Skeletons";
 import styles from "./ModelGrid.module.css";
 
 const FOTOS_SIN_ESPERAR = 8;
@@ -48,7 +49,18 @@ function ModelGridComponent({
   }
 
   if (isLoading) {
-    return <p className={styles.cargando}>Cargando catálogo…</p>;
+    return (
+      <div aria-busy="true">
+        {/* El esqueleto es aria-hidden, así que el estado "estoy cargando" hay
+            que decirlo con palabras para quien no lo ve. role="status" y no
+            "alert": es información de fondo, no interrumpe lo que se esté
+            leyendo. */}
+        <p className="sr-only" role="status">
+          Cargando el catálogo de modelos…
+        </p>
+        <ModelGridSkeleton />
+      </div>
+    );
   }
 
   if (!hasResults) {

@@ -74,6 +74,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
     bateria && !bateria.margen_alcanzado && llegadaPct !== null
       ? ` No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.`
       : "";
+  // Cuando la reserva subió porque el destino no tiene enchufe, decirlo: si no,
+  // el número del margen no cierra con el 10% que la persona cree que rige y
+  // parece un error de la app en vez de la decisión que ella misma tomó.
+  const reserva = bateria?.reserva ?? null;
+  const reservaText =
+    reserva?.motivo === "cargador_destino"
+      ? ` Como dijiste que en el destino no tenés dónde cargar, el viaje se calculó guardando un ${reserva.pct.toFixed(0)}% para que puedas llegar hasta un cargador.`
+      : "";
+
+  // El cargador del destino: sólo viene cuando se pidió la ruta declarando que
+  // allá no hay dónde enchufar. Contesta la pregunta que sigue a "¿llego?".
+  const cargador = result.cargador_destino ?? null;
 
   // Desglose del costo. El texto de peajes es el mismo de siempre (con o sin
   // montos desconocidos); lo que cambia con el backend nuevo es la energía:
@@ -164,6 +176,27 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             >
               {marginText}
               {marginFallbackText}
+              {reservaText}
+            </div>
+          )}
+          {cargador && (
+            <div className={styles.cargadorDestino}>
+              <p className={styles.cargadorDestinoTitulo}>Dónde cargar al llegar</p>
+              <p className={styles.cargadorDestinoNombre}>{cargador.nombre}</p>
+              <p className={styles.cargadorDestinoDato}>
+                a {cargador.distancia_km_recta.toFixed(1)} km en línea recta del destino
+                {cargador.potencia_kw ? ` · ${Math.round(cargador.potencia_kw)} kW` : ""}
+                {cargador.operador ? ` · ${cargador.operador}` : ""}
+                {cargador.direccion ? ` · ${cargador.direccion}` : ""}
+              </p>
+              {cargador.demasiado_lejos ? (
+                // No se disimula: si el cargador más cercano está a esa
+                // distancia, el problema no es el margen, es que ahí no hay
+                // infraestructura, y la persona tiene que poder decidir con eso.
+                <p className={styles.cargadorDestinoAviso}>
+                  Está lejos como para contar con él: fijate si vas a poder cargar antes de llegar.
+                </p>
+              ) : null}
             </div>
           )}
           <div className={styles.stats}>

@@ -8,6 +8,7 @@ import { setSession } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { Brand } from "../shared/Brand";
 import { GraphBackground } from "../shared/GraphBackground";
+import { Spinner } from "../shared/Spinner";
 import { GoogleSignIn } from "./GoogleSignIn";
 import styles from "./LoginPage.module.css";
 
@@ -19,6 +20,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 interface FormValues {
   email: string;
   password: string;
+  /** Solo en "crear cuenta", y siempre opcional (ver onSubmit). */
+  displayName: string;
 }
 
 interface ConfirmValues {
@@ -33,7 +36,7 @@ export function LoginPage() {
   const [banner, setBanner] = useState<{ variant: "error" | "info"; message: string } | null>(null);
   const [resending, setResending] = useState(false);
 
-  const form = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
+  const form = useForm<FormValues>({ defaultValues: { email: "", password: "", displayName: "" } });
   const confirmForm = useForm<ConfirmValues>({ defaultValues: { code: "" } });
 
   function goToApp(session: { access_token: string; username: string }) {
@@ -45,7 +48,14 @@ export function LoginPage() {
     setBanner(null);
     const email = values.email.trim();
     try {
-      const result = mode === "login" ? await login(email, values.password) : await register(email, values.password);
+      // QA BAJO 25: el nombre visible salía derivado del correo ("pucho1394").
+      // Ahora se puede elegir al crear la cuenta, sin dejar de ser opcional:
+      // vacío se manda como si el campo no existiera, y register() ya se
+      // encarga de que una API que todavía no lo acepta no rompa el alta.
+      const result =
+        mode === "login"
+          ? await login(email, values.password)
+          : await register(email, values.password, values.displayName);
       if (result.confirmation_required) {
         // Cuenta creada pero todavía sin token: falta el código que se
         // acaba de mandar por mail (ver RegisterResponse en backend/app/schemas.py).
@@ -171,9 +181,43 @@ export function LoginPage() {
                   <p className={styles.fieldError}>{form.formState.errors.password.message}</p>
                 )}
               </div>
+              {mode === "register" && (
+                <div className="field">
+                  <label htmlFor="display-name">Nombre (opcional)</label>
+                  <input
+                    id="display-name"
+                    type="text"
+                    autoComplete="nickname"
+                    maxLength={32}
+                    placeholder="ej. Marcela"
+                    // Sin `required` y sin ninguna regla de validación a
+                    // propósito: es el único campo del formulario que NUNCA
+                    // puede frenar un alta. Dejarlo vacío es una opción
+                    // legítima y el texto de abajo lo dice.
+                    {...form.register("displayName")}
+                  />
+                  <p className={styles.fieldHint}>
+                    Es cómo te vamos a mostrar en la app. Si lo dejás vacío te ponemos uno y lo
+                    podés cambiar cuando quieras desde tu perfil.
+                  </p>
+                </div>
+              )}
               <div className={styles.actions}>
-                <button type="submit" className="primary" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Un momento..." : mode === "login" ? "Entrar" : "Crear cuenta"}
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={form.formState.isSubmitting}
+                  aria-busy={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Spinner /> Un momento...
+                    </>
+                  ) : mode === "login" ? (
+                    "Entrar"
+                  ) : (
+                    "Crear cuenta"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -212,8 +256,19 @@ export function LoginPage() {
               )}
             </div>
             <div className={styles.actions}>
-              <button type="submit" className="primary" disabled={confirmForm.formState.isSubmitting}>
-                {confirmForm.formState.isSubmitting ? "Confirmando..." : "Confirmar"}
+              <button
+                type="submit"
+                className="primary"
+                disabled={confirmForm.formState.isSubmitting}
+                aria-busy={confirmForm.formState.isSubmitting}
+              >
+                {confirmForm.formState.isSubmitting ? (
+                  <>
+                    <Spinner /> Confirmando...
+                  </>
+                ) : (
+                  "Confirmar"
+                )}
               </button>
               <button type="button" className={styles.toggleMode} onClick={onResend} disabled={resending}>
                 Reenviar código

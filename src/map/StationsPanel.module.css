@@ -4,6 +4,13 @@
   padding: 0;
   max-height: 220px;
   overflow-y: auto;
+  /* Las filas son `justify-content: space-between` (.header, abajo), así que
+     lo último de cada fila -- los kW y el chip del operador -- queda contra el
+     borde derecho, que es exactamente donde el navegador dibuja la barra de
+     scroll en escritorio, POR ENCIMA del contenido. Reservar la canaleta le
+     devuelve esos ~15px a la fila y además evita que todo salte de lugar
+     cuando la lista pasa de caber a no caber. */
+  scrollbar-gutter: stable;
 }
 
 .list li {

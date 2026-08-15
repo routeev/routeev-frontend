@@ -12,14 +12,6 @@
   scroll-margin-top: 80px;
 }
 
-.cargando {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-  margin: 0;
-  padding: 32px 0;
-  text-align: center;
-}
-
 .cerrar {
   position: absolute;
   top: 12px;
@@ -96,6 +88,14 @@
   line-height: 1.15;
   letter-spacing: -0.01em;
   margin: 6px 0 10px;
+}
+
+/* Nombre local del auto, pegado al título del modelo. */
+.alias {
+  margin: -4px 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 /* Selector de version dentro de la ficha ("elegí la tuya"). */

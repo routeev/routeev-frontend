@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { RouterProvider } from "react-router-dom";
 import { setOnSessionExpired } from "./api/client";
 import { router } from "./routes";
+import { ToastViewport } from "./shared/ToastViewport";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,11 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
+        {/* Fuera del router a propósito: el live region tiene que estar en el
+            DOM antes de que aparezca el primer aviso, y sobrevivir a los
+            cambios de ruta. Montado acá, una navegación no lo desmonta ni lo
+            vuelve a crear (que sería lo mismo que no tenerlo). */}
+        <ToastViewport />
       </QueryClientProvider>
     </HelmetProvider>
   );
