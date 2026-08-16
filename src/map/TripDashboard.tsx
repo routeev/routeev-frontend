@@ -97,6 +97,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // allá no hay dónde enchufar. Contesta la pregunta que sigue a "¿llego?".
   const cargador = result.cargador_destino ?? null;
 
+  // Respaldo por parada. Alineado 1 a 1 con recharges igual que los costos, con
+  // el node_id de respaldo por si los largos no coinciden (una API vieja no
+  // manda nada y esto queda en undefined, que la fila entiende como "no mostrar").
+  const respaldos = result.respaldo_paradas?.paradas;
+  const respaldoDe = (i: number, nodeId: number | string) => {
+    const fila =
+      respaldos && respaldos.length === primary.recharges.length
+        ? respaldos[i]
+        : respaldos?.find((p) => p.node_id === String(nodeId));
+    return fila?.respaldo ?? null;
+  };
+
   // Desglose del costo. El texto de peajes es el mismo de siempre (con o sin
   // montos desconocidos); lo que cambia con el backend nuevo es la energía:
   // costo_uyu_recargas presente significa que costo_uyu_energia es SOLO lo
@@ -312,6 +324,20 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                         <div className={styles.stopRow}>
                           <span>Conectores</span>
                           <b>{detail.tipo_conector}</b>
+                        </div>
+                      )}
+                      {/* Si este cargador no funciona, ¿a dónde se va? Es la
+                          pregunta que aparece recién cuando ya estás ahí, y
+                          para entonces es tarde para decidir con la batería
+                          en el margen. */}
+                      {respaldoDe(i, rc.node_id) && (
+                        <div className={styles.stopRow}>
+                          <span>Si no funciona</span>
+                          <b>
+                            {respaldoDe(i, rc.node_id)!.nombre} a{" "}
+                            {respaldoDe(i, rc.node_id)!.distancia_km_recta} km
+                            {respaldoDe(i, rc.node_id)!.demasiado_lejos ? " — sin respaldo cerca" : ""}
+                          </b>
                         </div>
                       )}
                     </div>
