@@ -12,8 +12,19 @@ import styles from "./AppTopbar.module.css";
 interface AppTopbarProps {
   /** Texto al lado de la marca ("Mi perfil"); la pantalla del mapa no lleva. */
   subtitle?: string;
-  /** Enlaces propios de la pantalla (volver al mapa, ir al perfil). */
+  /**
+   * Enlace propio de la pantalla que hace falta en cualquier tamaño (p. ej.
+   * "Volver al mapa" en /profile: no hay otra forma de llegar ahí). Se ve en
+   * el header de escritorio y en el menú hamburguesa de mobile.
+   */
   children?: ReactNode;
+  /**
+   * Enlace que solo hace falta en mobile porque en escritorio ya lo cubre el
+   * menú de usuario (avatar + nombre) -- p. ej. "Mi perfil" en /app: mostrarlo
+   * también en el header de escritorio sería un duplicado de "Mi perfil" del
+   * menú. Se ve solo en el menú hamburguesa.
+   */
+  mobileOnlyChildren?: ReactNode;
   /** Nombre a mostrar en el chip; por defecto, el de la sesión. */
   username?: string;
 }
@@ -25,7 +36,7 @@ interface AppTopbarProps {
  * (Mi perfil / Volver al mapa) y "Cerrar sesión" pasan a un panel desplegable
  * en vez de competir con la marca en la barra.
  */
-export function AppTopbar({ subtitle, children, username }: AppTopbarProps) {
+export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: AppTopbarProps) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -87,7 +98,7 @@ export function AppTopbar({ subtitle, children, username }: AppTopbarProps) {
                 onClick={() => setMenuOpen(false)}
               >
                 <IconUser />
-                Ir a mi perfil
+                Mi perfil
               </Link>
               <button
                 type="button"
@@ -115,6 +126,7 @@ export function AppTopbar({ subtitle, children, username }: AppTopbarProps) {
         <div className={styles.mobileMenu}>
           <div className={styles.mobileMenuLink} onClick={() => setOpen(false)}>
             {children}
+            {mobileOnlyChildren}
           </div>
           <button type="button" className="ghost" onClick={logout}>
             <IconLogout />

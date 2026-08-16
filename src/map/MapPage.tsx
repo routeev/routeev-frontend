@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
 import { Banner } from "../shared/Banner";
+import buttons from "../shared/buttons.module.css";
+import { IconUser } from "../shared/NavIcons";
 import { MapCanvas } from "./MapCanvas";
 import { RouteInputPanel } from "./RouteInputPanel";
 import { StationDetailPanel } from "./StationDetailPanel";
@@ -193,9 +196,18 @@ export function MapPage() {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      {/* Sin children: "Mi perfil" quedaba duplicado con "Ir a mi perfil" en
-          el menú de usuario nuevo (avatar + nombre, ver AppTopbar.tsx). */}
-      <AppTopbar />
+      {/* mobileOnlyChildren, no children: en escritorio "Mi perfil" ya lo
+          cubre el menú de usuario nuevo (avatar + nombre) -- mostrarlo
+          también acá sería un duplicado. En el menú hamburguesa de mobile,
+          que no tiene ese menú, sigue haciendo falta. */}
+      <AppTopbar
+        mobileOnlyChildren={
+          <Link to="/profile" className={buttons.navLink}>
+            <IconUser />
+            Mi perfil
+          </Link>
+        }
+      />
 
       <div className={`${styles.layout} ${mapCollapsed ? styles.mapCollapsed : ""}`}>
         <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}>
