@@ -2,7 +2,7 @@
 // ModelCombobox en AddVehicleForm (perfil) y el <datalist> que todavía usa
 // VehiclePanel (mapa).
 //
-// Con las 630 opciones siempre montadas, el navegador despliega la lista
+// Con las 631 opciones siempre montadas, el navegador despliega la lista
 // COMPLETA apenas se clickea el campo vacío, tapando la pantalla. Por eso la
 // lista no ofrece nada hasta que haya un mínimo de letras escritas, y de
 // ahí en más filtra (sin mayúsculas ni tildes) con un tope de opciones — un

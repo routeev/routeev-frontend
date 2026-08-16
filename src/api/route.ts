@@ -107,6 +107,20 @@ export interface CargadorDestino extends EstacionCercana {
   demasiado_lejos: boolean;
 }
 
+/**
+ * El respaldo de una parada: a que OTRO cargador se llegaria si el de esa
+ * parada no funciona. Mismo shape que el cargador del destino, porque es la
+ * misma pregunta hecha en otro momento del viaje.
+ */
+export type CargadorRespaldo = CargadorDestino;
+
+export interface RespaldoParada {
+  node_id: string;
+  estacion: string;
+  // null cuando el backend no supo calcularlo (o es una respuesta vieja).
+  respaldo?: CargadorRespaldo | null;
+}
+
 export interface CompareRoutesResult {
   origin: { name: string };
   destination: { name: string };
@@ -114,6 +128,13 @@ export interface CompareRoutesResult {
   bateria?: RouteBattery;
   // Con dato solo cuando se pidio con cargador_en_destino: false.
   cargador_destino?: CargadorDestino | null;
+  // Si el plan garantiza que a cada parada se llega con bateria para alcanzar
+  // otro cargador en caso de que ese no funcione. Opcional: una API vieja no lo
+  // manda y la interfaz simplemente no muestra la seccion.
+  respaldo_paradas?: {
+    cubierto: boolean;
+    paradas: RespaldoParada[];
+  };
   dijkstra: RouteResult | null;
   astar: RouteResult;
 }
