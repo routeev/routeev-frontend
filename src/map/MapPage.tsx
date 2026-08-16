@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
 import { Banner } from "../shared/Banner";
-import buttons from "../shared/buttons.module.css";
-import { IconUser } from "../shared/NavIcons";
 import { MapCanvas } from "./MapCanvas";
 import { RouteInputPanel } from "./RouteInputPanel";
 import { StationDetailPanel } from "./StationDetailPanel";
@@ -196,12 +193,9 @@ export function MapPage() {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <AppTopbar>
-        <Link to="/profile" className={buttons.navLink}>
-          <IconUser />
-          Mi perfil
-        </Link>
-      </AppTopbar>
+      {/* Sin children: "Mi perfil" quedaba duplicado con "Ir a mi perfil" en
+          el menú de usuario nuevo (avatar + nombre, ver AppTopbar.tsx). */}
+      <AppTopbar />
 
       <div className={`${styles.layout} ${mapCollapsed ? styles.mapCollapsed : ""}`}>
         <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}>

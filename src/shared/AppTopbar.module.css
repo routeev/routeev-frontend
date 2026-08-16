@@ -101,6 +101,12 @@
   box-shadow: var(--shadow-float);
 }
 
+/* "Ir a mi perfil" es un <Link> (elemento <a>) y "Cerrar sesión" un
+   <button> -- mismos estilos de acá, pero el CSS global de base.css les da
+   un look de base distinto a cada tag (`a { color: var(--accent-astar) }`
+   más subrayado del navegador; `button { font-weight: 600 }`) que esta
+   clase no pisaba del todo. text-decoration y font-weight explícitos para
+   que los dos ítems queden iguales sin importar qué tag sea cada uno. */
 .userMenuItem {
   display: flex;
   align-items: center;
@@ -111,6 +117,8 @@
   background: none;
   color: var(--text);
   font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
   text-align: left;
   cursor: pointer;
 }
