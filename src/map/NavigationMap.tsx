@@ -30,10 +30,14 @@ const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 
 const NAV_ZOOM = 17;
 const NAV_PITCH = 60;
-// Similar al intervalo real de watchPosition (ver useLiveTrip.ts): bastante
-// para que la cámara se sienta fluida, no tan largo como para que vaya
-// siempre un paso atrás de la posición real.
-const EASE_DURATION_MS = 900;
+// Bajado de 900 probando en un celular real: con el intervalo real de
+// watchPosition (varios segundos entre fixes, no uno fijo), una animación
+// tan larga no llegaba a asentarse antes del próximo fix -- la cámara
+// quedaba siempre "un paso atrás" persiguiendo un objetivo que ya cambió de
+// nuevo, que es exactamente el reporte de "va atrasada". Sigue siendo una
+// transición suave (no un salto brusco), solo más corta que el intervalo
+// típico entre fixes.
+const EASE_DURATION_MS = 500;
 
 function routeToGeoJSON(coords: [number, number][]): GeoJSON.Feature<GeoJSON.LineString> {
   return {

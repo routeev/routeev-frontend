@@ -21,10 +21,23 @@ const ARRIVED_DISTANCE_M = 60;
 // grados de fix en fix sin haberse movido un centímetro real) -- se prefiere
 // dejar el último rumbo confiable antes que uno inventado.
 const MIN_MOVE_FOR_HEADING_M = 8;
-// Que tan rápido sigue la cámara del modo navegación al rumbo real -- mismo
-// alisado exponencial que ya usaba speedKmh (0.3 de peso al fix nuevo), para
-// que no tiemble con cada actualización del GPS pero tampoco vaya atrás.
-const HEADING_SMOOTHING_ALPHA = 0.3;
+// Igual que MIN_MOVE_FOR_HEADING_M pero mirando la velocidad en vez de la
+// distancia: el "rumbo" (course-over-ground) que da el propio GPS pierde
+// sentido por completo cerca de velocidad cero -- es la fuente concreta del
+// primer reporte real de este modo ("tiembla, va atrasada, y a veces rota
+// para el lado que no es" probando en un celular): al frenar en el tránsito
+// o en un semáforo, cualquier micro-desvío de posición se lee como un giro
+// de varios grados, y correjirlo a fuerza de alisado (ver
+// HEADING_SMOOTHING_ALPHA) solo cambiaba "tiembla" por "va atrasada" sin
+// arreglar la causa. Cortar la actualización del rumbo por completo bajo
+// este piso dejó de lado el ruido en la fuente en vez de promediarlo.
+const MIN_SPEED_FOR_HEADING_KMH = 8;
+// Que tan rápido sigue la cámara del modo navegación al rumbo real. Con el
+// piso de velocidad de arriba filtrando el ruido de fondo, el rumbo que
+// llega ya es bastante confiable, así que puede seguirlo más de cerca (antes
+// 0.3) sin volver a temblar -- 0.3 era, en la práctica, tapar ruido con
+// alisado en vez de sacarlo de raíz, y el costo era notarse "atrasado".
+const HEADING_SMOOTHING_ALPHA = 0.45;
 
 type RechargeStop = { nodeId: number; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
 
@@ -154,16 +167,21 @@ export function useLiveTrip() {
         trip.speedKmh = trip.speedKmh == null ? rawSpeedKmh : trip.speedKmh * 0.7 + rawSpeedKmh * 0.3;
       }
 
-      // coords.heading es lo mas confiable cuando esta (lo da el propio chip
-      // GPS a partir del efecto Doppler, no de comparar dos posiciones), pero
-      // solo viene no-nulo en la practica con el dispositivo en movimiento
-      // real -- de ahi el fallback calculando el rumbo entre el fix anterior
-      // y este, filtrado por MIN_MOVE_FOR_HEADING_M para no "girar" el auto
-      // con el ruido de un GPS parado.
+      // Se prefirio en un primer intento usar coords.heading (lo da el propio
+      // chip GPS) cuando estaba disponible, con el calculo por diferencia de
+      // posicion solo de respaldo -- se sacó probando en un celular real: la
+      // combinacion de las dos fuentes es exactamente lo que se sentia
+      // "tiembla, va atrasada, y a veces rota para el lado que no es". Course
+      // (direccion de desplazamiento) y heading de compas/orientacion del
+      // telefono no son la misma cosa, y coords.heading no distingue una de
+      // la otra de forma consistente entre navegadores/dispositivos -- con el
+      // telefono en cualquier posicion que no sea "mirando derecho para
+      // adelante" (en un pie de auto, por ejemplo), esa fuente apunta para
+      // cualquier lado. El calculo por diferencia de posicion consecutiva es
+      // la unica de las dos que SIEMPRE mide lo mismo (direccion real de
+      // desplazamiento), asi que es la unica que queda.
       let rawHeading: number | null = null;
-      if (typeof pos.coords.heading === "number" && !Number.isNaN(pos.coords.heading)) {
-        rawHeading = pos.coords.heading;
-      } else if (trip.lastFix) {
+      if (trip.lastFix && trip.speedKmh != null && trip.speedKmh >= MIN_SPEED_FOR_HEADING_KMH) {
         const movedM = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude) * 1000;
         if (movedM >= MIN_MOVE_FOR_HEADING_M) {
           rawHeading = bearingDeg(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
