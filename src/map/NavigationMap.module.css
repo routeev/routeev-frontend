@@ -1,0 +1,22 @@
+.container {
+  width: 100%;
+  height: 100%;
+}
+
+/* MapLibre no lee custom properties para nada que le pasemos por JS (mismo
+   motivo que ROUTE_COLOR en NavigationMap.tsx está hardcodeado), pero este
+   elemento SÍ es DOM normal y puede usar var() sin problema. */
+.marker {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+.marker svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--accent-astar);
+  stroke: var(--bg-panel);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}

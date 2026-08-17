@@ -1,7 +1,7 @@
 import L from "leaflet";
 import { useCallback, useRef, useState } from "react";
 import { logTrip } from "../api/route";
-import { haversineKm } from "../shared/geo";
+import { bearingDeg, haversineKm, smoothBearingDeg } from "../shared/geo";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
@@ -16,6 +16,15 @@ const DEPARTED_FROM_DESTINATION_M = 300;
 const MAX_DISTANCE_FROM_ORIGIN_KM = 3;
 const FAR_FROM_ROUTE_M = 500;
 const ARRIVED_DISTANCE_M = 60;
+// Bajo este avance entre dos fixes, calcular rumbo por la diferencia de
+// posición es puro ruido de GPS (un auto parado en un semáforo "gira" varios
+// grados de fix en fix sin haberse movido un centímetro real) -- se prefiere
+// dejar el último rumbo confiable antes que uno inventado.
+const MIN_MOVE_FOR_HEADING_M = 8;
+// Que tan rápido sigue la cámara del modo navegación al rumbo real -- mismo
+// alisado exponencial que ya usaba speedKmh (0.3 de peso al fix nuevo), para
+// que no tiemble con cada actualización del GPS pero tampoco vaya atrás.
+const HEADING_SMOOTHING_ALPHA = 0.3;
 
 type RechargeStop = { nodeId: number; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
 
@@ -33,6 +42,7 @@ interface TripRecord {
   startedRealMs: number;
   destination: [number, number];
   speedKmh: number | null;
+  heading: number | null;
   lastFix: { lat: number; lon: number; tMs: number } | null;
 }
 
@@ -48,6 +58,11 @@ export interface LiveTripUi {
   capacityKwh: number;
   elapsedMin: number;
   speedKmh: number | null;
+  // Rumbo actual (0-360°, 0=norte), para el modo navegación (NavigationMap):
+  // null hasta que hay suficiente movimiento real para calcularlo (ver
+  // MIN_MOVE_FOR_HEADING_M) -- no tiene sentido "mirar hacia" un rumbo
+  // inventado con el auto parado.
+  heading: number | null;
   statusText: string;
   statusKind: StatusKind;
   advisory: SpeedAdvisory | null;
@@ -63,6 +78,7 @@ const initialUi: LiveTripUi = {
   capacityKwh: 0,
   elapsedMin: 0,
   speedKmh: null,
+  heading: null,
   statusText: "",
   statusKind: "",
   advisory: null,
@@ -137,6 +153,26 @@ export function useLiveTrip() {
       if (rawSpeedKmh != null) {
         trip.speedKmh = trip.speedKmh == null ? rawSpeedKmh : trip.speedKmh * 0.7 + rawSpeedKmh * 0.3;
       }
+
+      // coords.heading es lo mas confiable cuando esta (lo da el propio chip
+      // GPS a partir del efecto Doppler, no de comparar dos posiciones), pero
+      // solo viene no-nulo en la practica con el dispositivo en movimiento
+      // real -- de ahi el fallback calculando el rumbo entre el fix anterior
+      // y este, filtrado por MIN_MOVE_FOR_HEADING_M para no "girar" el auto
+      // con el ruido de un GPS parado.
+      let rawHeading: number | null = null;
+      if (typeof pos.coords.heading === "number" && !Number.isNaN(pos.coords.heading)) {
+        rawHeading = pos.coords.heading;
+      } else if (trip.lastFix) {
+        const movedM = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude) * 1000;
+        if (movedM >= MIN_MOVE_FOR_HEADING_M) {
+          rawHeading = bearingDeg(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
+        }
+      }
+      if (rawHeading != null) {
+        trip.heading = smoothBearingDeg(trip.heading, rawHeading, HEADING_SMOOTHING_ALPHA);
+      }
+
       trip.lastFix = { lat: latitude, lon: longitude, tMs: now };
 
       const distToDestM = haversineKm(latitude, longitude, trip.destination[0], trip.destination[1]) * 1000;
@@ -156,6 +192,7 @@ export function useLiveTrip() {
           totalKm: trip.totalKm,
           batteryKwh: battery,
           capacityKwh: trip.capacityKwh,
+          heading: trip.heading,
           statusText: "Llegaste a destino",
           statusKind: "done",
         });
@@ -199,6 +236,7 @@ export function useLiveTrip() {
         capacityKwh: trip.capacityKwh,
         elapsedMin,
         speedKmh: trip.speedKmh,
+        heading: trip.heading,
         statusText,
         statusKind,
         advisory,
@@ -284,6 +322,7 @@ export function useLiveTrip() {
       startedRealMs: 0,
       destination: coords[coords.length - 1]!,
       speedKmh: null,
+      heading: null,
       lastFix: null,
     };
     tripRef.current = trip;

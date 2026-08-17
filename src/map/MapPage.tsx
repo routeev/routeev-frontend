@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AppTopbar } from "../shared/AppTopbar";
@@ -18,6 +18,18 @@ import { useLiveTrip } from "./useLiveTrip";
 import { useMapLoaders } from "./useMapLoaders";
 import { useReplayFromHistory } from "./useReplayFromHistory";
 import styles from "./MapPage.module.css";
+
+// Chunk aparte: MapLibre GL (~800 kB) solo hace falta con un viaje en vivo
+// arrancado, la minoría de las visitas a /app. Cargarlo siempre en el bundle
+// del mapa penalizaría a todo el mundo por una función que la mayoría nunca
+// prende. Mismo patrón que lazyPages.tsx para las pantallas enteras.
+const NavigationMap = lazy(() => import("./NavigationMap").then((m) => ({ default: m.NavigationMap })));
+
+// Referencia estable para "sin ruta calculada todavía": un `?? []` inline en
+// el selector de Zustand crearía un array NUEVO en cada llamada, y con eso
+// useMapStore nunca ve la misma referencia dos veces seguidas -- exactamente
+// el patrón que dispara un re-render de más en cada tick del store.
+const EMPTY_ROUTE: [number, number][] = [];
 
 type MapBanner = { message: string; variant: "error" | "warn" } | null;
 
@@ -50,6 +62,7 @@ export function MapPage() {
   const loaders = useMapLoaders();
   const liveTrip = useLiveTrip();
   const calc = useCalculateRoute();
+  const routeCoords = useMapStore((s) => s.lastResult?.astar.route_coords ?? EMPTY_ROUTE);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
   const originId = useMapStore((s) => s.originId);
@@ -300,7 +313,24 @@ export function MapPage() {
 
         <main className={styles.mainArea}>
           <div className={`${styles.mapWrap} ${picking ? styles.mapWrapPicking : ""}`}>
-            <MapCanvas liveTripPosition={liveTrip.ui.livePosition} onMapError={handleMapNotice} />
+            {liveTrip.ui.active ? (
+              // Modo navegación (cámara en perspectiva, rotando hacia donde
+              // se viaja) mientras el viaje está en curso -- Leaflet
+              // (MapCanvas) no tiene noción de inclinación/rotación de
+              // cámara, así que este modo usa un motor de mapa distinto (ver
+              // NavigationMap.tsx). Vuelve solo al mapa de planificación
+              // cuando el viaje termina o se cancela (ui.active pasa a
+              // false), sin que haga falta un botón de "salir" aparte.
+              <Suspense fallback={<div className={styles.navigationMapFallback} />}>
+                <NavigationMap
+                  position={liveTrip.ui.livePosition}
+                  heading={liveTrip.ui.heading}
+                  routeCoords={routeCoords}
+                />
+              </Suspense>
+            ) : (
+              <MapCanvas liveTripPosition={liveTrip.ui.livePosition} onMapError={handleMapNotice} />
+            )}
             {picking && (
               // Sobre el mapa y no en el panel: en pantalla angosta el panel
               // puede estar bajo el pliegue o colapsado, y este cartel es la

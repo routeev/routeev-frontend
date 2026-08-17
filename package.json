@@ -29,6 +29,7 @@
     "@react-oauth/google": "^0.13.5",
     "@tanstack/react-query": "^5.101.4",
     "leaflet": "^1.9.4",
+    "maplibre-gl": "^6.4.0",
     "motion": "^13.0.0",
     "ogl": "^1.0.11",
     "react": "^19.2.8",
