@@ -4,8 +4,19 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // con "does not provide an export named 'default'" pese a compilar bien en
 // tsc, porque ese chequeo lo hace el bundler (Vite/esbuild), no el tipado.
 import * as maplibregl from "maplibre-gl";
+// El worker de MapLibre (parsea vector tiles fuera del hilo principal) rompe
+// en el BUILD DE PRODUCCIÓN si no se registra así -- `?url` a secas lo emite
+// tal cual, sin el chunk hermano (maplibre-gl-shared.mjs) del que depende, y
+// falla en su primer import con un 404 real que Vercel responde con el
+// index.html de la SPA (de ahí el "non-JavaScript MIME type" en consola).
+// `?worker&url` lo hace pasar por el pipeline de workers de Vite, que arma
+// un chunk autocontenido. Solo pasa en producción -- `vite dev` funciona
+// con cualquiera de los dos, por eso no se notó probando en local.
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useEffect, useRef } from "react";
 import styles from "./NavigationMap.module.css";
+
+maplibregl.setWorkerUrl(workerUrl);
 
 // Mismo par que RouteLayers.tsx (COLOR_ASTAR): ninguna de las dos librerías
 // de mapa puede leer var() en runtime, así que el color queda hardcodeado
