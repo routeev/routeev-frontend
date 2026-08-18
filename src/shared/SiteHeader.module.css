@@ -33,6 +33,20 @@
   color: var(--accent-astar);
 }
 
+/* Agrupa .cta + el selector de idioma + el botón hamburguesa como un solo
+   bloque contra .inner (justify-content:space-between la separa de .brand/
+   .links como los únicos ítems que le importan a ese layout) -- así el
+   selector de idioma queda siempre pegado a lo que sí se ve en cada tamaño:
+   los botones de sesión en escritorio (.cta visible), el botón hamburguesa
+   en mobile (.cta escondido cuando hay uno -- ver la regla de abajo). Sin
+   este wrapper, space-between lo esparce como un ítem suelto en vez de
+   agruparlo con lo que tiene al lado. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .cta {
   display: flex;
   align-items: center;

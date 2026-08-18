@@ -22,6 +22,19 @@
   color: var(--text-faint);
 }
 
+/* Agrupa .right + el selector de idioma + el botón hamburguesa como un solo
+   bloque contra .topbar (justify-content:space-between la separa de .brand
+   como las únicas dos cosas que le importan a ese layout) -- así el selector
+   queda siempre pegado al elemento que sí se ve en cada tamaño: el chip de
+   usuario en escritorio (.right visible), el botón hamburguesa en mobile
+   (.right escondido). Sin este wrapper, space-between lo esparce como un
+   tercer/cuarto ítem suelto en vez de agruparlo con lo que tiene al lado. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .right {
   display: flex;
   align-items: center;

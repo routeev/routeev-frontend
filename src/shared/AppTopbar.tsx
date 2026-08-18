@@ -73,66 +73,67 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
         <Brand />
         {subtitle && <span className={styles.brandSub}>{subtitle}</span>}
       </div>
-      <div className={styles.right}>
-        {children}
-        <LanguageSwitcher />
-        <div className={styles.userMenu} ref={menuRef}>
-          <button
-            type="button"
-            className={styles.userMenuBtn}
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-          >
-            {photoUrl ? (
-              <img src={cloudinaryResize(photoUrl, 64)} className={styles.userMenuAvatar} alt="" />
-            ) : (
-              <span className={styles.userMenuAvatarFallback} aria-hidden="true">
-                {displayName.charAt(0).toUpperCase()}
-              </span>
+      <div className={styles.actions}>
+        <div className={styles.right}>
+          {children}
+          <div className={styles.userMenu} ref={menuRef}>
+            <button
+              type="button"
+              className={styles.userMenuBtn}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              {photoUrl ? (
+                <img src={cloudinaryResize(photoUrl, 64)} className={styles.userMenuAvatar} alt="" />
+              ) : (
+                <span className={styles.userMenuAvatarFallback} aria-hidden="true">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className={styles.userMenuName}>{displayName}</span>
+            </button>
+            {menuOpen && (
+              <div className={styles.userMenuDropdown} role="menu">
+                <Link
+                  to="/profile"
+                  className={styles.userMenuItem}
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <IconUser />
+                  {t.nav.myProfile}
+                </Link>
+                <button
+                  type="button"
+                  className={styles.userMenuItem}
+                  role="menuitem"
+                  onClick={logout}
+                >
+                  <IconLogout />
+                  {t.nav.logout}
+                </button>
+              </div>
             )}
-            <span className={styles.userMenuName}>{displayName}</span>
-          </button>
-          {menuOpen && (
-            <div className={styles.userMenuDropdown} role="menu">
-              <Link
-                to="/profile"
-                className={styles.userMenuItem}
-                role="menuitem"
-                onClick={() => setMenuOpen(false)}
-              >
-                <IconUser />
-                {t.nav.myProfile}
-              </Link>
-              <button
-                type="button"
-                className={styles.userMenuItem}
-                role="menuitem"
-                onClick={logout}
-              >
-                <IconLogout />
-                {t.nav.logout}
-              </button>
-            </div>
-          )}
+          </div>
         </div>
+        <LanguageSwitcher />
+        <button
+          type="button"
+          className={styles.menuToggle}
+          aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className={open ? styles.menuIconOpen : styles.menuIcon} aria-hidden="true" />
+        </button>
       </div>
-      <button
-        type="button"
-        className={styles.menuToggle}
-        aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span className={open ? styles.menuIconOpen : styles.menuIcon} aria-hidden="true" />
-      </button>
       {open && (
         <div className={styles.mobileMenu}>
           <div className={styles.mobileMenuLink} onClick={() => setOpen(false)}>
             {children}
             {mobileOnlyChildren}
           </div>
-          <LanguageSwitcher />
           <button type="button" className="ghost" onClick={logout}>
             <IconLogout />
             {t.nav.logout}
