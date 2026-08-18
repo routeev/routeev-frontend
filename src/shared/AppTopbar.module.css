@@ -22,13 +22,11 @@
   color: var(--text-faint);
 }
 
-/* Agrupa .right + el selector de idioma + el botón hamburguesa como un solo
-   bloque contra .topbar (justify-content:space-between la separa de .brand
-   como las únicas dos cosas que le importan a ese layout) -- así el selector
-   queda siempre pegado al elemento que sí se ve en cada tamaño: el chip de
-   usuario en escritorio (.right visible), el botón hamburguesa en mobile
-   (.right escondido). Sin este wrapper, space-between lo esparce como un
-   tercer/cuarto ítem suelto en vez de agruparlo con lo que tiene al lado. */
+/* Agrupa .right + el botón hamburguesa como un solo bloque contra .topbar
+   (justify-content:space-between la separa de .brand como las únicas dos
+   cosas que le importan a ese layout) -- sin este wrapper, .right y el
+   hamburguesa quedarían separados por todo el espacio libre en vez de
+   pegados como un solo grupo a la derecha. */
 .actions {
   display: flex;
   align-items: center;
@@ -36,12 +34,6 @@
 }
 
 .right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.desktopSwitchers {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -224,9 +216,6 @@
 
 @media (max-width: 860px) {
   .right {
-    display: none;
-  }
-  .desktopSwitchers {
     display: none;
   }
   .menuToggle {

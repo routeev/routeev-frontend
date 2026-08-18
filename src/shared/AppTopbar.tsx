@@ -77,6 +77,13 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
       <div className={styles.actions}>
         <div className={styles.right}>
           {children}
+          {/* Solo se ven acá en escritorio: .right entero se esconde en mobile
+              (ver el comentario más abajo), donde en cambio viven en "Mi
+              perfil" (ver AccountPanel.tsx). A la izquierda del chip de
+              usuario a propósito -- pedido explícito después de la primera
+              versión, que los mostraba a la derecha de todo. */}
+          <LanguageSwitcher />
+          <ThemeSwitcher />
           <div className={styles.userMenu} ref={menuRef}>
             <button
               type="button"
@@ -117,14 +124,6 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
               </div>
             )}
           </div>
-        </div>
-        {/* Solo en escritorio: en mobile viven en "Mi perfil" (ver
-            AccountPanel.tsx) en vez de acá al lado del hamburguesa -- pedido
-            explícito después de la primera versión, que sí los mostraba acá
-            en cualquier tamaño. */}
-        <div className={styles.desktopSwitchers}>
-          <LanguageSwitcher />
-          <ThemeSwitcher />
         </div>
         <button
           type="button"
