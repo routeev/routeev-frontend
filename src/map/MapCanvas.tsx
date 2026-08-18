@@ -1,4 +1,5 @@
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -15,6 +16,19 @@ import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
+
+// El mapa cambia de tamaño real cuando el panel "Datos del viaje" se
+// colapsa/expande en pantalla angosta (ver .dashboardWrap/.mapWrap en
+// MapPage.module.css: ahora comparten alto real, no es un panel flotando
+// encima). Sin este reencuadre el recorrido calculado podía quedar cortado
+// o descentrado dentro del espacio nuevo -- se llama tanto al terminar de
+// calcular como en cada resize del contenedor (ver CaptureMap abajo).
+function refitToRoute(map: L.Map) {
+  const result = useMapStore.getState().lastResult;
+  if (!result?.astar.found) return;
+  const bounds = L.polyline(result.astar.route_coords).getBounds();
+  map.fitBounds(bounds, { padding: [40, 40], animate: false });
+}
 
 interface CaptureMapProps {
   onLocateFail: (msg: string) => void;
@@ -121,10 +135,28 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     // mapa queda con el tamaño viejo cacheado y los tiles se ven
     // cortados/desplazados hasta el próximo resize real de la ventana.
     const container = map.getContainer();
-    const observer = new ResizeObserver(() => map.invalidateSize());
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+      // El resize puede venir de .dashboardWrap colapsandose/expandiendose
+      // (ver MapPage.module.css): reencuadra el recorrido calculado al
+      // espacio nuevo en vez de dejarlo donde haya quedado la camara.
+      refitToRoute(map);
+    });
     observer.observe(container);
     return () => observer.disconnect();
   }, [map]);
+
+  const hasResult = useMapStore((s) => s.lastResult != null);
+  useEffect(() => {
+    // El sidebar ("Tu viaje") pasa a display:none apenas hay un resultado
+    // calculado (ver MapPage.tsx/.sidebarReplaced), asi que .mapWrap crece
+    // de golpe en pantalla angosta. Medido: el ResizeObserver de arriba no
+    // siempre lo agarra a tiempo con un cambio asi de brusco -- quedaban
+    // tiles cargados solo para el tamaño chico de antes, con el resto del
+    // mapa en blanco hasta el proximo resize real de la ventana.
+    map.invalidateSize();
+    refitToRoute(map);
+  }, [map, hasResult]);
 
   if (!myPosition) return null;
   return (

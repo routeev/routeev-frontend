@@ -390,7 +390,11 @@ export function MapPage() {
               </div>
             )}
           </div>
-          <div className={`${styles.dashboardWrap} ${hasResult && dashboardCollapsed ? styles.collapsed : ""}`}>
+          <div
+            className={`${styles.dashboardWrap} ${
+              hasResult ? (dashboardCollapsed ? styles.collapsed : styles.expanded) : ""
+            }`}
+          >
             {/* Solo con un resultado calculado: sin esto habría un handle
                 arrastrable sin nada que mostrar/esconder debajo. Solo se ve
                 en pantalla angosta (CSS) -- en el split de escritorio

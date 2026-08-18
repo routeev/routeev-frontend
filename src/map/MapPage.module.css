@@ -387,19 +387,37 @@
       flex-basis 0.24s ease,
       min-height 0.24s ease;
   }
+  /* En pantalla angosta el panel deja de flotar ENCIMA del mapa (position:
+     absolute) y pasa a compartir el alto real de .mainArea con .mapWrap
+     (que ya es flex:1): así el mapa queda arriba con su propio espacio
+     visible, no tapado por detrás del panel, y crece de verdad cuando el
+     panel se colapsa en vez de solo "destaparse" un mapa que ya ocupaba
+     toda la pantalla. RouteLayers/CaptureMap reencuadran el recorrido cada
+     vez que este reparto cambia (ver el ResizeObserver en MapCanvas.tsx). */
   .dashboardWrap {
-    position: absolute;
-    inset: auto 10px 10px 10px;
-    height: 62%;
-    left: 10px;
-    transition: height 0.22s ease;
+    position: relative;
+    /* Resetea el left/right/bottom del position:absolute de escritorio:
+       con position:relative esos offsets no se ignoran, se APLICAN como
+       corrimiento desde la posición normal -- sin esto el panel quedaba
+       empujado cientos de px afuera de la pantalla. */
+    inset: auto;
+    /* 0 por default: antes de calcular no hay nada que mostrar (TripDashboard
+       no renderiza nada sin resultado) y sin esto igual reclamaba 62% del
+       alto, dejando al mapa una tira minúscula mientras "Tu viaje" todavía
+       está en pantalla. Pasa a .expanded recién con un resultado calculado. */
+    flex: 0 0 0;
+    min-height: 0;
+    transition: flex-basis 0.22s ease;
+  }
+  .dashboardWrap.expanded {
+    flex-basis: 62%;
   }
   /* Deslizando el handle hacia abajo (o tocándolo) se achica el panel a la
      franja del handle nomás, mismo criterio que .sidebar.collapsed: el mapa
-     y el recorrido dibujado quedan visibles enteros sin perder el resultado
-     ya calculado (sigue ahí, solo tapado). */
+     recupera casi toda la pantalla sin perder el resultado ya calculado
+     (sigue ahí, solo colapsado). */
   .dashboardWrap.collapsed {
-    height: 40px;
+    flex-basis: 40px;
   }
   .dashboardWrap.collapsed :global(section) {
     display: none;
@@ -421,8 +439,10 @@
        flotaba transparente sobre el mapa y el "pill" quedaba casi invisible.
        Con esto el handle y la sección forman una sola tarjeta continua. */
     background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-bottom: none;
+    /* Solo arriba: a los costados y abajo el panel ya queda pegado al borde
+       de la pantalla (ver .dashboardWrap), un borde ahí se veía como una
+       línea perdida justo en el filo -- mismo criterio que .sidebar. */
+    border-top: 1px solid var(--border);
     border-radius: var(--radius) var(--radius) 0 0;
   }
   .dashboardHandle::before {
@@ -433,9 +453,12 @@
     background: var(--border);
   }
   /* Esquinas superiores en 0 para que calcen justo debajo del handle (que ya
-     las redondea el arriba); solo en mobile, donde el handle existe. */
+     las redondea el arriba); sin bordes/radio a los costados y abajo por el
+     mismo motivo que en .dashboardHandle. Solo en mobile, donde el handle
+     existe. */
   .dashboardWrap :global(section) {
-    border-radius: 0 0 var(--radius) var(--radius);
+    border: none;
+    border-radius: 0;
   }
   /* Acá está el punto (b) del reporte de Gonzalo: en pantalla angosta el mapa
      chico es una caja fija que "por momentos no aporta nada" y le deja al
