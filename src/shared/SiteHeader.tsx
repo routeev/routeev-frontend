@@ -54,9 +54,11 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
           </nav>
         )}
         <div className={styles.actions}>
-          <div className={styles.cta}>{children}</div>
-          <LanguageSwitcher />
-          <ThemeSwitcher />
+          <div className={styles.cta}>
+            {children}
+            <LanguageSwitcher />
+            <ThemeSwitcher />
+          </div>
           {hasLinks && (
             <button
               type="button"
@@ -95,14 +97,20 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               </Link>
             )
           )}
-          {/* .cta se esconde en la barra en mobile (ver .hasMenu .cta en el
+          {/* .cta (con los selectores de idioma/tema adentro) se esconde en
+              la barra en mobile (ver ".inner:has(.menuToggle) .cta" en el
               CSS) -- se repite acá adentro para no perder "Iniciar sesión" /
-              "Crear cuenta" del todo, solo movidos de lugar y separados con
-              más aire para que no se lean como un link más de la lista. El
-              selector de idioma NO se repite acá: a diferencia de .cta,
-              ahora vive fuera de ese bloque (al lado del botón hamburguesa,
-              ver .actions) y ya queda visible en la barra sin abrir el menú. */}
-          <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>{children}</div>
+              "Crear cuenta" ni los selectores del todo, solo movidos de
+              lugar y separados con más aire para que no se lean como un
+              link más de la lista. Pedido explícito: en mobile no van al
+              lado del botón hamburguesa (ver el mismo cambio en
+              AppTopbar.tsx, aunque ahí terminaron en "Mi perfil" en vez de
+              acá porque esas pantallas sí tienen una). */}
+          <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
+            {children}
+            <LanguageSwitcher />
+            <ThemeSwitcher />
+          </div>
         </nav>
       )}
     </header>
