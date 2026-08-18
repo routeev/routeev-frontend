@@ -408,6 +408,14 @@
        gesto de arrastre a mano, no el scroll/gesto por default del navegador. */
     touch-action: none;
     pointer-events: auto;
+    /* A diferencia de .sidebar (donde el fondo/borde va en el contenedor
+       entero), acá el fondo vive solo en <section>: sin esto el handle
+       flotaba transparente sobre el mapa y el "pill" quedaba casi invisible.
+       Con esto el handle y la sección forman una sola tarjeta continua. */
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
   }
   .dashboardHandle::before {
     content: "";
@@ -415,6 +423,11 @@
     height: 4px;
     border-radius: var(--radius-pill);
     background: var(--border);
+  }
+  /* Esquinas superiores en 0 para que calcen justo debajo del handle (que ya
+     las redondea el arriba); solo en mobile, donde el handle existe. */
+  .dashboardWrap :global(section) {
+    border-radius: 0 0 var(--radius) var(--radius);
   }
   /* Acá está el punto (b) del reporte de Gonzalo: en pantalla angosta el mapa
      chico es una caja fija que "por momentos no aporta nada" y le deja al
