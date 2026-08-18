@@ -40,12 +40,12 @@
 
 .primary {
   background: var(--accent-astar);
-  color: #06231d;
+  color: var(--button-primary-text);
   border: 1px solid var(--accent-astar);
 }
 
 .primary:hover {
-  background: #63e9cb;
+  background: var(--button-primary-hover);
 }
 
 .ghost {

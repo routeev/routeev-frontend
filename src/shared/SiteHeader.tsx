@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { IconCar, IconChart, IconInfo } from "./NavIcons";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import styles from "./SiteHeader.module.css";
 
 interface SiteHeaderProps {
@@ -55,6 +56,7 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
         <div className={styles.actions}>
           <div className={styles.cta}>{children}</div>
           <LanguageSwitcher />
+          <ThemeSwitcher />
           {hasLinks && (
             <button
               type="button"

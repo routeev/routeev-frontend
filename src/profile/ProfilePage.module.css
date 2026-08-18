@@ -140,7 +140,7 @@
   justify-content: center;
   font-size: 24px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-hover);
 }
 
 .avatarWrap .photoEdit {
@@ -248,7 +248,7 @@
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-hover);
 }
 
 .artWrap {

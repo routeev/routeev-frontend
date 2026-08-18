@@ -88,11 +88,11 @@ button:active {
 button.primary {
   background: var(--accent-astar);
   border-color: var(--accent-astar);
-  color: #06231d;
+  color: var(--button-primary-text);
 }
 
 button.primary:hover {
-  background: #63e9cb;
+  background: var(--button-primary-hover);
 }
 
 button.primary:disabled {
@@ -170,7 +170,7 @@ label {
 .error-banner {
   background: var(--danger-dim);
   border: 1px solid var(--danger);
-  color: #ffd7d7;
+  color: var(--error-text);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   font-size: 13px;

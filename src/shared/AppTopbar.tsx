@@ -9,6 +9,7 @@ import { Brand } from "./Brand";
 import { cloudinaryResize } from "./cloudinaryResize";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { IconLogout, IconUser } from "./NavIcons";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import styles from "./AppTopbar.module.css";
 
 interface AppTopbarProps {
@@ -118,6 +119,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
           </div>
         </div>
         <LanguageSwitcher />
+        <ThemeSwitcher />
         <button
           type="button"
           className={styles.menuToggle}

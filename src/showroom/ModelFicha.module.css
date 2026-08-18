@@ -67,7 +67,7 @@
   font-size: 10.5px;
   line-height: 1.4;
   color: var(--text-muted);
-  background: linear-gradient(to top, rgba(10, 14, 19, 0.92), rgba(10, 14, 19, 0));
+  background: linear-gradient(to top, rgba(var(--bg-rgb), 0.92), rgba(var(--bg-rgb), 0));
 }
 
 .credito a {

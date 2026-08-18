@@ -10,6 +10,9 @@ export const common = {
   error: "Something went wrong",
   retry: "Retry",
   languageSwitcherLabel: "Language",
+  themeSwitcherLabel: "Theme",
+  lightMode: "Light mode",
+  darkMode: "Dark mode",
   // src/api/client.ts: no puede usar useTranslation() (no es un componente),
   // así que lee estos vía getStoredLang() en vez del hook.
   unexpectedApiError: "Unexpected error",

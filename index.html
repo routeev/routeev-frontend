@@ -2,6 +2,19 @@
 <html lang="es-UY">
   <head>
     <meta charset="UTF-8" />
+    <!-- Sincrónico y lo más arriba posible a propósito: fija data-theme antes
+         de que se aplique cualquier CSS, para que quien eligió "claro" no
+         vea un parpadeo en oscuro (el default de toda la vida) al cargar la
+         página. Ver src/theme/theme.ts -- misma clave de localStorage. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("routeev_theme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- /favicon.ico explícito (no solo el SVG): Google Search y varios
          crawlers/navegadores viejos chequean esa ruta fija sin mirar el
          <link>, y sin este archivo caía al catch-all de la SPA (index.html
