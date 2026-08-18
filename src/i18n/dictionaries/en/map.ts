@@ -4,8 +4,6 @@ export const map = {
   },
   tripDashboard: {
     title: "Trip details",
-    closeAriaLabel: "Close trip details",
-    closeTitle: "Close",
     noRouteFound: "No viable route was found with this battery.",
     margin: {
       critical: (pct: string) =>
@@ -74,6 +72,7 @@ export const map = {
     startTrip: "Start trip",
     startTripAgain: "Start trip again",
     cancelTrip: "Cancel trip",
+    cancelPlan: "Cancel",
     live: {
       distance: "Distance",
       battery: "Battery",

@@ -72,12 +72,19 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const marginTone =
     llegadaPct === null ? null : llegadaPct < 5 ? "danger" : llegadaPct < (bateria?.margen_pct ?? 0) ? "warn" : "ok";
   const showMarginBanner = marginTone !== null && !(marginTone === "ok" && (bateria?.margen_pct ?? 0) === 0);
+  // marginTone === null (bateria ausente, p. ej. en todo replay desde el
+  // historial: el backend nunca guarda "bateria" en result_json, solo astar/
+  // dijkstra) cae en este mismo "else" -- sin el chequeo explicito de "ok" acá
+  // abajo, el ! de llegadaPct explotaba con "Cannot read properties of null"
+  // aunque showMarginBanner ya fuera false y este texto nunca se mostrara.
   const marginText =
     marginTone === "danger"
       ? td.margin.critical(llegadaPct!.toFixed(1))
       : marginTone === "warn"
         ? td.margin.low(llegadaPct!.toFixed(1), bateria?.margen_pct ?? 0)
-        : td.margin.ok(llegadaPct!.toFixed(1), bateria?.margen_pct ?? 0);
+        : marginTone === "ok"
+          ? td.margin.ok(llegadaPct!.toFixed(1), bateria?.margen_pct ?? 0)
+          : "";
   const marginFallbackText =
     bateria && !bateria.margen_alcanzado && llegadaPct !== null ? td.margin.noPlanFallback : "";
   // Cuando la reserva subió porque el destino no tiene enchufe, decirlo: si no,
@@ -158,38 +165,6 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
           <h2>{td.title}</h2>
           <div className={styles.routeLabel}>{routeLabel}</div>
         </div>
-        {!liveTrip.ui.active && (
-          // Escondido durante un viaje en vivo a proposito: "Cancelar
-          // viaje" (mas abajo) es la salida correcta ahi -- liveTrip no se
-          // entera de que el dashboard se cerro, asi que dejar cerrar esto
-          // en medio del seguimiento dejaria el GPS corriendo sin ruta
-          // dibujada en el mapa (RouteLayers depende de lastResult).
-          <button
-            type="button"
-            className={styles.closeBtn}
-            onClick={() => {
-              // resetTripPlanning (no solo setLastResult) porque cerrar
-              // "Datos del viaje" tiene que sacar TODO lo del viaje anterior,
-              // no solo el resultado calculado: origen y destino fijados en
-              // los inputs de "Tu viaje" se quedaban puestos, listos para
-              // recalcular la misma ruta por accidente.
-              const state = useMapStore.getState();
-              state.resetTripPlanning();
-              // Mismo criterio que el popupclose de StationsLayer: sin esto
-              // la cámara se quedaba mirando fija donde estaba el viaje
-              // anterior -- visualmente seguía "mostrándolo" aunque la línea
-              // ya no estuviera. Volver a la ubicación real es lo que de
-              // verdad se siente como "arrancar de nuevo".
-              if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
-            }}
-            aria-label={td.closeAriaLabel}
-            title={td.closeTitle}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {!summary ? (
@@ -367,21 +342,46 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
 
       {result.astar.found && vehicle && (
         <div className={styles.control}>
-          {!liveTrip.ui.active ? (
-            <button type="button" className={["primary", styles.startBtn].join(" ")} onClick={liveTrip.start}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d={PLAY_PATH} />
-              </svg>
-              <span>{liveTrip.ui.finished ? td.startTripAgain : td.startTrip}</span>
-            </button>
-          ) : (
-            <button type="button" className={["primary", styles.startBtn].join(" ")} onClick={liveTrip.cancel}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="6.5" y="6.5" width="11" height="11" rx="1.6" />
-              </svg>
-              <span>{td.cancelTrip}</span>
-            </button>
-          )}
+          <div className={styles.controlActions}>
+            {!liveTrip.ui.active ? (
+              <button type="button" className={["primary", styles.startBtn].join(" ")} onClick={liveTrip.start}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={PLAY_PATH} />
+                </svg>
+                <span>{liveTrip.ui.finished ? td.startTripAgain : td.startTrip}</span>
+              </button>
+            ) : (
+              <button type="button" className={["primary", styles.startBtn].join(" ")} onClick={liveTrip.cancel}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="6.5" y="6.5" width="11" height="11" rx="1.6" />
+                </svg>
+                <span>{td.cancelTrip}</span>
+              </button>
+            )}
+            {!liveTrip.ui.active && (
+              // Reemplaza la "x" que antes vivía en el header (misma acción:
+              // resetTripPlanning, no solo limpiar el resultado calculado,
+              // asi origen/destino ya fijados en "Tu viaje" tambien se
+              // sueltan y no quedan listos para recalcular la misma ruta por
+              // accidente). Pedido explicito: un boton de texto al lado de
+              // "Iniciar viaje" en vez del icono suelto en la esquina.
+              <button
+                type="button"
+                className={["ghost", styles.cancelPlanBtn].join(" ")}
+                onClick={() => {
+                  const state = useMapStore.getState();
+                  state.resetTripPlanning();
+                  // Mismo criterio que el popupclose de StationsLayer: sin
+                  // esto la cámara se quedaba mirando fija donde estaba el
+                  // viaje anterior -- volver a la ubicación real es lo que
+                  // de verdad se siente como "arrancar de nuevo".
+                  if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
+                }}
+              >
+                {td.cancelPlan}
+              </button>
+            )}
+          </div>
 
           {/* "Iniciar viaje" puede rechazarse sin llegar a arrancar el
               seguimiento en vivo (lejos del origen, sin GPS, sin HTTPS) --
