@@ -16,11 +16,15 @@ const DEPARTED_FROM_DESTINATION_M = 300;
 const MAX_DISTANCE_FROM_ORIGIN_KM = 3;
 const FAR_FROM_ROUTE_M = 500;
 const ARRIVED_DISTANCE_M = 60;
-// Bajo este avance entre dos fixes, calcular rumbo por la diferencia de
-// posición es puro ruido de GPS (un auto parado en un semáforo "gira" varios
-// grados de fix en fix sin haberse movido un centímetro real) -- se prefiere
-// dejar el último rumbo confiable antes que uno inventado.
-const MIN_MOVE_FOR_HEADING_M = 8;
+// Piso MINIMO de avance entre dos fixes para calcular rumbo por diferencia de
+// posición (protege contra el ruido puro de un GPS parado, que "gira" varios
+// grados de fix en fix sin haberse movido un centímetro real) -- pero no es
+// el único piso: ver el cálculo de minMoveM en handlePosition, que lo escala
+// según MIN_SPEED_FOR_HEADING_KMH y el intervalo real entre fixes. Un piso
+// fijo mayor (8m, el valor original) resultaba, a la velocidad mínima y el
+// intervalo típico de un celular (1-3s), en una velocidad efectiva bastante
+// mayor a la nominal -- el rumbo casi no se actualizaba manejando en ciudad.
+const MIN_MOVE_FOR_HEADING_FLOOR_M = 3;
 // Piso de tiempo entre fixes para el cálculo de velocidad por diferencia de
 // posición (fallback cuando pos.coords.speed no viene, que en la práctica es
 // seguido en muchos Android/iOS con GPS de baja confianza). El piso viejo
@@ -165,15 +169,17 @@ export function useLiveTrip() {
       const elapsedMin = (Date.now() - trip.startedRealMs) / 60000;
 
       const now = Date.now();
+      // Se calcula una sola vez y se reusa para el piso de movimiento del
+      // rumbo de mas abajo: ver el comentario ahi de por que no puede seguir
+      // siendo un metraje fijo.
+      const gapMs = trip.lastFix ? now - trip.lastFix.tMs : null;
+
       let rawSpeedKmh: number | null = null;
       if (typeof pos.coords.speed === "number" && pos.coords.speed >= 0) {
         rawSpeedKmh = pos.coords.speed * 3.6;
-      } else if (trip.lastFix) {
-        const gapMs = now - trip.lastFix.tMs;
-        if (gapMs >= MIN_GAP_MS_FOR_SPEED && gapMs <= 30000) {
-          const dKm = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
-          rawSpeedKmh = (dKm / gapMs) * 3600000;
-        }
+      } else if (trip.lastFix && gapMs != null && gapMs >= MIN_GAP_MS_FOR_SPEED && gapMs <= 30000) {
+        const dKm = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
+        rawSpeedKmh = (dKm / gapMs) * 3600000;
       }
       if (rawSpeedKmh != null) {
         trip.speedKmh = trip.speedKmh == null ? rawSpeedKmh : trip.speedKmh * 0.7 + rawSpeedKmh * 0.3;
@@ -192,10 +198,24 @@ export function useLiveTrip() {
       // cualquier lado. El calculo por diferencia de posicion consecutiva es
       // la unica de las dos que SIEMPRE mide lo mismo (direccion real de
       // desplazamiento), asi que es la unica que queda.
+      // El piso de metros no puede ser un numero fijo: a MIN_SPEED_FOR_HEADING_KMH
+      // (8 km/h = 2.2 m/s) y el intervalo real entre fixes de un celular
+      // (1-3s con enableHighAccuracy), el auto recorre 2-7m entre dos fixes
+      // -- por debajo de un piso fijo de 8m. El resultado en la practica era
+      // que el rumbo casi nunca se actualizaba manejando en ciudad (donde
+      // importan las curvas), se quedaba pegado, y cuando por fin un fix
+      // cumplia los dos requisitos a la vez la correccion acumulada saltaba
+      // de golpe -- el reporte real: "se queda quieto y de golpe salta" +
+      // "no llega a corregir" el rumbo. Escalando el piso con el tiempo
+      // transcurrido (lo que se espera recorrer yendo justo al piso de
+      // velocidad, con margen) el gate queda consistente con el de arriba en
+      // vez de exigir de hecho una velocidad bastante mayor a la nominal.
       let rawHeading: number | null = null;
-      if (trip.lastFix && trip.speedKmh != null && trip.speedKmh >= MIN_SPEED_FOR_HEADING_KMH) {
+      if (trip.lastFix && gapMs != null && trip.speedKmh != null && trip.speedKmh >= MIN_SPEED_FOR_HEADING_KMH) {
         const movedM = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude) * 1000;
-        if (movedM >= MIN_MOVE_FOR_HEADING_M) {
+        const expectedMinM = (MIN_SPEED_FOR_HEADING_KMH / 3.6) * (gapMs / 1000) * 0.5;
+        const minMoveM = Math.max(MIN_MOVE_FOR_HEADING_FLOOR_M, expectedMinM);
+        if (movedM >= minMoveM) {
           rawHeading = bearingDeg(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
         }
       }
