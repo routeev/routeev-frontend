@@ -29,7 +29,6 @@ export function computeCompassHeading(alphaDeg: number, betaDeg: number, gammaDe
   const γ = toRad(gammaDeg);
   const cA = Math.cos(α);
   const sA = Math.sin(α);
-  const cB = Math.cos(β);
   const sB = Math.sin(β);
   const cG = Math.cos(γ);
   const sG = Math.sin(γ);
