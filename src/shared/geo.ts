@@ -13,18 +13,29 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 }
 
 /**
- * Rumbo (0-360°, 0 = norte, sentido horario) del punto 1 al punto 2. Usado
- * por el modo navegación (NavigationMap.tsx) para rotar la cámara hacia
- * donde apunta el viaje cuando el GPS no manda coords.heading directamente.
+ * Rumbo de brújula (0-360°, 0 = norte, sentido horario) a partir de
+ * DeviceOrientationEvent (alpha/beta/gamma), compensando la inclinación del
+ * celular -- necesario porque en un auto el teléfono está montado en algún
+ * ángulo (no plano sobre una mesa), y la fórmula ingenua `(360 - alpha) %
+ * 360` sólo vale con el celular acostado. Formula estándar de rotación
+ * ZXY (la misma que usa la brújula nativa de la mayoría de las apps web con
+ * DeviceOrientationEvent); ver el comentario en useLiveTrip.ts sobre por qué
+ * el modo navegación pasó de rumbo-por-GPS a esto.
  */
-export function bearingDeg(lat1: number, lon1: number, lat2: number, lon2: number): number {
+export function computeCompassHeading(alphaDeg: number, betaDeg: number, gammaDeg: number): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
-  const φ1 = toRad(lat1);
-  const φ2 = toRad(lat2);
-  const Δλ = toRad(lon2 - lon1);
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  const α = toRad(alphaDeg);
+  const β = toRad(betaDeg);
+  const γ = toRad(gammaDeg);
+  const cA = Math.cos(α);
+  const sA = Math.sin(α);
+  const cB = Math.cos(β);
+  const sB = Math.sin(β);
+  const cG = Math.cos(γ);
+  const sG = Math.sin(γ);
+  const rA = -cA * sG - sA * sB * cG;
+  const rB = -sA * sG + cA * sB * cG;
+  return ((Math.atan2(rA, rB) * 180) / Math.PI + 360) % 360;
 }
 
 /**

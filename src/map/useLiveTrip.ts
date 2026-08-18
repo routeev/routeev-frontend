@@ -1,7 +1,7 @@
 import L from "leaflet";
 import { useCallback, useRef, useState } from "react";
 import { logTrip } from "../api/route";
-import { bearingDeg, haversineKm, smoothBearingDeg } from "../shared/geo";
+import { computeCompassHeading, haversineKm, smoothBearingDeg } from "../shared/geo";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
@@ -16,15 +16,6 @@ const DEPARTED_FROM_DESTINATION_M = 300;
 const MAX_DISTANCE_FROM_ORIGIN_KM = 3;
 const FAR_FROM_ROUTE_M = 500;
 const ARRIVED_DISTANCE_M = 60;
-// Piso MINIMO de avance entre dos fixes para calcular rumbo por diferencia de
-// posición (protege contra el ruido puro de un GPS parado, que "gira" varios
-// grados de fix en fix sin haberse movido un centímetro real) -- pero no es
-// el único piso: ver el cálculo de minMoveM en handlePosition, que lo escala
-// según MIN_SPEED_FOR_HEADING_KMH y el intervalo real entre fixes. Un piso
-// fijo mayor (8m, el valor original) resultaba, a la velocidad mínima y el
-// intervalo típico de un celular (1-3s), en una velocidad efectiva bastante
-// mayor a la nominal -- el rumbo casi no se actualizaba manejando en ciudad.
-const MIN_MOVE_FOR_HEADING_FLOOR_M = 3;
 // Piso de tiempo entre fixes para el cálculo de velocidad por diferencia de
 // posición (fallback cuando pos.coords.speed no viene, que en la práctica es
 // seguido en muchos Android/iOS con GPS de baja confianza). El piso viejo
@@ -32,30 +23,67 @@ const MIN_MOVE_FOR_HEADING_FLOOR_M = 3;
 // con enableHighAccuracy, la mayoría de los celulares dispara watchPosition
 // cada 1-3s, por debajo del piso de 2000ms la mayoría de las veces -- el
 // resultado en la práctica era rawSpeedKmh en null para siempre en cualquier
-// dispositivo sin coords.speed, lo que además dejaba trip.heading trabado en
-// null porque MIN_SPEED_FOR_HEADING_KMH nunca se cumplía (el reporte real:
-// "la rotación ahora ni siquiera se mueve"). Sigue habiendo un piso (no 0)
-// para no dividir por un intervalo casi nulo entre dos eventos pegados.
+// dispositivo sin coords.speed. Sigue habiendo un piso (no 0) para no
+// dividir por un intervalo casi nulo entre dos eventos pegados.
 const MIN_GAP_MS_FOR_SPEED = 400;
-// Igual que MIN_MOVE_FOR_HEADING_M pero mirando la velocidad en vez de la
-// distancia: el "rumbo" (course-over-ground) que da el propio GPS pierde
-// sentido por completo cerca de velocidad cero -- es la fuente concreta del
-// primer reporte real de este modo ("tiembla, va atrasada, y a veces rota
-// para el lado que no es" probando en un celular): al frenar en el tránsito
-// o en un semáforo, cualquier micro-desvío de posición se lee como un giro
-// de varios grados, y correjirlo a fuerza de alisado (ver
-// HEADING_SMOOTHING_ALPHA) solo cambiaba "tiembla" por "va atrasada" sin
-// arreglar la causa. Cortar la actualización del rumbo por completo bajo
-// este piso dejó de lado el ruido en la fuente en vez de promediarlo.
-const MIN_SPEED_FOR_HEADING_KMH = 8;
-// Que tan rápido sigue la cámara del modo navegación al rumbo real. Con el
-// piso de velocidad de arriba filtrando el ruido de fondo, el rumbo que
-// llega ya es bastante confiable, así que puede seguirlo más de cerca (antes
-// 0.3) sin volver a temblar -- 0.3 era, en la práctica, tapar ruido con
-// alisado en vez de sacarlo de raíz, y el costo era notarse "atrasado".
-const HEADING_SMOOTHING_ALPHA = 0.45;
+// El rumbo del modo navegación pasó por dos versiones antes de esta: primero
+// coords.heading (chip GPS), después course-over-ground por diferencia de
+// posición entre fixes consecutivos. Las dos dependían de que el AUTO se
+// estuviera moviendo, y con la precisión real de un GPS de celular (±30-50m
+// medida en un viaje real) el desplazamiento entre dos fixes casi nunca supera
+// ese ruido -- el rumbo quedaba trabado la mayor parte del manejo en ciudad,
+// que es exactamente lo que se reportó ("sigue sin generar rotación"). Lo que
+// la persona esperaba en realidad -- confirmado explícitamente -- es que el
+// puntero gire como una brújula real, hacia donde apunta el CELULAR en ese
+// momento, no hacia donde se está moviendo el auto: una fuente de datos
+// totalmente distinta (DeviceOrientationEvent, sensor de orientación/
+// magnetómetro) que no depende en absoluto de la posición ni de la
+// velocidad. Ver attachDeviceOrientation más abajo.
+const COMPASS_UPDATE_INTERVAL_MS = 200;
+// Alisado angular del rumbo de brújula: el magnetómetro de un celular es
+// bastante más ruidoso adentro de un auto (el chasis metálico distorsiona el
+// campo magnético) que la lectura ya integrada de coords.speed, así que
+// sigue haciendo falta algo de filtro para no temblar -- pero mucho menos
+// que antes: acá se aplica cada COMPASS_UPDATE_INTERVAL_MS (200ms) en vez de
+// cada varios segundos (el intervalo real entre fixes de GPS), así que
+// converge a la orientación real mucho más rápido en tiempo real.
+const COMPASS_SMOOTHING_ALPHA = 0.35;
 
 type RechargeStop = { nodeId: number; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
+
+// iOS no expone alpha/beta/gamma "en crudo" de forma confiable para brújula
+// -- en cambio da esta propiedad no estándar, ya compensada por Apple según
+// la inclinación real del celular y la orientación de pantalla. Cuando está
+// presente hay que usarla tal cual, sin aplicarle ninguna corrección propia
+// encima.
+interface DeviceOrientationEventWithCompass extends DeviceOrientationEvent {
+  webkitCompassHeading?: number;
+}
+
+// El permiso de sensores de movimiento/orientación en iOS 13+ (Safari y
+// cualquier navegador basado en WebKit) no está en el lib.dom.d.ts estándar
+// -- es una extensión propia de Apple.
+interface DeviceOrientationEventConstructorWithPermission {
+  requestPermission?: () => Promise<"granted" | "denied">;
+}
+
+/**
+ * Rumbo de brújula (0-360°, 0=norte) a partir de un evento de orientación
+ * del celular. En iOS usa webkitCompassHeading directo (ya viene compensado
+ * por inclinación); en el resto, la fórmula tilt-compensated de geo.ts sobre
+ * alpha/beta/gamma, ajustada por la orientación de pantalla (si el celular
+ * está en horizontal en el pie del auto, alpha solo no alcanza).
+ */
+function normalizeOrientationHeading(event: DeviceOrientationEvent): number | null {
+  const webkitHeading = (event as DeviceOrientationEventWithCompass).webkitCompassHeading;
+  if (typeof webkitHeading === "number" && !Number.isNaN(webkitHeading)) {
+    return webkitHeading;
+  }
+  if (event.alpha == null || event.beta == null || event.gamma == null) return null;
+  const heading = computeCompassHeading(event.alpha, event.beta, event.gamma);
+  const screenAngle = typeof screen !== "undefined" ? (screen.orientation?.angle ?? 0) : 0;
+  return (heading + screenAngle + 360) % 360;
+}
 
 interface TripRecord {
   watchId: number | null;
@@ -87,10 +115,10 @@ export interface LiveTripUi {
   capacityKwh: number;
   elapsedMin: number;
   speedKmh: number | null;
-  // Rumbo actual (0-360°, 0=norte), para el modo navegación (NavigationMap):
-  // null hasta que hay suficiente movimiento real para calcularlo (ver
-  // MIN_MOVE_FOR_HEADING_M) -- no tiene sentido "mirar hacia" un rumbo
-  // inventado con el auto parado.
+  // Rumbo de brújula actual (0-360°, 0=norte), para el modo navegación
+  // (NavigationMap) -- viene del sensor de orientación del celular
+  // (attachDeviceOrientation), no de la posición GPS: null hasta el primer
+  // evento de orientación, o para siempre si el permiso se negó.
   heading: number | null;
   statusText: string;
   statusKind: StatusKind;
@@ -126,6 +154,12 @@ const initialUi: LiveTripUi = {
 export function useLiveTrip() {
   const [ui, setUi] = useState<LiveTripUi>(initialUi);
   const tripRef = useRef<TripRecord | null>(null);
+  // Última lectura del sensor de orientación, actualizada por el listener de
+  // attachDeviceOrientation en cuanto llega cada evento (mucho más seguido
+  // que los fixes de GPS) -- el intervalo de abajo la vuelca a trip.heading
+  // ya alisada, a un ritmo fijo en vez de en cada evento crudo.
+  const deviceHeadingRef = useRef<number | null>(null);
+  const orientationCleanupRef = useRef<(() => void) | null>(null);
 
   const logCompletedOrPartial = useCallback((trip: TripRecord, traveledKmOverride?: number) => {
     const payload = useMapStore.getState().lastRoutePayload;
@@ -145,7 +179,53 @@ export function useLiveTrip() {
     const trip = tripRef.current;
     if (trip?.watchId != null) navigator.geolocation.clearWatch(trip.watchId);
     tripRef.current = null;
+    orientationCleanupRef.current?.();
+    orientationCleanupRef.current = null;
+    deviceHeadingRef.current = null;
     setUi((u) => ({ ...initialUi, finished: u.finished }));
+  }, []);
+
+  // Prende el sensor de orientación del celular para que el modo navegación
+  // gire como una brújula real. En iOS 13+ el sensor está detrás de un
+  // permiso explícito que solo se puede pedir dentro de un gesto del
+  // usuario -- por eso esta función se llama sincrónicamente desde start(),
+  // que a su vez cuelga directo del onClick de "Iniciar viaje"
+  // (TripDashboard.tsx), sin ningún await de por medio que pierda ese
+  // contexto. Si el permiso se niega (o el navegador no tiene el sensor),
+  // deviceHeadingRef se queda en null para siempre: el puntero simplemente
+  // no gira, sin romper el resto del seguimiento en vivo.
+  const attachDeviceOrientation = useCallback(() => {
+    const startListening = () => {
+      const eventName = "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
+      const handler = (event: Event) => {
+        const h = normalizeOrientationHeading(event as DeviceOrientationEvent);
+        if (h != null) deviceHeadingRef.current = h;
+      };
+      window.addEventListener(eventName, handler);
+
+      const intervalId = window.setInterval(() => {
+        const trip = tripRef.current;
+        if (!trip || deviceHeadingRef.current == null) return;
+        trip.heading = smoothBearingDeg(trip.heading, deviceHeadingRef.current, COMPASS_SMOOTHING_ALPHA);
+        setUi((u) => (u.active ? { ...u, heading: trip.heading } : u));
+      }, COMPASS_UPDATE_INTERVAL_MS);
+
+      orientationCleanupRef.current = () => {
+        window.removeEventListener(eventName, handler);
+        window.clearInterval(intervalId);
+      };
+    };
+
+    const DOE = window.DeviceOrientationEvent as unknown as DeviceOrientationEventConstructorWithPermission | undefined;
+    if (DOE && typeof DOE.requestPermission === "function") {
+      DOE.requestPermission()
+        .then((state) => {
+          if (state === "granted") startListening();
+        })
+        .catch(() => {});
+    } else if (typeof DeviceOrientationEvent !== "undefined") {
+      startListening();
+    }
   }, []);
 
   const handlePosition = useCallback(
@@ -194,44 +274,11 @@ export function useLiveTrip() {
         trip.speedKmh = trip.speedKmh == null ? rawSpeedKmh : trip.speedKmh * 0.7 + rawSpeedKmh * 0.3;
       }
 
-      // Se prefirio en un primer intento usar coords.heading (lo da el propio
-      // chip GPS) cuando estaba disponible, con el calculo por diferencia de
-      // posicion solo de respaldo -- se sacó probando en un celular real: la
-      // combinacion de las dos fuentes es exactamente lo que se sentia
-      // "tiembla, va atrasada, y a veces rota para el lado que no es". Course
-      // (direccion de desplazamiento) y heading de compas/orientacion del
-      // telefono no son la misma cosa, y coords.heading no distingue una de
-      // la otra de forma consistente entre navegadores/dispositivos -- con el
-      // telefono en cualquier posicion que no sea "mirando derecho para
-      // adelante" (en un pie de auto, por ejemplo), esa fuente apunta para
-      // cualquier lado. El calculo por diferencia de posicion consecutiva es
-      // la unica de las dos que SIEMPRE mide lo mismo (direccion real de
-      // desplazamiento), asi que es la unica que queda.
-      // El piso de metros no puede ser un numero fijo: a MIN_SPEED_FOR_HEADING_KMH
-      // (8 km/h = 2.2 m/s) y el intervalo real entre fixes de un celular
-      // (1-3s con enableHighAccuracy), el auto recorre 2-7m entre dos fixes
-      // -- por debajo de un piso fijo de 8m. El resultado en la practica era
-      // que el rumbo casi nunca se actualizaba manejando en ciudad (donde
-      // importan las curvas), se quedaba pegado, y cuando por fin un fix
-      // cumplia los dos requisitos a la vez la correccion acumulada saltaba
-      // de golpe -- el reporte real: "se queda quieto y de golpe salta" +
-      // "no llega a corregir" el rumbo. Escalando el piso con el tiempo
-      // transcurrido (lo que se espera recorrer yendo justo al piso de
-      // velocidad, con margen) el gate queda consistente con el de arriba en
-      // vez de exigir de hecho una velocidad bastante mayor a la nominal.
-      let rawHeading: number | null = null;
-      if (trip.lastFix && gapMs != null && trip.speedKmh != null && trip.speedKmh >= MIN_SPEED_FOR_HEADING_KMH) {
-        const movedM = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude) * 1000;
-        const expectedMinM = (MIN_SPEED_FOR_HEADING_KMH / 3.6) * (gapMs / 1000) * 0.5;
-        const minMoveM = Math.max(MIN_MOVE_FOR_HEADING_FLOOR_M, expectedMinM);
-        if (movedM >= minMoveM) {
-          rawHeading = bearingDeg(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
-        }
-      }
-      if (rawHeading != null) {
-        trip.heading = smoothBearingDeg(trip.heading, rawHeading, HEADING_SMOOTHING_ALPHA);
-      }
-
+      // trip.heading ya NO se toca acá: lo mantiene al día el intervalo de
+      // attachDeviceOrientation (sensor de orientación del celular), a su
+      // propio ritmo, independiente de cuándo llega cada fix de GPS. Esta
+      // función solo lo lee (más abajo, al armar el setUi) para publicarlo
+      // junto con el resto del estado del viaje.
       trip.lastFix = { lat: latitude, lon: longitude, tMs: now };
 
       const distToDestM = haversineKm(latitude, longitude, trip.destination[0], trip.destination[1]) * 1000;
@@ -356,6 +403,11 @@ export function useLiveTrip() {
       return;
     }
 
+    // Sincrónico acá a propósito: ver el comentario de attachDeviceOrientation
+    // sobre por qué el permiso de iOS necesita seguir colgando del gesto de
+    // este click sin ningún await de por medio.
+    attachDeviceOrientation();
+
     const coords = result.astar.route_coords;
     const nodeIds = result.astar.route;
     const nodeCoords = result.astar.node_coords;
@@ -424,7 +476,7 @@ export function useLiveTrip() {
       handleError,
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
-  }, [end, handlePosition, handleError]);
+  }, [end, handlePosition, handleError, attachDeviceOrientation]);
 
   const cancel = useCallback(() => {
     const trip = tripRef.current;
