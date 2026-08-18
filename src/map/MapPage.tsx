@@ -34,11 +34,12 @@ const EMPTY_ROUTE: [number, number][] = [];
 
 type MapBanner = { message: string; variant: "error" | "warn" } | null;
 
-// Umbral en px para que un arrastre del handle cuente como swipe (arriba
-// muestra, abajo esconde); por debajo de esto se trata como un tap simple
-// que alterna el estado, asi el gesto sirve tanto para deslizar como para
-// tocar.
-const SIDEBAR_SWIPE_THRESHOLD = 30;
+// Umbral en px para que un arrastre de CUALQUIERA de los dos handles (el del
+// sidebar de planificación, el de "Datos del viaje") cuente como swipe
+// (arriba muestra, abajo esconde); por debajo de esto se trata como un tap
+// simple que alterna el estado, asi el gesto sirve tanto para deslizar como
+// para tocar.
+const SWIPE_THRESHOLD_PX = 30;
 
 // Cuánto hay que bajar dentro del panel para que el mapa chico se corra, y
 // cuánto hay que volver a subir para que vuelva solo. Son dos números y no uno
@@ -60,12 +61,20 @@ export function MapPage() {
   const [scrolledPastMap, setScrolledPastMap] = useState(false);
   const handleDragStartY = useRef<number | null>(null);
   const sidebarScrollRef = useRef<HTMLDivElement | null>(null);
+  // "Datos del viaje" (el resultado calculado, no el formulario) colapsado
+  // en pantalla angosta -- mismo patrón que sidebarCollapsed/handleDragStartY
+  // de arriba, pero para el panel de resultado en vez del de planificación:
+  // pedido explícito para poder deslizarlo hacia abajo y ver el mapa/
+  // recorrido completo, y volver a subirlo cuando haga falta.
+  const [dashboardCollapsed, setDashboardCollapsed] = useState(false);
+  const dashboardHandleDragStartY = useRef<number | null>(null);
   const handleMapNotice = (msg: string | null, severity: "error" | "warn" = "error") =>
     setMapBanner(msg ? { message: msg, variant: severity } : null);
   const loaders = useMapLoaders();
   const liveTrip = useLiveTrip();
   const calc = useCalculateRoute();
   const routeCoords = useMapStore((s) => s.lastResult?.astar.route_coords ?? EMPTY_ROUTE);
+  const hasResult = useMapStore((s) => s.lastResult != null);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
   const originId = useMapStore((s) => s.originId);
@@ -146,6 +155,17 @@ export function MapPage() {
     });
   }, []);
 
+  useEffect(() => {
+    // Mismo criterio que arriba: un resultado nuevo (recién calculado, o
+    // recalculado con otro vehículo/batería) tiene que mostrarse solo, no
+    // quedar escondido si el panel ya estaba colapsado de un viaje anterior.
+    return useMapStore.subscribe((state, prev) => {
+      if (state.lastResult != null && state.lastResult !== prev.lastResult) {
+        setDashboardCollapsed(false);
+      }
+    });
+  }, []);
+
   // Derivado y no un estado propio con efectos que lo corrigan: cada una de
   // estas condiciones es un caso en el que esconder el mapa sería un error, y
   // como valor derivado no puede quedar "pegado" en el estado equivocado.
@@ -186,9 +206,24 @@ export function MapPage() {
     handleDragStartY.current = null;
     if (startY == null) return;
     const delta = e.clientY - startY;
-    if (delta > SIDEBAR_SWIPE_THRESHOLD) collapseSidebar(true);
-    else if (delta < -SIDEBAR_SWIPE_THRESHOLD) collapseSidebar(false);
+    if (delta > SWIPE_THRESHOLD_PX) collapseSidebar(true);
+    else if (delta < -SWIPE_THRESHOLD_PX) collapseSidebar(false);
     else collapseSidebar(!sidebarCollapsed);
+  }
+
+  function onDashboardHandlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    dashboardHandleDragStartY.current = e.clientY;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onDashboardHandlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const startY = dashboardHandleDragStartY.current;
+    dashboardHandleDragStartY.current = null;
+    if (startY == null) return;
+    const delta = e.clientY - startY;
+    if (delta > SWIPE_THRESHOLD_PX) setDashboardCollapsed(true);
+    else if (delta < -SWIPE_THRESHOLD_PX) setDashboardCollapsed(false);
+    else setDashboardCollapsed((v) => !v);
   }
 
   function onSidebarScroll(e: React.UIEvent<HTMLDivElement>) {
@@ -353,7 +388,27 @@ export function MapPage() {
               </div>
             )}
           </div>
-          <div className={styles.dashboardWrap}>
+          <div className={`${styles.dashboardWrap} ${hasResult && dashboardCollapsed ? styles.collapsed : ""}`}>
+            {/* Solo con un resultado calculado: sin esto habría un handle
+                arrastrable sin nada que mostrar/esconder debajo. Solo se ve
+                en pantalla angosta (CSS) -- en el split de escritorio
+                "Datos del viaje" flota sobre el mapa sin taparlo entero, no
+                hace falta poder colapsarlo. */}
+            {hasResult && (
+              <div
+                className={styles.dashboardHandle}
+                role="button"
+                tabIndex={0}
+                aria-label={dashboardCollapsed ? mp.showDashboard : mp.hideDashboard}
+                onPointerDown={onDashboardHandlePointerDown}
+                onPointerUp={onDashboardHandlePointerUp}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  setDashboardCollapsed((v) => !v);
+                }}
+              />
+            )}
             <TripDashboard liveTrip={liveTrip} />
           </div>
         </main>

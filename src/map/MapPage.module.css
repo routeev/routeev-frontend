@@ -249,9 +249,25 @@
      and swallow clicks meant for ClickToPick's Leaflet handler. The actual
      panel re-enables pointer events on itself once it has content. */
   pointer-events: none;
+  /* Columna, no el default: en pantalla angosta .dashboardHandle (ver más
+     abajo) se apila arriba de la sección, igual que .sidebarHandle arriba de
+     .sidebarScroll/.sidebarCta. En escritorio .dashboardHandle está
+     display:none, así que la sección sigue siendo el único hijo real. */
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardHandle {
+  display: none;
 }
 
 .dashboardWrap :global(section) {
+  /* flex:1 (no solo el height:100% propio de TripDashboard.module.css)
+     porque ahora puede tener un hermano arriba (.dashboardHandle, en
+     pantalla angosta) -- sin esto se seguiría midiendo contra la altura
+     ENTERA de .dashboardWrap en vez de lo que le queda después del handle. */
+  flex: 1;
+  min-height: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-float);
@@ -368,6 +384,37 @@
     inset: auto 10px 10px 10px;
     height: 62%;
     left: 10px;
+    transition: height 0.22s ease;
+  }
+  /* Deslizando el handle hacia abajo (o tocándolo) se achica el panel a la
+     franja del handle nomás, mismo criterio que .sidebar.collapsed: el mapa
+     y el recorrido dibujado quedan visibles enteros sin perder el resultado
+     ya calculado (sigue ahí, solo tapado). */
+  .dashboardWrap.collapsed {
+    height: 40px;
+  }
+  .dashboardWrap.collapsed :global(section) {
+    display: none;
+  }
+  .dashboardHandle {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    cursor: grab;
+    /* Mismo motivo que .sidebarHandle: es este handle el que interpreta el
+       gesto de arrastre a mano, no el scroll/gesto por default del navegador. */
+    touch-action: none;
+    pointer-events: auto;
+  }
+  .dashboardHandle::before {
+    content: "";
+    width: 36px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--border);
   }
   /* Acá está el punto (b) del reporte de Gonzalo: en pantalla angosta el mapa
      chico es una caja fija que "por momentos no aporta nada" y le deja al

@@ -86,6 +86,8 @@ export const map = {
     title: "RouteEV · Mapa",
     showPanel: "Mostrar panel",
     hidePanel: "Ocultar panel",
+    showDashboard: "Mostrar datos del viaje",
+    hideDashboard: "Ocultar datos del viaje",
     viewMap: "Ver el mapa",
     loadFailed: (failed: string) => `No se pudo cargar: ${failed}. Revisá tu conexión y volvé a intentar.`,
     retryLoad: "Reintentar carga",
