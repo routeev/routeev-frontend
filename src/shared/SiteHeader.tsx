@@ -5,7 +5,6 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { IconCar, IconChart, IconInfo } from "./NavIcons";
-import { ThemeSwitcher } from "./ThemeSwitcher";
 import styles from "./SiteHeader.module.css";
 
 interface SiteHeaderProps {
@@ -57,7 +56,6 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
           <div className={styles.cta}>
             {children}
             <LanguageSwitcher />
-            <ThemeSwitcher />
           </div>
           {hasLinks && (
             <button
@@ -97,19 +95,16 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               </Link>
             )
           )}
-          {/* .cta (con los selectores de idioma/tema adentro) se esconde en
-              la barra en mobile (ver ".inner:has(.menuToggle) .cta" en el
-              CSS) -- se repite acá adentro para no perder "Iniciar sesión" /
-              "Crear cuenta" ni los selectores del todo, solo movidos de
-              lugar y separados con más aire para que no se lean como un
-              link más de la lista. Pedido explícito: en mobile no van al
-              lado del botón hamburguesa (ver el mismo cambio en
-              AppTopbar.tsx, aunque ahí terminaron en "Mi perfil" en vez de
-              acá porque esas pantallas sí tienen una). */}
+          {/* .cta (con el selector de idioma adentro) se esconde en la barra
+              en mobile (ver ".inner:has(.menuToggle) .cta" en el CSS) -- se
+              repite acá adentro para no perder "Iniciar sesión" / "Crear
+              cuenta" ni el selector del todo, solo movidos de lugar y
+              separados con más aire para que no se lean como un link más de
+              la lista. Sin selector de tema: claro/oscuro es una preferencia
+              de /app y /profile, no del sitio público (ver theme.ts). */}
           <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
             {children}
             <LanguageSwitcher />
-            <ThemeSwitcher />
           </div>
         </nav>
       )}

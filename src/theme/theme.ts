@@ -11,6 +11,17 @@ export type Theme = "dark" | "light";
 // lee el script inline de index.html antes del primer paint.
 const STORAGE_KEY = "routeev_theme";
 
+// El claro/oscuro es una preferencia de LA APLICACIÓN (/app, /profile), no
+// del sitio entero -- pedido explícito: landing, showroom, legales y login
+// se quedan siempre en el oscuro de toda la vida, sin importar qué haya
+// elegido la persona la última vez que estuvo en la app. Mismas dos rutas
+// que routes.tsx envuelve en ProtectedRoute.
+const THEMED_ROUTE_PREFIXES = ["/app", "/profile"];
+
+export function isThemedRoute(pathname: string): boolean {
+  return THEMED_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 // Oscuro es el default de toda la vida (el :root sin atributo en tokens.css)
 // -- solo se pasa a claro si la persona lo eligió antes, en esta pestaña o
 // en una visita anterior.
@@ -36,4 +47,14 @@ export function applyTheme(theme: Theme): void {
 export function setTheme(theme: Theme): void {
   window.localStorage.setItem(STORAGE_KEY, theme);
   applyTheme(theme);
+}
+
+/**
+ * Aplica (o no) el tema guardado según la ruta actual -- se llama al cargar
+ * la página y en cada cambio de ruta (ver App.tsx, router.subscribe). Fuera
+ * de /app y /profile fuerza oscuro sin tocar localStorage: la preferencia
+ * elegida sigue ahí, lista para cuando la persona vuelva a entrar a la app.
+ */
+export function syncThemeForRoute(pathname: string): void {
+  applyTheme(isThemedRoute(pathname) ? getStoredTheme() : "dark");
 }

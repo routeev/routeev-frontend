@@ -4,12 +4,18 @@
     <meta charset="UTF-8" />
     <!-- Sincrónico y lo más arriba posible a propósito: fija data-theme antes
          de que se aplique cualquier CSS, para que quien eligió "claro" no
-         vea un parpadeo en oscuro (el default de toda la vida) al cargar la
-         página. Ver src/theme/theme.ts -- misma clave de localStorage. -->
+         vea un parpadeo en oscuro (el default de toda la vida) al entrar
+         directo a /app o /profile (recargando, o abriendo un link). Ver
+         src/theme/theme.ts -- misma clave de localStorage y mismas dos
+         rutas. El tema es una preferencia de la aplicación, no del sitio
+         entero: fuera de esas rutas (landing, showroom, legales, login)
+         siempre se queda en el oscuro de toda la vida. */
     <script>
       (function () {
         try {
-          if (localStorage.getItem("routeev_theme") === "light") {
+          var path = location.pathname;
+          var enApp = path === "/app" || path.indexOf("/app/") === 0 || path === "/profile" || path.indexOf("/profile/") === 0;
+          if (enApp && localStorage.getItem("routeev_theme") === "light") {
             document.documentElement.setAttribute("data-theme", "light");
           }
         } catch (e) {}
