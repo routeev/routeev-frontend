@@ -264,7 +264,9 @@ export function MapPage() {
       />
 
       <div className={`${styles.layout} ${mapCollapsed ? styles.mapCollapsed : ""}`}>
-        <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}>
+        <aside
+          className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""} ${hasResult ? styles.sidebarReplaced : ""}`}
+        >
           <div
             className={styles.sidebarHandle}
             role="button"

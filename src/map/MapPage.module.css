@@ -369,6 +369,14 @@
     border-radius: var(--radius-pill);
     background: var(--border);
   }
+  /* Con un resultado calculado, "Datos del viaje" (.dashboardWrap) reemplaza
+     a "Tu viaje": ambos son paneles flotantes independientes en pantalla
+     angosta y sin esto quedaban superpuestos (el sidebar se veia atras/al
+     costado del dashboard). Volver a verlo es cancelar el viaje (boton X en
+     TripDashboard, que limpia lastResult). */
+  .sidebar.sidebarReplaced {
+    display: none;
+  }
   .mainArea {
     position: static;
     flex: 1;
