@@ -21,6 +21,18 @@ const ARRIVED_DISTANCE_M = 60;
 // grados de fix en fix sin haberse movido un centímetro real) -- se prefiere
 // dejar el último rumbo confiable antes que uno inventado.
 const MIN_MOVE_FOR_HEADING_M = 8;
+// Piso de tiempo entre fixes para el cálculo de velocidad por diferencia de
+// posición (fallback cuando pos.coords.speed no viene, que en la práctica es
+// seguido en muchos Android/iOS con GPS de baja confianza). El piso viejo
+// (2000-30000ms) asumía un intervalo entre fixes mucho más largo que el real:
+// con enableHighAccuracy, la mayoría de los celulares dispara watchPosition
+// cada 1-3s, por debajo del piso de 2000ms la mayoría de las veces -- el
+// resultado en la práctica era rawSpeedKmh en null para siempre en cualquier
+// dispositivo sin coords.speed, lo que además dejaba trip.heading trabado en
+// null porque MIN_SPEED_FOR_HEADING_KMH nunca se cumplía (el reporte real:
+// "la rotación ahora ni siquiera se mueve"). Sigue habiendo un piso (no 0)
+// para no dividir por un intervalo casi nulo entre dos eventos pegados.
+const MIN_GAP_MS_FOR_SPEED = 400;
 // Igual que MIN_MOVE_FOR_HEADING_M pero mirando la velocidad en vez de la
 // distancia: el "rumbo" (course-over-ground) que da el propio GPS pierde
 // sentido por completo cerca de velocidad cero -- es la fuente concreta del
@@ -158,7 +170,7 @@ export function useLiveTrip() {
         rawSpeedKmh = pos.coords.speed * 3.6;
       } else if (trip.lastFix) {
         const gapMs = now - trip.lastFix.tMs;
-        if (gapMs >= 2000 && gapMs <= 30000) {
+        if (gapMs >= MIN_GAP_MS_FOR_SPEED && gapMs <= 30000) {
           const dKm = haversineKm(trip.lastFix.lat, trip.lastFix.lon, latitude, longitude);
           rawSpeedKmh = (dKm / gapMs) * 3600000;
         }
