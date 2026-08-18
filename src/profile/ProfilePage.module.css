@@ -225,6 +225,28 @@
   color: var(--danger);
 }
 
+/* Selector de idioma y tema: vive acá (y no en AppTopbar) en mobile a
+   propósito -- ver el comentario en AppTopbar.tsx sobre por qué se sacaron
+   de al lado del botón hamburguesa. En escritorio es redundante con los que
+   siguen en la barra, pero no molesta tenerlos accesibles desde los dos
+   lugares. */
+.preferencesRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.preferencesControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* --- Vehículos --- */
 
 .fieldRow {

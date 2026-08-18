@@ -118,8 +118,14 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
             )}
           </div>
         </div>
-        <LanguageSwitcher />
-        <ThemeSwitcher />
+        {/* Solo en escritorio: en mobile viven en "Mi perfil" (ver
+            AccountPanel.tsx) en vez de acá al lado del hamburguesa -- pedido
+            explícito después de la primera versión, que sí los mostraba acá
+            en cualquier tamaño. */}
+        <div className={styles.desktopSwitchers}>
+          <LanguageSwitcher />
+          <ThemeSwitcher />
+        </div>
         <button
           type="button"
           className={styles.menuToggle}

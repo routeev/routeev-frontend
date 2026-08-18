@@ -23,6 +23,7 @@ export const profile = {
     displayNameUpdatedNamed: "Done, that's your name now.",
     displayNameUpdatedCleared: "Done, we removed your name.",
     displayNameUpdateError: "Couldn't save your name.",
+    preferencesLabel: "Language and theme",
   },
 
   // AddVehicleForm.tsx

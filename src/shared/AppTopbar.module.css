@@ -41,6 +41,12 @@
   gap: 12px;
 }
 
+.desktopSwitchers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .right :global(button.ghost) {
   display: inline-flex;
   align-items: center;
@@ -218,6 +224,9 @@
 
 @media (max-width: 860px) {
   .right {
+    display: none;
+  }
+  .desktopSwitchers {
     display: none;
   }
   .menuToggle {

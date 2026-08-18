@@ -13,8 +13,10 @@ import { setUsername as setStoredUsername } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { LanguageSwitcher } from "../shared/LanguageSwitcher";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { Spinner } from "../shared/Spinner";
+import { ThemeSwitcher } from "../shared/ThemeSwitcher";
 import { toast } from "../shared/toastStore";
 import styles from "./ProfilePage.module.css";
 
@@ -250,6 +252,13 @@ export function AccountPanel() {
           {error}
         </Banner>
       )}
+      <div className={styles.preferencesRow}>
+        <span className="hint">{t.profile.account.preferencesLabel}</span>
+        <div className={styles.preferencesControls}>
+          <LanguageSwitcher />
+          <ThemeSwitcher />
+        </div>
+      </div>
     </section>
   );
 }
