@@ -95,6 +95,13 @@ export interface LiveTripUi {
   statusText: string;
   statusKind: StatusKind;
   advisory: SpeedAdvisory | null;
+  // TEMP DEBUG, revert junto con el bloque que lo muestra en TripDashboard:
+  // diagnóstico para el próximo viaje real (precisión que reporta el propio
+  // GPS del celular, y cada cuánto llega un fix nuevo) -- sin esto, cada
+  // reporte de "la posición es imprecisa" o "el refresco es lento" es una
+  // conjetura más sobre qué está pasando en un dispositivo que no puedo ver.
+  gpsAccuracyM: number | null;
+  gpsGapMs: number | null;
 }
 
 const initialUi: LiveTripUi = {
@@ -111,6 +118,8 @@ const initialUi: LiveTripUi = {
   statusText: "",
   statusKind: "",
   advisory: null,
+  gpsAccuracyM: null,
+  gpsGapMs: null,
 };
 
 /** Seguimiento de la ubicación REAL durante "Iniciar viaje", portado de js/map/liveTrip.js. */
@@ -245,6 +254,8 @@ export function useLiveTrip() {
           heading: trip.heading,
           statusText: "Llegaste a destino",
           statusKind: "done",
+          gpsAccuracyM: pos.coords.accuracy ?? null,
+          gpsGapMs: gapMs,
         });
         return;
       }
@@ -290,6 +301,8 @@ export function useLiveTrip() {
         statusText,
         statusKind,
         advisory,
+        gpsAccuracyM: pos.coords.accuracy ?? null,
+        gpsGapMs: gapMs,
       });
     },
     [logCompletedOrPartial]

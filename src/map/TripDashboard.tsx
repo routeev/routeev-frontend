@@ -440,6 +440,14 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                   {liveTrip.ui.advisory.text}
                 </div>
               )}
+              {/* TEMP DEBUG, revertir junto con gpsAccuracyM/gpsGapMs en
+                  useLiveTrip.ts: diagnóstico para el próximo viaje real. */}
+              {liveTrip.ui.active && (
+                <div className="hint" style={{ marginTop: 8 }}>
+                  GPS: precisión ±{liveTrip.ui.gpsAccuracyM != null ? Math.round(liveTrip.ui.gpsAccuracyM) : "?"}m · cada{" "}
+                  {liveTrip.ui.gpsGapMs != null ? (liveTrip.ui.gpsGapMs / 1000).toFixed(1) : "?"}s
+                </div>
+              )}
             </div>
           )}
         </div>
