@@ -1,3 +1,4 @@
+import { useTranslation } from "../i18n/LanguageProvider";
 import { Banner } from "../shared/Banner";
 import { RouteAutocompleteField } from "./RouteAutocompleteField";
 import { useGeolocation } from "./useGeolocation";
@@ -12,6 +13,8 @@ interface RouteInputPanelProps {
 }
 
 export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
+  const { t } = useTranslation();
+  const ri = t.map.routeInput;
   const pickMode = useMapStore((s) => s.pickMode);
   const picking = useMapStore((s) => s.picking);
   const startPicking = useMapStore((s) => s.startPicking);
@@ -40,14 +43,19 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
     startPicking(imprecisePick.role);
   }
 
+  const cargadorOpciones = [
+    { id: "yes", label: ri.chargerAtDestination.yes, valor: true },
+    { id: "no", label: ri.chargerAtDestination.no, valor: false },
+  ];
+
   return (
     <section className="panel">
-      <h2>Tu viaje</h2>
+      <h2>{ri.title}</h2>
 
       <div className={styles.routeInput}>
         <RouteAutocompleteField
           role="origin"
-          placeholder="¿Desde dónde salís?"
+          placeholder={ri.originPlaceholder}
           isPicking={picking === "origin"}
           isNextTarget={picking == null && pickMode === "origin"}
           onPickTarget={() => togglePicking("origin")}
@@ -55,7 +63,7 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
         <div className={styles.connector} aria-hidden="true" />
         <RouteAutocompleteField
           role="destination"
-          placeholder="¿A dónde vas?"
+          placeholder={ri.destinationPlaceholder}
           isPicking={picking === "destination"}
           isNextTarget={picking == null && pickMode === "destination"}
           onPickTarget={() => togglePicking("destination")}
@@ -81,19 +89,15 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
         // (ImprecisePickLink), así que esto puede ser corto.
         <div className={styles.impreciseCard} role="status">
           <p className={styles.impreciseTitle}>
-            El {imprecisePick.role === "origin" ? "origen" : "destino"} quedó a{" "}
-            {imprecisePick.distanceKm.toFixed(1)} km de donde tocaste.
+            {ri.imprecise.title(t.map.routeAutocomplete.roleLabel(imprecisePick.role), imprecisePick.distanceKm.toFixed(1))}
           </p>
-          <p className={styles.impreciseBody}>
-            Lo más cercano que conocemos por ahí es «{imprecisePick.node.name}». En el mapa vas a ver
-            la línea punteada entre los dos puntos.
-          </p>
+          <p className={styles.impreciseBody}>{ri.imprecise.body(imprecisePick.node.name)}</p>
           <div className={styles.impreciseActions}>
             <button type="button" className="primary small" onClick={() => clearImprecisePick()}>
-              Usar este punto
+              {ri.imprecise.useThisPoint}
             </button>
             <button type="button" className="ghost small" onClick={volverAMarcar}>
-              Marcar otro punto
+              {ri.imprecise.pickAnother}
             </button>
           </div>
         </div>
@@ -104,18 +108,12 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
         // ("¿en el destino?" ¿cuál?) y sería una fila más ocupando pantalla sin
         // aportar, que es justo lo que se sacó del panel.
         <fieldset className={styles.cargador}>
-          <legend className={styles.cargadorLegend}>¿Tenés dónde cargar en el destino?</legend>
-          <p className={styles.cargadorHint}>
-            Si no tenés, calculamos el viaje para que te quede batería para llegar hasta el cargador
-            más cercano.
-          </p>
+          <legend className={styles.cargadorLegend}>{ri.chargerAtDestination.legend}</legend>
+          <p className={styles.cargadorHint}>{ri.chargerAtDestination.hint}</p>
           <div className={styles.cargadorOpciones}>
-            {[
-              { label: "Sí, tengo", valor: true },
-              { label: "No tengo", valor: false },
-            ].map((opcion) => (
+            {cargadorOpciones.map((opcion) => (
               <label
-                key={opcion.label}
+                key={opcion.id}
                 className={[styles.cargadorOpcion, cargadorEnDestino === opcion.valor ? styles.cargadorOpcionActiva : ""].join(" ")}
               >
                 <input
@@ -137,7 +135,7 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
           <path d="M12 2v3.4M12 18.6V22M22 12h-3.4M5.4 12H2" />
           <circle cx="12" cy="12" r="7.4" />
         </svg>
-        {geolocation.busy ? "Buscando tu ubicación..." : "Usar mi ubicación como origen"}
+        {geolocation.busy ? ri.locatingYou : ri.useMyLocation}
       </button>
       {geolocation.result && (
         <div className="address-result">

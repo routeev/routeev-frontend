@@ -1,5 +1,6 @@
 import type { Vehicle } from "../api/vehicles";
 import { CarSilhouette } from "../shared/CarSilhouette";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { useVehiclePhoto } from "./useVehiclePhoto";
 import styles from "./ProfilePage.module.css";
 
@@ -12,6 +13,7 @@ interface VehicleCardProps {
 }
 
 export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDelete }: VehicleCardProps) {
+  const { t } = useTranslation();
   const photoUrl = useVehiclePhoto(vehicle.id, vehicle.has_photo);
   const autonomiaKm = vehicle.consumption_kwh_per_km
     ? vehicle.battery_capacity_kwh / vehicle.consumption_kwh_per_km
@@ -25,7 +27,7 @@ export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDel
         ) : (
           <CarSilhouette name={vehicle.name} className={styles.art} />
         )}
-        <label className={styles.photoEdit} title={vehicle.has_photo ? "Cambiar la foto de este auto" : "Agregar una foto de este auto"}>
+        <label className={styles.photoEdit} title={vehicle.has_photo ? t.profile.vehicleCard.changePhoto : t.profile.vehicleCard.addPhoto}>
           <input
             type="file"
             accept="image/*"
@@ -38,7 +40,7 @@ export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDel
           />
           <span aria-hidden="true">{vehicle.has_photo ? "✎" : "📷"}</span>
           <span className="sr-only">
-            {vehicle.has_photo ? "Cambiar la foto de este auto" : "Agregar una foto de este auto"}
+            {vehicle.has_photo ? t.profile.vehicleCard.changePhoto : t.profile.vehicleCard.addPhoto}
           </span>
         </label>
       </div>
@@ -47,19 +49,19 @@ export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDel
         <h3 className={styles.vehicleName}>{vehicle.name}</h3>
         <dl className={styles.vehicleSpecs}>
           <div>
-            <dt>Batería</dt>
+            <dt>{t.profile.vehicleCard.battery}</dt>
             <dd className="mono-num">{vehicle.battery_capacity_kwh} kWh</dd>
           </div>
           <div>
-            <dt>Consumo</dt>
+            <dt>{t.profile.vehicleCard.consumption}</dt>
             <dd className="mono-num">{vehicle.consumption_kwh_per_km} kWh/km</dd>
           </div>
           <div>
-            <dt>Carga</dt>
+            <dt>{t.profile.vehicleCard.charging}</dt>
             <dd className="mono-num">{vehicle.charging_power_kw} kW</dd>
           </div>
           <div>
-            <dt>Autonomía</dt>
+            <dt>{t.profile.vehicleCard.range}</dt>
             <dd className="mono-num">{autonomiaKm ? `${autonomiaKm.toFixed(0)} km` : "-"}</dd>
           </div>
         </dl>
@@ -68,13 +70,13 @@ export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDel
       <div className={styles.cardActions}>
         {vehicle.has_photo ? (
           <button type="button" className="ghost small" disabled={busy} onClick={onRemovePhoto}>
-            Quitar foto
+            {t.profile.vehicleCard.removePhoto}
           </button>
         ) : (
           <span />
         )}
-        <button type="button" className="ghost small" disabled={busy} onClick={onDelete} title="Eliminar vehículo">
-          Eliminar
+        <button type="button" className="ghost small" disabled={busy} onClick={onDelete} title={t.profile.vehicleCard.deleteTitle}>
+          {t.profile.vehicleCard.delete}
         </button>
       </div>
     </article>

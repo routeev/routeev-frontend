@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { geocode } from "../api/graph";
 import type { GraphNode } from "../api/graph";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
 import { useMapStore, type SearchableNode } from "./mapStore";
@@ -53,6 +54,8 @@ export function RouteAutocompleteField({
   isNextTarget,
   onPickTarget,
 }: RouteAutocompleteFieldProps) {
+  const { t } = useTranslation();
+  const ra = t.map.routeAutocomplete;
   const searchableNodes = useMapStore((s) => s.searchableNodes);
   const node = useMapStore((s) => (role === "origin" ? s.originNode : s.destinationNode));
   const setNode = useMapStore((s) => (role === "origin" ? s.setOrigin : s.setDestination));
@@ -120,20 +123,20 @@ export function RouteAutocompleteField({
   async function chooseGeocode(label: string) {
     setOpen(false);
     setBusy(true);
-    setResult({ text: "Buscando...", kind: "" });
+    setResult({ text: ra.searching, kind: "" });
     try {
       const res = await geocode(label);
       useMapStore.getState().addNode(res.node);
       chooseNode(res.node);
-      let msg = `Encontrado: ${res.matched_address}`;
+      let msg = ra.addressFound(res.matched_address);
       let kind: "warn" | "" = "";
       if (res.distance_to_node_km > 2) {
-        msg += ` (a ${res.distance_to_node_km.toFixed(1)} km de la calle más cercana del grafo cubierto -- puede no ser precisa)`;
+        msg += ra.addressImprecise(res.distance_to_node_km.toFixed(1));
         kind = "warn";
       }
       setResult({ text: msg, kind });
     } catch (err) {
-      setResult({ text: err instanceof Error ? err.message : "No se pudo buscar esa dirección.", kind: "error" });
+      setResult({ text: err instanceof Error ? err.message : ra.addressSearchError, kind: "error" });
     } finally {
       setBusy(false);
     }
@@ -145,7 +148,7 @@ export function RouteAutocompleteField({
     else void chooseGeocode(item.label);
   }
 
-  const etiqueta = role === "origin" ? "origen" : "destino";
+  const etiqueta = ra.roleLabel(role);
 
   return (
     <div>
@@ -155,7 +158,7 @@ export function RouteAutocompleteField({
           aria-hidden="true"
         />
         <label className="sr-only" htmlFor={`${role}-input`}>
-          {role === "origin" ? "Origen" : "Destino"}
+          {role === "origin" ? ra.originLabel : ra.destinationLabel}
         </label>
         <div className={styles.autocomplete}>
           <input
@@ -198,7 +201,7 @@ export function RouteAutocompleteField({
           {open && (
             <ul className={styles.list}>
               {items.length === 0 ? (
-                <li className={[styles.item, styles.itemEmpty].join(" ")}>Seguí escribiendo para buscar...</li>
+                <li className={[styles.item, styles.itemEmpty].join(" ")}>{ra.keepTyping}</li>
               ) : (
                 items.map((item, i) => (
                   <li
@@ -210,7 +213,7 @@ export function RouteAutocompleteField({
                       chooseItem(item);
                     }}
                   >
-                    {item.type === "geocode" ? `Buscar «${item.label}» como dirección completa` : item.node.name}
+                    {item.type === "geocode" ? ra.searchAsAddress(item.label) : item.node.name}
                   </li>
                 ))
               )}
@@ -221,13 +224,13 @@ export function RouteAutocompleteField({
           <button
             type="button"
             className={styles.clear}
-            title={`Borrar el ${etiqueta}`}
+            title={ra.clearRole(etiqueta)}
             onClick={() => clearNode()}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
-            <span className="sr-only">Borrar el {etiqueta}</span>
+            <span className="sr-only">{ra.clearRole(etiqueta)}</span>
           </button>
         )}
         {/* Cada chincheta lleva el color de SU rol (el mismo blanco/violeta de
@@ -244,21 +247,13 @@ export function RouteAutocompleteField({
             isNextTarget ? styles.pinNext : "",
           ].join(" ")}
           aria-pressed={isPicking}
-          title={
-            isPicking
-              ? `Tocá el mapa para marcar el ${etiqueta}, o tocá acá para cancelar`
-              : `Marcar el ${etiqueta} tocando el mapa`
-          }
+          title={isPicking ? ra.pickOnMapActive(etiqueta) : ra.pickOnMap(etiqueta)}
           onClick={onPickTarget}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             {isPicking ? CROSSHAIR_SVG : PIN_SVG}
           </svg>
-          <span className="sr-only">
-            {isPicking
-              ? `Tocá el mapa para marcar el ${etiqueta}. Tocá este botón de nuevo para cancelar.`
-              : `Marcar el ${etiqueta} tocando el mapa`}
-          </span>
+          <span className="sr-only">{isPicking ? ra.pickOnMapActiveSr(etiqueta) : ra.pickOnMap(etiqueta)}</span>
         </button>
       </div>
       {result && (

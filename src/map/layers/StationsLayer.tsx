@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { esPrivada } from "../esPrivada";
 import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
@@ -55,6 +56,7 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
  * esas importan aunque el usuario haya alejado o movido el mapa a otro lado.
  */
 export function StationsLayer() {
+  const { t } = useTranslation();
   // staleTime: Infinity -- catalogo estatico, ver el comentario en
   // useMapLoaders.ts (misma key).
   const query = useQuery({ queryKey: ["stations"], queryFn: getStations, staleTime: Infinity });
@@ -145,7 +147,7 @@ export function StationsLayer() {
                   <span>{st.operador}</span>
                 </div>
                 <div className={styles.teaserAddress}>{st.direccion}</div>
-                <div className={styles.teaserHint}>Detalle completo y reseñas en el menú.</div>
+                <div className={styles.teaserHint}>{t.map.layers.stationsLayer.detailInMenu}</div>
               </div>
             </Popup>
           </Marker>

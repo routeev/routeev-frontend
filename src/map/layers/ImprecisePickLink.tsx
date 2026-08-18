@@ -1,4 +1,5 @@
 import { CircleMarker, Polyline, Tooltip } from "react-leaflet";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { useMapStore } from "../mapStore";
 
 // Mismo naranja que --accent-dijkstra (src/styles/tokens.css), el color de
@@ -21,6 +22,7 @@ const COLOR_AVISO = "#f2a154";
  * pregunta ("Usar este punto" / "Marcar otro punto").
  */
 export function ImprecisePickLink() {
+  const { t } = useTranslation();
   const pick = useMapStore((s) => s.imprecisePick);
   if (!pick) return null;
 
@@ -42,7 +44,7 @@ export function ImprecisePickLink() {
             explique, y pedirle a alguien que descubra un tooltip pasando el
             mouse no sirve en un celular. */}
         <Tooltip permanent direction="top" offset={[0, -8]}>
-          Tocaste acá
+          {t.map.layers.imprecisePickLink.tappedHere}
         </Tooltip>
       </CircleMarker>
     </>

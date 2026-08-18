@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ShowroomModel, SimulateResult } from "../api/showroom";
 import { CertaintyLine } from "../shared/CertaintyLine";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration, formatUyu } from "../shared/format";
 import { certaintyPointsFromSegments } from "./certaintyProfile";
 import { num } from "./num";
@@ -20,6 +21,8 @@ interface SimulationResultProps {
 }
 
 export function SimulationResult({ resultado, model, desde, hasta, bateria, margenPct = 10 }: SimulationResultProps) {
+  const { t } = useTranslation();
+  const sr = t.showroom.simulationResult;
   const tramosInfo = useMemo(() => armarTramos(resultado), [resultado]);
   const tieneMapa = resultado.detalle.tramos.every((t) => Array.isArray(t.route_coords) && t.route_coords.length > 1);
   const certaintyPoints = useMemo(() => {
@@ -31,11 +34,8 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
   if (!resultado.llega) {
     return (
       <div className={styles.out}>
-        <p className={[styles.veredicto, styles.no].join(" ")}>No llega</p>
-        <p className={styles.detalle}>
-          Saliendo con {bateria}% de batería no hay ningún camino que este auto pueda hacer hasta ahí, ni parando
-          a cargar en las estaciones que hay en el trayecto.
-        </p>
+        <p className={[styles.veredicto, styles.no].join(" ")}>{sr.noLlega}</p>
+        <p className={styles.detalle}>{sr.noLlegaDetalle(bateria)}</p>
       </div>
     );
   }
@@ -72,92 +72,85 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
         </div>
       )}
 
-      <p className={[styles.veredicto, styles.si].join(" ")}>Llega</p>
-      <p className={styles.detalle}>
-        {desde} → {hasta}, saliendo con {bateria}% de batería
-        {d.tramos.length > 1 ? ", ida y vuelta." : "."}
-      </p>
+      <p className={[styles.veredicto, styles.si].join(" ")}>{sr.llega}</p>
+      <p className={styles.detalle}>{sr.llegaDetalle(desde, hasta, bateria, d.tramos.length > 1)}</p>
 
       {/* Semáforo del margen: crítico < 5% siempre; "bajo" hasta el margen que
           el plan intentó mantener (el backend ya sumó las recargas que pudo). */}
       {resultado.bateria_llegada_pct < 5 ? (
         <p className={[styles.margenAviso, styles.margenCritico].join(" ")}>
-          🔴 Margen crítico: llega con apenas {num(resultado.bateria_llegada_pct, 1)}% de batería. Cualquier desvío o
-          consumo extra puede dejarlo sin carga antes de llegar.
+          {sr.margenCritico(num(resultado.bateria_llegada_pct, 1))}
         </p>
       ) : resultado.bateria_llegada_pct < margenPct ? (
         <p className={[styles.margenAviso, styles.margenBajo].join(" ")}>
-          🟠 Margen bajo: llega con {num(resultado.bateria_llegada_pct, 1)}%, por debajo del margen de seguridad del{" "}
-          {num(margenPct)}%{resultado.margen_alcanzado === false ? " — no hay plan de cargas que lo respete en este viaje" : ""}.
+          {sr.margenBajo(num(resultado.bateria_llegada_pct, 1), num(margenPct), resultado.margen_alcanzado === false)}
         </p>
       ) : (
         <p className={[styles.margenAviso, styles.margenOk].join(" ")}>
-          🟢 Llega con {num(resultado.bateria_llegada_pct, 1)}% de batería, dentro del margen de seguridad ({num(margenPct)}%).
+          {sr.margenOk(num(resultado.bateria_llegada_pct, 1), num(margenPct))}
         </p>
       )}
 
       <dl className={styles.cifras}>
         <div>
-          <dt>Distancia</dt>
+          <dt>{sr.dtDistancia}</dt>
           <dd className="mono-num">{num(d.distancia_km, 1)} km</dd>
         </div>
         <div>
-          <dt>Tiempo total</dt>
+          <dt>{sr.dtTiempoTotal}</dt>
           <dd className="mono-num">{formatDuration(resultado.tiempo_total_min)}</dd>
         </div>
         <div>
-          <dt>Batería al llegar</dt>
+          <dt>{sr.dtBateriaLlegada}</dt>
           <dd className={["mono-num", styles.bat].join(" ")}>{num(resultado.bateria_llegada_pct, 1)}%</dd>
         </div>
         <div>
-          <dt>Costo del viaje</dt>
+          <dt>{sr.dtCostoViaje}</dt>
           <dd className={["mono-num", styles.costo].join(" ")}>{formatUyu(resultado.costo_uyu)}</dd>
         </div>
       </dl>
 
       <div className={styles.desglose}>
         <div>
-          <h5>El tiempo</h5>
+          <h5>{sr.tiempoTitulo}</h5>
           <ul>
             <li>
-              <span>Manejando</span>
+              <span>{sr.manejando}</span>
               <span className="mono-num">{formatDuration(d.conduccion_min)}</span>
             </li>
             <li>
-              <span>Demoras por tráfico</span>
+              <span>{sr.demorasTrafico}</span>
               <span className="mono-num">{formatDuration(d.trafico_min)}</span>
             </li>
             <li>
-              <span>Enchufado cargando</span>
+              <span>{sr.enchufadoCargando}</span>
               <span className="mono-num">{formatDuration(d.recarga_min)}</span>
             </li>
           </ul>
         </div>
         <div>
-          <h5>La plata</h5>
+          <h5>{sr.plataTitulo}</h5>
           <ul>
             <li>
-              <span>{conTarifas ? `Energía de casa (${num(kwhCasa, 1)} kWh)` : `Energía (${num(d.energia_kwh, 1)} kWh)`}</span>
+              <span>{conTarifas ? sr.energiaCasa(num(kwhCasa, 1)) : sr.energiaTotal(num(d.energia_kwh, 1))}</span>
               <span className="mono-num">{formatUyu(d.costo_uyu_energia)}</span>
             </li>
             {conTarifas && paradas.length > 0 && (
               <li>
-                <span>Recargas en ruta ({paradas.length})</span>
+                <span>{sr.recargasEnRuta(paradas.length)}</span>
                 <span className="mono-num">{formatUyu(d.costo_uyu_recargas ?? 0)}</span>
               </li>
             )}
-            {sinTarifa > 0 && (
-              <li className={styles.desgloseNota}>
-                + {sinTarifa} recarga{sinTarifa === 1 ? "" : "s"} en operador sin tarifario publicado — no{" "}
-                {sinTarifa === 1 ? "incluida" : "incluidas"} en el total
-              </li>
-            )}
+            {sinTarifa > 0 && <li className={styles.desgloseNota}>{sr.recargasSinTarifa(sinTarifa)}</li>}
             <li>
-              <span>Peajes{d.peajes ? ` (${d.peajes})` : ""}</span>
+              <span>
+                {sr.peajes}
+                {d.peajes ? ` (${d.peajes})` : ""}
+              </span>
               <span className="mono-num">{formatUyu(d.peaje_uyu)}</span>
             </li>
             <li className={styles.desgloseTotal}>
-              <span>Total</span>
+              <span>{sr.total}</span>
               <span className="mono-num">{formatUyu(resultado.costo_uyu)}</span>
             </li>
           </ul>
@@ -166,12 +159,12 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
 
       {d.tramos.length > 1 && (
         <ul className={styles.tramos}>
-          {d.tramos.map((t) => (
-            <li key={t.tramo}>
-              <span className={styles.tramoNombre}>{t.tramo === "ida" ? "Ida" : "Vuelta"}</span>
-              <span className="mono-num">{num(t.distancia_km, 1)} km</span>
-              <span className="mono-num">{formatDuration(t.conduccion_min + t.trafico_min + t.recarga_min)}</span>
-              <span className="mono-num">{formatUyu(t.costo_uyu_total)}</span>
+          {d.tramos.map((tramo) => (
+            <li key={tramo.tramo}>
+              <span className={styles.tramoNombre}>{tramo.tramo === "ida" ? sr.ida : sr.vuelta}</span>
+              <span className="mono-num">{num(tramo.distancia_km, 1)} km</span>
+              <span className="mono-num">{formatDuration(tramo.conduccion_min + tramo.trafico_min + tramo.recarga_min)}</span>
+              <span className="mono-num">{formatUyu(tramo.costo_uyu_total)}</span>
             </li>
           ))}
         </ul>
@@ -179,15 +172,15 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
 
       {paradas.length ? (
         <>
-          <h5 className={styles.paradasTitulo}>Dónde para a cargar</h5>
+          <h5 className={styles.paradasTitulo}>{sr.paradasTitulo}</h5>
           <ol className={styles.paradas}>
             {paradas.map((parada, i) => {
-              const datos = [`${formatDuration(parada.minutos)} enchufado`, `+${num(parada.kwh, 1)} kWh`];
+              const datos = [sr.enchufado(formatDuration(parada.minutos)), sr.kwhGanados(num(parada.kwh, 1))];
               if (parada.potencia_efectiva_kw) {
                 datos.push(
                   parada.potencia_efectiva_kw < parada.potencia_kw
-                    ? `${num(parada.potencia_efectiva_kw)} kW (la estación da ${num(parada.potencia_kw)})`
-                    : `${num(parada.potencia_kw)} kW`
+                    ? sr.potenciaLimitada(num(parada.potencia_efectiva_kw), num(parada.potencia_kw))
+                    : sr.potenciaSimple(num(parada.potencia_kw))
                 );
               }
               if (parada.conector) datos.push(parada.conector);
@@ -203,14 +196,16 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
                   <p className={["mono-num", styles.paradaDatos].join(" ")}>{datos.join(" · ")}</p>
                   {/* De dónde sale el costo de arriba (o por qué no hay costo).
                       Sin `tarifa` (backend viejo) no se muestra nada. */}
-                  {parada.tarifa && <p className={styles.paradaTarifa}>{tarifaLinea(parada.tarifa)}</p>}
+                  {parada.tarifa && (
+                    <p className={styles.paradaTarifa}>{tarifaLinea(parada.tarifa, t.showroom.tarifaTexto)}</p>
+                  )}
                 </li>
               );
             })}
           </ol>
         </>
       ) : (
-        <p className={styles.sinParadas}>Llega de una, sin parar a cargar en el camino.</p>
+        <p className={styles.sinParadas}>{sr.sinParadas}</p>
       )}
     </div>
   );

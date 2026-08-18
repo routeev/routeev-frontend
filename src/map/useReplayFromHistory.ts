@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { HistoryEntry } from "../api/route";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDate } from "../shared/format";
 import { useMapStore } from "./mapStore";
 
@@ -12,6 +13,7 @@ import { useMapStore } from "./mapStore";
  */
 export function useReplayFromHistory(ready: boolean) {
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const done = useRef(false);
   const setOrigin = useMapStore((s) => s.setOrigin);
   const setDestination = useMapStore((s) => s.setDestination);
@@ -72,7 +74,7 @@ export function useReplayFromHistory(ready: boolean) {
         vehicle_id: h.vehicle_id,
         start_battery_kwh: h.start_battery_kwh ?? undefined,
       },
-      ` · viaje del ${formatDate(h.created_at)}`
+      t.map.replay.suffix(formatDate(h.created_at))
     );
-  }, [ready, searchParams, setOrigin, setDestination, selectVehicle, setStartBatteryPct, setLastResult]);
+  }, [ready, searchParams, setOrigin, setDestination, selectVehicle, setStartBatteryPct, setLastResult, t]);
 }

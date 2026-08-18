@@ -1,0 +1,47 @@
+export const auth = {
+  login: {
+    pageTitle: "RouteEV · Iniciar sesión",
+    backToHome: "← Volver al inicio",
+    tagline: "Entrá a tu cuenta para calcular tu próxima ruta.",
+    modeLabelLogin: "Iniciar sesión",
+    modeLabelRegister: "Crear cuenta",
+    emailLabel: "Correo electrónico",
+    emailPlaceholder: "ej. nombre@dominio.com",
+    emailInvalid: "Ingresá un correo electrónico válido.",
+    passwordLabel: "Contraseña",
+    passwordRequired: "Escribí tu contraseña.",
+    passwordTooShort: "La contraseña necesita al menos 10 caracteres.",
+    submitting: "Un momento...",
+    submitLogin: "Entrar",
+    submitRegister: "Crear cuenta",
+    toggleToRegister: "Crear una cuenta nueva",
+    toggleToLogin: "Ya tengo cuenta",
+    unconfirmedNotice: "Tu correo todavía no está confirmado. Si no tenés el código a mano, pedí que te lo reenviemos.",
+    genericError: "No se pudo completar la operación",
+    googleError: "No se pudo iniciar sesión con Google",
+  },
+  register: {
+    displayNameLabel: "Nombre (opcional)",
+    displayNamePlaceholder: "ej. Marcela",
+    displayNameHint:
+      "Es cómo te vamos a mostrar en la app. Si lo dejás vacío te ponemos uno y lo podés cambiar cuando quieras desde tu perfil.",
+  },
+  verifyEmail: {
+    modeLabel: "Confirmá tu correo",
+    notice: (email: string) => `Te mandamos un código de 6 dígitos a ${email}. Ingresalo para confirmar tu cuenta.`,
+    codeLabel: "Código de confirmación",
+    codeInvalid: "El código tiene 6 dígitos.",
+    confirming: "Confirmando...",
+    submit: "Confirmar",
+    backToLogin: "Volver a iniciar sesión",
+    error: "No se pudo confirmar el correo",
+  },
+  resendCode: {
+    button: "Reenviar código",
+    success: "Te reenviamos el código. Puede tardar unos minutos en llegar.",
+    error: "No se pudo reenviar el código",
+  },
+  google: {
+    divider: "o",
+  },
+};

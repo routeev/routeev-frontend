@@ -12,6 +12,7 @@ import {
 import { setUsername as setStoredUsername } from "../api/session";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { Spinner } from "../shared/Spinner";
 import { toast } from "../shared/toastStore";
@@ -32,6 +33,7 @@ const USERNAME_MAX = 32;
  * Cloudinary y es pública: va directo en el <img src>, sin fetch manual.
  */
 export function AccountPanel() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
   const fileInput = useRef<HTMLInputElement | null>(null);
@@ -47,20 +49,20 @@ export function AccountPanel() {
     mutationFn: async (file: File) => uploadMyPhoto(await resizePhotoForUpload(file)),
     onSuccess: (user) => {
       queryClient.setQueryData(["me"], user);
-      toast.ok("Listo, cambiamos tu foto de perfil.");
+      toast.ok(t.profile.account.photoUploadOk);
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "No se pudo subir la foto."),
+      toast.error(err instanceof Error ? err.message : t.profile.account.photoUploadError),
   });
 
   const remove = useMutation({
     mutationFn: deleteMyPhoto,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["me"] });
-      toast.ok("Listo, sacamos tu foto de perfil.");
+      toast.ok(t.profile.account.photoRemoveOk);
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "No se pudo quitar la foto."),
+      toast.error(err instanceof Error ? err.message : t.profile.account.photoRemoveError),
   });
 
   const rename = useMutation({
@@ -73,9 +75,10 @@ export function AccountPanel() {
       // mostrando el nombre viejo hasta el próximo login.
       setStoredUsername(user.username);
       setEditingUsername(false);
-      toast.ok(`Listo, ahora te llamás «${user.username}».`);
+      toast.ok(t.profile.account.usernameUpdated(user.username));
     },
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo cambiar el nombre de usuario."),
+    onError: (err) =>
+      setError(err instanceof Error ? err.message : t.profile.account.usernameUpdateError),
   });
 
   const user = meQuery.data;
@@ -83,7 +86,7 @@ export function AccountPanel() {
   return (
     <section className="panel">
       <div className={styles.panelHeader}>
-        <h2>Mi cuenta</h2>
+        <h2>{t.profile.account.title}</h2>
       </div>
       <div className={styles.accountRow}>
         <div className={styles.avatarWrap}>
@@ -94,7 +97,7 @@ export function AccountPanel() {
               {(user?.username ?? "?").charAt(0).toUpperCase()}
             </div>
           )}
-          <label className={styles.photoEdit} title="Cambiar foto de perfil">
+          <label className={styles.photoEdit} title={t.profile.account.changePhoto}>
             <input
               ref={fileInput}
               type="file"
@@ -109,7 +112,7 @@ export function AccountPanel() {
               }}
             />
             {upload.isPending ? <Spinner size={12} /> : <span aria-hidden="true">✎</span>}
-            <span className="sr-only">Cambiar foto de perfil</span>
+            <span className="sr-only">{t.profile.account.changePhoto}</span>
           </label>
         </div>
         <div className={styles.accountInfo}>
@@ -129,7 +132,7 @@ export function AccountPanel() {
                 }
                 if (trimmed.length < USERNAME_MIN || trimmed.length > USERNAME_MAX) {
                   setUsernameError(
-                    `El nombre de usuario tiene que tener entre ${USERNAME_MIN} y ${USERNAME_MAX} caracteres.`
+                    t.profile.account.usernameLengthError(USERNAME_MIN, USERNAME_MAX)
                   );
                   // El foco se queda en "Guardar" si no se mueve, y el error se
                   // pinta abajo: quien tiene los ojos en el botón, o usa lector
@@ -145,7 +148,7 @@ export function AccountPanel() {
                   nombre, así que sin esto no hay nada en pantalla que diga qué
                   se está editando -- ni para quien ve, ni para un lector de
                   pantalla, que solo anunciaba "cuadro de edición". */}
-              <label htmlFor="account-username">Tu nombre de usuario</label>
+              <label htmlFor="account-username">{t.profile.account.usernameLabel}</label>
               <div className={styles.usernameEditRow}>
                 <input
                   id="account-username"
@@ -169,10 +172,10 @@ export function AccountPanel() {
                 >
                   {rename.isPending ? (
                     <>
-                      <Spinner /> Guardando...
+                      <Spinner /> {t.common.saving}
                     </>
                   ) : (
-                    "Guardar"
+                    t.common.save
                   )}
                 </button>
                 <button
@@ -185,7 +188,7 @@ export function AccountPanel() {
                     setEditingUsername(false);
                   }}
                 >
-                  Cancelar
+                  {t.common.cancel}
                 </button>
               </div>
               {usernameError && (
@@ -205,7 +208,7 @@ export function AccountPanel() {
               <button
                 type="button"
                 className={styles.usernameEditBtn}
-                title="Cambiar nombre de usuario"
+                title={t.profile.account.changeUsername}
                 onClick={() => {
                   setError(null);
                   setUsernameInput(user?.username ?? "");
@@ -213,7 +216,7 @@ export function AccountPanel() {
                 }}
               >
                 <span aria-hidden="true">✎</span>
-                <span className="sr-only">Cambiar nombre de usuario</span>
+                <span className="sr-only">{t.profile.account.changeUsername}</span>
               </button>
             </div>
           )}
@@ -233,10 +236,10 @@ export function AccountPanel() {
             >
               {remove.isPending ? (
                 <>
-                  <Spinner /> Quitando...
+                  <Spinner /> {t.profile.account.removingPhoto}
                 </>
               ) : (
-                "Quitar foto"
+                t.profile.account.removePhoto
               )}
             </button>
           )}
@@ -265,6 +268,7 @@ export function AccountPanel() {
  * nombre propio, lleva tildes, espacios y mayúsculas.
  */
 function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: string | null) => void }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState("");
@@ -274,9 +278,14 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
     onSuccess: (actualizado) => {
       queryClient.setQueryData(["me"], actualizado);
       setEditando(false);
-      toast.ok(actualizado.display_name ? "Listo, ese es tu nombre ahora." : "Listo, sacamos tu nombre.");
+      toast.ok(
+        actualizado.display_name
+          ? t.profile.account.displayNameUpdatedNamed
+          : t.profile.account.displayNameUpdatedCleared
+      );
     },
-    onError: (err) => onError(err instanceof Error ? err.message : "No se pudo guardar tu nombre."),
+    onError: (err) =>
+      onError(err instanceof Error ? err.message : t.profile.account.displayNameUpdateError),
   });
 
   if (!editando) {
@@ -290,7 +299,7 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
           setEditando(true);
         }}
       >
-        {user?.display_name ? "Cambiar mi nombre" : "Poné tu nombre"}
+        {user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName}
       </button>
     );
   }
@@ -305,13 +314,13 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
         guardar.mutate(valor.trim());
       }}
     >
-      <label htmlFor="account-display-name">Tu nombre</label>
+      <label htmlFor="account-display-name">{t.profile.account.displayNameLabel}</label>
       <div className={styles.usernameEditRow}>
         <input
           id="account-display-name"
           type="text"
           autoComplete="name"
-          placeholder="ej. Matías Filgueiras"
+          placeholder={t.profile.account.displayNamePlaceholder}
           value={valor}
           onChange={(e) => setValor(e.target.value)}
           maxLength={80}
@@ -321,10 +330,10 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
         <button type="submit" className="primary small" disabled={guardar.isPending} aria-busy={guardar.isPending}>
           {guardar.isPending ? (
             <>
-              <Spinner /> Guardando...
+              <Spinner /> {t.common.saving}
             </>
           ) : (
-            "Guardar"
+            t.common.save
           )}
         </button>
         <button
@@ -336,10 +345,10 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
             setEditando(false);
           }}
         >
-          Cancelar
+          {t.common.cancel}
         </button>
       </div>
-      <p className="hint">Dejalo vacío si preferís que te mostremos por tu nombre de usuario.</p>
+      <p className="hint">{t.profile.account.displayNameHint}</p>
     </form>
   );
 }

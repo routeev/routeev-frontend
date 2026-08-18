@@ -1,48 +1,45 @@
 import { useQuery } from "@tanstack/react-query";
 import { getMonthlyStats, getVehicleStats } from "../api/route";
 import { formatUyu } from "../shared/format";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { fmt } from "./formatCell";
 import styles from "./ProfilePage.module.css";
 
-const MONTH_NAMES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
-
-function formatMonth(yyyyMm: string): string {
+function formatMonth(yyyyMm: string, monthNames: string[]): string {
   const [year, month] = yyyyMm.split("-");
-  return `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+  return `${monthNames[Number(month) - 1]} ${year}`;
 }
 
 export function MonthlyStatsPanel() {
+  const { t } = useTranslation();
   const query = useQuery({ queryKey: ["monthlyStats"], queryFn: getMonthlyStats });
   const stats = query.data ?? [];
 
   return (
     <section className="panel">
-      <h2>Consumo y gasto por mes</h2>
-      <p className="hint">Sobre los viajes efectivamente recorridos, agrupados por mes.</p>
+      <h2>{t.profile.stats.monthlyTitle}</h2>
+      <p className="hint">{t.profile.stats.monthlyHint}</p>
       {query.isSuccess && stats.length === 0 ? (
-        <p className="hint">Todavía no hay viajes calculados este mes ni en meses anteriores.</p>
+        <p className="hint">{t.profile.stats.monthlyEmpty}</p>
       ) : (
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Mes</th>
-                <th>Viajes</th>
-                <th>Distancia total</th>
-                <th>Energía total</th>
-                <th>Gasto total</th>
-                <th>Recargas</th>
-                <th>Distancia prom.</th>
-                <th>Costo prom.</th>
+                <th>{t.profile.stats.colMonth}</th>
+                <th>{t.profile.stats.colTrips}</th>
+                <th>{t.profile.stats.colTotalDistance}</th>
+                <th>{t.profile.stats.colTotalEnergy}</th>
+                <th>{t.profile.stats.colTotalCost}</th>
+                <th>{t.profile.stats.colRecharges}</th>
+                <th>{t.profile.stats.colAvgDistance}</th>
+                <th>{t.profile.stats.colAvgCost}</th>
               </tr>
             </thead>
             <tbody>
               {stats.map((m) => (
                 <tr key={m.month}>
-                  <td>{formatMonth(m.month)}</td>
+                  <td>{formatMonth(m.month, t.profile.stats.monthNames)}</td>
                   <td>{m.trip_count}</td>
                   <td>{fmt(m.total_distance_km, 1, " km")}</td>
                   <td>{fmt(m.total_energy_kwh, 1, " kWh")}</td>
@@ -61,6 +58,7 @@ export function MonthlyStatsPanel() {
 }
 
 export function VehicleStatsPanel() {
+  const { t } = useTranslation();
   const query = useQuery({ queryKey: ["vehicleStats"], queryFn: getVehicleStats });
   const stats = query.data ?? [];
 
@@ -70,19 +68,19 @@ export function VehicleStatsPanel() {
 
   return (
     <section className="panel">
-      <h2>Consumo por vehículo</h2>
-      <p className="hint">Acumulado histórico de cada vehículo, ordenado por kilómetros recorridos.</p>
+      <h2>{t.profile.stats.vehicleTitle}</h2>
+      <p className="hint">{t.profile.stats.vehicleHint}</p>
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Vehículo</th>
-              <th>Viajes</th>
-              <th>Distancia</th>
-              <th>Energía</th>
-              <th>Gasto</th>
-              <th>Costo / km</th>
-              <th>Recargas</th>
+              <th>{t.profile.stats.colVehicle}</th>
+              <th>{t.profile.stats.colTrips}</th>
+              <th>{t.profile.stats.colDistance}</th>
+              <th>{t.profile.stats.colEnergy}</th>
+              <th>{t.profile.stats.colCost}</th>
+              <th>{t.profile.stats.colCostPerKm}</th>
+              <th>{t.profile.stats.colRecharges}</th>
             </tr>
           </thead>
           <tbody>

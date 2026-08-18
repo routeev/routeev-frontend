@@ -4,11 +4,13 @@ import { getHistory, type HistoryEntry } from "../api/route";
 import { listVehicles } from "../api/vehicles";
 import { CertaintyLine } from "../shared/CertaintyLine";
 import { formatDate, formatDuration, formatUyu } from "../shared/format";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { certaintyPointsFromRoute } from "./historyCertainty";
 import { fmt } from "./formatCell";
 import styles from "./ProfilePage.module.css";
 
 function HistoryRow({ entry, capacityKwh }: { entry: HistoryEntry; capacityKwh: number | null }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const noRoute = entry.distance_km === null || entry.distance_km === undefined;
   const astar = entry.result?.astar;
@@ -27,7 +29,7 @@ function HistoryRow({ entry, capacityKwh }: { entry: HistoryEntry; capacityKwh: 
         {entry.origin_name || entry.origin_id} → {entry.destination_name || entry.destination_id}
       </td>
       <td className={styles.cellProfile}>{points.length >= 2 && <CertaintyLine points={points} scale="micro" />}</td>
-      <td className={noRoute ? styles.cellDanger : undefined}>{noRoute ? "sin ruta" : fmt(entry.distance_km, 1, " km")}</td>
+      <td className={noRoute ? styles.cellDanger : undefined}>{noRoute ? t.profile.history.noRoute : fmt(entry.distance_km, 1, " km")}</td>
       <td>{fmt(entry.energy_kwh, 2, " kWh")}</td>
       <td>{entry.trip_time_min == null ? "-" : formatDuration(entry.trip_time_min)}</td>
       <td>{entry.costo_uyu_total == null ? "-" : formatUyu(entry.costo_uyu_total)}</td>
@@ -44,7 +46,7 @@ function HistoryRow({ entry, capacityKwh }: { entry: HistoryEntry; capacityKwh: 
               navigate("/app?replay=1");
             }}
           >
-            Ver
+            {t.profile.history.view}
           </button>
         )}
       </td>
@@ -53,6 +55,7 @@ function HistoryRow({ entry, capacityKwh }: { entry: HistoryEntry; capacityKwh: 
 }
 
 export function HistoryPanel() {
+  const { t } = useTranslation();
   const historyQuery = useQuery({ queryKey: ["history"], queryFn: getHistory });
   const vehiclesQuery = useQuery({ queryKey: ["vehicles"], queryFn: listVehicles });
   const history = historyQuery.data ?? [];
@@ -63,22 +66,22 @@ export function HistoryPanel() {
 
   return (
     <section className="panel">
-      <h2>Historial de viajes</h2>
+      <h2>{t.profile.history.title}</h2>
       {historyQuery.isSuccess && history.length === 0 ? (
-        <p className="hint">Todavía no calculaste ninguna ruta. Andá al mapa y calculá una para verla acá.</p>
+        <p className="hint">{t.profile.history.emptyState}</p>
       ) : (
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Origen → Destino</th>
-                <th>Batería</th>
-                <th>Distancia</th>
-                <th>Energía</th>
-                <th>Tiempo</th>
-                <th>Costo estimado</th>
-                <th>Recargas</th>
+                <th>{t.profile.history.colDate}</th>
+                <th>{t.profile.history.colRoute}</th>
+                <th>{t.profile.history.colBattery}</th>
+                <th>{t.profile.history.colDistance}</th>
+                <th>{t.profile.history.colEnergy}</th>
+                <th>{t.profile.history.colTime}</th>
+                <th>{t.profile.history.colCost}</th>
+                <th>{t.profile.history.colRecharges}</th>
                 <th />
               </tr>
             </thead>

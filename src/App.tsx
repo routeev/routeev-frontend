@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { RouterProvider } from "react-router-dom";
 import { setOnSessionExpired } from "./api/client";
+import { LanguageProvider } from "./i18n/LanguageProvider";
 import { router } from "./routes";
 import { ToastViewport } from "./shared/ToastViewport";
 
@@ -19,14 +20,16 @@ function App() {
 
   return (
     <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        {/* Fuera del router a propósito: el live region tiene que estar en el
-            DOM antes de que aparezca el primer aviso, y sobrevivir a los
-            cambios de ruta. Montado acá, una navegación no lo desmonta ni lo
-            vuelve a crear (que sería lo mismo que no tenerlo). */}
-        <ToastViewport />
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+          {/* Fuera del router a propósito: el live region tiene que estar en el
+              DOM antes de que aparezca el primer aviso, y sobrevivir a los
+              cambios de ruta. Montado acá, una navegación no lo desmonta ni lo
+              vuelve a crear (que sería lo mismo que no tenerlo). */}
+          <ToastViewport />
+        </QueryClientProvider>
+      </LanguageProvider>
     </HelmetProvider>
   );
 }

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { IconCar, IconChart, IconInfo } from "./NavIcons";
 import styles from "./SiteHeader.module.css";
 
@@ -28,6 +30,7 @@ const NAV_ICONS: Record<string, ReactNode> = {
  */
 export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const hasLinks = Boolean(navLinks && navLinks.length > 0);
 
   return (
@@ -49,12 +52,15 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
             )}
           </nav>
         )}
-        <div className={styles.cta}>{children}</div>
+        <div className={styles.cta}>
+          {children}
+          <LanguageSwitcher />
+        </div>
         {hasLinks && (
           <button
             type="button"
             className={styles.menuToggle}
-            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
@@ -89,13 +95,13 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
           )}
           {/* .cta se esconde en la barra en mobile (ver .hasMenu .cta en el
               CSS) -- se repite acá adentro para no perder "Iniciar sesión" /
-              "Crear cuenta" del todo, solo movidos de lugar y separados con
-              más aire para que no se lean como un link más de la lista. */}
-          {children && (
-            <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
-              {children}
-            </div>
-          )}
+              "Crear cuenta" (ni el selector de idioma) del todo, solo
+              movidos de lugar y separados con más aire para que no se lean
+              como un link más de la lista. */}
+          <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
+            {children}
+            <LanguageSwitcher />
+          </div>
         </nav>
       )}
     </header>

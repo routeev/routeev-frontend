@@ -1,6 +1,7 @@
 import L from "leaflet";
 import { useCallback, useRef, useState } from "react";
 import { logTrip } from "../api/route";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { computeCompassHeading, haversineKm, smoothBearingDeg } from "../shared/geo";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
@@ -191,6 +192,8 @@ const initialUi: LiveTripUi = {
 
 /** Seguimiento de la ubicación REAL durante "Iniciar viaje", portado de js/map/liveTrip.js. */
 export function useLiveTrip() {
+  const { t } = useTranslation();
+  const lt = t.map.liveTrip;
   const [ui, setUi] = useState<LiveTripUi>(initialUi);
   const tripRef = useRef<TripRecord | null>(null);
   // Última lectura del sensor de orientación, actualizada por el listener de
@@ -352,7 +355,7 @@ export function useLiveTrip() {
           batteryKwh: battery,
           capacityKwh: trip.capacityKwh,
           heading: trip.heading,
-          statusText: "Llegaste a destino",
+          statusText: lt.arrived,
           statusKind: "done",
           gpsAccuracyM: accuracyM,
           gpsGapMs: gapMs,
@@ -363,28 +366,31 @@ export function useLiveTrip() {
       let statusText: string;
       let statusKind: StatusKind;
       if (!onRoute) {
-        statusText = `Estás a ${(offRouteM / 1000).toFixed(1)} km de la ruta calculada: el progreso no se puede seguir hasta que estés sobre ella.`;
+        statusText = lt.offRoute((offRouteM / 1000).toFixed(1));
         statusKind = "warn";
       } else if (newlyArrivedStation) {
-        statusText = `Pasaste por ${newlyArrivedStation}: batería actualizada`;
+        statusText = lt.passedStation(newlyArrivedStation);
         statusKind = "charging";
       } else if (offRouteM > 150) {
-        statusText = "Te alejaste de la ruta calculada";
+        statusText = lt.driftedFromRoute;
         statusKind = "warn";
       } else {
-        statusText = "En ruta...";
+        statusText = lt.onRoute;
         statusKind = "";
       }
 
       const nextPendingStop = trip.rechargeStops.find((r) => !r.applied);
       const advisory = onRoute
-        ? computeSpeedAdvisory({
-            speedKmh: trip.speedKmh,
-            batteryKwh: battery,
-            consumptionKwhKm: trip.consumption,
-            remainingKm: (nextPendingStop ? nextPendingStop.cumKm : trip.totalKm) - clampedKm,
-            pendingRecharge: Boolean(nextPendingStop),
-          })
+        ? computeSpeedAdvisory(
+            {
+              speedKmh: trip.speedKmh,
+              batteryKwh: battery,
+              consumptionKwhKm: trip.consumption,
+              remainingKm: (nextPendingStop ? nextPendingStop.cumKm : trip.totalKm) - clampedKm,
+              pendingRecharge: Boolean(nextPendingStop),
+            },
+            t.map.speedAdvisory
+          )
         : null;
 
       setUi({
@@ -405,23 +411,23 @@ export function useLiveTrip() {
         gpsGapMs: gapMs,
       });
     },
-    [logCompletedOrPartial]
+    [logCompletedOrPartial, lt, t]
   );
 
   const handleError = useCallback(
     (err: GeolocationPositionError) => {
       const isPermission = err.code === err.PERMISSION_DENIED;
       const text = isPermission
-        ? "Permiso de ubicación denegado: activalo en la configuración del navegador para seguir el viaje en vivo."
+        ? lt.permissionDenied
         : err.code === err.TIMEOUT
-          ? "Buscando señal de GPS..."
-          : "No se pudo obtener tu ubicación por el momento.";
+          ? lt.searchingGps
+          : lt.locationUnavailable;
       setUi((u) => ({ ...u, active: true, statusText: text, statusKind: isPermission ? "warn" : u.statusKind }));
       // Un timeout pasajero no mata el viaje (el navegador reintenta watchPosition
       // solo); un permiso denegado es terminal.
       if (isPermission) end();
     },
-    [end]
+    [end, lt]
   );
 
   const start = useCallback(() => {
@@ -448,11 +454,11 @@ export function useLiveTrip() {
     // siempre, sin ningún evento que lo vuelva a "Iniciar viaje". El texto
     // se muestra igual (ver el bloque de advertencia en TripDashboard).
     if (!navigator.geolocation) {
-      setUi({ ...initialUi, statusText: "Tu navegador no soporta geolocalización: no se puede seguir el viaje en vivo.", statusKind: "warn" });
+      setUi({ ...initialUi, statusText: lt.unsupportedBrowser, statusKind: "warn" });
       return;
     }
     if (!window.isSecureContext) {
-      setUi({ ...initialUi, statusText: "El seguimiento en vivo necesita una conexión segura (HTTPS).", statusKind: "warn" });
+      setUi({ ...initialUi, statusText: lt.insecureContext, statusKind: "warn" });
       return;
     }
 
@@ -502,7 +508,7 @@ export function useLiveTrip() {
       totalKm,
       batteryKwh: startBatteryKwh,
       capacityKwh: trip.capacityKwh,
-      statusText: "Buscando tu ubicación...",
+      statusText: lt.searchingLocation,
     });
 
     // Antes de arrancar el seguimiento hay que confirmar que la persona esta
@@ -515,12 +521,12 @@ export function useLiveTrip() {
           tripRef.current = null;
           setUi({
             ...initialUi,
-            statusText: `No se puede iniciar el viaje: estás a ${distanciaAlOrigenKm.toFixed(1)} km del origen de la ruta. Acercate al origen, o recalculá la ruta desde donde estás ahora (podés usar "Usar mi ubicación como origen").`,
+            statusText: lt.tooFarFromOrigin(distanciaAlOrigenKm.toFixed(1)),
             statusKind: "warn",
           });
           return;
         }
-        setUi((u) => ({ ...u, statusText: "En ruta...", statusKind: "" }));
+        setUi((u) => ({ ...u, statusText: lt.onRoute, statusKind: "" }));
         trip.watchId = navigator.geolocation.watchPosition(handlePosition, handleError, {
           enableHighAccuracy: true,
           maximumAge: 4000,
@@ -530,7 +536,7 @@ export function useLiveTrip() {
       handleError,
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
-  }, [end, handlePosition, handleError, attachDeviceOrientation]);
+  }, [end, handlePosition, handleError, attachDeviceOrientation, lt]);
 
   const cancel = useCallback(() => {
     const trip = tripRef.current;

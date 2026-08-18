@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./ModelCombobox.module.css";
 
 interface ModelComboboxProps {
@@ -51,6 +52,7 @@ export function ModelCombobox({
   photoUrl,
   onChange,
 }: ModelComboboxProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const blurTimeout = useRef<number | null>(null);
@@ -71,11 +73,11 @@ export function ModelCombobox({
   const ayuda = !open
     ? null
     : loading
-      ? "Buscando en el catálogo..."
+      ? t.shared.modelCombobox.searching
       : escrito.length < minChars
-        ? `Escribí al menos ${minChars} letras para buscar en el catálogo.`
+        ? t.shared.modelCombobox.minChars(minChars)
         : options.length === 0
-          ? "Ningún modelo del catálogo coincide. Igual podés completar los datos a mano."
+          ? t.shared.modelCombobox.noMatches
           : null;
 
   useEffect(() => {

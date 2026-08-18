@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { showroomModel, type ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDuration, formatUyu } from "../shared/format";
 import { modelAliases } from "./modelAlias";
@@ -21,6 +22,8 @@ interface ModelFichaProps {
 }
 
 export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: ModelFichaProps) {
+  const { t } = useTranslation();
+  const mf = t.showroom.modelFicha;
   // La familia se rearma acá solo para el nombre limpio y las etiquetas de
   // versión ("48 kWh", "GT"); las versiones ya vienen agrupadas del catálogo.
   const familia = useMemo(
@@ -43,9 +46,9 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
 
   if (query.isLoading) {
     return (
-      <section className={styles.ficha} aria-label="Ficha del modelo elegido" aria-busy="true">
+      <section className={styles.ficha} aria-label={mf.ariaLabel} aria-busy="true">
         <p className="sr-only" role="status">
-          Cargando la ficha del modelo…
+          {mf.loadingStatus}
         </p>
         <FichaSkeleton />
       </section>
@@ -54,12 +57,8 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
 
   if (query.isError || !query.data || !model) {
     return (
-      <section className={styles.ficha} aria-label="Ficha del modelo elegido">
-        <p className="error-banner">
-          {query.error instanceof Error
-            ? query.error.message
-            : "No se pudo cargar la ficha de este modelo."}
-        </p>
+      <section className={styles.ficha} aria-label={mf.ariaLabel}>
+        <p className="error-banner">{query.error instanceof Error ? query.error.message : mf.loadError}</p>
       </section>
     );
   }
@@ -79,8 +78,7 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
   // DC y AC por separado: el backend puede publicar una sola modalidad.
   const preciosRed = tarifasRed
     ? [
-        tarifasRed.dc &&
-          `DC $ ${num(tarifasRed.dc.energia_uyu_kwh, 2)}/kWh + ${formatUyu(tarifasRed.dc.cargo_base_uyu)} de conexión`,
+        tarifasRed.dc && mf.precioRedDc(num(tarifasRed.dc.energia_uyu_kwh, 2), formatUyu(tarifasRed.dc.cargo_base_uyu)),
         tarifasRed.ac && `AC $ ${num(tarifasRed.ac.energia_uyu_kwh, 2)}/kWh + ${formatUyu(tarifasRed.ac.cargo_base_uyu)}`,
       ]
         .filter(Boolean)
@@ -88,13 +86,8 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
     : "";
 
   return (
-    <section className={styles.ficha} aria-label="Ficha del modelo elegido" tabIndex={-1}>
-      <button
-        type="button"
-        className={styles.cerrar}
-        aria-label="Cerrar la ficha"
-        onClick={onClose}
-      >
+    <section className={styles.ficha} aria-label={mf.ariaLabel} tabIndex={-1}>
+      <button type="button" className={styles.cerrar} aria-label={mf.closeAriaLabel} onClick={onClose}>
         &times;
       </button>
 
@@ -108,20 +101,20 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
         <p className={styles.credito}>
           {photo?.encontrada ? (
             <>
-              Foto: Wikimedia Commons
+              {mf.photoCredit}
               {photo.credito?.autor ? ` · ${photo.credito.autor}` : ""}
               {photo.credito?.licencia ? ` · ${photo.credito.licencia}` : ""}
               {photo.credito?.archivo_url && (
                 <>
                   {" · "}
                   <a href={photo.credito.archivo_url} target="_blank" rel="noopener noreferrer">
-                    ver original
+                    {mf.viewOriginal}
                   </a>
                 </>
               )}
             </>
           ) : (
-            "Sin foto libre de este modelo."
+            mf.noFreePhoto
           )}
         </p>
       </div>
@@ -133,15 +126,11 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
             listan todos (a diferencia de la tarjeta, que muestra uno solo por
             falta de lugar) porque es la pantalla donde se confirma que el auto
             encontrado es efectivamente el que se estaba buscando. */}
-        {alias.length > 0 && (
-          <p className={styles.alias}>
-            Acá también se lo conoce como {alias.map((a) => `«${a}»`).join(" o ")}.
-          </p>
-        )}
+        {alias.length > 0 && <p className={styles.alias}>{mf.aliasTexto(alias)}</p>}
 
         {familia && (
-          <div className={styles.versiones} role="group" aria-label="Versiones de este modelo">
-            <p className={styles.versionesTitulo}>Este auto viene en {familia.versiones.length} versiones — elegí la tuya:</p>
+          <div className={styles.versiones} role="group" aria-label={mf.versionsAriaLabel}>
+            <p className={styles.versionesTitulo}>{mf.versionesTitulo(familia.versiones.length)}</p>
             <div className={styles.versionesLista}>
               {familia.versiones.map((v) => {
                 const etiqueta = versionLabel(familia, v) || `${num(v.bateria_kwh, 1)} kWh`;
@@ -175,78 +164,70 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
 
         <dl className={styles.stats}>
           <div className={styles.stat}>
-            <dt>Batería</dt>
+            <dt>{mf.statBateria}</dt>
             <dd className="mono-num">
               {num(model.bateria_kwh, 1)}
               <small> kWh</small>
             </dd>
           </div>
           <div className={styles.stat}>
-            <dt>Autonomía real</dt>
+            <dt>{mf.statAutonomiaReal}</dt>
             <dd className="mono-num">
               {num(metricas.autonomia_calculada_km)}
               <small> km</small>
             </dd>
-            <p className={styles.statSub}>Fabricante: {num(model.autonomia_aprox_km)} km</p>
+            <p className={styles.statSub}>{mf.statFabricante(num(model.autonomia_aprox_km))}</p>
           </div>
           <div className={styles.stat}>
-            <dt>Consumo</dt>
+            <dt>{mf.statConsumo}</dt>
             <dd className="mono-num">
               {num(metricas.consumo_kwh_100km, 1)}
               <small> kWh/100 km</small>
             </dd>
           </div>
           <div className={styles.stat}>
-            <dt>Carga máxima</dt>
+            <dt>{mf.statCargaMaxima}</dt>
             <dd className="mono-num">
               {num(model.potencia_carga_kw)}
               <small> kW</small>
             </dd>
           </div>
           <div className={[styles.stat, styles.statCosto].join(" ")}>
-            <dt>Costo cada 100 km</dt>
+            <dt>{mf.statCostoCada100}</dt>
             <dd className="mono-num">{formatUyu(metricas.costo_uyu_100km)}</dd>
             {/* Con tarifario de red a la vista hay que aclarar que estos dos
                 costos son al precio de casa, no al de las estaciones. */}
-            <p className={styles.statSub}>
-              A $ {num(metricas.energia_uyu_kwh, 2)} el kWh{tarifasRed ? ", cargando en casa" : ""}
-            </p>
+            <p className={styles.statSub}>{mf.statCostoPorKwh(num(metricas.energia_uyu_kwh, 2), Boolean(tarifasRed))}</p>
           </div>
           <div className={[styles.stat, styles.statCosto].join(" ")}>
-            <dt>Cargar la batería entera</dt>
+            <dt>{mf.statCargarCompleta}</dt>
             <dd className="mono-num">{formatUyu(metricas.costo_carga_completa_uyu)}</dd>
-            <p className={styles.statSub}>
-              {num(model.bateria_kwh, 1)} kWh de punta a punta{tarifasRed ? ", en casa" : ""}
-            </p>
+            <p className={styles.statSub}>{mf.statBateriaPuntaAPunta(num(model.bateria_kwh, 1), Boolean(tarifasRed))}</p>
           </div>
         </dl>
 
         <div className={styles.bloque}>
           <h3>
-            Cargar del {metricas.carga_desde_pct}% al {metricas.carga_hasta_pct}%
-            <small>+{num(metricas.carga_km_recuperados)} km de autonomía</small>
+            {mf.cargarTitulo(metricas.carga_desde_pct, metricas.carga_hasta_pct)}
+            <small>{mf.cargarKmRecuperados(num(metricas.carga_km_recuperados))}</small>
           </h3>
-          <p className={styles.bloqueSub}>
-            En las potencias que existen de verdad en la red uruguaya, sobre las{" "}
-            {num(metricas.estaciones_red)} estaciones de UTE del mapa. La potencia baja sola cerca
-            del 80%: por eso el tramo final tarda tanto y conviene seguir viaje.
-          </p>
+          <p className={styles.bloqueSub}>{mf.bloqueSub(num(metricas.estaciones_red))}</p>
           <table className={styles.carga}>
             <thead>
               <tr>
-                <th>Estación</th>
-                <th>Le entrega</th>
-                <th>Tarda</th>
+                <th>{mf.thEstacion}</th>
+                <th>{mf.thEntrega}</th>
+                <th>{mf.thTarda}</th>
                 {/* Solo si alguna fila trae costo (backend nuevo): sin datos,
                     la tabla queda exactamente como estaba. */}
-                {hayCosto && <th>Cuesta</th>}
+                {hayCosto && <th>{mf.thCuesta}</th>}
               </tr>
             </thead>
             <tbody>
               {metricas.carga.map((fila, i) => (
                 <tr key={i}>
                   <td className="mono-num">
-                    {num(fila.potencia_kw)} kW <small>· {num(fila.estaciones)} estaciones</small>
+                    {num(fila.potencia_kw)} kW <small>{mf.stationsCount(num(fila.estaciones))}</small>
                   </td>
                   <td
                     className={[
@@ -264,16 +245,15 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
               ))}
             </tbody>
           </table>
-          {hayLimite && (
-            <p className={styles.notaCarga}>
-              Este auto acepta hasta {num(model.potencia_carga_kw)} kW: en una estación más potente
-              carga igual de rápido que en una de {num(model.potencia_carga_kw)} kW, no más.
-            </p>
-          )}
+          {hayLimite && <p className={styles.notaCarga}>{mf.notaCarga(num(model.potencia_carga_kw))}</p>}
           {tarifasRed && (
             <p className={styles.notaTarifas}>
-              Precios de red según pliego {tarifasRed.operador ?? "UTE"} {tarifasRed.vigencia}
-              {preciosRed ? `: ${preciosRed}` : ""}. En casa: $ {num(tarifasRed.casa_uyu_kwh, 2)}/kWh.
+              {mf.notaTarifas(
+                tarifasRed.operador ?? "UTE",
+                tarifasRed.vigencia,
+                preciosRed ? `: ${preciosRed}` : "",
+                num(tarifasRed.casa_uyu_kwh, 2)
+              )}
             </p>
           )}
         </div>

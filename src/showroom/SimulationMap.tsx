@@ -2,6 +2,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
 import type { TramoInfo } from "./simulationTimeline";
@@ -99,6 +100,7 @@ export function SimulationMap({
   bateriaInicialPct,
   tiempoTotalMin,
 }: SimulationMapProps) {
+  const { t } = useTranslation();
   const { markerRef, kmRef, batRef, timeRef, fillRef, statusRef, playing, play } =
     useSimulationAnimation(tramosInfo, capacidadKwh, bateriaInicialPct, tiempoTotalMin);
 
@@ -140,7 +142,11 @@ export function SimulationMap({
           ref={setMap}
           style={{ height: "100%" }}
         >
-          <ZoomControl position="topleft" zoomInTitle="Acercar el mapa" zoomOutTitle="Alejar el mapa" />
+          <ZoomControl
+            position="topleft"
+            zoomInTitle={t.showroom.simulationMap.zoomIn}
+            zoomOutTitle={t.showroom.simulationMap.zoomOut}
+          />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -171,7 +177,8 @@ export function SimulationMap({
               >
                 <Popup>
                   <b>{parada.nombre}</b>
-                  <br />+{num(parada.kwh, 1)} kWh · {formatDuration(parada.minutos)}
+                  <br />
+                  {t.showroom.simulationMap.popupParada(num(parada.kwh, 1), formatDuration(parada.minutos))}
                 </Popup>
               </Marker>
             ))
@@ -192,7 +199,7 @@ export function SimulationMap({
           onClick={verTodo}
           disabled={!map}
         >
-          ⤢ Ver el trayecto completo
+          {t.showroom.simulationMap.verTrayecto}
         </button>
         <button
           type="button"
@@ -200,22 +207,22 @@ export function SimulationMap({
           onClick={play}
           disabled={playing}
         >
-          ↻ Repetir animación
+          {t.showroom.simulationMap.repetirAnimacion}
         </button>
       </div>
 
       <div className={styles.live}>
         <div className={styles.liveRow}>
           <div className={styles.liveItem}>
-            <span>Recorrido</span>
+            <span>{t.showroom.simulationMap.recorrido}</span>
             <b ref={kmRef} />
           </div>
           <div className={styles.liveItem}>
-            <span>Batería</span>
+            <span>{t.showroom.simulationMap.bateria}</span>
             <b ref={batRef} />
           </div>
           <div className={styles.liveItem}>
-            <span>Tiempo de viaje</span>
+            <span>{t.showroom.simulationMap.tiempoDeViaje}</span>
             <b ref={timeRef} />
           </div>
         </div>
@@ -223,7 +230,7 @@ export function SimulationMap({
           <div className={styles.progressFill} ref={fillRef} />
         </div>
         <div className={styles.status} ref={statusRef}>
-          Arrancando…
+          {t.showroom.simulationMap.arrancando}
         </div>
       </div>
     </div>

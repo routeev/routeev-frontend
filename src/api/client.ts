@@ -1,5 +1,21 @@
+import { common as commonEn } from "../i18n/dictionaries/en/common";
+import { common as commonEs } from "../i18n/dictionaries/es/common";
+import { getStoredLang } from "../i18n/getStoredLang";
 import { API_BASE_URL } from "./config";
 import { clearSession, getToken } from "./session";
+
+// Este módulo arma mensajes de error antes de que exista ningún árbol de
+// componentes (o incluso fuera de uno, en cualquier código que llame a
+// apiFetch), así que no puede usar useTranslation() -- lee el idioma actual
+// directo de localStorage en el momento de cada error, no una vez al cargar
+// el módulo, para que un cambio de idioma a mitad de sesión también aplique
+// acá. Importa el namespace `common` directo (no el diccionario combinado de
+// ./dictionaries/es) para no arrastrar el resto de los textos de la app (map,
+// profile, landing...) a este módulo, que importa CUALQUIER pantalla que
+// llame a la API -- eso rompía el code-splitting por página.
+function t() {
+  return getStoredLang() === "en" ? commonEn : commonEs;
+}
 
 // Espejo de js/api.js#normalizeDetail: el backend FastAPI devuelve, en un
 // 422, un array de errores de Pydantic ({loc, msg, type}) en vez de un
@@ -11,7 +27,7 @@ function normalizeDetail(detail: unknown): string {
   if (Array.isArray(detail)) {
     return (detail as PydanticError[]).map((e) => e.msg).join(", ");
   }
-  return "Error inesperado";
+  return t().unexpectedApiError;
 }
 
 export class ApiError extends Error {
@@ -31,22 +47,6 @@ export class ApiError extends Error {
     this.isNetworkError = isNetworkError;
   }
 }
-
-/**
- * Un fallo de red se veía en pantalla como «Failed to fetch»: el texto crudo
- * que tira el navegador, en inglés, sin decir qué pasó ni qué hacer. Aparecía
- * tal cual en el showroom ("No se pudo cargar el catálogo: Failed to fetch") y
- * en cualquier otra pantalla, porque apiFetch dejaba propagar el TypeError de
- * fetch sin tocarlo.
- *
- * El caso más común no es "no tenés internet": el servidor de la API arma el
- * grafo entero en memoria al arrancar y tarda cerca de un minuto (ver
- * DEPLOY.md), así que después de cada deploy hay una ventana real en la que los
- * pedidos no vuelven. Por eso el mensaje sugiere reintentar en vez de dar a
- * entender que el problema es del usuario.
- */
-const MENSAJE_SIN_RESPUESTA =
-  "No pudimos conectarnos con el servidor. Puede ser tu conexión, o que el servidor esté arrancando: probá de nuevo en unos segundos.";
 
 export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
   // `object` (no una interfaz con index signature) para aceptar cualquier
@@ -88,7 +88,13 @@ export async function apiFetch<T = unknown>(
     // por diseño no dice cuál fue (es información que la página no debería
     // poder averiguar de otro origen). No hay nada útil que extraer del error
     // original, así que se reemplaza entero.
-    throw new ApiError(MENSAJE_SIN_RESPUESTA, 0, true);
+    //
+    // El mensaje sugiere reintentar (no "revisá tu conexión") porque el caso
+    // más común no es "no tenés internet": el servidor de la API arma el
+    // grafo entero en memoria al arrancar y tarda cerca de un minuto (ver
+    // DEPLOY.md), así que después de cada deploy hay una ventana real en la
+    // que los pedidos no vuelven.
+    throw new ApiError(t().networkError, 0, true);
   }
 
   if (res.status === 401 && token) {
@@ -97,7 +103,7 @@ export async function apiFetch<T = unknown>(
     // invalidas, y eso lo maneja la rama de abajo con el detail real.
     clearSession();
     onSessionExpired?.();
-    throw new ApiError("Sesion expirada, inicia sesion de nuevo", 401);
+    throw new ApiError(t().sessionExpired, 401);
   }
 
   if (!res.ok) {
@@ -119,6 +125,6 @@ export async function apiFetch<T = unknown>(
     // medio (un proxy, el dev server reiniciándose) devuelve una página de
     // error con status 200. Sin esto salía un "Unexpected end of JSON input"
     // en pantalla, que no le dice nada a nadie.
-    throw new ApiError("El servidor respondió algo que no pudimos leer. Probá de nuevo.", res.status);
+    throw new ApiError(t().unreadableResponse, res.status);
   }
 }

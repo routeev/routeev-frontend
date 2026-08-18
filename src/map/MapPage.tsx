@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { AppTopbar } from "../shared/AppTopbar";
 import { Banner } from "../shared/Banner";
 import buttons from "../shared/buttons.module.css";
@@ -47,6 +48,8 @@ const MAP_COLLAPSE_SCROLL_PX = 48;
 const MAP_RESTORE_SCROLL_PX = 8;
 
 export function MapPage() {
+  const { t } = useTranslation();
+  const mp = t.map.page;
   const [mapBanner, setMapBanner] = useState<MapBanner>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // "El usuario bajó lo suficiente dentro del panel". Solo tiene efecto en
@@ -86,13 +89,16 @@ export function MapPage() {
   // que la barra de "Calcular ruta" no existe hasta que se puede calcular.
   const step = useMemo(
     () =>
-      nextTripStep({
-        vehiclesLoaded,
-        hasSelectedVehicle: !!selectedVehicleId,
-        originId,
-        destinationId,
-      }),
-    [vehiclesLoaded, selectedVehicleId, originId, destinationId]
+      nextTripStep(
+        {
+          vehiclesLoaded,
+          hasSelectedVehicle: !!selectedVehicleId,
+          originId,
+          destinationId,
+        },
+        t.map.nextStep
+      ),
+    [vehiclesLoaded, selectedVehicleId, originId, destinationId, t]
   );
   useReplayFromHistory(vehiclesLoaded);
 
@@ -205,7 +211,7 @@ export function MapPage() {
   return (
     <div className={styles.page}>
       <Helmet>
-        <title>RouteEV · Mapa</title>
+        <title>{mp.title}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
@@ -217,7 +223,7 @@ export function MapPage() {
         mobileOnlyChildren={
           <Link to="/profile" className={buttons.navLink}>
             <IconUser />
-            Mi perfil
+            {t.nav.myProfile}
           </Link>
         }
       />
@@ -228,7 +234,7 @@ export function MapPage() {
             className={styles.sidebarHandle}
             role="button"
             tabIndex={0}
-            aria-label={sidebarCollapsed ? "Mostrar panel" : "Ocultar panel"}
+            aria-label={sidebarCollapsed ? mp.showPanel : mp.hidePanel}
             onPointerDown={onHandlePointerDown}
             onPointerUp={onHandlePointerUp}
             onKeyDown={(e) => {
@@ -248,7 +254,7 @@ export function MapPage() {
                 <path d="M9 4 3 6.4v13.2L9 17l6 2.6 6-2.4V4l-6 2.4L9 4Z" />
                 <path d="M9 4v13M15 6.4v13.2" />
               </svg>
-              Ver el mapa
+              {mp.viewMap}
             </button>
           )}
           <div
@@ -264,11 +270,9 @@ export function MapPage() {
               // parecia que clickear un cargador CAUSABA el error, cuando en
               // realidad ya habia fallado antes.
               <>
-                <Banner variant="error">
-                  {`No se pudo cargar: ${loaders.failed.join(", ")}. Revisá tu conexión y volvé a intentar.`}
-                </Banner>
+                <Banner variant="error">{mp.loadFailed(loaders.failed.join(", "))}</Banner>
                 <button type="button" className="ghost small full-width" onClick={loaders.retry}>
-                  Reintentar carga
+                  {mp.retryLoad}
                 </button>
               </>
             )}
@@ -304,9 +308,9 @@ export function MapPage() {
                   calc.calculate();
                 }}
               >
-                {calc.isPending ? "Calculando..." : "Calcular ruta"}
+                {calc.isPending ? mp.calculating : mp.calculateRoute}
               </button>
-              <p className="hint hint-ok">Listo para calcular.</p>
+              <p className="hint hint-ok">{mp.readyToCalculate}</p>
             </div>
           )}
         </aside>
@@ -342,11 +346,9 @@ export function MapPage() {
                   className={`${styles.pickDot} ${picking === "destination" ? styles.pickDotDest : ""}`}
                   aria-hidden="true"
                 />
-                <span className={styles.pickText}>
-                  Tocá el mapa para marcar {picking === "origin" ? "el origen" : "el destino"}
-                </span>
+                <span className={styles.pickText}>{mp.tapToMark(picking)}</span>
                 <button type="button" className={styles.pickCancel} onClick={() => stopPicking()}>
-                  Cancelar
+                  {mp.cancel}
                 </button>
               </div>
             )}

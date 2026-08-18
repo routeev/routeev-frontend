@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { memo } from "react";
 import { showroomLookupAi, type ShowroomFicha } from "../api/showroom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { ModelCard } from "./ModelCard";
 import type { ModelFamily } from "./modelFamily";
 import { ModelGridSkeleton } from "./Skeletons";
@@ -45,6 +46,8 @@ function ModelGridComponent({
   aiEnabled,
   onAiModelFound,
 }: ModelGridProps) {
+  const { t } = useTranslation();
+  const mg = t.showroom.modelGrid;
   const aiLookup = useMutation({ mutationFn: (consulta: string) => showroomLookupAi(consulta) });
 
   if (isError) {
@@ -55,10 +58,10 @@ function ModelGridComponent({
     // arrancar), o sea que reintentar suele alcanzar.
     return (
       <div className="error-banner" role="alert">
-        <p>{errorMessage ?? "No se pudo cargar el catálogo."}</p>
+        <p>{errorMessage ?? mg.catalogError}</p>
         {onRetry && (
           <button type="button" className="primary small" onClick={onRetry} style={{ marginTop: 10 }}>
-            Reintentar
+            {mg.reintentar}
           </button>
         )}
       </div>
@@ -73,7 +76,7 @@ function ModelGridComponent({
             "alert": es información de fondo, no interrumpe lo que se esté
             leyendo. */}
         <p className="sr-only" role="status">
-          Cargando el catálogo de modelos…
+          {mg.loadingStatus}
         </p>
         <ModelGridSkeleton />
       </div>
@@ -85,15 +88,13 @@ function ModelGridComponent({
     const ofrecerIa = aiEnabled && consulta.length >= 2 && !hasActiveFilters;
     return (
       <div className={styles.empty}>
-        <p className={styles.emptyTitle}>No hay ningún modelo así en el catálogo.</p>
-        <p className={styles.emptySub}>
-          {hasActiveFilters ? "Probá con otro nombre, o sacá los filtros de marca y carga rápida." : "Probá con otro nombre."}
-        </p>
+        <p className={styles.emptyTitle}>{mg.emptyTitle}</p>
+        <p className={styles.emptySub}>{hasActiveFilters ? mg.emptySubFiltered : mg.emptySub}</p>
         {ofrecerIa && (
           <div className={styles.aiBox}>
             <p>
-              El catálogo tiene los modelos que se consiguen en la región. Si el tuyo no está, la IA lo
-              identifica por el nombre y estima sus especificaciones: <strong className={styles.aiQ}>{consulta}</strong>
+              {mg.aiIntro}
+              <strong className={styles.aiQ}>{consulta}</strong>
             </p>
             <button
               type="button"
@@ -101,10 +102,10 @@ function ModelGridComponent({
               disabled={aiLookup.isPending}
               onClick={() => aiLookup.mutate(consulta, { onSuccess: onAiModelFound })}
             >
-              {aiLookup.isPending ? "Buscando…" : "Identificarlo con IA"}
+              {aiLookup.isPending ? mg.buscando : mg.identificarConIa}
             </button>
             {aiLookup.isError && (
-              <p className="error-banner">{aiLookup.error instanceof Error ? aiLookup.error.message : "No se pudo consultar la IA."}</p>
+              <p className="error-banner">{aiLookup.error instanceof Error ? aiLookup.error.message : mg.aiError}</p>
             )}
           </div>
         )}
@@ -122,7 +123,7 @@ function ModelGridComponent({
       {hasMore && (
         <div className={styles.moreWrap}>
           <button type="button" className="ghost" onClick={onLoadMore}>
-            Ver más modelos
+            {mg.verMas}
           </button>
         </div>
       )}

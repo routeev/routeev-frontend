@@ -1,6 +1,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from "react-leaflet";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
 import { ImprecisePickLink } from "./layers/ImprecisePickLink";
@@ -20,6 +21,8 @@ interface CaptureMapProps {
 }
 
 function CaptureMap({ onLocateFail }: CaptureMapProps) {
+  const { t } = useTranslation();
+  const mc = t.map.mapCanvas;
   const map = useMap();
   const [myPosition, setMyPosition] = useState<[number, number] | null>(null);
   // MapCanvas pasa un `(msg) => onMapError(msg, "warn")` inline como
@@ -100,10 +103,8 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
         // preguntar) -- el candado en la barra de direcciones es el unico
         // lugar para revertirla.
         const reason =
-          err.code === err.PERMISSION_DENIED
-            ? "no le diste permiso de ubicación a este sitio, o quedó bloqueado de una visita anterior. Para habilitarlo: tocá el candado 🔒 junto a la dirección del sitio y activá la ubicación (o revisá que la ubicación esté encendida en el dispositivo)"
-            : "no se pudo determinar tu ubicación (revisá que el GPS o la ubicación del dispositivo estén encendidos)";
-        onLocateFailRef.current(`No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`);
+          err.code === err.PERMISSION_DENIED ? mc.reasonPermissionDenied : mc.reasonUnableToDetermine;
+        onLocateFailRef.current(mc.locateFailed(reason));
       }
     );
     return () => {
@@ -137,6 +138,8 @@ interface MapCanvasProps {
 }
 
 export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
+  const { t } = useTranslation();
+  const mc = t.map.mapCanvas;
   return (
     <MapContainer
       center={MONTEVIDEO}
@@ -151,7 +154,7 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       zoomControl={false}
       style={{ height: "100%", width: "100%" }}
     >
-      <ZoomControl position="topright" zoomInTitle="Acercar el mapa" zoomOutTitle="Alejar el mapa" />
+      <ZoomControl position="topright" zoomInTitle={mc.zoomIn} zoomOutTitle={mc.zoomOut} />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'

@@ -9,6 +9,7 @@ import { Banner } from "../shared/Banner";
 import { Brand } from "../shared/Brand";
 import { GraphBackground } from "../shared/GraphBackground";
 import { Spinner } from "../shared/Spinner";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { GoogleSignIn } from "./GoogleSignIn";
 import styles from "./LoginPage.module.css";
 
@@ -30,6 +31,7 @@ interface ConfirmValues {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<Mode>(searchParams.get("crear") === "1" ? "register" : "login");
   const [view, setView] = useState<View>({ name: "form" });
@@ -62,7 +64,7 @@ export function LoginPage() {
         setView({
           name: "confirm",
           email: result.email,
-          notice: `Te mandamos un código de 6 dígitos a ${result.email}. Ingresalo para confirmar tu cuenta.`,
+          notice: t.auth.verifyEmail.notice(result.email),
         });
         return;
       }
@@ -75,10 +77,10 @@ export function LoginPage() {
         setView({ name: "confirm", email });
         setBanner({
           variant: "info",
-          message: "Tu correo todavía no está confirmado. Si no tenés el código a mano, pedí que te lo reenviemos.",
+          message: t.auth.login.unconfirmedNotice,
         });
       } else {
-        setBanner({ variant: "error", message: err instanceof Error ? err.message : "No se pudo completar la operación" });
+        setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.login.genericError });
       }
     }
   }
@@ -89,7 +91,7 @@ export function LoginPage() {
     try {
       goToApp(await confirmEmail(view.email, values.code.trim()));
     } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : "No se pudo confirmar el correo" });
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.verifyEmail.error });
     }
   }
 
@@ -99,9 +101,9 @@ export function LoginPage() {
     setResending(true);
     try {
       await resendConfirmation(view.email);
-      setBanner({ variant: "info", message: "Te reenviamos el código. Puede tardar unos minutos en llegar." });
+      setBanner({ variant: "info", message: t.auth.resendCode.success });
     } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : "No se pudo reenviar el código" });
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resendCode.error });
     } finally {
       setResending(false);
     }
@@ -112,7 +114,7 @@ export function LoginPage() {
     try {
       goToApp(await googleLogin(credential));
     } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : "No se pudo iniciar sesión con Google" });
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.login.googleError });
     }
   }
 
@@ -121,12 +123,17 @@ export function LoginPage() {
     setBanner(null);
   }
 
-  const modeLabel = view.name === "confirm" ? "Confirmá tu correo" : mode === "login" ? "Iniciar sesión" : "Crear cuenta";
+  const modeLabel =
+    view.name === "confirm"
+      ? t.auth.verifyEmail.modeLabel
+      : mode === "login"
+        ? t.auth.login.modeLabelLogin
+        : t.auth.login.modeLabelRegister;
 
   return (
     <div className={styles.page}>
       <Helmet>
-        <title>RouteEV · Iniciar sesión</title>
+        <title>{t.auth.login.pageTitle}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
@@ -134,13 +141,13 @@ export function LoginPage() {
 
       <div className={styles.card}>
         <Link to="/" className={styles.backLink}>
-          ← Volver al inicio
+          {t.auth.login.backToHome}
         </Link>
         <p className={["eyebrow", styles.eyebrow].join(" ")}>Uruguay</p>
         <h1 className={styles.brand}>
           <Brand size={26} />
         </h1>
-        <p className={styles.tagline}>Entrá a tu cuenta para calcular tu próxima ruta.</p>
+        <p className={styles.tagline}>{t.auth.login.tagline}</p>
         <p className={styles.modeLabel}>{modeLabel}</p>
 
         {banner && <Banner variant={banner.variant}>{banner.message}</Banner>}
@@ -149,32 +156,32 @@ export function LoginPage() {
           <>
             <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
               <div className="field">
-                <label htmlFor="email">Correo electrónico</label>
+                <label htmlFor="email">{t.auth.login.emailLabel}</label>
                 <input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="ej. nombre@dominio.com"
+                  placeholder={t.auth.login.emailPlaceholder}
                   {...form.register("email", {
                     required: true,
-                    validate: (v) => EMAIL_RE.test(v.trim()) || "Ingresá un correo electrónico válido.",
+                    validate: (v) => EMAIL_RE.test(v.trim()) || t.auth.login.emailInvalid,
                   })}
                 />
                 {form.formState.errors.email && (
-                  <p className={styles.fieldError}>{form.formState.errors.email.message || "Ingresá un correo electrónico válido."}</p>
+                  <p className={styles.fieldError}>{form.formState.errors.email.message || t.auth.login.emailInvalid}</p>
                 )}
               </div>
               <div className="field">
-                <label htmlFor="password">Contraseña</label>
+                <label htmlFor="password">{t.auth.login.passwordLabel}</label>
                 <input
                   id="password"
                   type="password"
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
                   placeholder="••••••••"
                   {...form.register("password", {
-                    required: "Escribí tu contraseña.",
+                    required: t.auth.login.passwordRequired,
                     validate: (v) =>
-                      mode === "register" && v.length < 10 ? "La contraseña necesita al menos 10 caracteres." : true,
+                      mode === "register" && v.length < 10 ? t.auth.login.passwordTooShort : true,
                   })}
                 />
                 {form.formState.errors.password && (
@@ -183,23 +190,20 @@ export function LoginPage() {
               </div>
               {mode === "register" && (
                 <div className="field">
-                  <label htmlFor="display-name">Nombre (opcional)</label>
+                  <label htmlFor="display-name">{t.auth.register.displayNameLabel}</label>
                   <input
                     id="display-name"
                     type="text"
                     autoComplete="nickname"
                     maxLength={32}
-                    placeholder="ej. Marcela"
+                    placeholder={t.auth.register.displayNamePlaceholder}
                     // Sin `required` y sin ninguna regla de validación a
                     // propósito: es el único campo del formulario que NUNCA
                     // puede frenar un alta. Dejarlo vacío es una opción
                     // legítima y el texto de abajo lo dice.
                     {...form.register("displayName")}
                   />
-                  <p className={styles.fieldHint}>
-                    Es cómo te vamos a mostrar en la app. Si lo dejás vacío te ponemos uno y lo
-                    podés cambiar cuando quieras desde tu perfil.
-                  </p>
+                  <p className={styles.fieldHint}>{t.auth.register.displayNameHint}</p>
                 </div>
               )}
               <div className={styles.actions}>
@@ -211,12 +215,12 @@ export function LoginPage() {
                 >
                   {form.formState.isSubmitting ? (
                     <>
-                      <Spinner /> Un momento...
+                      <Spinner /> {t.auth.login.submitting}
                     </>
                   ) : mode === "login" ? (
-                    "Entrar"
+                    t.auth.login.submitLogin
                   ) : (
-                    "Crear cuenta"
+                    t.auth.login.submitRegister
                   )}
                 </button>
                 <button
@@ -227,7 +231,7 @@ export function LoginPage() {
                     setBanner(null);
                   }}
                 >
-                  {mode === "login" ? "Crear una cuenta nueva" : "Ya tengo cuenta"}
+                  {mode === "login" ? t.auth.login.toggleToRegister : t.auth.login.toggleToLogin}
                 </button>
               </div>
             </form>
@@ -238,7 +242,7 @@ export function LoginPage() {
           <form onSubmit={confirmForm.handleSubmit(onConfirmSubmit)} noValidate>
             {view.notice && <p className={styles.tagline}>{view.notice}</p>}
             <div className="field">
-              <label htmlFor="confirm-code">Código de confirmación</label>
+              <label htmlFor="confirm-code">{t.auth.verifyEmail.codeLabel}</label>
               <input
                 id="confirm-code"
                 type="text"
@@ -248,11 +252,11 @@ export function LoginPage() {
                 placeholder="123456"
                 {...confirmForm.register("code", {
                   required: true,
-                  validate: (v) => /^\d{6}$/.test(v.trim()) || "El código tiene 6 dígitos.",
+                  validate: (v) => /^\d{6}$/.test(v.trim()) || t.auth.verifyEmail.codeInvalid,
                 })}
               />
               {confirmForm.formState.errors.code && (
-                <p className={styles.fieldError}>{confirmForm.formState.errors.code.message || "El código tiene 6 dígitos."}</p>
+                <p className={styles.fieldError}>{confirmForm.formState.errors.code.message || t.auth.verifyEmail.codeInvalid}</p>
               )}
             </div>
             <div className={styles.actions}>
@@ -264,17 +268,17 @@ export function LoginPage() {
               >
                 {confirmForm.formState.isSubmitting ? (
                   <>
-                    <Spinner /> Confirmando...
+                    <Spinner /> {t.auth.verifyEmail.confirming}
                   </>
                 ) : (
-                  "Confirmar"
+                  t.auth.verifyEmail.submit
                 )}
               </button>
               <button type="button" className={styles.toggleMode} onClick={onResend} disabled={resending}>
-                Reenviar código
+                {t.auth.resendCode.button}
               </button>
               <button type="button" className={styles.toggleMode} onClick={backToLogin}>
-                Volver a iniciar sesión
+                {t.auth.verifyEmail.backToLogin}
               </button>
             </div>
           </form>

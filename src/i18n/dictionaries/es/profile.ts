@@ -1,0 +1,121 @@
+export const profile = {
+  // AccountPanel.tsx
+  account: {
+    title: "Mi cuenta",
+    changePhoto: "Cambiar foto de perfil",
+    photoUploadOk: "Listo, cambiamos tu foto de perfil.",
+    photoUploadError: "No se pudo subir la foto.",
+    photoRemoveOk: "Listo, sacamos tu foto de perfil.",
+    photoRemoveError: "No se pudo quitar la foto.",
+    usernameUpdated: (username: string) => `Listo, ahora te llamás «${username}».`,
+    usernameUpdateError: "No se pudo cambiar el nombre de usuario.",
+    usernameLabel: "Tu nombre de usuario",
+    usernameLengthError: (min: number, max: number) =>
+      `El nombre de usuario tiene que tener entre ${min} y ${max} caracteres.`,
+    changeUsername: "Cambiar nombre de usuario",
+    removePhoto: "Quitar foto",
+    removingPhoto: "Quitando...",
+    displayNameLabel: "Tu nombre",
+    displayNamePlaceholder: "ej. Matías Filgueiras",
+    displayNameHint: "Dejalo vacío si preferís que te mostremos por tu nombre de usuario.",
+    changeDisplayName: "Cambiar mi nombre",
+    setDisplayName: "Poné tu nombre",
+    displayNameUpdatedNamed: "Listo, ese es tu nombre ahora.",
+    displayNameUpdatedCleared: "Listo, sacamos tu nombre.",
+    displayNameUpdateError: "No se pudo guardar tu nombre.",
+  },
+
+  // AddVehicleForm.tsx
+  addVehicle: {
+    nameRequired: "Escribí un nombre para reconocer el vehículo (ej. Nissan Leaf).",
+    capacityInvalid: "Poné la capacidad de la batería en kWh, de 0.1 para arriba (ej. 40).",
+    consumptionInvalid: "Poné el consumo en kWh por km, de 0.01 para arriba (ej. 0.18).",
+    chargingPowerInvalid: "Poné la potencia de carga en kW, de 0.5 para arriba (ej. 22).",
+    identifiedStatus: (marca: string, modelo: string) =>
+      `Identificado: ${marca} ${modelo}. Revisá los datos y guardá.`,
+    identifyError: "No se pudo identificar el vehículo con esa foto.",
+    identifying: "Identificando el vehículo con IA...",
+    vehicleCreated: (name: string) => `Listo, «${name}» quedó agregado a tus vehículos.`,
+    createError: "No se pudo crear el vehículo.",
+    identifyWithPhoto: "Identificar con una foto",
+    orSearchManually: "o buscá / completá a mano",
+    modelLabel: "Modelo (opcional, precarga los datos)",
+    modelPlaceholder: (min: number) => `Escribí al menos ${min} letras (ej. Nissan Leaf, Tesla Model 3)...`,
+    nameLabel: "Nombre",
+    namePlaceholder: "ej. Nissan Leaf",
+    batteryLabel: "Batería (kWh)",
+    consumptionLabel: "Consumo (kWh/km)",
+    chargingLabel: "Carga (kW)",
+    creating: "Creando...",
+    createVehicle: "Crear vehículo",
+  },
+
+  // VehicleCard.tsx
+  vehicleCard: {
+    changePhoto: "Cambiar la foto de este auto",
+    addPhoto: "Agregar una foto de este auto",
+    battery: "Batería",
+    consumption: "Consumo",
+    charging: "Carga",
+    range: "Autonomía",
+    removePhoto: "Quitar foto",
+    delete: "Eliminar",
+    deleteTitle: "Eliminar vehículo",
+  },
+
+  // HistoryPanel.tsx
+  history: {
+    title: "Historial de viajes",
+    emptyState: "Todavía no calculaste ninguna ruta. Andá al mapa y calculá una para verla acá.",
+    colDate: "Fecha",
+    colRoute: "Origen → Destino",
+    colBattery: "Batería",
+    colDistance: "Distancia",
+    colEnergy: "Energía",
+    colTime: "Tiempo",
+    colCost: "Costo estimado",
+    colRecharges: "Recargas",
+    noRoute: "sin ruta",
+    view: "Ver",
+  },
+
+  // VehiclesPanel.tsx
+  vehiclesPanel: {
+    title: "Mis vehículos",
+    addVehicle: "+ Agregar vehículo",
+    hint: "Los vehículos que podés elegir al calcular una ruta.",
+    photoUploadError: "No se pudo subir la foto.",
+    photoRemoveError: "No se pudo quitar la foto.",
+    deleteError: "No se pudo eliminar el vehículo.",
+    emptyState: "Todavía no cargaste ningún vehículo.",
+    confirmRemovePhoto: (name: string) => `¿Quitar la foto de «${name}»?`,
+    confirmDelete: (name: string) =>
+      `¿Eliminar «${name}»? Los viajes que ya hiciste con él se mantienen en el historial.`,
+  },
+
+  // StatsPanels.tsx
+  stats: {
+    monthNames: [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    ] as string[],
+    monthlyTitle: "Consumo y gasto por mes",
+    monthlyHint: "Sobre los viajes efectivamente recorridos, agrupados por mes.",
+    monthlyEmpty: "Todavía no hay viajes calculados este mes ni en meses anteriores.",
+    colMonth: "Mes",
+    colTrips: "Viajes",
+    colTotalDistance: "Distancia total",
+    colTotalEnergy: "Energía total",
+    colTotalCost: "Gasto total",
+    colRecharges: "Recargas",
+    colAvgDistance: "Distancia prom.",
+    colAvgCost: "Costo prom.",
+    vehicleTitle: "Consumo por vehículo",
+    vehicleHint: "Acumulado histórico de cada vehículo, ordenado por kilómetros recorridos.",
+    colVehicle: "Vehículo",
+    colDistance: "Distancia",
+    colEnergy: "Energía",
+    colCost: "Gasto",
+    colCostPerKm: "Costo / km",
+  },
+};

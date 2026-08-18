@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useMapEvents } from "react-leaflet";
 import { getNearestNode } from "../../api/graph";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { haversineKm } from "../../shared/geo";
 import { useMapStore, type PickMode } from "../mapStore";
 import { claimPickRole, DOUBLE_CLICK_GUARD_MS } from "../pickSequence";
@@ -32,6 +33,7 @@ interface ClickToPickProps {
 }
 
 export function ClickToPick({ onError }: ClickToPickProps) {
+  const { t } = useTranslation();
   // Timeouts agendados y todavía sin correr. Un array, no un solo id: ver el
   // comentario del componente.
   // El rol viaja junto al timeout para poder devolver SOLO los roles de los
@@ -113,7 +115,7 @@ export function ClickToPick({ onError }: ClickToPickProps) {
       }
       onError(null);
     } catch (err) {
-      onError(err instanceof Error ? err.message : "No se pudo resolver ese punto del mapa.", "error");
+      onError(err instanceof Error ? err.message : t.map.layers.clickToPick.resolveError, "error");
     } finally {
       releaseClaim(role);
       // El punto quedó fijado (o falló): en cualquiera de los dos casos el

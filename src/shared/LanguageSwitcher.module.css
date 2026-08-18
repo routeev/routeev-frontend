@@ -1,0 +1,36 @@
+.switcher {
+  display: inline-flex;
+  align-items: center;
+  /* Ancho de contenido siempre, aunque el flex padre (p. ej. el menú mobile
+     de AppTopbar, en columna con align-items:stretch) intente estirarlo --
+     una píldora de dos letras estirada a todo el ancho se ve rota. */
+  align-self: center;
+  padding: 2px;
+  gap: 2px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.switcher button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.switcher button:hover {
+  color: var(--text);
+}
+
+.switcher button.active {
+  background: var(--bg);
+  color: var(--text);
+}

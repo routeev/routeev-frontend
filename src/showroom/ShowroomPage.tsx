@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { authConfig } from "../api/auth";
 import type { ShowroomFicha } from "../api/showroom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import buttons from "../shared/buttons.module.css";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
@@ -15,6 +16,8 @@ import styles from "./ShowroomPage.module.css";
 import { useShowroomCatalog } from "./useShowroomCatalog";
 
 export function ShowroomPage() {
+  const { t, lang } = useTranslation();
+  const sp = t.showroom.page;
   const catalog = useShowroomCatalog();
   const { addModel } = catalog;
   const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
@@ -71,45 +74,38 @@ export function ShowroomPage() {
   return (
     <div>
       <Helmet>
-        <title>Showroom eléctrico — RouteEV</title>
-        <meta
-          name="description"
-          content="Buscá cualquier auto eléctrico y mirá sus datos reales: batería, autonomía, consumo, costo en pesos y tiempo de carga en la red de carga de Uruguay."
-        />
+        <title>{sp.metaTitle}</title>
+        <meta name="description" content={sp.metaDescription} />
         <link rel="canonical" href="https://routeev.uy/showroom" />
         <meta property="og:type" content="website" />
-        <meta property="og:locale" content="es_UY" />
+        <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/showroom" />
-        <meta property="og:title" content="Showroom: 631 autos eléctricos con sus números reales" />
-        <meta
-          property="og:description"
-          content="Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de carga. Sin crear cuenta."
-        />
+        <meta property="og:title" content={sp.ogTitle} />
+        <meta property="og:description" content={sp.ogDescription} />
         <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
-      <SiteHeader navLinks={[{ href: "/", label: "Inicio" }, { href: "/showroom", label: "Showroom" }]}>
+      <SiteHeader navLinks={[{ href: "/", label: sp.navHome }, { href: "/showroom", label: sp.navShowroom }]}>
         <Link to="/login" className={buttons.navLink}>
-          Iniciar sesión
+          {sp.login}
         </Link>
         <Link to="/login?crear=1" className={buttons.primary}>
-          Crear cuenta
+          {sp.createAccount}
         </Link>
       </SiteHeader>
 
       <main className={styles.main}>
         <section className={styles.head}>
-          <p className="eyebrow">Showroom eléctrico</p>
+          <p className="eyebrow">{sp.eyebrow}</p>
           <h1>
-            Buscá cualquier auto eléctrico
-            <br />y mirá sus números de verdad.
+            {sp.headlineLine1}
+            <br />
+            {sp.headlineLine2}
           </h1>
           <p className={styles.sub}>
-            <strong className="mono-num">{num(catalog.total)}</strong> modelos con sus datos de fábrica, el
-            costo real en pesos y cuánto tarda en cargar en las estaciones que existen en Uruguay. La foto de
-            cada auto se busca por su nombre. Sin cuenta, sin instalar nada.
+            <strong className="mono-num">{num(catalog.total)}</strong> {sp.subtitle}
           </p>
 
           <SearchControls
@@ -158,7 +154,7 @@ export function ShowroomPage() {
         </section>
       </main>
 
-      <SiteFooter note="RouteEV — Uruguay. Datos de catálogo aproximados de fabricante; fotos de Wikimedia Commons." />
+      <SiteFooter note={sp.footerNote} />
     </div>
   );
 }

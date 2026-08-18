@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { useEffect, useRef, useState } from "react";
 import { authConfig } from "../api/auth";
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./LoginPage.module.css";
 
 interface GoogleSignInProps {
@@ -19,6 +20,7 @@ interface GoogleSignInProps {
  * funcionando igual).
  */
 export function GoogleSignIn({ onCredential }: GoogleSignInProps) {
+  const { t } = useTranslation();
   const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
   const containerRef = useRef<HTMLDivElement>(null);
   // El prop `width` de GoogleLogin es un ancho fijo en px que Google usa tal
@@ -45,7 +47,7 @@ export function GoogleSignIn({ onCredential }: GoogleSignInProps) {
   return (
     <GoogleOAuthProvider clientId={cfg.google_client_id}>
       <div className={styles.googleDivider}>
-        <span>o</span>
+        <span>{t.auth.google.divider}</span>
       </div>
       <div className={styles.googleBtn} ref={containerRef}>
         <GoogleLogin

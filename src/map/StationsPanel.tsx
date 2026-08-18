@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { listStationReviewSummaries } from "../api/stationReviews";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { esPrivada } from "./esPrivada";
 import { RatingSummary } from "./RatingSummary";
 import { useMapStore } from "./mapStore";
@@ -9,6 +10,8 @@ const BOLT_SVG_PATH = "M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z";
 
 /** Lista de todas las estaciones -- elegir una cambia a StationDetailPanel (ver MapPage), que muestra el detalle completo + reseñas. */
 export function StationsPanel() {
+  const { t } = useTranslation();
+  const sp = t.map.stationsPanel;
   const stations = useMapStore((s) => s.stations);
   const leafletMap = useMapStore((s) => s.leafletMap);
   const selectStation = useMapStore((s) => s.selectStation);
@@ -16,8 +19,8 @@ export function StationsPanel() {
 
   return (
     <section className="panel" id="stations-panel">
-      <h2>Estaciones de carga</h2>
-      <p className={styles.leyenda}>De la red de UTE y de operadores privados.</p>
+      <h2>{sp.title}</h2>
+      <p className={styles.leyenda}>{sp.legend}</p>
       <ul className={styles.list}>
         {stations.map((st) => {
           const nodeId = String(st.node_id);

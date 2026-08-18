@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getMe } from "../api/user";
 import { clearSession, getUsername } from "../api/session";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
 import { cloudinaryResize } from "./cloudinaryResize";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { IconLogout, IconUser } from "./NavIcons";
 import styles from "./AppTopbar.module.css";
 
@@ -38,6 +40,7 @@ interface AppTopbarProps {
  */
 export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: AppTopbarProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -52,7 +55,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
     navigate("/");
   }
 
-  const displayName = meQuery.data?.username ?? username ?? getUsername() ?? "usuario";
+  const displayName = meQuery.data?.username ?? username ?? getUsername() ?? t.nav.fallbackUsername;
   const photoUrl = meQuery.data?.photo_url;
 
   useEffect(() => {
@@ -72,6 +75,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
       </div>
       <div className={styles.right}>
         {children}
+        <LanguageSwitcher />
         <div className={styles.userMenu} ref={menuRef}>
           <button
             type="button"
@@ -98,7 +102,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
                 onClick={() => setMenuOpen(false)}
               >
                 <IconUser />
-                Mi perfil
+                {t.nav.myProfile}
               </Link>
               <button
                 type="button"
@@ -107,7 +111,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
                 onClick={logout}
               >
                 <IconLogout />
-                Cerrar sesión
+                {t.nav.logout}
               </button>
             </div>
           )}
@@ -116,7 +120,7 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
       <button
         type="button"
         className={styles.menuToggle}
-        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+        aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -128,9 +132,10 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
             {children}
             {mobileOnlyChildren}
           </div>
+          <LanguageSwitcher />
           <button type="button" className="ghost" onClick={logout}>
             <IconLogout />
-            Cerrar sesión
+            {t.nav.logout}
           </button>
         </div>
       )}

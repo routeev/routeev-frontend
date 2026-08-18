@@ -1,0 +1,47 @@
+export const auth = {
+  login: {
+    pageTitle: "RouteEV · Sign in",
+    backToHome: "← Back to home",
+    tagline: "Sign in to plan your next route.",
+    modeLabelLogin: "Sign in",
+    modeLabelRegister: "Create account",
+    emailLabel: "Email address",
+    emailPlaceholder: "e.g. name@example.com",
+    emailInvalid: "Enter a valid email address.",
+    passwordLabel: "Password",
+    passwordRequired: "Enter your password.",
+    passwordTooShort: "Password needs at least 10 characters.",
+    submitting: "One moment...",
+    submitLogin: "Sign in",
+    submitRegister: "Create account",
+    toggleToRegister: "Create a new account",
+    toggleToLogin: "I already have an account",
+    unconfirmedNotice: "Your email hasn't been confirmed yet. If you don't have the code handy, ask us to resend it.",
+    genericError: "Couldn't complete the operation",
+    googleError: "Couldn't sign in with Google",
+  },
+  register: {
+    displayNameLabel: "Name (optional)",
+    displayNamePlaceholder: "e.g. Marcela",
+    displayNameHint:
+      "This is how we'll show you in the app. If you leave it blank we'll assign one, and you can change it anytime from your profile.",
+  },
+  verifyEmail: {
+    modeLabel: "Confirm your email",
+    notice: (email: string) => `We sent a 6-digit code to ${email}. Enter it to confirm your account.`,
+    codeLabel: "Confirmation code",
+    codeInvalid: "The code is 6 digits.",
+    confirming: "Confirming...",
+    submit: "Confirm",
+    backToLogin: "Back to sign in",
+    error: "Couldn't confirm your email",
+  },
+  resendCode: {
+    button: "Resend code",
+    success: "We resent the code. It can take a few minutes to arrive.",
+    error: "Couldn't resend the code",
+  },
+  google: {
+    divider: "or",
+  },
+};

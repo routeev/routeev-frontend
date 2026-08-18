@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./Stars.module.css";
 
 const STAR_PATH =
@@ -12,12 +13,13 @@ interface StarsProps {
 
 /** Estrellas de solo lectura, para mostrar un promedio ya calculado. */
 export function Stars({ value, size = 14 }: StarsProps) {
+  const { t } = useTranslation();
   const filledCount = Math.round(Math.max(0, Math.min(5, value)));
   return (
     <span
       className={styles.stars}
       style={{ "--star-size": `${size}px` } as CSSProperties}
-      aria-label={`${value.toFixed(1)} de 5 estrellas`}
+      aria-label={t.map.stars.ratingLabel(value.toFixed(1))}
     >
       {Array.from({ length: 5 }, (_, i) => (
         <svg
@@ -41,6 +43,7 @@ interface StarPickerProps {
 
 /** Estrellas clickeables, para que el usuario elija su valoracion (1-5). */
 export function StarPicker({ value, onChange, size = 26 }: StarPickerProps) {
+  const { t } = useTranslation();
   return (
     <span className={styles.picker} style={{ "--star-size": `${size}px` } as CSSProperties}>
       {Array.from({ length: 5 }, (_, i) => {
@@ -50,7 +53,7 @@ export function StarPicker({ value, onChange, size = 26 }: StarPickerProps) {
             key={n}
             type="button"
             className={styles.pickerBtn}
-            aria-label={`${n} de 5 estrellas`}
+            aria-label={t.map.stars.starLabel(n)}
             aria-pressed={value === n}
             onClick={() => onChange(n)}
           >

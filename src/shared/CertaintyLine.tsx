@@ -1,3 +1,4 @@
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./CertaintyLine.module.css";
 
 /**
@@ -36,6 +37,7 @@ const DIMENSIONS: Record<
 };
 
 export function CertaintyLine({ points, scale = "macro", className }: CertaintyLineProps) {
+  const { t } = useTranslation();
   if (points.length < 2) return null;
 
   const { width, height, pad, padBottom } = DIMENSIONS[scale];
@@ -61,8 +63,8 @@ export function CertaintyLine({ points, scale = "macro", className }: CertaintyL
       role="img"
       aria-label={
         infeasible
-          ? "Perfil de batería del viaje: no es factible con este vehículo"
-          : "Perfil de batería a lo largo del viaje"
+          ? t.shared.certaintyLine.infeasibleAriaLabel
+          : t.shared.certaintyLine.feasibleAriaLabel
       }
     >
       <path

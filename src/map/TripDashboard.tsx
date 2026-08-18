@@ -1,3 +1,4 @@
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { useMapStore, selectedVehicle, batteryPctToKwh } from "./mapStore";
@@ -20,11 +21,16 @@ function precioUnitario(valor: number): string {
 // sub-texto. Si un viaje tiene un solo componente real (lo mas comun: sin
 // trafico ni recargas), mostrar el desglose no aporta nada sobre el numero
 // grande de arriba, asi que se omite.
-function formatTimeBreakdown(drivingMin: number, trafficMin: number, chargingMin: number): string | null {
+function formatTimeBreakdown(
+  drivingMin: number,
+  trafficMin: number,
+  chargingMin: number,
+  t: { driving: (min: string) => string; traffic: (min: string) => string; charging: (min: string) => string }
+): string | null {
   const parts: string[] = [];
-  if (drivingMin > 0.5) parts.push(`${formatDuration(drivingMin)} manejando`);
-  if (trafficMin > 0.5) parts.push(`${formatDuration(trafficMin)} de tráfico`);
-  if (chargingMin > 0.5) parts.push(`${formatDuration(chargingMin)} cargando`);
+  if (drivingMin > 0.5) parts.push(t.driving(formatDuration(drivingMin)));
+  if (trafficMin > 0.5) parts.push(t.traffic(formatDuration(trafficMin)));
+  if (chargingMin > 0.5) parts.push(t.charging(formatDuration(chargingMin)));
   return parts.length > 1 ? parts.join(" + ") : null;
 }
 
@@ -43,6 +49,8 @@ interface TripDashboardProps {
 }
 
 export function TripDashboard({ liveTrip }: TripDashboardProps) {
+  const { t } = useTranslation();
+  const td = t.map.tripDashboard;
   const result = useMapStore((s) => s.lastResult);
   const replaySuffix = useMapStore((s) => s.replaySuffix);
   const stations = useMapStore((s) => s.stations);
@@ -66,14 +74,12 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const showMarginBanner = marginTone !== null && !(marginTone === "ok" && (bateria?.margen_pct ?? 0) === 0);
   const marginText =
     marginTone === "danger"
-      ? `🔴 Margen crítico: llegarías con ~${llegadaPct?.toFixed(1)}% de batería. Cualquier desvío o consumo extra te puede dejar sin carga.`
+      ? td.margin.critical(llegadaPct!.toFixed(1))
       : marginTone === "warn"
-        ? `🟠 Margen bajo: llegarías con ~${llegadaPct?.toFixed(1)}%, por debajo del margen de seguridad del ${bateria?.margen_pct}%.`
-        : `🟢 Llegás con ~${llegadaPct?.toFixed(1)}% de batería, dentro del margen de seguridad (${bateria?.margen_pct}%).`;
+        ? td.margin.low(llegadaPct!.toFixed(1), bateria?.margen_pct ?? 0)
+        : td.margin.ok(llegadaPct!.toFixed(1), bateria?.margen_pct ?? 0);
   const marginFallbackText =
-    bateria && !bateria.margen_alcanzado && llegadaPct !== null
-      ? ` No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.`
-      : "";
+    bateria && !bateria.margen_alcanzado && llegadaPct !== null ? td.margin.noPlanFallback : "";
   // Cuando la reserva subió porque el destino no tiene enchufe, decirlo: si no,
   // el número del margen no cierra con el 10% que la persona cree que rige y
   // parece un error de la app en vez de la decisión que ella misma tomó.
@@ -88,9 +94,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // clase de error que puede cometer esta pantalla.
   const reservaAplicada = reserva?.motivo === "cargador_destino" && bateria?.margen_alcanzado === true;
   const reservaText = reservaAplicada
-    ? ` Como dijiste que en el destino no tenés dónde cargar, el viaje se calculó guardando un ${reserva!.pct.toFixed(0)}% para que puedas llegar hasta un cargador.`
+    ? td.margin.reserveApplied(reserva!.pct.toFixed(0))
     : reserva?.motivo === "cargador_destino"
-      ? ` Tampoco alcanza para llegar hasta un cargador después de llegar: revisá si vas a poder cargar antes.`
+      ? td.margin.reserveNotEnough
       : "";
 
   // El cargador del destino: sólo viene cuando se pidió la ruta declarando que
@@ -117,18 +123,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const bd = primary.breakdown;
   const peajesSub = hayPeajeSinMonto(bd)
     ? bd.peaje_uyu > 0
-      ? `${formatUyu(bd.peaje_uyu)} y otros sin monto conocido`
-      : "sin monto conocido"
+      ? td.cost.tollsPartialAmount(formatUyu(bd.peaje_uyu))
+      : td.cost.tollsNoAmount
     : formatUyu(bd.peaje_uyu);
   const sinTarifa = bd.recargas_sin_tarifa ?? 0;
   const costoSub =
     bd.costo_uyu_recargas != null
-      ? `energía de casa ${formatUyu(bd.costo_uyu_energia)} + recargas ${formatUyu(bd.costo_uyu_recargas)} + peajes ${peajesSub}` +
-        (sinTarifa > 0 ? ` · ${sinTarifa} recarga${sinTarifa === 1 ? "" : "s"} sin tarifario` : "")
-      : `energía ${formatUyu(bd.costo_uyu_energia)} + peajes ${peajesSub}`;
+      ? td.cost.homeAndRoute(formatUyu(bd.costo_uyu_energia), formatUyu(bd.costo_uyu_recargas), peajesSub) +
+        (sinTarifa > 0 ? td.cost.withoutTariff(sinTarifa) : "")
+      : td.cost.homeOnly(formatUyu(bd.costo_uyu_energia), peajesSub);
 
   const timeBreakdown = summary
-    ? formatTimeBreakdown(summary.drivingMin, summary.trafficMin, summary.chargingMin)
+    ? formatTimeBreakdown(summary.drivingMin, summary.trafficMin, summary.chargingMin, td.timeBreakdown)
     : null;
   // Igual que costoSub arriba: energia_recargada_kwh > 0 es la señal de que
   // hubo carga en ruta ademas de la de casa (backend nuevo). Sin eso, el
@@ -136,7 +142,11 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const energySub = !summary
     ? null
     : summary.publicEnergyKwh != null && summary.publicEnergyKwh > 0
-      ? `${summary.consumedKwh.toFixed(2)} kWh · casa ${summary.homeEnergyKwh?.toFixed(2)} + ruta ${summary.publicEnergyKwh.toFixed(2)}`
+      ? td.energyBreakdown.homeAndRoute(
+          summary.consumedKwh.toFixed(2),
+          summary.homeEnergyKwh?.toFixed(2) ?? "0.00",
+          summary.publicEnergyKwh.toFixed(2)
+        )
       : summary.consumedPct !== null
         ? `${summary.consumedKwh.toFixed(2)} kWh`
         : null;
@@ -145,7 +155,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
     <section className={styles.dashboard}>
       <div className={styles.header}>
         <div>
-          <h2>Datos del viaje</h2>
+          <h2>{td.title}</h2>
           <div className={styles.routeLabel}>{routeLabel}</div>
         </div>
         {!liveTrip.ui.active && (
@@ -172,8 +182,8 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               // verdad se siente como "arrancar de nuevo".
               if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
             }}
-            aria-label="Cerrar datos del viaje"
-            title="Cerrar"
+            aria-label={td.closeAriaLabel}
+            title={td.closeTitle}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
@@ -184,7 +194,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
 
       {!summary ? (
         <div className={styles.stat} style={{ gridColumn: "1 / -1" }}>
-          <div className={[styles.statValue, styles.notFound].join(" ")}>No se encontró una ruta viable con esta batería.</div>
+          <div className={[styles.statValue, styles.notFound].join(" ")}>{td.noRouteFound}</div>
         </div>
       ) : liveTrip.ui.active ? null : (
         // Con el viaje en curso, todo este bloque (margen, cargador del
@@ -209,10 +219,10 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
           )}
           {cargador && (
             <div className={styles.cargadorDestino}>
-              <p className={styles.cargadorDestinoTitulo}>Dónde cargar al llegar</p>
+              <p className={styles.cargadorDestinoTitulo}>{td.destinationCharger.title}</p>
               <p className={styles.cargadorDestinoNombre}>{cargador.nombre}</p>
               <p className={styles.cargadorDestinoDato}>
-                a {cargador.distancia_km_recta.toFixed(1)} km en línea recta del destino
+                {td.destinationCharger.distance(cargador.distancia_km_recta.toFixed(1))}
                 {cargador.potencia_kw ? ` · ${Math.round(cargador.potencia_kw)} kW` : ""}
                 {cargador.operador ? ` · ${cargador.operador}` : ""}
                 {cargador.direccion ? ` · ${cargador.direccion}` : ""}
@@ -221,39 +231,37 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 // No se disimula: si el cargador más cercano está a esa
                 // distancia, el problema no es el margen, es que ahí no hay
                 // infraestructura, y la persona tiene que poder decidir con eso.
-                <p className={styles.cargadorDestinoAviso}>
-                  Está lejos como para contar con él: fijate si vas a poder cargar antes de llegar.
-                </p>
+                <p className={styles.cargadorDestinoAviso}>{td.destinationCharger.tooFar}</p>
               ) : null}
             </div>
           )}
           <div className={styles.stats}>
-            <TripStatCard label="Distancia total" value={`${summary.distanceKm.toFixed(1)} km`} large />
-            <TripStatCard label="Tiempo estimado" value={formatDuration(summary.timeMin)} sub={timeBreakdown} large />
+            <TripStatCard label={td.stats.distance} value={`${summary.distanceKm.toFixed(1)} km`} large />
+            <TripStatCard label={td.stats.estimatedTime} value={formatDuration(summary.timeMin)} sub={timeBreakdown} large />
             {summary.avgSpeedKmh !== null && (
-              <TripStatCard label="Velocidad promedio" value={`${Math.round(summary.avgSpeedKmh)} km/h`} />
+              <TripStatCard label={td.stats.avgSpeed} value={`${Math.round(summary.avgSpeedKmh)} km/h`} />
             )}
             <TripStatCard
-              label="Batería consumida"
+              label={td.stats.batteryConsumed}
               value={summary.consumedPct !== null ? `${summary.consumedPct.toFixed(0)}%` : `${summary.consumedKwh.toFixed(2)} kWh`}
               sub={energySub}
             />
             <TripStatCard
-              label="Batería al llegar"
+              label={td.stats.batteryOnArrival}
               value={summary.arrivalPct !== null ? `${summary.arrivalPct.toFixed(0)}%` : `${summary.arrivalKwh.toFixed(1)} kWh`}
               sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
             />
-            <TripStatCard label="Paradas de recarga" value={String(summary.rechargeCount)} />
-            <TripStatCard label="Costo estimado" value={formatUyu(summary.costUyu)} sub={costoSub} />
+            <TripStatCard label={td.stats.rechargeStops} value={String(summary.rechargeCount)} />
+            <TripStatCard label={td.stats.estimatedCost} value={formatUyu(summary.costUyu)} sub={costoSub} />
             <TripStatCard
-              label="Peajes"
-              value={summary.hasTolls ? `${summary.tollCount} en la ruta` : "Sin peajes"}
+              label={td.stats.tolls}
+              value={summary.hasTolls ? td.tolls.count(summary.tollCount) : td.tolls.none}
               sub={
                 summary.hasTolls
                   ? hayPeajeSinMonto(primary.breakdown)
                     ? primary.breakdown.peaje_uyu > 0
-                      ? `${formatUyu(primary.breakdown.peaje_uyu)} y otros sin monto conocido`
-                      : "monto no disponible"
+                      ? td.cost.tollsPartialAmount(formatUyu(primary.breakdown.peaje_uyu))
+                      : td.tolls.amountUnavailable
                     : formatUyu(primary.breakdown.peaje_uyu)
                   : null
               }
@@ -263,11 +271,11 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
           <div className={styles.chargingStops}>
             {primary.recharges.length === 0 ? (
               <p className="hint" style={{ margin: "8px 0 0" }}>
-                Sin paradas de recarga: la batería alcanza para todo el viaje.
+                {td.noRechargeStops}
               </p>
             ) : (
               <>
-                <h3>Puestos de carga usados</h3>
+                <h3>{td.chargingStopsTitle}</h3>
                 {primary.recharges.map((rc, i) => {
                   const detail = findStationDetail(stations, rc.node_id);
                   const addedPct = pctOfCapacity(rc.added_kwh, vehicle);
@@ -289,17 +297,17 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                         {rc.station_name}
                       </div>
                       <div className={styles.stopRow}>
-                        <span>Batería agregada</span>
+                        <span>{td.stopCard.batteryAdded}</span>
                         <b>{addedPct !== null ? `+${addedPct.toFixed(0)}% (+${rc.added_kwh.toFixed(1)} kWh)` : `+${rc.added_kwh.toFixed(1)} kWh`}</b>
                       </div>
                       <div className={styles.stopRow}>
-                        <span>Tiempo de carga</span>
+                        <span>{td.stopCard.chargingTime}</span>
                         <b>{rc.time_min.toFixed(1)} min</b>
                       </div>
                       {rcTarifa && (
                         <div className={styles.stopRow}>
-                          <span>Costo</span>
-                          <b>{rcTarifa.costo_uyu != null ? formatUyu(rcTarifa.costo_uyu) : "Tarifa no publicada"}</b>
+                          <span>{td.stopCard.cost}</span>
+                          <b>{rcTarifa.costo_uyu != null ? formatUyu(rcTarifa.costo_uyu) : td.stopCard.unpublishedRate}</b>
                         </div>
                       )}
                       {/* Ocupación: informativa (corre si te quedás enchufado
@@ -308,27 +316,27 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                         rcTarifa.ocupacion_uyu_min != null &&
                         rcTarifa.ocupacion_tolerancia_min != null && (
                           <div className={styles.stopRow}>
-                            <span>Ocupación</span>
+                            <span>{td.stopCard.occupation}</span>
                             <b>
-                              $ {precioUnitario(rcTarifa.ocupacion_uyu_min)}/min pasados {rcTarifa.ocupacion_tolerancia_min} min
+                              {td.stopCard.occupationValue(precioUnitario(rcTarifa.ocupacion_uyu_min), rcTarifa.ocupacion_tolerancia_min)}
                             </b>
                           </div>
                         )}
                       {detail && (
                         <div className={styles.stopRow}>
-                          <span>Dirección</span>
+                          <span>{td.stopCard.address}</span>
                           <b>{detail.direccion}</b>
                         </div>
                       )}
                       {detail && (
                         <div className={styles.stopRow}>
-                          <span>Potencia disponible</span>
+                          <span>{td.stopCard.availablePower}</span>
                           <b>{detail.potencia_kw} kW max</b>
                         </div>
                       )}
                       {detail && (
                         <div className={styles.stopRow}>
-                          <span>Conectores</span>
+                          <span>{td.stopCard.connectors}</span>
                           <b>{detail.tipo_conector}</b>
                         </div>
                       )}
@@ -338,11 +346,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                           en el margen. */}
                       {respaldoDe(i, rc.node_id) && (
                         <div className={styles.stopRow}>
-                          <span>Si no funciona</span>
+                          <span>{td.stopCard.backup}</span>
                           <b>
-                            {respaldoDe(i, rc.node_id)!.nombre} a{" "}
-                            {respaldoDe(i, rc.node_id)!.distancia_km_recta} km
-                            {respaldoDe(i, rc.node_id)!.demasiado_lejos ? " — sin respaldo cerca" : ""}
+                            {td.stopCard.backupValue(
+                              respaldoDe(i, rc.node_id)!.nombre,
+                              respaldoDe(i, rc.node_id)!.distancia_km_recta,
+                              respaldoDe(i, rc.node_id)!.demasiado_lejos
+                            )}
                           </b>
                         </div>
                       )}
@@ -362,14 +372,14 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d={PLAY_PATH} />
               </svg>
-              <span>{liveTrip.ui.finished ? "Iniciar viaje de nuevo" : "Iniciar viaje"}</span>
+              <span>{liveTrip.ui.finished ? td.startTripAgain : td.startTrip}</span>
             </button>
           ) : (
             <button type="button" className={["primary", styles.startBtn].join(" ")} onClick={liveTrip.cancel}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="6.5" y="6.5" width="11" height="11" rx="1.6" />
               </svg>
-              <span>Cancelar viaje</span>
+              <span>{td.cancelTrip}</span>
             </button>
           )}
 
@@ -388,24 +398,24 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             <div className={styles.live}>
               <div className={styles.liveRow}>
                 <div className={styles.liveItem}>
-                  <span className={styles.liveLabel}>Distancia</span>
+                  <span className={styles.liveLabel}>{td.live.distance}</span>
                   <span className={["mono-num", styles.liveValue].join(" ")}>
                     {liveTrip.ui.distanceKm.toFixed(1)} / {liveTrip.ui.totalKm.toFixed(1)} km
                   </span>
                 </div>
                 <div className={styles.liveItem}>
-                  <span className={styles.liveLabel}>Batería</span>
+                  <span className={styles.liveLabel}>{td.live.battery}</span>
                   <span className={["mono-num", styles.liveValue].join(" ")}>
                     {Math.max(0, Math.min(100, (liveTrip.ui.batteryKwh / Math.max(0.001, liveTrip.ui.capacityKwh)) * 100)).toFixed(0)}% (
                     {liveTrip.ui.batteryKwh.toFixed(1)} kWh)
                   </span>
                 </div>
                 <div className={styles.liveItem}>
-                  <span className={styles.liveLabel}>Tiempo de viaje</span>
+                  <span className={styles.liveLabel}>{td.live.tripTime}</span>
                   <span className={["mono-num", styles.liveValue].join(" ")}>{liveTrip.ui.elapsedMin.toFixed(0)} min</span>
                 </div>
                 <div className={styles.liveItem}>
-                  <span className={styles.liveLabel}>Velocidad</span>
+                  <span className={styles.liveLabel}>{td.live.speed}</span>
                   <span className={["mono-num", styles.liveValue].join(" ")}>
                     {liveTrip.ui.speedKmh != null ? `${Math.round(liveTrip.ui.speedKmh)} km/h` : "-"}
                   </span>
@@ -444,8 +454,10 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                   useLiveTrip.ts: diagnóstico para el próximo viaje real. */}
               {liveTrip.ui.active && (
                 <div className="hint" style={{ marginTop: 8 }}>
-                  GPS: precisión ±{liveTrip.ui.gpsAccuracyM != null ? Math.round(liveTrip.ui.gpsAccuracyM) : "?"}m · cada{" "}
-                  {liveTrip.ui.gpsGapMs != null ? (liveTrip.ui.gpsGapMs / 1000).toFixed(1) : "?"}s
+                  {td.live.gpsDebug(
+                    liveTrip.ui.gpsAccuracyM != null ? String(Math.round(liveTrip.ui.gpsAccuracyM)) : "?",
+                    liveTrip.ui.gpsGapMs != null ? (liveTrip.ui.gpsGapMs / 1000).toFixed(1) : "?"
+                  )}
                 </div>
               )}
             </div>

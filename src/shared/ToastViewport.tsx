@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { useToastStore, type Toast } from "./toastStore";
 import styles from "./ToastViewport.module.css";
 
@@ -30,6 +31,7 @@ export function ToastViewport() {
 }
 
 function ToastRow({ toast }: { toast: Toast }) {
+  const { t } = useTranslation();
   const dismiss = useToastStore((s) => s.dismiss);
   const esError = toast.variant === "error";
 
@@ -49,7 +51,7 @@ function ToastRow({ toast }: { toast: Toast }) {
       <p className={styles.message}>{toast.message}</p>
       <button type="button" className={styles.close} onClick={() => dismiss(toast.id)}>
         <span aria-hidden="true">&times;</span>
-        <span className="sr-only">Cerrar este aviso</span>
+        <span className="sr-only">{t.shared.toastViewport.dismiss}</span>
       </button>
     </div>
   );

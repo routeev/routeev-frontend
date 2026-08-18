@@ -9,6 +9,8 @@ import {
 } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import type { Dictionary } from "../i18n/dictionaries/en";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { MODEL_SEARCH_MIN_CHARS, filterModelLabels } from "../shared/evModelSearch";
 import { ModelCombobox } from "../shared/ModelCombobox";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
@@ -45,11 +47,11 @@ const ORDEN_CAMPOS: CampoForm[] = ["name", "capacity", "consumption", "chargingP
  * sanear el valor). Decirle a alguien que escriba "0,18" en un campo donde la
  * coma no entra sería mandarlo a pelear con el teclado.
  */
-function validar(f: typeof emptyForm): ErroresForm {
+function validar(f: typeof emptyForm, msgs: Dictionary["profile"]["addVehicle"]): ErroresForm {
   const errores: ErroresForm = {};
 
   if (!f.name.trim()) {
-    errores.name = "Escribí un nombre para reconocer el vehículo (ej. Nissan Leaf).";
+    errores.name = msgs.nameRequired;
   }
 
   const invalido = (valor: string, min: number) => {
@@ -58,13 +60,13 @@ function validar(f: typeof emptyForm): ErroresForm {
   };
 
   if (invalido(f.capacity, 0.1)) {
-    errores.capacity = "Poné la capacidad de la batería en kWh, de 0.1 para arriba (ej. 40).";
+    errores.capacity = msgs.capacityInvalid;
   }
   if (invalido(f.consumption, 0.01)) {
-    errores.consumption = "Poné el consumo en kWh por km, de 0.01 para arriba (ej. 0.18).";
+    errores.consumption = msgs.consumptionInvalid;
   }
   if (invalido(f.chargingPower, 0.5)) {
-    errores.chargingPower = "Poné la potencia de carga en kW, de 0.5 para arriba (ej. 22).";
+    errores.chargingPower = msgs.chargingPowerInvalid;
   }
 
   return errores;
@@ -75,6 +77,7 @@ interface AddVehicleFormProps {
 }
 
 export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
   const [errores, setErrores] = useState<ErroresForm>({});
   const [modelSearch, setModelSearch] = useState("");
@@ -135,13 +138,13 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       // Los datos que acaban de entrar solos invalidan cualquier error viejo.
       setErrores({});
       setPhotoStatus({
-        text: `Identificado: ${model.marca} ${model.modelo}. Revisá los datos y guardá.`,
+        text: t.profile.addVehicle.identifiedStatus(model.marca, model.modelo),
         ok: true,
       });
     },
     onError: (err) => {
       const text =
-        err instanceof Error ? err.message : "No se pudo identificar el vehículo con esa foto.";
+        err instanceof Error ? err.message : t.profile.addVehicle.identifyError;
       setPhotoStatus({ text, ok: false });
       // Además del texto de al lado del botón: identificar por foto puede
       // tardar varios segundos, tiempo de sobra para que la persona haya
@@ -184,13 +187,13 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       // que puede quedar fuera de la pantalla: sin este aviso, el único
       // indicio de que salió bien era que los campos se borraron -- que es
       // exactamente lo que se ve cuando algo se pierde.
-      toast.ok(`Listo, «${vehicle.name}» quedó agregado a tus vehículos.`);
+      toast.ok(t.profile.addVehicle.vehicleCreated(vehicle.name));
       onCreated();
     },
     // Acá cae, entre otros, el 409 de nombre repetido: el backend ya manda un
     // mensaje explicando cuál es el nombre que choca.
     onError: (err) =>
-      setError(err instanceof Error ? err.message : "No se pudo crear el vehículo."),
+      setError(err instanceof Error ? err.message : t.profile.addVehicle.createError),
   });
 
   function onModelSearchChange(value: string) {
@@ -220,7 +223,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
-        const nuevos = validar(form);
+        const nuevos = validar(form, t.profile.addVehicle);
         setErrores(nuevos);
         const primerCampoRoto = ORDEN_CAMPOS.find((campo) => nuevos[campo]);
         if (primerCampoRoto) {
@@ -235,8 +238,8 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
     >
       <div className={styles.photoIdRow}>
         <label className={styles.photoIdBtn}>
-          {identify.isPending ? <Spinner /> : <span aria-hidden="true">📷</span>} Identificar con una
-          foto
+          {identify.isPending ? <Spinner /> : <span aria-hidden="true">📷</span>}{" "}
+          {t.profile.addVehicle.identifyWithPhoto}
           <input
             type="file"
             accept="image/*"
@@ -247,7 +250,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
               const file = e.target.files?.[0];
               e.target.value = "";
               if (!file) return;
-              setPhotoStatus({ text: "Identificando el vehículo con IA...", ok: false });
+              setPhotoStatus({ text: t.profile.addVehicle.identifying, ok: false });
               identify.mutate(file);
             }}
           />
@@ -261,7 +264,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       )}
 
       <div className={styles.formDivider}>
-        <span>o buscá / completá a mano</span>
+        <span>{t.profile.addVehicle.orSearchManually}</span>
       </div>
 
       {/* QA BAJO 22: esto era un <input list> con un <datalist>, y el
@@ -271,8 +274,8 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
           letras, tope de opciones, sin tildes) pero con el estilo de la app. */}
       <ModelCombobox
         id="p-model-search"
-        label="Modelo (opcional, precarga los datos)"
-        placeholder={`Escribí al menos ${MODEL_SEARCH_MIN_CHARS} letras (ej. Nissan Leaf, Tesla Model 3)...`}
+        label={t.profile.addVehicle.modelLabel}
+        placeholder={t.profile.addVehicle.modelPlaceholder(MODEL_SEARCH_MIN_CHARS)}
         value={modelSearch}
         options={modelOptions}
         loading={modelsQuery.isFetching}
@@ -282,12 +285,12 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       />
 
       <div className="field">
-        <label htmlFor="p-name">Nombre</label>
+        <label htmlFor="p-name">{t.profile.addVehicle.nameLabel}</label>
         <input
           type="text"
           id="p-name"
           required
-          placeholder="ej. Nissan Leaf"
+          placeholder={t.profile.addVehicle.namePlaceholder}
           value={form.name}
           aria-invalid={Boolean(errores.name)}
           aria-describedby={errores.name ? "p-name-error" : undefined}
@@ -302,7 +305,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
 
       <div className={styles.fieldRow}>
         <div className="field">
-          <label htmlFor="p-capacity">Batería (kWh)</label>
+          <label htmlFor="p-capacity">{t.profile.addVehicle.batteryLabel}</label>
           <input
             id="p-capacity"
             type="number"
@@ -322,7 +325,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
           )}
         </div>
         <div className="field">
-          <label htmlFor="p-consumption">Consumo (kWh/km)</label>
+          <label htmlFor="p-consumption">{t.profile.addVehicle.consumptionLabel}</label>
           <input
             id="p-consumption"
             type="number"
@@ -342,7 +345,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
           )}
         </div>
         <div className="field">
-          <label htmlFor="p-charging-power">Carga (kW)</label>
+          <label htmlFor="p-charging-power">{t.profile.addVehicle.chargingLabel}</label>
           <input
             id="p-charging-power"
             type="number"
@@ -376,10 +379,10 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       >
         {create.isPending ? (
           <>
-            <Spinner /> Creando...
+            <Spinner /> {t.profile.addVehicle.creating}
           </>
         ) : (
-          "Crear vehículo"
+          t.profile.addVehicle.createVehicle
         )}
       </button>
     </form>

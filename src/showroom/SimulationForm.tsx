@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { showroomDestinos, showroomSimulate, type ShowroomModel } from "../api/showroom";
 import { Banner } from "../shared/Banner";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { readNumberInput } from "../shared/readNumberInput";
 import { Spinner } from "../shared/Spinner";
 import { toast } from "../shared/toastStore";
@@ -16,6 +17,8 @@ const BATERIA_MIN = 10;
 const BATERIA_MAX = 100;
 
 export function SimulationForm({ model }: SimulationFormProps) {
+  const { t } = useTranslation();
+  const sf = t.showroom.simulationForm;
   const destinosQuery = useQuery({ queryKey: ["showroomDestinos"], queryFn: showroomDestinos });
   const destinos = destinosQuery.data ?? [];
 
@@ -47,7 +50,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
     // El resultado se dibuja bastante más abajo (a veces fuera de la pantalla,
     // sobre todo en celular): sin este aviso, terminar de calcular no se
     // notaba desde donde había quedado el dedo.
-    onSuccess: () => toast.ok("Listo, ya calculamos el viaje con este auto."),
+    onSuccess: () => toast.ok(sf.toastOk),
   });
 
   if (destinosQuery.isSuccess && destinos.length === 0) return null;
@@ -65,12 +68,12 @@ export function SimulationForm({ model }: SimulationFormProps) {
     // mano es perfectamente válido y antes lo rechazaba con otro cartel en
     // inglés ("The two nearest valid values are 45 and 50").
     if (!Number.isFinite(bateria) || bateria < BATERIA_MIN || bateria > BATERIA_MAX) {
-      setBateriaError(`La batería al salir va de ${BATERIA_MIN} % a ${BATERIA_MAX} %.`);
+      setBateriaError(sf.bateriaError(BATERIA_MIN, BATERIA_MAX));
       document.getElementById("sim-bat")?.focus();
       return;
     }
     if (origenId === destinoId) {
-      setFormError("Elegí un destino distinto del origen.");
+      setFormError(sf.formError);
       return;
     }
     simulate.mutate();
@@ -81,16 +84,13 @@ export function SimulationForm({ model }: SimulationFormProps) {
 
   return (
     <>
-      <h3>¿Llego con este auto?</h3>
-      <p>
-        Se calcula el viaje real sobre el mapa vial del país con este auto, revisando la batería tramo a tramo
-        y sumando paradas de carga si hacen falta.
-      </p>
+      <h3>{sf.titulo}</h3>
+      <p>{sf.descripcion}</p>
 
       <form onSubmit={onSubmit} noValidate>
         <div className={styles.form}>
           <div className="field">
-            <label htmlFor="sim-origen">Desde</label>
+            <label htmlFor="sim-origen">{sf.desde}</label>
             <select id="sim-origen" value={origenId} onChange={(e) => setOrigenOverride(e.target.value)}>
               {destinos.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -100,7 +100,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="sim-destino">Hasta</label>
+            <label htmlFor="sim-destino">{sf.hasta}</label>
             <select id="sim-destino" value={destinoId} onChange={(e) => setDestinoOverride(e.target.value)}>
               {destinos.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -110,7 +110,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="sim-bat">Batería al salir (%)</label>
+            <label htmlFor="sim-bat">{sf.bateriaAlSalir}</label>
             <input
               type="number"
               id="sim-bat"
@@ -135,7 +135,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
 
         <label className={["check-field", styles.checkField].join(" ")}>
           <input type="checkbox" checked={idaYVuelta} onChange={(e) => setIdaYVuelta(e.target.checked)} />
-          <span>Ida y vuelta sin cargar en el destino</span>
+          <span>{sf.idaYVuelta}</span>
         </label>
 
         {/* aria-busy además del disabled: el `disabled` evita el doble
@@ -145,10 +145,10 @@ export function SimulationForm({ model }: SimulationFormProps) {
         <button type="submit" className="primary" disabled={simulate.isPending} aria-busy={simulate.isPending}>
           {simulate.isPending ? (
             <>
-              <Spinner /> Calculando…
+              <Spinner /> {sf.calculando}
             </>
           ) : (
-            "Calcular el viaje"
+            sf.calcularViaje
           )}
         </button>
       </form>
@@ -164,7 +164,7 @@ export function SimulationForm({ model }: SimulationFormProps) {
       {simulate.isError && (
         <div style={{ marginTop: 16 }}>
           <Banner variant="error" alert>
-            {simulate.error instanceof Error ? simulate.error.message : "No se pudo calcular el viaje."}
+            {simulate.error instanceof Error ? simulate.error.message : sf.simulateError}
           </Banner>
         </div>
       )}

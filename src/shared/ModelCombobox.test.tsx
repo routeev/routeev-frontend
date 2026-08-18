@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
+import { LanguageProvider } from "../i18n/LanguageProvider";
 import { MODEL_SEARCH_MIN_CHARS, filterModelLabels } from "./evModelSearch";
 import { ModelCombobox } from "./ModelCombobox";
 
@@ -23,7 +24,11 @@ function Host() {
 }
 
 function renderCombobox() {
-  render(<Host />);
+  render(
+    <LanguageProvider>
+      <Host />
+    </LanguageProvider>
+  );
   return screen.getByRole("combobox", { name: "Modelo" });
 }
 

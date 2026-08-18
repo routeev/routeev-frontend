@@ -1,8 +1,11 @@
 import { Marker, Popup } from "react-leaflet";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { destinationIcon, originIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
 
 export function OriginDestinationMarkers() {
+  const { t } = useTranslation();
+  const om = t.map.layers.originDestinationMarkers;
   const originNode = useMapStore((s) => s.originNode);
   const destinationNode = useMapStore((s) => s.destinationNode);
 
@@ -11,7 +14,7 @@ export function OriginDestinationMarkers() {
       {originNode && (
         <Marker position={[originNode.lat, originNode.lon]} icon={originIcon()} zIndexOffset={500}>
           <Popup>
-            <b>Origen</b>
+            <b>{om.origin}</b>
             <br />
             {originNode.name}
           </Popup>
@@ -24,7 +27,7 @@ export function OriginDestinationMarkers() {
           zIndexOffset={500}
         >
           <Popup>
-            <b>Destino</b>
+            <b>{om.destination}</b>
             <br />
             {destinationNode.name}
           </Popup>

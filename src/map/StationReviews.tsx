@@ -8,6 +8,7 @@ import {
   upsertMyStationReview,
   type StationReview,
 } from "../api/stationReviews";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { Banner } from "../shared/Banner";
 import buttons from "../shared/buttons.module.css";
 import { formatDate } from "../shared/format";
@@ -22,6 +23,8 @@ interface StationReviewsProps {
 }
 
 export function StationReviews({ nodeId }: StationReviewsProps) {
+  const { t } = useTranslation();
+  const sr = t.map.stationReviews;
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["stationReviews", nodeId], queryFn: () => getStationReviews(nodeId) });
 
@@ -33,8 +36,8 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
     queryClient.invalidateQueries({ queryKey: ["stationReviewSummaries"] });
   }
 
-  if (query.isLoading) return <p className="hint">Cargando reseñas...</p>;
-  if (query.isError) return <Banner variant="error">No se pudieron cargar las reseñas de esta estación.</Banner>;
+  if (query.isLoading) return <p className="hint">{sr.loading}</p>;
+  if (query.isError) return <Banner variant="error">{sr.loadError}</Banner>;
   if (!query.data) return null;
 
   const { summary, reviews } = query.data;
@@ -48,7 +51,7 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
           <RatingSummary summary={summary} size={14} />
         ) : (
           <span className="hint" style={{ margin: 0 }}>
-            Todavía no hay reseñas. Sé el primero en dejar una.
+            {sr.noReviewsYet}
           </span>
         )}
       </div>
@@ -73,6 +76,8 @@ interface ReviewFormProps {
 }
 
 function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
+  const { t } = useTranslation();
+  const sr = t.map.stationReviews;
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -81,25 +86,25 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
   const upsert = useMutation({
     mutationFn: () => upsertMyStationReview(nodeId, rating, comment.trim() || null),
     onSuccess: onSaved,
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo guardar la reseña."),
+    onError: (err) => setError(err instanceof Error ? err.message : sr.saveError),
   });
 
   const removeReview = useMutation({
     mutationFn: () => deleteMyStationReview(nodeId),
     onSuccess: onSaved,
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo borrar la reseña."),
+    onError: (err) => setError(err instanceof Error ? err.message : sr.deleteError),
   });
 
   const uploadPhoto = useMutation({
     mutationFn: async (file: File) => uploadMyStationReviewPhoto(nodeId, await resizePhotoForUpload(file)),
     onSuccess: onSaved,
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo subir la foto."),
+    onError: (err) => setError(err instanceof Error ? err.message : sr.uploadPhotoError),
   });
 
   const removePhoto = useMutation({
     mutationFn: () => deleteMyStationReviewPhoto(nodeId),
     onSuccess: onSaved,
-    onError: (err) => setError(err instanceof Error ? err.message : "No se pudo quitar la foto."),
+    onError: (err) => setError(err instanceof Error ? err.message : sr.removePhotoError),
   });
 
   const busy = upsert.isPending || removeReview.isPending || uploadPhoto.isPending || removePhoto.isPending;
@@ -111,20 +116,20 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
         e.preventDefault();
         setError(null);
         if (rating < 1) {
-          setError("Elegí una cantidad de estrellas.");
+          setError(sr.starsRequired);
           return;
         }
         upsert.mutate();
       }}
     >
       <div className={styles.formHeader}>
-        <span className={styles.formLabel}>{existing ? "Tu reseña" : "Dejá tu reseña"}</span>
+        <span className={styles.formLabel}>{existing ? sr.yourReview : sr.writeReview}</span>
         <StarPicker value={rating} onChange={setRating} />
       </div>
 
       <textarea
         className={styles.textarea}
-        placeholder="¿Cómo fue tu experiencia en esta estación? (opcional)"
+        placeholder={sr.commentPlaceholder}
         maxLength={1000}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
@@ -134,7 +139,7 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
         <div className={styles.photoPreviewRow}>
           <img src={photoUrl} alt="" className={styles.photoPreview} />
           <button type="button" className="ghost small" disabled={busy} onClick={() => removePhoto.mutate()}>
-            Quitar foto
+            {sr.removePhoto}
           </button>
         </div>
       )}
@@ -144,7 +149,7 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
       <div className={styles.formActions}>
         {existing && (
           <label className={buttons.ghost}>
-            {existing.has_photo ? "Cambiar foto" : "Agregar foto"}
+            {existing.has_photo ? sr.changePhoto : sr.addPhoto}
             <input
               type="file"
               accept="image/*"
@@ -159,11 +164,11 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
           </label>
         )}
         <button type="submit" className="primary small" disabled={busy}>
-          {upsert.isPending ? "Guardando..." : existing ? "Actualizar" : "Publicar"}
+          {upsert.isPending ? sr.saving : existing ? sr.update : sr.publish}
         </button>
         {existing && (
           <button type="button" className="ghost small" disabled={busy} onClick={() => removeReview.mutate()}>
-            Borrar
+            {sr.delete}
           </button>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "../i18n/LanguageProvider";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { StationDetailRows } from "./StationDetailRows";
 import { StationReviews } from "./StationReviews";
@@ -13,6 +14,7 @@ import styles from "./StationDetailPanel.module.css";
  * fotos tengan lugar de verdad.
  */
 export function StationDetailPanel() {
+  const { t } = useTranslation();
   const stations = useMapStore((s) => s.stations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const selectStation = useMapStore((s) => s.selectStation);
@@ -41,7 +43,7 @@ export function StationDetailPanel() {
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 5 8 12l7 7" />
         </svg>
-        Estaciones de carga
+        {t.map.stationsPanel.title}
       </button>
       <h2>{station.nombre}</h2>
       <StationDetailRows station={station} />

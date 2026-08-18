@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./SiteFooter.module.css";
 
 interface SiteFooterProps {
@@ -6,15 +7,16 @@ interface SiteFooterProps {
 }
 
 /** Footer compartido por landing, showroom y las páginas legales (css/landing.css .l-footer). */
-export function SiteFooter({ note = "RouteEV — hecho en Montevideo, Uruguay." }: SiteFooterProps) {
+export function SiteFooter({ note }: SiteFooterProps) {
+  const { t } = useTranslation();
   return (
     <footer className={styles.footer}>
-      <span>{note}</span>
+      <span>{note ?? t.shared.siteFooter.defaultNote}</span>
       <div className={styles.links}>
-        <Link to="/showroom">Showroom</Link>
-        <Link to="/privacidad">Privacidad</Link>
-        <Link to="/terminos">Términos</Link>
-        <a href="mailto:routemindtbo@gmail.com">Escribinos</a>
+        <Link to="/showroom">{t.shared.siteFooter.showroom}</Link>
+        <Link to="/privacidad">{t.shared.siteFooter.privacy}</Link>
+        <Link to="/terminos">{t.shared.siteFooter.terms}</Link>
+        <a href="mailto:routemindtbo@gmail.com">{t.shared.siteFooter.contact}</a>
       </div>
     </footer>
   );
