@@ -166,9 +166,14 @@
   border-top: 1px solid var(--border);
 }
 
+/* text-align:center no alcanza: .navLink/.primary/.ghost (buttons.module.css)
+   son display:inline-flex, y ahí el contenido se centra con justify-content,
+   no con text-align -- sin esto "Iniciar sesión"/"Crear cuenta" quedaban
+   pegados a la izquierda del botón ya estirado a todo el ancho. */
 .mobileMenuActions > :global(a),
 .mobileMenuActions > :global(button) {
   width: 100%;
+  justify-content: center;
   text-align: center;
 }
 
