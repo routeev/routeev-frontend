@@ -186,7 +186,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
         <div className={styles.stat} style={{ gridColumn: "1 / -1" }}>
           <div className={[styles.statValue, styles.notFound].join(" ")}>No se encontró una ruta viable con esta batería.</div>
         </div>
-      ) : (
+      ) : liveTrip.ui.active ? null : (
+        // Con el viaje en curso, todo este bloque (margen, cargador del
+        // destino, la grilla completa de estadisticas planificadas y las
+        // paradas de carga) es info de planificacion que ya cumplio su
+        // proposito -- lo que importa mientras se maneja es el bloque .live
+        // de mas abajo. Misma condicion que el boton de cerrar arriba: vuelve
+        // a mostrarse en cuanto el viaje termina o se cancela.
         <>
           {showMarginBanner && (
             <div

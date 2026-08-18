@@ -107,6 +107,19 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
     if (initialPositionRef.current) marker.addTo(map);
     markerRef.current = marker;
 
+    // Pin del destino: fijo durante todo el viaje (el recorrido no cambia
+    // una vez arrancado, ver el comentario del efecto de `routeCoords` más
+    // abajo), por eso se arma una sola vez acá y no necesita su propio ref
+    // ni actualizarse en el efecto que sigue la posición en vivo.
+    const destCoords = routeCoordsRef.current[routeCoordsRef.current.length - 1];
+    if (destCoords) {
+      const destEl = document.createElement("div");
+      destEl.className = styles.destinationMarker;
+      destEl.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>';
+      new maplibregl.Marker({ element: destEl, anchor: "bottom" }).setLngLat([destCoords[1], destCoords[0]]).addTo(map);
+    }
+
     map.on("load", () => {
       loadedRef.current = true;
       map.addSource("route", { type: "geojson", data: routeToGeoJSON(routeCoordsRef.current) });
