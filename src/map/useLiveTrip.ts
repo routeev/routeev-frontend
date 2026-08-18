@@ -16,6 +16,41 @@ const DEPARTED_FROM_DESTINATION_M = 300;
 const MAX_DISTANCE_FROM_ORIGIN_KM = 3;
 const FAR_FROM_ROUTE_M = 500;
 const ARRIVED_DISTANCE_M = 60;
+// Un fix con esta precisión o peor no es una lectura confiable del chip GPS
+// -- en la práctica suele venir de un fallback por wifi/antena celular
+// cuando no hay buena vista del cielo (túnel, entre edificios altos, etc.),
+// y usarlo tal cual movía la posición mostrada (y con ella distancia y
+// batería) de un salto grande que se corregía recién en el próximo fix
+// bueno -- el reporte real: "la posición se va a la mierda a veces". Se
+// descarta entero en vez de dejarlo corromper nada.
+const GPS_HARD_REJECT_ACCURACY_M = 300;
+// Con qué peso entra cada fix nuevo a la posición mostrada, según su propia
+// precisión (pos.coords.accuracy): un fix muy preciso pesa cerca del máximo
+// (se confía casi entero), uno impreciso pesa poco y solo corrige de a poco
+// -- así un fix puntualmente malo (que no llega a ser tan malo como para el
+// piso de arriba) no se ve como un salto en el mapa, sin dejar de seguir el
+// movimiento real cuando la señal es buena.
+const GPS_SMOOTH_REFERENCE_ACCURACY_M = 15;
+const GPS_SMOOTH_MIN_WEIGHT = 0.15;
+const GPS_SMOOTH_MAX_WEIGHT = 1;
+
+/**
+ * Alisa un fix de GPS nuevo contra la última posición ya alisada, pesado por
+ * la precisión que reporta el propio GPS -- ver los tres constantes de
+ * arriba. Sin `prev` (primer fix del viaje) no hay nada contra qué alisar.
+ */
+function smoothGpsFix(
+  prev: { lat: number; lon: number } | null,
+  lat: number,
+  lon: number,
+  accuracyM: number | null
+): { lat: number; lon: number } {
+  if (!prev) return { lat, lon };
+  const accuracy = accuracyM ?? GPS_SMOOTH_REFERENCE_ACCURACY_M;
+  const weight = Math.min(GPS_SMOOTH_MAX_WEIGHT, Math.max(GPS_SMOOTH_MIN_WEIGHT, GPS_SMOOTH_REFERENCE_ACCURACY_M / accuracy));
+  return { lat: prev.lat + weight * (lat - prev.lat), lon: prev.lon + weight * (lon - prev.lon) };
+}
+
 // Piso de tiempo entre fixes para el cálculo de velocidad por diferencia de
 // posición (fallback cuando pos.coords.speed no viene, que en la práctica es
 // seguido en muchos Android/iOS con GPS de baja confianza). El piso viejo
@@ -101,6 +136,10 @@ interface TripRecord {
   speedKmh: number | null;
   heading: number | null;
   lastFix: { lat: number; lon: number; tMs: number } | null;
+  // Posición alisada por precisión (ver smoothGpsFix) -- es lo que de verdad
+  // se usa para todo (posición mostrada, distancia, batería, cercanía al
+  // destino), nunca el lat/lon crudo de un fix individual.
+  smoothedFix: { lat: number; lon: number } | null;
 }
 
 export type StatusKind = "" | "charging" | "warn" | "done";
@@ -232,7 +271,21 @@ export function useLiveTrip() {
     (pos: GeolocationPosition) => {
       const trip = tripRef.current;
       if (!trip) return;
-      const { latitude, longitude } = pos.coords;
+      const accuracyM = pos.coords.accuracy ?? null;
+
+      // Fix demasiado impreciso: se descarta entero antes de tocar nada del
+      // estado del viaje, en vez de dejarlo mover la posición mostrada (y
+      // con ella distancia/batería) de un salto que recién se corregiría en
+      // el próximo fix bueno. Sigue publicando el número de precisión (el
+      // renglón de diagnóstico lo necesita para mostrar que esto está
+      // pasando), pero nada más cambia.
+      if (accuracyM != null && accuracyM > GPS_HARD_REJECT_ACCURACY_M) {
+        setUi((u) => (u.active ? { ...u, gpsAccuracyM: accuracyM } : u));
+        return;
+      }
+
+      const { lat: latitude, lon: longitude } = smoothGpsFix(trip.smoothedFix, pos.coords.latitude, pos.coords.longitude, accuracyM);
+      trip.smoothedFix = { lat: latitude, lon: longitude };
       if (trip.startedRealMs === 0) trip.startedRealMs = Date.now();
 
       const { traveledKm, offRouteM } = projectOntoRoute(trip.coords, trip.cum, latitude, longitude);
@@ -301,7 +354,7 @@ export function useLiveTrip() {
           heading: trip.heading,
           statusText: "Llegaste a destino",
           statusKind: "done",
-          gpsAccuracyM: pos.coords.accuracy ?? null,
+          gpsAccuracyM: accuracyM,
           gpsGapMs: gapMs,
         });
         return;
@@ -348,7 +401,7 @@ export function useLiveTrip() {
         statusText,
         statusKind,
         advisory,
-        gpsAccuracyM: pos.coords.accuracy ?? null,
+        gpsAccuracyM: accuracyM,
         gpsGapMs: gapMs,
       });
     },
@@ -439,6 +492,7 @@ export function useLiveTrip() {
       speedKmh: null,
       heading: null,
       lastFix: null,
+      smoothedFix: null,
     };
     tripRef.current = trip;
 
