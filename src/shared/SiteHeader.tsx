@@ -53,10 +53,14 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
           </nav>
         )}
         <div className={styles.actions}>
-          <div className={styles.cta}>
-            {children}
-            <LanguageSwitcher />
-          </div>
+          {/* Fuera de .cta a propósito: .cta se esconde en mobile (ver la
+              regla ".inner:has(.menuToggle) .cta" en el CSS), pero esto
+              tiene que seguir visible ahí, pegado al botón hamburguesa --
+              mismo lugar que ocupa en escritorio (a la izquierda de "Ir a
+              la app" / "Iniciar sesión" y "Crear cuenta"), sin necesitar
+              una regla de media query aparte. */}
+          <LanguageSwitcher />
+          <div className={styles.cta}>{children}</div>
           {hasLinks && (
             <button
               type="button"
@@ -95,17 +99,14 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               </Link>
             )
           )}
-          {/* .cta (con el selector de idioma adentro) se esconde en la barra
-              en mobile (ver ".inner:has(.menuToggle) .cta" en el CSS) -- se
-              repite acá adentro para no perder "Iniciar sesión" / "Crear
-              cuenta" ni el selector del todo, solo movidos de lugar y
-              separados con más aire para que no se lean como un link más de
-              la lista. Sin selector de tema: claro/oscuro es una preferencia
-              de /app y /profile, no del sitio público (ver theme.ts). */}
-          <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>
-            {children}
-            <LanguageSwitcher />
-          </div>
+          {/* .cta se esconde en la barra en mobile (ver ".inner:has(.menuToggle)
+              .cta" en el CSS) -- se repite acá adentro para no perder
+              "Iniciar sesión" / "Crear cuenta" del todo, solo movidos de
+              lugar y separados con más aire para que no se lean como un link
+              más de la lista. El selector de idioma NO se repite acá: sigue
+              visible en la barra (al lado del botón hamburguesa) en
+              cualquier tamaño, ver el comentario en .actions más arriba. */}
+          <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>{children}</div>
         </nav>
       )}
     </header>
