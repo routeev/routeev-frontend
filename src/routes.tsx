@@ -1,5 +1,5 @@
 import { Suspense, type JSX } from "react";
-import { createBrowserRouter, Outlet } from "react-router-dom";
+import { createBrowserRouter, Outlet, ScrollRestoration } from "react-router-dom";
 import { GuestOnlyRoute } from "./auth/GuestOnlyRoute";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import {
@@ -27,7 +27,18 @@ export const router = createBrowserRouter([
     // vez de repetirlo en cada una. Sin esto, un chunk de React.lazy() que
     // falla en cargar (deploy viejo, red mala) reventaba hasta la pantalla
     // de error generica de react-router en vez de una propia.
-    element: <Outlet />,
+    element: (
+      <>
+        <Outlet />
+        {/* Sin esto, entrar a otra pagina (click en un Link, o
+            router.navigate) mantenia el scroll donde estaba en la pagina
+            anterior -- pedido explicito: toda pagina nueva arranca arriba
+            del todo. Distingue solo por PUSH/REPLACE (nueva pagina) vs
+            POP (atras/adelante del navegador, donde SI se espera volver a
+            donde estabas), que es el comportamiento nativo del browser. */}
+        <ScrollRestoration />
+      </>
+    ),
     errorElement: <RouteErrorBoundary />,
     children: [
       { path: "/", element: withFallback(<LandingPage />) },
