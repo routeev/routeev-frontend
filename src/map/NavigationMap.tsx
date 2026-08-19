@@ -94,6 +94,19 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
     });
     mapRef.current = map;
 
+    // El estilo "dark" de OpenFreeMap referencia sprites (p. ej.
+    // "wood-pattern") que a veces no vienen en el atlas que sirve su CDN.
+    // MapLibre solo evita el warning si la imagen llega ANTES de resolver
+    // la falta: setMissingStyleImageResolver corre primero y se espera su
+    // resultado, así que llega a tiempo -- el evento "styleimagemissing"
+    // (probado antes) dispara demasiado tarde, cuando el warning ya está
+    // decidido. Un pixel transparente 1x1 alcanza: no hay sprite propio que
+    // mantener, y en un estilo oscuro un relleno vacío no se nota donde
+    // iría el patrón.
+    map.setMissingStyleImageResolver((id) => {
+      if (!map.hasImage(id)) map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+    });
+
     // Flecha propia (no el pin por defecto de MapLibre) con
     // rotationAlignment "viewport": queda SIEMPRE apuntando para arriba en
     // pantalla sin importar el rumbo -- es el propio MAPA el que rota hacia
