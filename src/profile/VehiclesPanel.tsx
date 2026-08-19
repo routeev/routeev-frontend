@@ -6,6 +6,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { AddVehicleForm } from "./AddVehicleForm";
 import { VehicleCard } from "./VehicleCard";
+import { vehiclePhotoQueryKey } from "./useVehiclePhoto";
 import styles from "./ProfilePage.module.css";
 
 export function VehiclesPanel() {
@@ -17,21 +18,41 @@ export function VehiclesPanel() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["vehicles"] });
 
+  // La foto vieja (si había) queda cacheada como blob URL en React Query
+  // (ver useVehiclePhoto.ts) -- sin revocarla acá quedaría viva en memoria
+  // para siempre, y sin invalidar la query se seguiría mostrando esa misma
+  // blob URL (ya desactualizada) en vez de pedir la nueva.
+  const invalidatePhoto = (vehicleId: number) => {
+    const key = vehiclePhotoQueryKey(vehicleId);
+    const old = queryClient.getQueryData<string | null>(key);
+    if (old) URL.revokeObjectURL(old);
+    queryClient.invalidateQueries({ queryKey: key });
+  };
+
   const uploadPhoto = useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => uploadVehiclePhoto(id, await resizePhotoForUpload(file)),
-    onSuccess: refresh,
+    onSuccess: (_data, { id }) => {
+      refresh();
+      invalidatePhoto(id);
+    },
     onError: (err) => setError(err instanceof Error ? err.message : t.profile.vehiclesPanel.photoUploadError),
   });
 
   const removePhoto = useMutation({
     mutationFn: (id: number) => deleteVehiclePhoto(id),
-    onSuccess: refresh,
+    onSuccess: (_data, id) => {
+      refresh();
+      invalidatePhoto(id);
+    },
     onError: (err) => setError(err instanceof Error ? err.message : t.profile.vehiclesPanel.photoRemoveError),
   });
 
   const remove = useMutation({
     mutationFn: (id: number) => deleteVehicle(id),
-    onSuccess: refresh,
+    onSuccess: (_data, id) => {
+      refresh();
+      invalidatePhoto(id);
+    },
     onError: (err) => setError(err instanceof Error ? err.message : t.profile.vehiclesPanel.deleteError),
   });
 

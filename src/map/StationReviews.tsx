@@ -15,7 +15,7 @@ import { formatDate } from "../shared/format";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { RatingSummary } from "./RatingSummary";
 import { Stars, StarPicker } from "./Stars";
-import { useStationReviewPhoto } from "./useStationReviewPhoto";
+import { stationReviewPhotoQueryKey, useStationReviewPhoto } from "./useStationReviewPhoto";
 import styles from "./StationReviews.module.css";
 
 interface StationReviewsProps {
@@ -78,10 +78,23 @@ interface ReviewFormProps {
 function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
   const { t } = useTranslation();
   const sr = t.map.stationReviews;
+  const queryClient = useQueryClient();
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [comment, setComment] = useState(existing?.comment ?? "");
   const [error, setError] = useState<string | null>(null);
   const photoUrl = useStationReviewPhoto(existing?.id ?? 0, existing?.has_photo);
+
+  // La foto vieja (si había) queda cacheada como blob URL en React Query
+  // (ver useStationReviewPhoto.ts) -- sin revocarla acá quedaría viva en
+  // memoria para siempre, y sin invalidar la query se seguiría mostrando esa
+  // misma blob URL (ya desactualizada) en vez de pedir la nueva.
+  const invalidatePhoto = () => {
+    if (!existing) return;
+    const key = stationReviewPhotoQueryKey(existing.id);
+    const old = queryClient.getQueryData<string | null>(key);
+    if (old) URL.revokeObjectURL(old);
+    queryClient.invalidateQueries({ queryKey: key });
+  };
 
   const upsert = useMutation({
     mutationFn: () => upsertMyStationReview(nodeId, rating, comment.trim() || null),
@@ -91,19 +104,28 @@ function ReviewForm({ nodeId, existing, onSaved }: ReviewFormProps) {
 
   const removeReview = useMutation({
     mutationFn: () => deleteMyStationReview(nodeId),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      onSaved();
+      invalidatePhoto();
+    },
     onError: (err) => setError(err instanceof Error ? err.message : sr.deleteError),
   });
 
   const uploadPhoto = useMutation({
     mutationFn: async (file: File) => uploadMyStationReviewPhoto(nodeId, await resizePhotoForUpload(file)),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      onSaved();
+      invalidatePhoto();
+    },
     onError: (err) => setError(err instanceof Error ? err.message : sr.uploadPhotoError),
   });
 
   const removePhoto = useMutation({
     mutationFn: () => deleteMyStationReviewPhoto(nodeId),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      onSaved();
+      invalidatePhoto();
+    },
     onError: (err) => setError(err instanceof Error ? err.message : sr.removePhotoError),
   });
 

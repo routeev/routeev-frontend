@@ -1,38 +1,25 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { vehiclePhotoUrl } from "../api/vehicles";
+
+export function vehiclePhotoQueryKey(vehicleId: number) {
+  return ["vehiclePhoto", vehicleId] as const;
+}
 
 /**
  * Foto privada de un vehículo: se pide con Authorization y se convierte a
- * blob URL (un <img> no puede mandar headers propios). El navegador no
- * libera esas URLs solo -- sin el revoke del cleanup se acumulan en memoria
- * cada vez que la lista se vuelve a montar, que es en cada alta, baja o
- * cambio de foto (ver _photoObjectUrls en js/profile.js).
+ * blob URL (un <img> no puede mandar headers propios). Cacheada con React
+ * Query (staleTime: Infinity, no cambia sola) en vez de un fetch por
+ * useEffect: antes se volvía a pedir y a crear una blob URL nueva en CADA
+ * remonte (entrar y salir de /profile), aunque la foto siguiera siendo la
+ * misma. Quien sube o borra una foto es responsable de invalidar esta query
+ * (y revocar la blob URL vieja) a mano -- ver VehiclesPanel.tsx.
  */
 export function useVehiclePhoto(vehicleId: number, hasPhoto: boolean | undefined) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!hasPhoto) return;
-    let objectUrl: string | null = null;
-    let cancelled = false;
-
-    vehiclePhotoUrl(vehicleId).then((resolved) => {
-      if (cancelled) {
-        if (resolved) URL.revokeObjectURL(resolved);
-        return;
-      }
-      objectUrl = resolved;
-      setUrl(resolved);
-    });
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [vehicleId, hasPhoto]);
-
-  // Derivado en vez de resetear el estado dentro del efecto: si el vehículo
-  // dejó de tener foto, la URL vieja ya fue revocada por el cleanup y no
-  // debe mostrarse igual.
-  return hasPhoto ? url : null;
+  const { data } = useQuery({
+    queryKey: vehiclePhotoQueryKey(vehicleId),
+    queryFn: () => vehiclePhotoUrl(vehicleId),
+    enabled: !!hasPhoto,
+    staleTime: Infinity,
+  });
+  return hasPhoto ? (data ?? null) : null;
 }
