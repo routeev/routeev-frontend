@@ -12,6 +12,13 @@
   font-size: 12.5px;
 }
 
+.brandCol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .links {
   display: flex;
   gap: 12px;
@@ -25,5 +32,13 @@
 }
 
 .links a:hover {
+  color: var(--accent-astar);
+}
+
+/* Pagina actual (Showroom en /showroom, etc.): mismo criterio que
+   SiteHeader.module.css .linkActive -- ".links a.linkActive", no
+   ".linkActive" a secas, porque necesita mas especificidad que ".links a"
+   para ganarle al color base, no solo aparecer despues. */
+.links a.linkActive {
   color: var(--accent-astar);
 }
