@@ -25,9 +25,16 @@
          crawlers/navegadores viejos chequean esa ruta fija sin mirar el
          <link>, y sin este archivo caía al catch-all de la SPA (index.html
          servido como si fuera el ícono), por eso no aparecía en resultados
-         de Google pese a que el SVG andaba bien en el navegador. -->
+         de Google pese a que el SVG andaba bien en el navegador.
+         El .ico en sí también importa: Google pide un ícono cuadrado de al
+         menos 48x48px para mostrarlo en los resultados -- el que había solo
+         traía un frame de 16x16 adentro, por debajo del mínimo, así que
+         aunque el archivo cargaba bien igual quedaba afuera. Ahora trae
+         16/32/48 empaquetados, más un PNG de 48x48 aparte por si algún
+         crawler mira el <link> en vez de abrir el .ico. -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

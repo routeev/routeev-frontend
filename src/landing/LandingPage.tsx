@@ -62,6 +62,19 @@ export function LandingPage() {
             author: { "@type": "Organization", name: "RouteEV", email: "routemindtbo@gmail.com" },
           })}
         </script>
+        {/* Aparte del WebApplication de arriba: es el tipo WebSite +
+            "name" el que Google documenta como señal para el nombre que
+            muestra en los resultados de búsqueda (al lado del favicon,
+            "RouteEV" en vez del dominio "routeev.uy") -- og:site_name ya
+            lo decía, esto refuerza la misma señal por el otro camino. */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "RouteEV",
+            url: "https://routeev.uy/",
+          })}
+        </script>
       </Helmet>
 
       <SiteHeader
