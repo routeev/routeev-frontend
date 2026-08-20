@@ -52,6 +52,14 @@ export const showroom = {
     precioRedDc: (precioKwh: string, cargoBase: string) => `DC $ ${precioKwh}/kWh + ${cargoBase} de conexión`,
     notaTarifas: (operador: string, vigencia: string, detalle: string, precioCasa: string) =>
       `Precios de red según pliego ${operador} ${vigencia}${detalle}. En casa: $ ${precioCasa}/kWh.`,
+    // Título/descripción propios de cada modelo (en vez de heredar los
+    // genéricos de la página del showroom): sin esto, Google veía el mismo
+    // <title> para las 631 fichas y no tenía forma de indexar "Nissan Leaf
+    // autonomía Uruguay" como un resultado propio.
+    metaTitle: (nombre: string) => `${nombre} — autonomía, batería y carga en Uruguay | RouteEV`,
+    metaDescription: (nombre: string, autonomiaKm: string, bateriaKwh: string) =>
+      `${nombre}: ${autonomiaKm} km de autonomía real, ${bateriaKwh} kWh de batería. Cuánto tarda en cargar y cuánto sale cada 100 km en las estaciones de Uruguay, calculado con datos reales.`,
+    ogTitle: (nombre: string, autonomiaKm: string) => `${nombre}: ${autonomiaKm} km de autonomía real en Uruguay`,
   },
   simulationResult: {
     noLlega: "No llega",

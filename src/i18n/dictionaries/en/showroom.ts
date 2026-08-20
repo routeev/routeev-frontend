@@ -52,6 +52,14 @@ export const showroom = {
     precioRedDc: (precioKwh: string, cargoBase: string) => `DC $ ${precioKwh}/kWh + ${cargoBase} connection fee`,
     notaTarifas: (operador: string, vigencia: string, detalle: string, precioCasa: string) =>
       `Network rates per the ${operador} rate sheet ${vigencia}${detalle}. At home: $ ${precioCasa}/kWh.`,
+    // Per-model title/description (instead of inheriting the showroom
+    // page's generic ones): without this, Google saw the same <title> for
+    // all 631 sheets and had no way to index "Nissan Leaf range Uruguay"
+    // as its own result.
+    metaTitle: (nombre: string) => `${nombre} — range, battery and charging in Uruguay | RouteEV`,
+    metaDescription: (nombre: string, autonomiaKm: string, bateriaKwh: string) =>
+      `${nombre}: ${autonomiaKm} km of real-world range, ${bateriaKwh} kWh battery. How long it takes to charge and what it costs per 100 km on Uruguay's charging network, calculated with real data.`,
+    ogTitle: (nombre: string, autonomiaKm: string) => `${nombre}: ${autonomiaKm} km of real-world range in Uruguay`,
   },
   simulationResult: {
     noLlega: "Won't make it",

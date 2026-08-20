@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { showroomModel, type ShowroomModel } from "../api/showroom";
 import { CarSilhouette } from "../shared/CarSilhouette";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -22,7 +23,7 @@ interface ModelFichaProps {
 }
 
 export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: ModelFichaProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const mf = t.showroom.modelFicha;
   // La familia se rearma acá solo para el nombre limpio y las etiquetas de
   // versión ("48 kWh", "GT"); las versiones ya vienen agrupadas del catálogo.
@@ -85,8 +86,34 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
         .join(" · ")
     : "";
 
+  const autonomiaKm = num(metricas.autonomia_calculada_km);
+  const bateriaKwh = num(model.bateria_kwh, 1);
+  const canonicalUrl = `https://routeev.uy/showroom?modelo=${encodeURIComponent(modelId)}`;
+
   return (
     <section className={styles.ficha} aria-label={mf.ariaLabel} tabIndex={-1}>
+      {/* Título/descripción propios de ESTE modelo, no los genéricos de
+          ShowroomPage (que se apaga por completo mientras hay una ficha
+          abierta, ver ShowroomPage.tsx): react-helmet-async NO reemplaza
+          los <meta>/<link> de un Helmet ancestro por los de uno más
+          adentro con el mismo name/property, los dos quedarían
+          conviviendo -- por eso este Helmet repite también los og: que no
+          cambian (type/locale/site_name/image) en vez de heredarlos. Sin
+          nada de esto, cualquier resultado de Google para una ficha
+          puntual mostraba el mismo título genérico de todo el showroom. */}
+      <Helmet>
+        <title>{mf.metaTitle(nombre)}</title>
+        <meta name="description" content={mf.metaDescription(nombre, autonomiaKm, bateriaKwh)} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
+        <meta property="og:site_name" content="RouteEV" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={mf.ogTitle(nombre, autonomiaKm)} />
+        <meta property="og:description" content={mf.metaDescription(nombre, autonomiaKm, bateriaKwh)} />
+        <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
       <button type="button" className={styles.cerrar} aria-label={mf.closeAriaLabel} onClick={onClose}>
         &times;
       </button>

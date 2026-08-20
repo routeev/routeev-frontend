@@ -20,6 +20,19 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Las meta/og/twitter de index.html (marcadas data-fallback) son SOLO
+    // para quien comparte un link sin ejecutar JS (WhatsApp/Slack/Twitter
+    // armando la vista previa del HTML crudo) -- react-helmet-async no las
+    // conoce (no las renderizo el, viven en el HTML estatico), asi que
+    // nunca las reemplaza: cada pagina terminaba con DOS <meta
+    // name="description"> (la generica de la home + la propia de Helmet),
+    // y Google no tiene garantia de cual de las dos lee. Sacarlas una vez
+    // que React ya tomo control es seguro: para entonces cualquier crawler
+    // sin JS ya termino de leer el HTML original.
+    document.querySelectorAll('[data-fallback="true"]').forEach((el) => el.remove());
+  }, []);
+
+  useEffect(() => {
     // El tema es una preferencia de /app y /profile, no del sitio entero
     // (ver theme.ts) -- fuera del componente de ruta a propósito, porque
     // router (createBrowserRouter, no <BrowserRouter>) vive afuera del

@@ -73,19 +73,28 @@ export function ShowroomPage() {
 
   return (
     <div>
-      <Helmet>
-        <title>{sp.metaTitle}</title>
-        <meta name="description" content={sp.metaDescription} />
-        <link rel="canonical" href="https://routeev.uy/showroom" />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
-        <meta property="og:site_name" content="RouteEV" />
-        <meta property="og:url" content="https://routeev.uy/showroom" />
-        <meta property="og:title" content={sp.ogTitle} />
-        <meta property="og:description" content={sp.ogDescription} />
-        <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
+      {/* Solo sin ficha abierta: react-helmet-async NO reemplaza un <meta>/
+          <link> de un Helmet ancestro por el de uno más adentro con el
+          mismo name/property -- los deja a los dos convivir (title es la
+          única excepción, ahí sí gana el último). Con ficha abierta,
+          ModelFicha pone su PROPIO Helmet completo (título, descripción,
+          canonical Y los og:type/locale/site_name/image de acá abajo) en
+          vez de heredar estos; de ahí que este bloque entero se apague. */}
+      {!fichaId && (
+        <Helmet>
+          <title>{sp.metaTitle}</title>
+          <meta name="description" content={sp.metaDescription} />
+          <link rel="canonical" href="https://routeev.uy/showroom" />
+          <meta property="og:type" content="website" />
+          <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
+          <meta property="og:site_name" content="RouteEV" />
+          <meta property="og:url" content="https://routeev.uy/showroom" />
+          <meta property="og:title" content={sp.ogTitle} />
+          <meta property="og:description" content={sp.ogDescription} />
+          <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
+          <meta name="twitter:card" content="summary_large_image" />
+        </Helmet>
+      )}
 
       <SiteHeader navLinks={[{ href: "/", label: sp.navHome }, { href: "/showroom", label: sp.navShowroom }]}>
         <Link to="/login" className={buttons.navLink}>

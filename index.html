@@ -40,30 +40,41 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0e13" />
+    <!-- data-fallback: contenido de la home, solo para quien NO ejecuta JS
+         (compartir un link en WhatsApp/Slack/Twitter, que arma la vista
+         previa leyendo el HTML crudo, sin correr React). Cada página ya
+         pone las suyas propias con Helmet -- sin el data-fallback para
+         identificarlas y sacarlas en el mount (ver App.tsx), estas
+         quedaban conviviendo con las de Helmet como una <meta> repetida
+         (mismo name/property, texto distinto) en TODAS las rutas, no solo
+         la home, y Google no tiene garantía de cuál de las dos usa. -->
     <meta
       name="description"
       content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 259 estaciones de carga de UTE y de operadores privados. 631 modelos precargados, sin crear cuenta."
+      data-fallback="true"
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="es_UY" />
-    <meta property="og:site_name" content="RouteEV" />
-    <meta property="og:url" content="https://routeev.uy/" />
-    <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+    <meta property="og:type" content="website" data-fallback="true" />
+    <meta property="og:locale" content="es_UY" data-fallback="true" />
+    <meta property="og:site_name" content="RouteEV" data-fallback="true" />
+    <meta property="og:url" content="https://routeev.uy/" data-fallback="true" />
+    <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." data-fallback="true" />
     <meta
       property="og:description"
       content="Elegí uno de 631 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      data-fallback="true"
     />
-    <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="631" />
-    <meta property="og:image:alt" content="RouteEV — planificá viajes en auto eléctrico por Uruguay" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+    <meta property="og:image" content="https://routeev.uy/img/og-cover.png" data-fallback="true" />
+    <meta property="og:image:width" content="1200" data-fallback="true" />
+    <meta property="og:image:height" content="631" data-fallback="true" />
+    <meta property="og:image:alt" content="RouteEV — planificá viajes en auto eléctrico por Uruguay" data-fallback="true" />
+    <meta name="twitter:card" content="summary_large_image" data-fallback="true" />
+    <meta name="twitter:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." data-fallback="true" />
     <meta
       name="twitter:description"
       content="Elegí uno de 631 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      data-fallback="true"
     />
-    <meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" />
+    <meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" data-fallback="true" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
