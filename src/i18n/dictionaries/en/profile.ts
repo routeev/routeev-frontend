@@ -2,6 +2,11 @@ export const profile = {
   // AccountPanel.tsx
   account: {
     title: "My account",
+    fieldNameLabel: "Name",
+    fieldUsernameLabel: "Username",
+    fieldEmailLabel: "Email",
+    fieldPasswordLabel: "Password",
+    noDisplayName: "Not set",
     changePhoto: "Change profile photo",
     photoUploadOk: "Done, your profile photo is updated.",
     photoUploadError: "Couldn't upload the photo.",

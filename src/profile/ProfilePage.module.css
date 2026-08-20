@@ -127,11 +127,16 @@
 
 /* --- Mi cuenta --- */
 
+/* Encabezado: foto + identidad, sin ningún control de edición acá -- antes
+   el nombre grande de arriba tenía al lado un lápiz que en realidad editaba
+   el USERNAME (no el nombre que mostraba), y el lápiz del nombre para
+   mostrar vivía suelto más abajo sin ningún texto que dijera qué controlaba.
+   Editar cualquier dato ahora vive SOLO en .accountFields, cada uno con su
+   propio label -- ver el comentario ahí. */
 .accountRow {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 4px;
 }
 
 .avatarWrap {
@@ -180,28 +185,85 @@
   font-weight: 600;
 }
 
-.usernameRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* Lista de campos editables (Nombre, Usuario, Correo, Contraseña y, en
+   mobile, Idioma y tema): mismo patrón repetido para los cinco -- label chico
+   arriba, valor abajo, y el botón de editar al final de la fila, siempre a
+   la altura de ESE campo y ningún otro. Reemplaza el layout ad-hoc que tenía
+   cada uno antes (ver el comentario de .accountRow arriba). */
+.accountFields {
+  margin-top: 18px;
 }
 
-.usernameEditBtn {
+.accountField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.accountField:last-child {
+  border-bottom: none;
+}
+
+.accountFieldMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.accountFieldLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.accountFieldValue {
+  font-size: 14px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.accountFieldEmpty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* Botón de editar de cada fila: con borde propio (a diferencia del lápiz
+   suelto que tenía antes cada campo) para que se lea como un control con el
+   que se puede interactuar, no como un adorno chico al lado del texto --
+   pedido explícito de "ajustar la posición de los botones". */
+.accountFieldEdit {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: none;
-  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-faint);
-  font-size: 12px;
+  font-size: 13px;
 }
 
-.usernameEditBtn:hover {
+.accountFieldEdit:hover {
   color: var(--text);
-  border-color: transparent;
+  border-color: var(--accent-astar);
+}
+
+/* En el celular el botón se toca con el dedo: mismo criterio de 44px que ya
+   usa .usernameEditRow input más abajo. */
+@media (max-width: 640px) {
+  .accountFieldEdit {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* El <label> del campo va arriba de la fila, no adentro: si entrara en el
@@ -211,6 +273,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
 }
 
 .usernameEditRow {
@@ -244,17 +307,6 @@
   color: var(--danger);
 }
 
-/* Cambiar contraseña: mismo separador que .dangerZone de abajo, para que
-   tenga aire propio en vez de quedar pegada justo debajo de .preferencesRow
-   -- que en escritorio es display:none (solo existe en mobile), así que sin
-   este borde/margen propios el botón quedaba tocando el bloque de arriba
-   sin ningún respiro en esa pantalla. */
-.passwordSection {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-soft);
-}
-
 /* Eliminar cuenta: separada del resto de "Mi cuenta" con su propio borde,
    para que se lea como una zona aparte y no como una opción más de la
    lista -- es la única acción del panel que es irreversible de verdad. */
@@ -275,22 +327,21 @@
   margin-bottom: 8px;
 }
 
-/* Selector de idioma y tema: vive acá (y no en AppTopbar) en mobile a
-   propósito -- ver el comentario en AppTopbar.tsx sobre por qué se sacaron
-   de al lado del botón hamburguesa. Solo en mobile: en escritorio los mismos
-   dos controles ya están en la barra (a la izquierda del chip de usuario),
-   así que mostrarlos acá también sería un duplicado sin motivo. Mismo corte
-   de 860px que AppTopbar.module.css, para que sea exactamente el tamaño en
-   el que uno de los dos lugares deja de verse y el otro empieza. */
+/* Idioma y tema: misma fila que el resto de .accountFields (.accountField ya
+   le da el padding/borde-inferior), solo que esta además necesita esconderse
+   en escritorio -- vive acá (y no en AppTopbar) en mobile a propósito, ver el
+   comentario en AppTopbar.tsx sobre por qué se sacaron de al lado del botón
+   hamburguesa. En escritorio los mismos dos controles ya están en la barra
+   (a la izquierda del chip de usuario), así que mostrarlos acá también sería
+   un duplicado sin motivo. Mismo corte de 860px que AppTopbar.module.css,
+   para que sea exactamente el tamaño en el que uno de los dos lugares deja
+   de verse y el otro empieza.
+   display:none DESPUÉS de .accountField en el archivo a propósito: son la
+   misma propiedad, y en CSS (misma especificidad) gana la regla que aparece
+   más abajo -- así este selector le puede pisar el display:flex a
+   .accountField sin necesitar más especificidad. */
 .preferencesRow {
   display: none;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-soft);
 }
 
 @media (max-width: 860px) {

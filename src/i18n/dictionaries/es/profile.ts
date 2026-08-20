@@ -2,6 +2,16 @@ export const profile = {
   // AccountPanel.tsx
   account: {
     title: "Mi cuenta",
+    // Labels cortos de cada fila de "Mi cuenta" (Nombre/Usuario/Correo/
+    // Contraseña) -- distintos de usernameLabel/displayNameLabel/newEmailLabel
+    // de abajo, que son los labels del FORMULARIO al editar ("Tu nombre de
+    // usuario"), más largos/instructivos. Estos son el label corto de la fila
+    // cuando no se está editando, tipo lista de configuración.
+    fieldNameLabel: "Nombre",
+    fieldUsernameLabel: "Usuario",
+    fieldEmailLabel: "Correo",
+    fieldPasswordLabel: "Contraseña",
+    noDisplayName: "Sin definir",
     changePhoto: "Cambiar foto de perfil",
     photoUploadOk: "Listo, cambiamos tu foto de perfil.",
     photoUploadError: "No se pudo subir la foto.",

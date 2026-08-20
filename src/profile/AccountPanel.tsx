@@ -35,9 +35,15 @@ const USERNAME_MIN = 3;
 const USERNAME_MAX = 32;
 
 /**
- * "Mi cuenta": nombre, correo y foto de perfil. A diferencia de la foto de
- * un vehículo (blob privado con Authorization), la de perfil vive en
- * Cloudinary y es pública: va directo en el <img src>, sin fetch manual.
+ * "Mi cuenta": foto, nombre, usuario, correo, contraseña, idioma/tema y
+ * eliminar cuenta.
+ *
+ * Estructura en dos bloques (ver el comentario de .accountRow en
+ * ProfilePage.module.css para el porqué): un encabezado puramente
+ * informativo (foto + nombre + @usuario, sin ningún botón de editar) y
+ * abajo una lista de campos (.accountFields), cada uno con su propio
+ * label + valor + botón de editar -- así ningún lápiz queda ambiguo sobre
+ * qué dato controla, ni suelto sin ningún texto al lado.
  */
 export function AccountPanel() {
   const { t } = useTranslation();
@@ -45,9 +51,6 @@ export function AccountPanel() {
   const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
   const fileInput = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [usernameInput, setUsernameInput] = useState("");
 
   // La foto de perfil cambia arriba de todo y la persona que la subió está
   // mirando el selector de archivos, no el avatar: sin un aviso, el resultado
@@ -70,22 +73,6 @@ export function AccountPanel() {
     },
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : t.profile.account.photoRemoveError),
-  });
-
-  const rename = useMutation({
-    mutationFn: (username: string) => updateMyUsername(username),
-    onSuccess: (user) => {
-      queryClient.setQueryData(["me"], user);
-      // No solo el cache de la query: /app muestra el chip de usuario con
-      // getUsername() (localStorage) como respaldo cuando no le pasan un
-      // username por prop (ver AppTopbar.tsx) -- sin esto, ahí seguía
-      // mostrando el nombre viejo hasta el próximo login.
-      setStoredUsername(user.username);
-      setEditingUsername(false);
-      toast.ok(t.profile.account.usernameUpdated(user.username));
-    },
-    onError: (err) =>
-      setError(err instanceof Error ? err.message : t.profile.account.usernameUpdateError),
   });
 
   const user = meQuery.data;
@@ -123,113 +110,8 @@ export function AccountPanel() {
           </label>
         </div>
         <div className={styles.accountInfo}>
-          {editingUsername ? (
-            <form
-              className={styles.usernameEditForm}
-              noValidate
-              onSubmit={(e) => {
-                e.preventDefault();
-                setError(null);
-                setUsernameError(null);
-                const trimmed = usernameInput.trim();
-                // Dejarlo igual (o vacío) no es un error: es "me arrepentí".
-                if (!trimmed || trimmed === user?.username) {
-                  setEditingUsername(false);
-                  return;
-                }
-                if (trimmed.length < USERNAME_MIN || trimmed.length > USERNAME_MAX) {
-                  setUsernameError(
-                    t.profile.account.usernameLengthError(USERNAME_MIN, USERNAME_MAX)
-                  );
-                  // El foco se queda en "Guardar" si no se mueve, y el error se
-                  // pinta abajo: quien tiene los ojos en el botón, o usa lector
-                  // de pantalla, no se entera de nada. Mismo patrón que ya usan
-                  // AddVehicleForm y SimulationForm.
-                  requestAnimationFrame(() => document.getElementById("account-username")?.focus());
-                  return;
-                }
-                rename.mutate(trimmed);
-              }}
-            >
-              {/* <label> de verdad, con htmlFor: el campo aparece EN LUGAR del
-                  nombre, así que sin esto no hay nada en pantalla que diga qué
-                  se está editando -- ni para quien ve, ni para un lector de
-                  pantalla, que solo anunciaba "cuadro de edición". */}
-              <label htmlFor="account-username">{t.profile.account.usernameLabel}</label>
-              <div className={styles.usernameEditRow}>
-                <input
-                  id="account-username"
-                  type="text"
-                  value={usernameInput}
-                  onChange={(e) => {
-                    setUsernameInput(e.target.value);
-                    setUsernameError(null);
-                  }}
-                  maxLength={USERNAME_MAX}
-                  autoFocus
-                  disabled={rename.isPending}
-                  aria-invalid={Boolean(usernameError)}
-                  aria-describedby={usernameError ? "account-username-error" : undefined}
-                />
-                <button
-                  type="submit"
-                  className="primary small"
-                  disabled={rename.isPending}
-                  aria-busy={rename.isPending}
-                >
-                  {rename.isPending ? (
-                    <>
-                      <Spinner /> {t.common.saving}
-                    </>
-                  ) : (
-                    t.common.save
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="ghost small"
-                  disabled={rename.isPending}
-                  onClick={() => {
-                    setError(null);
-                    setUsernameError(null);
-                    setEditingUsername(false);
-                  }}
-                >
-                  {t.common.cancel}
-                </button>
-              </div>
-              {usernameError && (
-                <p className={styles.fieldError} id="account-username-error">
-                  {usernameError}
-                </p>
-              )}
-            </form>
-          ) : (
-            <div className={styles.usernameRow}>
-              {/* El nombre propio manda: es lo que la persona escribió de sí
-                  misma. El nombre de usuario queda debajo, en chico, porque es
-                  un identificador y no como se llama. Sin esto, el registro
-                  prometía "es cómo te vamos a mostrar en la app" y después
-                  todas las pantallas seguían diciendo "pucho1394". */}
-              <span className={styles.accountUsername}>{nombreParaMostrar(user) || "-"}</span>
-              <button
-                type="button"
-                className={styles.usernameEditBtn}
-                title={t.profile.account.changeUsername}
-                onClick={() => {
-                  setError(null);
-                  setUsernameInput(user?.username ?? "");
-                  setEditingUsername(true);
-                }}
-              >
-                <span aria-hidden="true">✎</span>
-                <span className="sr-only">{t.profile.account.changeUsername}</span>
-              </button>
-            </div>
-          )}
-          {user?.display_name && <div className="hint">@{user.username}</div>}
-          <DisplayNameField user={user ?? null} onError={setError} />
-          <EmailField user={user ?? null} onError={setError} />
+          <span className={styles.accountUsername}>{nombreParaMostrar(user) || "-"}</span>
+          {user && <span className="hint">@{user.username}</span>}
           {user?.photo_url && (
             <button
               type="button"
@@ -257,21 +139,31 @@ export function AccountPanel() {
           {error}
         </Banner>
       )}
-      <div className={styles.preferencesRow}>
-        <span className="hint">{t.profile.account.preferencesLabel}</span>
-        <div className={styles.preferencesControls}>
-          <LanguageSwitcher />
-          <ThemeSwitcher />
+      <div className={styles.accountFields}>
+        <DisplayNameField user={user ?? null} onError={setError} />
+        <UsernameField user={user ?? null} onError={setError} />
+        <EmailField user={user ?? null} onError={setError} />
+        <PasswordField />
+        {/* Solo en mobile (ver .preferencesRow) -- en escritorio los mismos
+            dos controles ya están en AppTopbar, mostrarlos acá también sería
+            un duplicado. */}
+        <div className={`${styles.accountField} ${styles.preferencesRow}`}>
+          <div className={styles.accountFieldMain}>
+            <span className={styles.accountFieldLabel}>{t.profile.account.preferencesLabel}</span>
+          </div>
+          <div className={styles.preferencesControls}>
+            <LanguageSwitcher />
+            <ThemeSwitcher />
+          </div>
         </div>
       </div>
-      <PasswordField />
       <DeleteAccountSection />
     </section>
   );
 }
 
 /**
- * Tu nombre, el propio, el que se muestra en la app.
+ * Fila "Nombre": el nombre propio, el que se muestra en la app.
  *
  * QA BAJO 25: el nombre salía del prefijo del correo, así que alguien se veía
  * "pucho1394" en su propio perfil y en su historial de viajes. El registro ya
@@ -305,83 +197,219 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
   });
 
   if (!editando) {
-    // Icono solo, no el botón de texto que tenía antes ("Cambiar mi nombre" /
-    // "Poné tu nombre"): pedido explícito, mismo tratamiento que el lápiz de
-    // usuario/correo (usernameEditBtn) para que las tres ediciones de "Mi
-    // cuenta" se vean como una sola convención, no una mezcla de botones de
-    // texto y iconos.
-    const label = user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName;
     return (
-      <button
-        type="button"
-        className={styles.usernameEditBtn}
-        title={label}
-        onClick={() => {
-          onError(null);
-          setValor(user?.display_name ?? "");
-          setEditando(true);
-        }}
-      >
-        <span aria-hidden="true">✎</span>
-        <span className="sr-only">{label}</span>
-      </button>
+      <div className={styles.accountField}>
+        <div className={styles.accountFieldMain}>
+          <span className={styles.accountFieldLabel}>{t.profile.account.fieldNameLabel}</span>
+          <span className={styles.accountFieldValue}>
+            {user?.display_name || <span className={styles.accountFieldEmpty}>{t.profile.account.noDisplayName}</span>}
+          </span>
+        </div>
+        <button
+          type="button"
+          className={styles.accountFieldEdit}
+          title={user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName}
+          onClick={() => {
+            onError(null);
+            setValor(user?.display_name ?? "");
+            setEditando(true);
+          }}
+        >
+          <span aria-hidden="true">✎</span>
+          <span className="sr-only">
+            {user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName}
+          </span>
+        </button>
+      </div>
     );
   }
 
   return (
-    <form
-      className={styles.usernameEditForm}
-      noValidate
-      onSubmit={(e) => {
-        e.preventDefault();
-        onError(null);
-        guardar.mutate(valor.trim());
-      }}
-    >
-      <label htmlFor="account-display-name">{t.profile.account.displayNameLabel}</label>
-      <div className={styles.usernameEditRow}>
-        <input
-          id="account-display-name"
-          type="text"
-          autoComplete="name"
-          placeholder={t.profile.account.displayNamePlaceholder}
-          value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          maxLength={80}
-          autoFocus
-          disabled={guardar.isPending}
-        />
-        <button type="submit" className="primary small" disabled={guardar.isPending} aria-busy={guardar.isPending}>
-          {guardar.isPending ? (
-            <>
-              <Spinner /> {t.common.saving}
-            </>
-          ) : (
-            t.common.save
-          )}
-        </button>
-        <button
-          type="button"
-          className="ghost small"
-          disabled={guardar.isPending}
-          onClick={() => {
-            onError(null);
-            setEditando(false);
-          }}
-        >
-          {t.common.cancel}
-        </button>
-      </div>
-      <p className="hint">{t.profile.account.displayNameHint}</p>
-    </form>
+    <div className={styles.accountField}>
+      <form
+        className={styles.usernameEditForm}
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          onError(null);
+          guardar.mutate(valor.trim());
+        }}
+      >
+        <label htmlFor="account-display-name">{t.profile.account.displayNameLabel}</label>
+        <div className={styles.usernameEditRow}>
+          <input
+            id="account-display-name"
+            type="text"
+            autoComplete="name"
+            placeholder={t.profile.account.displayNamePlaceholder}
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            maxLength={80}
+            autoFocus
+            disabled={guardar.isPending}
+          />
+          <button type="submit" className="primary small" disabled={guardar.isPending} aria-busy={guardar.isPending}>
+            {guardar.isPending ? (
+              <>
+                <Spinner /> {t.common.saving}
+              </>
+            ) : (
+              t.common.save
+            )}
+          </button>
+          <button
+            type="button"
+            className="ghost small"
+            disabled={guardar.isPending}
+            onClick={() => {
+              onError(null);
+              setEditando(false);
+            }}
+          >
+            {t.common.cancel}
+          </button>
+        </div>
+        <p className="hint">{t.profile.account.displayNameHint}</p>
+      </form>
+    </div>
   );
 }
 
 /**
- * Tu correo. Cambio en dos pasos: pedirlo (manda un código de 6 dígitos a la
- * casilla NUEVA, nunca a la vieja) y confirmarlo con ese código -- el correo
- * de la cuenta no cambia hasta que se prueba que esa casilla nueva responde
- * de verdad (ver api/user.ts#requestMyEmailChange/confirmMyEmailChange).
+ * Fila "Usuario": el identificador único de la cuenta (minúsculas, sin
+ * acentos ni espacios) -- distinto del nombre propio de arriba, ver el
+ * comentario de DisplayNameField. Antes vivía arreglado al nombre grande del
+ * encabezado, con un lápiz que en los hechos editaba ESTO, no el nombre que
+ * tenía al lado: confuso. Ahora tiene su propia fila, como cualquier otro
+ * campo.
+ */
+function UsernameField({ user, onError }: { user: Me | null; onError: (msg: string | null) => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [editando, setEditando] = useState(false);
+  const [valor, setValor] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+
+  const rename = useMutation({
+    mutationFn: (username: string) => updateMyUsername(username),
+    onSuccess: (actualizado) => {
+      queryClient.setQueryData(["me"], actualizado);
+      // No solo el cache de la query: /app muestra el chip de usuario con
+      // getUsername() (localStorage) como respaldo cuando no le pasan un
+      // username por prop (ver AppTopbar.tsx) -- sin esto, ahí seguía
+      // mostrando el nombre viejo hasta el próximo login.
+      setStoredUsername(actualizado.username);
+      setEditando(false);
+      toast.ok(t.profile.account.usernameUpdated(actualizado.username));
+    },
+    onError: (err) => onError(err instanceof Error ? err.message : t.profile.account.usernameUpdateError),
+  });
+
+  if (!editando) {
+    return (
+      <div className={styles.accountField}>
+        <div className={styles.accountFieldMain}>
+          <span className={styles.accountFieldLabel}>{t.profile.account.fieldUsernameLabel}</span>
+          <span className={styles.accountFieldValue}>{user?.username ?? ""}</span>
+        </div>
+        <button
+          type="button"
+          className={styles.accountFieldEdit}
+          title={t.profile.account.changeUsername}
+          onClick={() => {
+            onError(null);
+            setUsernameError(null);
+            setValor(user?.username ?? "");
+            setEditando(true);
+          }}
+        >
+          <span aria-hidden="true">✎</span>
+          <span className="sr-only">{t.profile.account.changeUsername}</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.accountField}>
+      <form
+        className={styles.usernameEditForm}
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          onError(null);
+          setUsernameError(null);
+          const trimmed = valor.trim();
+          // Dejarlo igual (o vacío) no es un error: es "me arrepentí".
+          if (!trimmed || trimmed === user?.username) {
+            setEditando(false);
+            return;
+          }
+          if (trimmed.length < USERNAME_MIN || trimmed.length > USERNAME_MAX) {
+            setUsernameError(t.profile.account.usernameLengthError(USERNAME_MIN, USERNAME_MAX));
+            // El foco se queda en "Guardar" si no se mueve, y el error se
+            // pinta abajo: quien tiene los ojos en el botón, o usa lector
+            // de pantalla, no se entera de nada. Mismo patrón que ya usan
+            // AddVehicleForm y SimulationForm.
+            requestAnimationFrame(() => document.getElementById("account-username")?.focus());
+            return;
+          }
+          rename.mutate(trimmed);
+        }}
+      >
+        <label htmlFor="account-username">{t.profile.account.usernameLabel}</label>
+        <div className={styles.usernameEditRow}>
+          <input
+            id="account-username"
+            type="text"
+            value={valor}
+            onChange={(e) => {
+              setValor(e.target.value);
+              setUsernameError(null);
+            }}
+            maxLength={USERNAME_MAX}
+            autoFocus
+            disabled={rename.isPending}
+            aria-invalid={Boolean(usernameError)}
+            aria-describedby={usernameError ? "account-username-error" : undefined}
+          />
+          <button type="submit" className="primary small" disabled={rename.isPending} aria-busy={rename.isPending}>
+            {rename.isPending ? (
+              <>
+                <Spinner /> {t.common.saving}
+              </>
+            ) : (
+              t.common.save
+            )}
+          </button>
+          <button
+            type="button"
+            className="ghost small"
+            disabled={rename.isPending}
+            onClick={() => {
+              onError(null);
+              setUsernameError(null);
+              setEditando(false);
+            }}
+          >
+            {t.common.cancel}
+          </button>
+        </div>
+        {usernameError && (
+          <p className={styles.fieldError} id="account-username-error">
+            {usernameError}
+          </p>
+        )}
+      </form>
+    </div>
+  );
+}
+
+/**
+ * Fila "Correo". Cambio en dos pasos: pedirlo (manda un código de 6 dígitos a
+ * la casilla NUEVA, nunca a la vieja) y confirmarlo con ese código -- el
+ * correo de la cuenta no cambia hasta que se prueba que esa casilla nueva
+ * responde de verdad (ver api/user.ts#requestMyEmailChange/confirmMyEmailChange).
  *
  * Si el servidor no tiene Resend configurado no hay como mandar el código:
  * `confirmation_required` en la respuesta dice cuál de los dos caminos
@@ -430,11 +458,14 @@ function EmailField({ user, onError }: { user: Me | null; onError: (msg: string 
 
   if (step === "idle") {
     return (
-      <div className={styles.usernameRow}>
-        <span className="hint">{user?.email ?? ""}</span>
+      <div className={styles.accountField}>
+        <div className={styles.accountFieldMain}>
+          <span className={styles.accountFieldLabel}>{t.profile.account.fieldEmailLabel}</span>
+          <span className={styles.accountFieldValue}>{user?.email ?? ""}</span>
+        </div>
         <button
           type="button"
-          className={styles.usernameEditBtn}
+          className={styles.accountFieldEdit}
           title={t.profile.account.changeEmail}
           onClick={() => {
             onError(null);
@@ -451,112 +482,115 @@ function EmailField({ user, onError }: { user: Me | null; onError: (msg: string 
 
   if (step === "confirming") {
     return (
+      <div className={styles.accountField}>
+        <form
+          className={styles.usernameEditForm}
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            onError(null);
+            confirm.mutate(code.trim());
+          }}
+        >
+          <label htmlFor="account-email-code">{t.profile.account.emailCodeLabel}</label>
+          {info && <p className="hint">{info}</p>}
+          <div className={styles.usernameEditRow}>
+            <input
+              id="account-email-code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder={t.profile.account.emailCodePlaceholder}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              maxLength={6}
+              autoFocus
+              disabled={confirm.isPending}
+            />
+            <button type="submit" className="primary small" disabled={confirm.isPending} aria-busy={confirm.isPending}>
+              {confirm.isPending ? (
+                <>
+                  <Spinner /> {t.profile.account.confirmingEmailChange}
+                </>
+              ) : (
+                t.profile.account.confirmEmailChange
+              )}
+            </button>
+            <button type="button" className="ghost small" disabled={confirm.isPending} onClick={volverAIdle}>
+              {t.common.cancel}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.accountField}>
       <form
         className={styles.usernameEditForm}
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
           onError(null);
-          confirm.mutate(code.trim());
+          const trimmed = newEmail.trim();
+          // Igual al correo actual (o vacío) no es un error: es "me arrepentí".
+          if (!trimmed || trimmed === user?.email) {
+            setStep("idle");
+            return;
+          }
+          request.mutate(trimmed);
         }}
       >
-        <label htmlFor="account-email-code">{t.profile.account.emailCodeLabel}</label>
-        {info && <p className="hint">{info}</p>}
+        <label htmlFor="account-email">{t.profile.account.newEmailLabel}</label>
         <div className={styles.usernameEditRow}>
           <input
-            id="account-email-code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder={t.profile.account.emailCodePlaceholder}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            maxLength={6}
+            id="account-email"
+            type="email"
+            autoComplete="email"
+            placeholder={t.profile.account.newEmailPlaceholder}
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
             autoFocus
-            disabled={confirm.isPending}
+            disabled={request.isPending}
           />
-          <button type="submit" className="primary small" disabled={confirm.isPending} aria-busy={confirm.isPending}>
-            {confirm.isPending ? (
+          <button type="submit" className="primary small" disabled={request.isPending} aria-busy={request.isPending}>
+            {request.isPending ? (
               <>
-                <Spinner /> {t.profile.account.confirmingEmailChange}
+                <Spinner /> {t.profile.account.requestingEmailChange}
               </>
             ) : (
-              t.profile.account.confirmEmailChange
+              t.common.save
             )}
           </button>
-          <button type="button" className="ghost small" disabled={confirm.isPending} onClick={volverAIdle}>
+          <button
+            type="button"
+            className="ghost small"
+            disabled={request.isPending}
+            onClick={() => {
+              onError(null);
+              setStep("idle");
+            }}
+          >
             {t.common.cancel}
           </button>
         </div>
       </form>
-    );
-  }
-
-  return (
-    <form
-      className={styles.usernameEditForm}
-      noValidate
-      onSubmit={(e) => {
-        e.preventDefault();
-        onError(null);
-        const trimmed = newEmail.trim();
-        // Igual al correo actual (o vacío) no es un error: es "me arrepentí".
-        if (!trimmed || trimmed === user?.email) {
-          setStep("idle");
-          return;
-        }
-        request.mutate(trimmed);
-      }}
-    >
-      <label htmlFor="account-email">{t.profile.account.newEmailLabel}</label>
-      <div className={styles.usernameEditRow}>
-        <input
-          id="account-email"
-          type="email"
-          autoComplete="email"
-          placeholder={t.profile.account.newEmailPlaceholder}
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          autoFocus
-          disabled={request.isPending}
-        />
-        <button type="submit" className="primary small" disabled={request.isPending} aria-busy={request.isPending}>
-          {request.isPending ? (
-            <>
-              <Spinner /> {t.profile.account.requestingEmailChange}
-            </>
-          ) : (
-            t.common.save
-          )}
-        </button>
-        <button
-          type="button"
-          className="ghost small"
-          disabled={request.isPending}
-          onClick={() => {
-            onError(null);
-            setStep("idle");
-          }}
-        >
-          {t.common.cancel}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }
 
 /**
- * Cambiar contraseña, validando la actual primero (ver
+ * Fila "Contraseña", validando la actual primero (ver
  * api/user.ts#changeMyPassword). El backend invalida todos los tokens ya
  * emitidos al cambiarla y devuelve uno nuevo -- setSession lo guarda para
  * que ESTA sesión siga andando; sin eso, cambiar tu propia contraseña te
  * dejaría deslogueado de inmediato.
  *
- * Envuelto en su propia sección con separador (.passwordSection, no un botón
- * suelto): antes quedaba pegado justo debajo de .preferencesRow, que en
- * escritorio es display:none (solo existe en mobile, ver el comentario de esa
- * clase) -- ahí el botón de contraseña quedaba sin ningún aire arriba,
- * pegado directo al bloque de "Mi cuenta".
+ * El valor mostrado (•••••••) es puramente decorativo -- no hay forma de
+ * saber el largo real desde acá -- pero mantiene la misma fila
+ * label+valor+lápiz que el resto de .accountFields en vez de ser la única
+ * fila sin "valor".
  */
 function PasswordField() {
   const { t } = useTranslation();
@@ -582,10 +616,15 @@ function PasswordField() {
 
   if (!editando) {
     return (
-      <div className={styles.passwordSection}>
+      <div className={styles.accountField}>
+        <div className={styles.accountFieldMain}>
+          <span className={styles.accountFieldLabel}>{t.profile.account.fieldPasswordLabel}</span>
+          <span className={styles.accountFieldValue}>••••••••</span>
+        </div>
         <button
           type="button"
-          className="ghost small"
+          className={styles.accountFieldEdit}
+          title={t.profile.account.changePassword}
           onClick={() => {
             setError(null);
             setActual("");
@@ -594,14 +633,15 @@ function PasswordField() {
             setEditando(true);
           }}
         >
-          {t.profile.account.changePassword}
+          <span aria-hidden="true">✎</span>
+          <span className="sr-only">{t.profile.account.changePassword}</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className={styles.passwordSection}>
+    <div className={styles.accountField}>
       <form
         className={styles.usernameEditForm}
         noValidate
