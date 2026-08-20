@@ -106,6 +106,27 @@ button.ghost {
   background: transparent;
 }
 
+/* Para acciones destructivas (eliminar cuenta, ver AccountPanel.tsx) --
+   mismo esqueleto que button.ghost (fondo transparente, sin ganarle
+   protagonismo visual a .primary) pero con el color de --danger en vez del
+   texto normal, para que se lea como "cuidado" antes de leer la palabra. */
+button.danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.danger:hover {
+  background: var(--danger-dim);
+}
+
+button.danger:disabled {
+  background: var(--bg-panel-raised);
+  border-color: var(--border);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
 input,
 select {
   background: var(--bg);

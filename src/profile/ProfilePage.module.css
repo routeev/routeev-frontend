@@ -48,9 +48,21 @@
 
 /* --- Tablas de datos --- */
 
+/* overflow-x:auto se mantiene (las tablas de acá -- Consumo por mes,
+   Vehículos, Historial -- tienen mas columnas de las que entran en una
+   pantalla angosta, sacarlo haria que el texto se desborde del panel) pero
+   la barra de scroll en si queda invisible: pedido explicito, se puede
+   seguir scrolleando con el trackpad/rueda del mouse, solo no se dibuja la
+   "barrita" gris debajo de la tabla. */
 .tableScroll {
   overflow-x: auto;
   margin-top: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tableScroll::-webkit-scrollbar {
+  display: none;
 }
 
 .table {
@@ -230,6 +242,26 @@
   font-size: 12px;
   line-height: 1.4;
   color: var(--danger);
+}
+
+/* Eliminar cuenta: separada del resto de "Mi cuenta" con su propio borde,
+   para que se lea como una zona aparte y no como una opción más de la
+   lista -- es la única acción del panel que es irreversible de verdad. */
+.dangerZone {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.dangerZoneTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.dangerZone .fieldError {
+  margin-bottom: 8px;
 }
 
 /* Selector de idioma y tema: vive acá (y no en AppTopbar) en mobile a
