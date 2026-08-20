@@ -24,13 +24,28 @@ export function LegalLayout({ title, description, children }: LegalLayoutProps) 
         <meta name="description" content={description} />
       </Helmet>
 
-      <SiteHeader>
-        <Link to="/showroom" className={buttons.navLink}>
-          {t.landing.nav.showroom}
+      {/* Mismos navLinks (con hamburguesa en mobile) que ShowroomPage: antes
+          esta página no pasaba navLinks, así que en pantallas angostas el
+          "Showroom" quedaba suelto en la barra en vez de colapsar como en
+          el resto del sitio -- un header con forma distinta según de qué
+          página pública se tratara. */}
+      <SiteHeader navLinks={[{ href: "/", label: t.landing.nav.home }, { href: "/showroom", label: t.landing.nav.showroom }]}>
+        <Link to="/login" className={buttons.navLink}>
+          {t.landing.header.login}
+        </Link>
+        <Link to="/login?crear=1" className={buttons.primary}>
+          {t.landing.header.createAccount}
         </Link>
       </SiteHeader>
 
-      <main className={styles.legal}>{children}</main>
+      <main className={styles.legal}>
+        {/* Mismo patrón "eyebrow + título" que landing/showroom (ver
+            .eyebrow en LandingPage.module.css) -- antes esta página
+            arrancaba directo en el <h1>, sin la etiqueta mono en mayúsculas
+            que ata visualmente cada sección del resto del sitio público. */}
+        <p className={styles.eyebrow}>{t.legal.eyebrow}</p>
+        {children}
+      </main>
 
       <SiteFooter />
     </>

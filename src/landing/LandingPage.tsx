@@ -175,19 +175,37 @@ export function LandingPage() {
               {t.landing.showroomSection.cta}
             </Link>
           </div>
+          {/* Check, no "01-04": la lista de pasos numerados de verdad es
+              "Cómo funciona" un poco más abajo en esta misma página -- con
+              el mismo estilo de número acá, las dos se leían como la misma
+              lista repetida en el scroll. Este es un resumen de lo que
+              ofrece el showroom, no una instrucción a seguir en orden. */}
           <ul className={styles.showroomSteps}>
-            <li>
-              <span className={styles.stepNum}>01</span> {t.landing.showroomSection.steps.search}
-            </li>
-            <li>
-              <span className={styles.stepNum}>02</span> {t.landing.showroomSection.steps.view}
-            </li>
-            <li>
-              <span className={styles.stepNum}>03</span> {t.landing.showroomSection.steps.choose}
-            </li>
-            <li>
-              <span className={styles.stepNum}>04</span> {t.landing.showroomSection.steps.result}
-            </li>
+            {[
+              t.landing.showroomSection.steps.search,
+              t.landing.showroomSection.steps.view,
+              t.landing.showroomSection.steps.choose,
+              t.landing.showroomSection.steps.result,
+            ].map((step) => (
+              <li key={step}>
+                <svg
+                  className={styles.showroomStepIcon}
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8 12.5l2.5 2.5L16 9.5" />
+                </svg>
+                {step}
+              </li>
+            ))}
           </ul>
         </Reveal>
 

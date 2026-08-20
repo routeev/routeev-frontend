@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { IconCar, IconChart, IconInfo } from "./NavIcons";
+import { IconCar, IconChart, IconHome, IconInfo } from "./NavIcons";
 import styles from "./SiteHeader.module.css";
 
 interface SiteHeaderProps {
@@ -12,10 +12,12 @@ interface SiteHeaderProps {
   children?: ReactNode;
 }
 
-// Ícono por link del menú móvil, por href -- hoy solo la landing pasa
-// navLinks (3 fijos), así que un mapa local alcanza sin sumar una prop de
-// ícono por link a la interfaz pública del componente.
+// Ícono por link del menú móvil, por href -- landing, showroom y las
+// páginas legales pasan un subconjunto fijo de estos, así que un mapa local
+// alcanza sin sumar una prop de ícono por link a la interfaz pública del
+// componente.
 const NAV_ICONS: Record<string, ReactNode> = {
+  "/": <IconHome />,
   "/showroom": <IconCar />,
   "#como-funciona": <IconInfo />,
   "#datos-reales": <IconChart />,

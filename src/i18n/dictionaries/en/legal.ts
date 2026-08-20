@@ -1,4 +1,5 @@
 export const legal = {
+  eyebrow: "Legal",
   privacy: {
     pageTitle: "Privacy Policy",
     metaDescription:

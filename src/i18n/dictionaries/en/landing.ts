@@ -10,6 +10,7 @@ export const landing = {
       "Trip planner for electric vehicles in Uruguay: calculates whether your car will make it, where to stop and charge, and how much it costs, on the country's real road map.",
   },
   nav: {
+    home: "Home",
     showroom: "Showroom",
     howItWorks: "How it works",
     realData: "Real data",

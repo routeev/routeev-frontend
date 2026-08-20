@@ -10,6 +10,7 @@ export const landing = {
       "Planificador de viajes para vehículos eléctricos en Uruguay: calcula si tu auto llega, dónde parar a cargar y cuánto cuesta, sobre el mapa vial real del país.",
   },
   nav: {
+    home: "Inicio",
     showroom: "Showroom",
     howItWorks: "Cómo funciona",
     realData: "Datos reales",

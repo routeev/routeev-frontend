@@ -16,6 +16,15 @@ const common = {
   "aria-hidden": true,
 };
 
+export function IconHome() {
+  return (
+    <svg {...common}>
+      <path d="M4 11 12 4l8 7" />
+      <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+
 export function IconCar() {
   return (
     <svg {...common}>
