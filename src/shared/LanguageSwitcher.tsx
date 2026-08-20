@@ -1,8 +1,36 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "../i18n/LanguageProvider";
 import type { Lang } from "../i18n/LanguageProvider";
 import { IconChevronDown } from "./NavIcons";
 import styles from "./LanguageSwitcher.module.css";
+
+// SVG en vez de la banderita emoji (🇬🇧/🇪🇸) que había antes: Windows no
+// tiene glifo de bandera para los "regional indicator" que arma el emoji, y
+// los muestra como el código de país en texto plano ("GB"/"ES") en vez de
+// una bandera -- confirmado por el usuario, no renderizaba en su máquina.
+// Mismo criterio que NavIcons.tsx: inline y sin librería, para no sumar una
+// dependencia (react-flag-icons y similares) por dos banderas.
+function FlagGB() {
+  return (
+    <svg viewBox="0 0 60 40" aria-hidden="true">
+      <rect width="60" height="40" fill="#00247d" />
+      <path d="M0 0 60 40M60 0 0 40" stroke="#fff" strokeWidth="8" />
+      <path d="M0 0 60 40M60 0 0 40" stroke="#cf142b" strokeWidth="3" />
+      <path d="M30 0V40M0 20H60" stroke="#fff" strokeWidth="14" />
+      <path d="M30 0V40M0 20H60" stroke="#cf142b" strokeWidth="8" />
+    </svg>
+  );
+}
+
+function FlagES() {
+  return (
+    <svg viewBox="0 0 60 40" aria-hidden="true">
+      <rect width="60" height="40" fill="#c60b1e" />
+      <rect y="10" width="60" height="20" fill="#ffc400" />
+    </svg>
+  );
+}
 
 // "short" es lo que se ve en el dropdown (pedido explícito: "ENG"/"ES", no
 // el nombre completo) -- el nombre completo (t.common.languageNameEs/En)
@@ -10,9 +38,9 @@ import styles from "./LanguageSwitcher.module.css";
 // visible (solo la bandera + la flechita) y sí lo necesita.
 // Reino Unido/España, no Uruguay/Estados Unidos -- pedido explícito. Orden
 // EN primero, ES segundo, en ese mismo pedido.
-const LANGS: { code: Lang; flag: string; short: string }[] = [
-  { code: "en", flag: "🇬🇧", short: "ENG" },
-  { code: "es", flag: "🇪🇸", short: "ES" },
+const LANGS: { code: Lang; Flag: () => ReactNode; short: string }[] = [
+  { code: "en", Flag: FlagGB, short: "ENG" },
+  { code: "es", Flag: FlagES, short: "ES" },
 ];
 
 /**
@@ -55,8 +83,8 @@ export function LanguageSwitcher() {
         aria-label={`${t.common.languageSwitcherLabel}: ${nameOf(lang)}`}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className={styles.flag} aria-hidden="true">
-          {current.flag}
+        <span className={styles.flag}>
+          <current.Flag />
         </span>
         <IconChevronDown />
       </button>
@@ -72,8 +100,8 @@ export function LanguageSwitcher() {
               className={[styles.option, lang === l.code ? styles.optionActive : ""].join(" ")}
               onClick={() => choose(l.code)}
             >
-              <span className={styles.flag} aria-hidden="true">
-                {l.flag}
+              <span className={styles.flag}>
+                <l.Flag />
               </span>
               {l.short}
             </button>

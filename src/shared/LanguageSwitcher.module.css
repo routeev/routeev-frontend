@@ -26,9 +26,24 @@
   color: var(--text);
 }
 
+/* Chip de la bandera SVG (ver FlagGB/FlagES en LanguageSwitcher.tsx):
+   width/height/radius fijos en vez de font-size -- ya no es un caracter de
+   texto (emoji) que escala con la tipografía, es un <svg> con su propio
+   viewBox 60x40 (proporción real de bandera, 3:2) que hay que encajar en un
+   tamaño de ícono chico. overflow:hidden + radius redondea el rectángulo
+   entero, no cada forma de adentro. */
 .flag {
-  font-size: 15px;
-  line-height: 1;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 20px;
+  height: 14px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.flag svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* Mismo look que .userMenuDropdown de AppTopbar.module.css: mismo mecanismo
