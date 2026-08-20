@@ -159,9 +159,20 @@ export function MapPage() {
     // Mismo criterio que arriba: un resultado nuevo (recién calculado, o
     // recalculado con otro vehículo/batería) tiene que mostrarse solo, no
     // quedar escondido si el panel ya estaba colapsado de un viaje anterior.
+    //
+    // scrolledPastMap también se resetea acá, no solo dashboardCollapsed:
+    // BUG REAL encontrado en vivo (mobile) -- si scrolledPastMap seguía en
+    // true desde ANTES de calcular (bajaste dentro de "Tu viaje" para llegar
+    // al botón "Calcular ruta"), mapCollapsed más abajo no tenía forma de
+    // enterarse de que ya no aplica: .mainArea (que en mobile contiene el
+    // mapa Y "Datos del viaje") se quedaba con flex:0 0 0 + overflow:hidden
+    // (ver .mapCollapsed .mainArea en el CSS) justo cuando el sidebar
+    // también se esconde entero (.sidebarReplaced, hasResult=true) -- las
+    // dos únicas cosas en pantalla desaparecían a la vez, pantalla negra.
     return useMapStore.subscribe((state, prev) => {
       if (state.lastResult != null && state.lastResult !== prev.lastResult) {
         setDashboardCollapsed(false);
+        setScrolledPastMap(false);
       }
     });
   }, []);
@@ -174,9 +185,18 @@ export function MapPage() {
   //     (que dibuja la distancia SOBRE el mapa), esconderlo no explicaría nada.
   //   - Con el panel ya colapsado por el handle, esconder también el mapa deja
   //     la pantalla entera en blanco: son las dos únicas cosas que hay.
+  //   - Con un resultado ya calculado, "Tu viaje" (el formulario que
+  //     scrolledPastMap le hacía lugar) ni se muestra -- lo reemplazó "Datos
+  //     del viaje" (ver el ternario de sidebarScroll), que tiene su PROPIO
+  //     colapsable (dashboardCollapsed/dashboardHandle). El reset de arriba ya
+  //     deja scrolledPastMap en false apenas llega un resultado nuevo, pero
+  //     esto es la misma garantía como valor derivado, no solo como efecto:
+  //     no hay forma de que mapCollapsed quede "pegado" en true mientras haya
+  //     un resultado en pantalla.
   const mapCollapsed =
     scrolledPastMap &&
     !sidebarCollapsed &&
+    !hasResult &&
     picking == null &&
     imprecisePick == null &&
     originId != null &&

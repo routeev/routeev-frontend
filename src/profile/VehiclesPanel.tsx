@@ -38,7 +38,19 @@ export function VehiclesPanel() {
     // "Mis vehículos" no es el primer panel de /profile (va después de "Mi
     // cuenta"): sin este scroll, el formulario se abría fuera de vista y
     // parecía que el link no había hecho nada.
-    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    //
+    // Un solo scrollIntoView acá no alcanzaba: en este momento "Mi cuenta"
+    // (el panel de arriba) y este mismo panel todavía no terminaron de pedir
+    // sus datos (meQuery/vehiclesQuery) -- apenas llegan, la página crece
+    // (avatar, campos, tarjetas de vehículo) y ese primer scroll queda corto,
+    // el formulario aparece más abajo de donde se scrolleó. Reintentar unas
+    // pocas veces mientras se asienta el layout cubre esa carrera sin tener
+    // que engancharse a la señal exacta de cada query.
+    const intentos = [0, 150, 350, 600, 900];
+    const timers = intentos.map((ms) =>
+      window.setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), ms)
+    );
+    return () => timers.forEach((id) => window.clearTimeout(id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
