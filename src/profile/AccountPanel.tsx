@@ -305,17 +305,25 @@ function DisplayNameField({ user, onError }: { user: Me | null; onError: (msg: s
   });
 
   if (!editando) {
+    // Icono solo, no el botón de texto que tenía antes ("Cambiar mi nombre" /
+    // "Poné tu nombre"): pedido explícito, mismo tratamiento que el lápiz de
+    // usuario/correo (usernameEditBtn) para que las tres ediciones de "Mi
+    // cuenta" se vean como una sola convención, no una mezcla de botones de
+    // texto y iconos.
+    const label = user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName;
     return (
       <button
         type="button"
-        className="ghost small"
+        className={styles.usernameEditBtn}
+        title={label}
         onClick={() => {
           onError(null);
           setValor(user?.display_name ?? "");
           setEditando(true);
         }}
       >
-        {user?.display_name ? t.profile.account.changeDisplayName : t.profile.account.setDisplayName}
+        <span aria-hidden="true">✎</span>
+        <span className="sr-only">{label}</span>
       </button>
     );
   }
@@ -543,12 +551,19 @@ function EmailField({ user, onError }: { user: Me | null; onError: (msg: string 
  * emitidos al cambiarla y devuelve uno nuevo -- setSession lo guarda para
  * que ESTA sesión siga andando; sin eso, cambiar tu propia contraseña te
  * dejaría deslogueado de inmediato.
+ *
+ * Envuelto en su propia sección con separador (.passwordSection, no un botón
+ * suelto): antes quedaba pegado justo debajo de .preferencesRow, que en
+ * escritorio es display:none (solo existe en mobile, ver el comentario de esa
+ * clase) -- ahí el botón de contraseña quedaba sin ningún aire arriba,
+ * pegado directo al bloque de "Mi cuenta".
  */
 function PasswordField() {
   const { t } = useTranslation();
   const [editando, setEditando] = useState(false);
   const [actual, setActual] = useState("");
   const [nueva, setNueva] = useState("");
+  const [confirmacion, setConfirmacion] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const cambiar = useMutation({
@@ -558,6 +573,7 @@ function PasswordField() {
       setEditando(false);
       setActual("");
       setNueva("");
+      setConfirmacion("");
       setError(null);
       toast.ok(t.profile.account.passwordChanged);
     },
@@ -566,86 +582,106 @@ function PasswordField() {
 
   if (!editando) {
     return (
-      <button
-        type="button"
-        className="ghost small"
-        onClick={() => {
-          setError(null);
-          setActual("");
-          setNueva("");
-          setEditando(true);
-        }}
-      >
-        {t.profile.account.changePassword}
-      </button>
+      <div className={styles.passwordSection}>
+        <button
+          type="button"
+          className="ghost small"
+          onClick={() => {
+            setError(null);
+            setActual("");
+            setNueva("");
+            setConfirmacion("");
+            setEditando(true);
+          }}
+        >
+          {t.profile.account.changePassword}
+        </button>
+      </div>
     );
   }
 
   return (
-    <form
-      className={styles.usernameEditForm}
-      noValidate
-      onSubmit={(e) => {
-        e.preventDefault();
-        setError(null);
-        // Mismo mínimo que el backend (MIN_PASSWORD_LENGTH en schemas.py):
-        // se valida acá primero para no gastar un pedido HTTP (ni el rate
-        // limit de intentos) en algo que ya se sabe que va a fallar.
-        if (nueva.length < 10) {
-          setError(t.profile.account.newPasswordHint);
-          return;
-        }
-        cambiar.mutate();
-      }}
-    >
-      <label htmlFor="account-current-password">{t.profile.account.currentPasswordLabel}</label>
-      <div className={styles.usernameEditRow}>
-        <input
-          id="account-current-password"
-          type="password"
-          autoComplete="current-password"
-          value={actual}
-          onChange={(e) => setActual(e.target.value)}
-          autoFocus
-          disabled={cambiar.isPending}
-        />
-      </div>
-      <label htmlFor="account-new-password">{t.profile.account.newPasswordLabel}</label>
-      <div className={styles.usernameEditRow}>
-        <input
-          id="account-new-password"
-          type="password"
-          autoComplete="new-password"
-          value={nueva}
-          onChange={(e) => setNueva(e.target.value)}
-          disabled={cambiar.isPending}
-        />
-      </div>
-      <p className="hint">{t.profile.account.newPasswordHint}</p>
-      <div className={styles.usernameEditRow}>
-        <button type="submit" className="primary small" disabled={cambiar.isPending} aria-busy={cambiar.isPending}>
-          {cambiar.isPending ? (
-            <>
-              <Spinner /> {t.profile.account.changingPassword}
-            </>
-          ) : (
-            t.common.save
-          )}
-        </button>
-        <button
-          type="button"
-          className="ghost small"
-          disabled={cambiar.isPending}
-          onClick={() => {
-            setError(null);
-            setEditando(false);
-          }}
-        >
-          {t.common.cancel}
-        </button>
-      </div>
-      {error && <p className={styles.fieldError}>{error}</p>}
-    </form>
+    <div className={styles.passwordSection}>
+      <form
+        className={styles.usernameEditForm}
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          setError(null);
+          // Mismo mínimo que el backend (MIN_PASSWORD_LENGTH en schemas.py):
+          // se valida acá primero para no gastar un pedido HTTP (ni el rate
+          // limit de intentos) en algo que ya se sabe que va a fallar.
+          if (nueva.length < 10) {
+            setError(t.profile.account.newPasswordHint);
+            return;
+          }
+          if (nueva !== confirmacion) {
+            setError(t.profile.account.passwordMismatchError);
+            return;
+          }
+          cambiar.mutate();
+        }}
+      >
+        <label htmlFor="account-current-password">{t.profile.account.currentPasswordLabel}</label>
+        <div className={styles.usernameEditRow}>
+          <input
+            id="account-current-password"
+            type="password"
+            autoComplete="current-password"
+            value={actual}
+            onChange={(e) => setActual(e.target.value)}
+            autoFocus
+            disabled={cambiar.isPending}
+          />
+        </div>
+        <label htmlFor="account-new-password">{t.profile.account.newPasswordLabel}</label>
+        <div className={styles.usernameEditRow}>
+          <input
+            id="account-new-password"
+            type="password"
+            autoComplete="new-password"
+            value={nueva}
+            onChange={(e) => setNueva(e.target.value)}
+            disabled={cambiar.isPending}
+          />
+        </div>
+        <label htmlFor="account-new-password-confirm">{t.profile.account.confirmNewPasswordLabel}</label>
+        <div className={styles.usernameEditRow}>
+          <input
+            id="account-new-password-confirm"
+            type="password"
+            autoComplete="new-password"
+            value={confirmacion}
+            onChange={(e) => setConfirmacion(e.target.value)}
+            disabled={cambiar.isPending}
+          />
+        </div>
+        <p className="hint">{t.profile.account.newPasswordHint}</p>
+        <div className={styles.usernameEditRow}>
+          <button type="submit" className="primary small" disabled={cambiar.isPending} aria-busy={cambiar.isPending}>
+            {cambiar.isPending ? (
+              <>
+                <Spinner /> {t.profile.account.changingPassword}
+              </>
+            ) : (
+              t.common.save
+            )}
+          </button>
+          <button
+            type="button"
+            className="ghost small"
+            disabled={cambiar.isPending}
+            onClick={() => {
+              setError(null);
+              setEditando(false);
+            }}
+          >
+            {t.common.cancel}
+          </button>
+        </div>
+        {error && <p className={styles.fieldError}>{error}</p>}
+      </form>
+    </div>
   );
 }
 

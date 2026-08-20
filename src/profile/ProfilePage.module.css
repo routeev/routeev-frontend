@@ -244,6 +244,17 @@
   color: var(--danger);
 }
 
+/* Cambiar contraseña: mismo separador que .dangerZone de abajo, para que
+   tenga aire propio en vez de quedar pegada justo debajo de .preferencesRow
+   -- que en escritorio es display:none (solo existe en mobile), así que sin
+   este borde/margen propios el botón quedaba tocando el bloque de arriba
+   sin ningún respiro en esa pantalla. */
+.passwordSection {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
 /* Eliminar cuenta: separada del resto de "Mi cuenta" con su propio borde,
    para que se lea como una zona aparte y no como una opción más de la
    lista -- es la única acción del panel que es irreversible de verdad. */

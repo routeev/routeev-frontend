@@ -101,8 +101,22 @@ export async function apiFetch<T = unknown>(
     // 401 solo significa "sesion expirada" cuando HABIA un token de por
     // medio (js/api.js, mismo criterio). Sin token es credenciales
     // invalidas, y eso lo maneja la rama de abajo con el detail real.
-    clearSession();
-    onSessionExpired?.();
+    //
+    // getToken() !== token (no solo "token" a secas, leido al principio de
+    // esta funcion): un pedido que salio ANTES de cambiar la contraseña
+    // (ver AccountPanel.tsx#PasswordField) puede volver DESPUES con un 401
+    // real -- el cambio invalida TODOS los tokens viejos, incluido el que
+    // este pedido en particular llevaba pegado. Para cuando la respuesta
+    // llega, la sesion ya tiene guardado el token NUEVO que devolvio el
+    // cambio, que sigue siendo perfectamente valido. Limpiarla igual por un
+    // 401 de un pedido que ya se sabe obsoleto deslogueaba a alguien que
+    // recien acababa de cambiar su contraseña con exito -- confirmado en
+    // vivo. Este pedido puntual sigue fallando (algo lo pidio con un token
+    // que ya no vale), pero no le toca la sesion actual a nadie mas.
+    if (getToken() === token) {
+      clearSession();
+      onSessionExpired?.();
+    }
     throw new ApiError(t().sessionExpired, 401);
   }
 

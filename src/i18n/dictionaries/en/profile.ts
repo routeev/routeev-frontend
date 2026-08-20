@@ -43,6 +43,8 @@ export const profile = {
     currentPasswordLabel: "Current password",
     newPasswordLabel: "New password",
     newPasswordHint: "At least 10 characters.",
+    confirmNewPasswordLabel: "Confirm the new password",
+    passwordMismatchError: "The two new passwords don't match.",
     changingPassword: "Changing...",
     passwordChanged: "Done, your password is changed.",
     passwordChangeError: "Couldn't change the password.",
