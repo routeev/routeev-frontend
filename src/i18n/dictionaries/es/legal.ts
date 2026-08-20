@@ -4,7 +4,7 @@ export const legal = {
     pageTitle: "Política de Privacidad",
     metaDescription:
       "Qué datos recoge RouteEV, para qué los usa, cuánto los conserva y cómo ejercer tus derechos según la Ley 18.331 de Uruguay.",
-    lastUpdated: "Última actualización: 4 de agosto de 2026",
+    lastUpdated: "Última actualización: 20 de agosto de 2026",
     summary:
       "En resumen: RouteEV te pide lo mínimo para que la aplicación funcione, no vende tus datos a nadie y no te muestra publicidad. Podés usar el showroom y calcular un viaje entero sin crear una cuenta ni darnos ningún dato.",
     responsible: {
@@ -41,8 +41,8 @@ export const legal = {
       body: "Google nos comparte tu dirección de correo y tu nombre para crear la cuenta. No recibimos tu contraseña de Google ni tenemos acceso a ningún otro dato de tu cuenta de Google.",
     },
     mobileTracking: {
-      heading: "Si usás el seguimiento de viaje en la aplicación móvil",
-      body: "La aplicación usa tu ubicación mientras el viaje está activo, incluso con la pantalla bloqueada, para calcular tu progreso y la batería restante. Esa ubicación se procesa en tu teléfono y no se envía a nuestros servidores salvo que guardes el viaje. Podés revocar el permiso desde los ajustes del teléfono en cualquier momento.",
+      heading: "Si usás el seguimiento de viaje",
+      body: "RouteEV usa tu ubicación mientras el viaje está activo y tenés la pestaña del navegador abierta, para calcular tu progreso y la batería restante. Esa ubicación se procesa en tu teléfono y no se envía a nuestros servidores salvo que guardes el viaje. Si bloqueás la pantalla o el navegador pasa a segundo plano, el seguimiento se corta -- es una limitación del navegador, no algo que RouteEV controle. Podés revocar el permiso de ubicación desde los ajustes del navegador o del teléfono en cualquier momento.",
     },
     usage: {
       heading: "Para qué usamos los datos",

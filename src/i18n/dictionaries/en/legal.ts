@@ -4,7 +4,7 @@ export const legal = {
     pageTitle: "Privacy Policy",
     metaDescription:
       "What data RouteEV collects, what it's used for, how long it's kept, and how to exercise your rights under Uruguay's Law 18.331.",
-    lastUpdated: "Last updated: August 4, 2026",
+    lastUpdated: "Last updated: August 20, 2026",
     summary:
       "In short: RouteEV asks for the bare minimum to make the app work, doesn't sell your data to anyone, and doesn't show you ads. You can use the showroom and plan an entire trip without creating an account or giving us any data.",
     responsible: {
@@ -41,8 +41,8 @@ export const legal = {
       body: "Google shares your email address and name with us to create the account. We don't receive your Google password or have access to any other data in your Google account.",
     },
     mobileTracking: {
-      heading: "If you use trip tracking in the mobile app",
-      body: "The app uses your location while a trip is active, even with the screen locked, to calculate your progress and remaining battery. That location is processed on your phone and isn't sent to our servers unless you save the trip. You can revoke the permission from your phone's settings at any time.",
+      heading: "If you use trip tracking",
+      body: "RouteEV uses your location while a trip is active and the browser tab stays open, to calculate your progress and remaining battery. That location is processed on your phone and isn't sent to our servers unless you save the trip. If you lock the screen or the browser goes to the background, tracking stops — that's a browser limitation, not something RouteEV controls. You can revoke the location permission from your browser's or phone's settings at any time.",
     },
     usage: {
       heading: "What we use the data for",
