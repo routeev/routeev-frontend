@@ -21,8 +21,8 @@ export const landing = {
   },
   hero: {
     eyebrow: "Movilidad eléctrica",
-    titleLine1: "Tu viaje por Uruguay",
-    titleLine2: "no se detiene; tu batería tampoco.",
+    titleLine1: "Tu auto eléctrico no se detiene",
+    titleLine2: "en Uruguay; tu batería tampoco.",
     subtitle:
       "RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el mapa vial real del país, revisando tu batería tramo a tramo y sumando las paradas de carga que hagan falta en el camino.",
     ctaPrimary: "Ver el catálogo y simular un viaje",
