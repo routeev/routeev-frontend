@@ -197,7 +197,7 @@ export const map = {
     batteryHint: (pct: number, rangeAtPct: string, autonomyFull: string) =>
       `${pct}% de batería · autonomía estimada ${rangeAtPct} km (${autonomyFull} km a batería llena para este vehículo)`,
     chooseVehicleFirst: "Elegí o creá un vehículo primero.",
-    addVehicle: "+ Agregar nuevo vehículo",
+    addVehicle: "Agregar vehículo",
   },
   stationDetailRows: {
     address: "Dirección",

@@ -197,7 +197,7 @@ export const map = {
     batteryHint: (pct: number, rangeAtPct: string, autonomyFull: string) =>
       `${pct}% battery · estimated range ${rangeAtPct} km (${autonomyFull} km at a full battery for this vehicle)`,
     chooseVehicleFirst: "Choose or create a vehicle first.",
-    addVehicle: "+ Add new vehicle",
+    addVehicle: "Add vehicle",
   },
   stationDetailRows: {
     address: "Address",

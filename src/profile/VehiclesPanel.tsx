@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { deleteVehicle, deleteVehiclePhoto, listVehicles, uploadVehiclePhoto } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -13,8 +14,33 @@ export function VehiclesPanel() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const vehiclesQuery = useQuery({ queryKey: ["vehicles"], queryFn: listVehicles });
-  const [formOpen, setFormOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Arranca abierto si se llegó con ?agregar-vehiculo=1 (link "Agregar nuevo
+  // vehículo" del sidebar de /app, ver VehiclePanel.tsx): sin esto, ese link
+  // solo traía hasta acá y había que apretar "+ Agregar vehículo" de nuevo
+  // para lo mismo que ya se venía a hacer.
+  const [formOpen, setFormOpen] = useState(() => searchParams.get("agregar-vehiculo") === "1");
   const [error, setError] = useState<string | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("agregar-vehiculo") !== "1") return;
+    // Se saca de la URL enseguida (replace, sin sumar una entrada al
+    // historial): es un gatillo de una sola vez, no un estado que tenga que
+    // sobrevivir a un refresh de la página.
+    setSearchParams(
+      (prev) => {
+        prev.delete("agregar-vehiculo");
+        return prev;
+      },
+      { replace: true }
+    );
+    // "Mis vehículos" no es el primer panel de /profile (va después de "Mi
+    // cuenta"): sin este scroll, el formulario se abría fuera de vista y
+    // parecía que el link no había hecho nada.
+    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["vehicles"] });
 
@@ -60,7 +86,7 @@ export function VehiclesPanel() {
   const busy = uploadPhoto.isPending || removePhoto.isPending || remove.isPending;
 
   return (
-    <section className="panel">
+    <section className="panel" ref={panelRef}>
       <div className={styles.panelHeader}>
         <h2>{t.profile.vehiclesPanel.title}</h2>
         <button type="button" className="primary small" onClick={() => setFormOpen((v) => !v)}>
