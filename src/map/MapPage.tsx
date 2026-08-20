@@ -295,7 +295,9 @@ export function MapPage() {
             </button>
           )}
           <div
-            className={`${styles.sidebarScroll} ${ready ? "" : styles.sidebarScrollNoCta}`}
+            className={`${styles.sidebarScroll} ${ready ? "" : styles.sidebarScrollNoCta} ${
+              hasResult ? styles.sidebarScrollDashboard : ""
+            }`}
             ref={sidebarScrollRef}
             onScroll={onSidebarScroll}
           >
@@ -320,6 +322,16 @@ export function MapPage() {
               // lugar de sobra. El boton "volver" de StationDetailPanel
               // (selectStation(null)) es lo unico que las trae de vuelta.
               <StationDetailPanel />
+            ) : hasResult ? (
+              // Mismo reemplazo que en pantalla angosta (.sidebarReplaced +
+              // .dashboardWrap, ver el CSS), pero adentro del panel fijo de
+              // escritorio en vez de un panel flotante aparte: con un
+              // resultado calculado, "Tu viaje" (el formulario) deja de
+              // aportar nada -- lo unico que queda por hacer es arrancar el
+              // viaje o cancelar el plan, y las dos vivven en TripDashboard.
+              // Cancelar el plan (boton adentro de TripDashboard) es lo
+              // unico que trae de vuelta el formulario.
+              <TripDashboard liveTrip={liveTrip} />
             ) : (
               <>
                 <RouteInputPanel banner={banner} step={step} />
@@ -333,8 +345,12 @@ export function MapPage() {
               que se desactive el botón"). En pantalla angosta esa franja fija
               se comía lugar del panel para no ofrecer nada. Lo que falta lo
               dice ahora el paso a seguir dentro de "Tu viaje"
-              (RouteInputPanel), donde la persona ya está mirando. */}
-          {ready && (
+              (RouteInputPanel), donde la persona ya está mirando. Tambien
+              desaparece con un resultado ya calculado: sin origen/destino a
+              la vista (RouteInputPanel esta reemplazado por TripDashboard,
+              arriba) "Calcular ruta" quedaria suelto sin nada que lo explique
+              -- arrancar/cancelar el viaje vive ahora en TripDashboard. */}
+          {ready && !hasResult && (
             <div className={styles.sidebarCta}>
               <button
                 type="button"

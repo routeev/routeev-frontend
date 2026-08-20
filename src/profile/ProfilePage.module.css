@@ -6,8 +6,15 @@
   flex-direction: column;
 }
 
+/* 780px, no 1100px: "Mi cuenta"/"Consumo y gasto"/"Historial de viajes"
+   son listas angostas de texto, no grillas -- a 1100px en un monitor
+   normal quedaban pegadas a la izquierda con una franja vacía enorme a
+   la derecha. Mismo orden de magnitud que el max-width de las páginas
+   legales (720px, LegalLayout.module.css), ya pensado para lectura, no
+   para llenar el ancho entero. La grilla de vehículos (.vehicleGrid,
+   auto-fill) se sigue acomodando sola con menos columnas por fila. */
 .main {
-  max-width: 1100px;
+  max-width: 780px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 20px 60px;

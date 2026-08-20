@@ -234,6 +234,15 @@
   right: 14px;
   bottom: 14px;
   left: calc(372px + 42px);
+  /* Sin esto, en un monitor ancho el panel se estira hasta el borde
+     derecho de la pantalla entera -- la grilla de 6 stats (auto-fit,
+     TripDashboard.module.css) reparte ese ancho parejo entre las 6
+     tarjetas y cada una queda con mucho mas aire vacio alrededor de un
+     dato chico ("32.3 km") del que necesita. Con un tope, sigue pegado
+     al sidebar (misma esquina de siempre) pero denso en vez de disperso;
+     en ventanas angostas (entre 860 y ~1100px) el right:14px de arriba
+     lo sigue achicando por debajo de este tope sin overflow. */
+  max-width: 680px;
   /* `height`, not `max-height`: TripDashboard's own `height: 100%` (see
      TripDashboard.module.css) needs a containing block with an explicit
      height to resolve against, or the percentage is ignored, the inner
@@ -281,6 +290,31 @@
    mobile el bottom sheet ya se resuelve deslizando (ver .sidebarHandle) y
    los botones/inputs mas grandes ahi son touch targets a proposito. */
 @media (min-width: 861px) {
+  /* Con un resultado calculado, TripDashboard vive adentro del sidebar fijo
+     (ver el ternario de MapPage.tsx) -- el panel flotante de abajo
+     (.dashboardWrap) queda redundante y se apaga entero en vez de mostrar la
+     misma info dos veces. En pantalla angosta sigue siendo el único lugar
+     donde "Datos del viaje" se muestra (el sidebar entero se reemplaza por
+     display:none, ver .sidebarReplaced más abajo), así que esta regla no
+     puede vivir fuera de este media query. */
+  .dashboardWrap {
+    display: none;
+  }
+  /* Sin tope de ancho ni padding propio: TripDashboard pasa a ocupar el
+     mismo panel fijo de 372px que "Tu viaje" ocupaba, así que su borde/fondo/
+     padding de "tarjeta flotante" (pensados para :global(section) sobre el
+     mapa, ver .dashboardWrap :global(section) arriba) sobrarían acá --
+     .sidebarScroll ya es el borde exterior del panel. */
+  .sidebarScrollDashboard {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebarScrollDashboard :global(section) {
+    flex: 1;
+    min-height: 0;
+    border-top: none;
+  }
   .sidebarScroll :global(.panel) h2 {
     font-size: 12px;
     margin-bottom: 10px;
