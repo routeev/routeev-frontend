@@ -4,12 +4,13 @@ import { getStoredTheme, setTheme, type Theme } from "../theme/theme";
 import styles from "./ThemeSwitcher.module.css";
 
 /**
- * Selector claro/oscuro, mismo patrón visual que LanguageSwitcher (dos
- * botones en una píldora) y usado en los mismos dos lugares (AppTopbar,
- * SiteHeader). No usa el contexto de idioma para el propio tema -- ver
- * src/theme/theme.ts sobre por qué esto no necesita un LanguageProvider-like
- * propio, solo estado local que se sincroniza con localStorage + el
- * atributo data-theme al elegir.
+ * Selector claro/oscuro, solo en pantallas con cuenta (AppTopbar,
+ * AccountPanel) -- a propósito no vive en SiteHeader (nav público de
+ * landing/showroom/legales): el modo claro/oscuro es una preferencia de
+ * cuenta, no algo que se le ofrezca a un visitante sin loguearse. No usa el
+ * contexto de idioma para el propio tema -- ver src/theme/theme.ts sobre por
+ * qué esto no necesita un LanguageProvider-like propio, solo estado local
+ * que se sincroniza con localStorage + el atributo data-theme al elegir.
  */
 export function ThemeSwitcher() {
   const { t } = useTranslation();

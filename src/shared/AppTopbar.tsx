@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getMe } from "../api/user";
 import { clearSession, getUsername } from "../api/session";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -41,10 +41,15 @@ interface AppTopbarProps {
  */
 export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: AppTopbarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  // Mismo criterio que SiteHeader (isActiveLink): "Mi perfil" en el dropdown
+  // del chip de usuario no sabía que ya estabas en /profile -- se mostraba
+  // igual ahí que en /app.
+  const isOnProfile = location.pathname === "/profile";
   // Misma queryKey que AccountPanel/ProfilePage ("me"): si esa pantalla ya
   // la pidió, esto sale del cache de TanStack Query sin otro fetch -- en
   // /app (que no la pide en ningun otro lado) dispara la suya propia, una
@@ -105,8 +110,9 @@ export function AppTopbar({ subtitle, children, mobileOnlyChildren, username }: 
               <div className={styles.userMenuDropdown} role="menu">
                 <Link
                   to="/profile"
-                  className={styles.userMenuItem}
+                  className={[styles.userMenuItem, isOnProfile ? styles.userMenuItemActive : ""].join(" ")}
                   role="menuitem"
+                  aria-current={isOnProfile ? "page" : undefined}
                   onClick={() => setMenuOpen(false)}
                 >
                   <IconUser />

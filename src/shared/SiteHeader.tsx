@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { IconCar, IconChart, IconHome, IconInfo } from "./NavIcons";
+import { IconCar, IconChart, IconGlobe, IconHome, IconInfo } from "./NavIcons";
 import styles from "./SiteHeader.module.css";
 
 interface SiteHeaderProps {
@@ -33,7 +33,13 @@ const NAV_ICONS: Record<string, ReactNode> = {
 export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
+  const location = useLocation();
   const hasLinks = Boolean(navLinks && navLinks.length > 0);
+
+  // Solo links de pagina (no los anclas "#como-funciona" de la landing, que
+  // no tienen una ruta propia contra la cual compararse): asi "Showroom" se
+  // resalta cuando estas en /showroom, o "Inicio" en las paginas legales.
+  const isActiveLink = (href: string) => !href.startsWith("#") && location.pathname === href;
 
   return (
     <header className={styles.nav}>
@@ -47,7 +53,12 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
                   {link.label}
                 </a>
               ) : (
-                <Link key={link.href} to={link.href}>
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={isActiveLink(link.href) ? styles.linkActive : undefined}
+                  aria-current={isActiveLink(link.href) ? "page" : undefined}
+                >
                   {link.label}
                 </Link>
               )
@@ -55,13 +66,19 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
           </nav>
         )}
         <div className={styles.actions}>
-          {/* Fuera de .cta a propósito: .cta se esconde en mobile (ver la
-              regla ".inner:has(.menuToggle) .cta" en el CSS), pero esto
-              tiene que seguir visible ahí, pegado al botón hamburguesa --
-              mismo lugar que ocupa en escritorio (a la izquierda de "Ir a
-              la app" / "Iniciar sesión" y "Crear cuenta"), sin necesitar
-              una regla de media query aparte. */}
-          <LanguageSwitcher />
+          {/* .languageSlot se esconde en mobile igual que .cta (ver
+              ".inner:has(.menuToggle) .languageSlot" en el CSS) -- pedido
+              explícito de que el selector de idioma viva ADENTRO del menú
+              hamburguesa en mobile en vez de ocupar su propio lugar en la
+              barra. El :has() (no un media query a secas) es lo que hace
+              que, si algún día una pantalla usa SiteHeader sin navLinks (sin
+              hamburguesa, ver el docblock del componente), esto siga visible
+              acá -- sin eso quedaría sin ningún lugar donde mostrarse. Sin
+              ThemeSwitcher a propósito: el modo claro/oscuro es solo para
+              pantallas con cuenta (AppTopbar/AccountPanel) -- acá no va. */}
+          <div className={styles.languageSlot}>
+            <LanguageSwitcher />
+          </div>
           <div className={styles.cta}>{children}</div>
           {hasLinks && (
             <button
@@ -93,7 +110,8 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               <Link
                 key={link.href}
                 to={link.href}
-                className={styles.mobileLink}
+                className={[styles.mobileLink, isActiveLink(link.href) ? styles.mobileLinkActive : ""].join(" ")}
+                aria-current={isActiveLink(link.href) ? "page" : undefined}
                 onClick={() => setOpen(false)}
               >
                 {NAV_ICONS[link.href]}
@@ -101,13 +119,25 @@ export function SiteHeader({ navLinks, children }: SiteHeaderProps) {
               </Link>
             )
           )}
+          {/* Fila propia para el idioma, entre los links y las acciones de
+              cuenta: en la barra de arriba está escondida en mobile (ver
+              .languageSlot), así que este es su único lugar en pantalla
+              angosta. No usa onClick={() => setOpen(false)} en el contenedor
+              (a diferencia de los links y de .mobileMenuActions más abajo):
+              elegir un idioma no tiene por qué cerrar el menú entero, es la
+              propia LanguageSwitcher la que abre/cierra SU dropdown. */}
+          <div className={styles.mobileMenuLanguage}>
+            <span className={styles.mobileMenuLanguageLabel}>
+              <IconGlobe />
+              {t.common.languageSwitcherLabel}
+            </span>
+            <LanguageSwitcher />
+          </div>
           {/* .cta se esconde en la barra en mobile (ver ".inner:has(.menuToggle)
               .cta" en el CSS) -- se repite acá adentro para no perder
               "Iniciar sesión" / "Crear cuenta" del todo, solo movidos de
               lugar y separados con más aire para que no se lean como un link
-              más de la lista. El selector de idioma NO se repite acá: sigue
-              visible en la barra (al lado del botón hamburguesa) en
-              cualquier tamaño, ver el comentario en .actions más arriba. */}
+              más de la lista. */}
           <div className={styles.mobileMenuActions} onClick={() => setOpen(false)}>{children}</div>
         </nav>
       )}

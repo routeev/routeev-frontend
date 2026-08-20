@@ -1,36 +1,74 @@
 .switcher {
+  position: relative;
   display: inline-flex;
-  align-items: center;
   /* Ancho de contenido siempre, aunque el flex padre (p. ej. el menú mobile
      de AppTopbar, en columna con align-items:stretch) intente estirarlo --
-     una píldora de dos letras estirada a todo el ancho se ve rota. */
+     un botón chico estirado a todo el ancho se ve roto. */
   align-self: center;
-  padding: 2px;
-  gap: 2px;
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: 20px;
   flex-shrink: 0;
 }
 
-.switcher button {
-  padding: 5px 10px;
-  border: none;
-  border-radius: 16px;
-  background: transparent;
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 9px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 20px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
   cursor: pointer;
 }
 
-.switcher button:hover {
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  border-color: var(--accent-astar);
   color: var(--text);
 }
 
-.switcher button.active {
+.flag {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Mismo look que .userMenuDropdown de AppTopbar.module.css: mismo mecanismo
+   (botón + panel flotante), tiene que leerse como el mismo control. */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 2000;
+  min-width: 150px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.option:hover {
   background: var(--bg);
   color: var(--text);
+}
+
+.optionActive {
+  color: var(--accent-astar);
 }

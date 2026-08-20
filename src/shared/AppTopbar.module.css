@@ -139,6 +139,18 @@
   border-color: transparent;
 }
 
+/* "Mi perfil" cuando ya estás en /profile: mismo criterio que .linkActive de
+   SiteHeader.module.css (color de acento, sin desactivar el click -- ir a
+   donde ya estás no rompe nada, y sacar el link entero sería más
+   inconsistente que dejarlo). */
+.userMenuItemActive {
+  color: var(--accent-astar);
+}
+
+.userMenuItemActive svg {
+  color: var(--accent-astar);
+}
+
 .userMenuItem svg {
   width: 15px;
   height: 15px;

@@ -83,3 +83,24 @@ export function IconLogout() {
     </svg>
   );
 }
+
+/** Gatillo del dropdown de idioma (LanguageSwitcher): "hay más opciones abajo". */
+export function IconChevronDown() {
+  return (
+    <svg {...common} width={14} height={14}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/** Fila "Idioma" del menú móvil de SiteHeader -- mismo lugar que ocupan
+    IconHome/IconCar/etc. al lado de los demás links de ese menú. */
+export function IconGlobe() {
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17" />
+      <path d="M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5s-1.3 6.1-3.8 8.5c-2.5-2.4-3.8-5.4-3.8-8.5s1.3-6.1 3.8-8.5Z" />
+    </svg>
+  );
+}

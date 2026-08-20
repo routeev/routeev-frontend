@@ -10,6 +10,8 @@ export const common = {
   error: "Something went wrong",
   retry: "Retry",
   languageSwitcherLabel: "Language",
+  languageNameEs: "Español",
+  languageNameEn: "English",
   themeSwitcherLabel: "Theme",
   lightMode: "Light mode",
   darkMode: "Dark mode",
