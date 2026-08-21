@@ -51,9 +51,12 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
 
 /**
  * Dibuja marcadores de estaciones de carga, pero nunca las ~200+ de una: eso
- * satura el mapa apenas se abre. Se muestran las que caen en el area visible
- * del mapa (arriba) MAS, siempre, las paradas de una ruta ya calculada --
- * esas importan aunque el usuario haya alejado o movido el mapa a otro lado.
+ * satura el mapa apenas se abre. Sin una ruta calculada, se muestran las que
+ * caen en el área visible del mapa (arriba). Con una ruta ya calculada, el
+ * criterio cambia del todo: solo las paradas de carga que el plan realmente
+ * usa, ignorando el área visible -- el mapa se encuadra sobre la ruta
+ * entera al calcular, y esa área suele traer consigo estaciones que no
+ * tienen nada que ver con el viaje (pedido explícito de no mezclarlas).
  */
 export function StationsLayer() {
   const { t } = useTranslation();
@@ -75,13 +78,21 @@ export function StationsLayer() {
   const inViewIds = useStationsInView(query.data);
 
   const visibleIds = useMemo(() => {
-    const ids = new Set(inViewIds);
     if (lastResult) {
+      // Con una ruta ya calculada, mostrar SOLO los cargadores que el plan
+      // realmente usa -- no "los que caen en el área visible" (inViewIds):
+      // el mapa se encuadra sobre la ruta entera al calcular, y esa área
+      // suele traer consigo decenas de estaciones que no tienen nada que
+      // ver con el viaje. Pedido explícito de no mezclarlas.
+      const ids = new Set<number>();
       const primary = lastResult.astar.found
         ? lastResult.astar
         : (lastResult.dijkstra ?? lastResult.astar);
       for (const rc of primary.recharges) ids.add(rc.node_id);
+      if (selectedStationId != null) ids.add(selectedStationId);
+      return ids;
     }
+    const ids = new Set(inViewIds);
     if (selectedStationId != null) ids.add(selectedStationId);
     return ids;
   }, [inViewIds, lastResult, selectedStationId]);
