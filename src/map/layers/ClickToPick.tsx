@@ -131,6 +131,15 @@ export function ClickToPick({ onError }: ClickToPickProps) {
 
   useMapEvents({
     click(e) {
+      // Con un viaje ya calculado, RouteInputPanel (donde viven los botones de
+      // "marcar tocando el mapa") ni se muestra -- lo reemplazó TripDashboard.
+      // Sin este corte, un toque cualquiera en el mapa (por ejemplo para mirar
+      // el recorrido de cerca) igual fijaba un origen/destino nuevo y con eso
+      // borraba el resultado (setOrigin/setDestination limpian lastResult al
+      // cambiar el punto) -- cancelaba el viaje sin que la persona lo pidiera.
+      // Pedido explícito: mientras haya resultado, solo "Cancelar viaje" (en
+      // TripDashboard) puede volver a abrir el mapa para elegir de nuevo.
+      if (useMapStore.getState().lastResult != null) return;
       // lat/lng se copian ACA: el objeto de evento de Leaflet se reusa entre
       // eventos, y para cuando corre el timeout puede ya no describir este
       // toque.
