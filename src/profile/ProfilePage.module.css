@@ -50,19 +50,35 @@
 
 /* overflow-x:auto se mantiene (las tablas de acá -- Consumo por mes,
    Vehículos, Historial -- tienen mas columnas de las que entran en una
-   pantalla angosta, sacarlo haria que el texto se desborde del panel) pero
-   la barra de scroll en si queda invisible: pedido explicito, se puede
-   seguir scrolleando con el trackpad/rueda del mouse, solo no se dibuja la
-   "barrita" gris debajo de la tabla. */
+   pantalla angosta, sacarlo haria que el texto se desborde del panel).
+   La barra en si es fina y discreta, no la gruesa que pone el sistema por
+   default -- se había sacado del todo (display:none) por pedido explícito,
+   pero sin NINGÚN indicio de que hay más columnas a la derecha (Distancia
+   Promedio, Tiempo, Costo, Recargas...) esas columnas quedaban invisibles
+   de verdad, no solo con la barra escondida: nadie se enteraba de que
+   podía scrollear para verlas. Esta es la version intermedia: se nota que
+   hay para donde scrollear, sin el bloque ancho de siempre. */
 .tableScroll {
   overflow-x: auto;
   margin-top: 12px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
 }
 
 .tableScroll::-webkit-scrollbar {
-  display: none;
+  height: 6px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
 }
 
 .table {
