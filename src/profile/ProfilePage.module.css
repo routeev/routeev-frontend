@@ -12,7 +12,14 @@
    la derecha. Mismo orden de magnitud que el max-width de las páginas
    legales (720px, LegalLayout.module.css), ya pensado para lectura, no
    para llenar el ancho entero. La grilla de vehículos (.vehicleGrid,
-   auto-fill) se sigue acomodando sola con menos columnas por fila. */
+   auto-fill) se sigue acomodando sola con menos columnas por fila.
+   Se probó un ancho mayor solo para los paneles con tablas anchas
+   (Consumo/Historial, ver el historial de git) para que entraran sin
+   scroll horizontal -- pedido explícito de deshacerlo: se veían más
+   grandes que el resto de los paneles, y eso se nota más que el scroll
+   que evitaba. Todos los paneles vuelven a compartir el mismo ancho; las
+   tablas que no entran siguen resolviéndose con la barra de scroll fina
+   (ver .tableScroll más abajo), no ensanchando el panel. */
 .main {
   max-width: 780px;
   width: 100%;
