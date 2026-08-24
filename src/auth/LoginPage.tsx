@@ -2,7 +2,16 @@ import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { confirmEmail, googleLogin, login, register, resendConfirmation } from "../api/auth";
+import {
+  confirmEmail,
+  googleLogin,
+  login,
+  register,
+  requestPasswordReset,
+  resendConfirmation,
+  resetPassword,
+  verifyPasswordResetCode,
+} from "../api/auth";
 import { ApiError } from "../api/client";
 import { setSession } from "../api/session";
 import { Banner } from "../shared/Banner";
@@ -14,7 +23,16 @@ import { GoogleSignIn } from "./GoogleSignIn";
 import styles from "./LoginPage.module.css";
 
 type Mode = "login" | "register";
-type View = { name: "form" } | { name: "confirm"; email: string; notice?: string };
+type View =
+  | { name: "form" }
+  | { name: "confirm"; email: string; notice?: string }
+  | { name: "forgot" }
+  // Codigo mandado, todavia sin validar contra el backend.
+  | { name: "reset-code"; email: string }
+  // Codigo ya validado (ver onVerifyCodeSubmit): recien acá se pide la
+  // contraseña nueva, para no hacer escribirla dos veces solo para
+  // enterarse al final de que el código estaba mal tipeado.
+  | { name: "reset-password"; email: string; code: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,6 +47,19 @@ interface ConfirmValues {
   code: string;
 }
 
+interface ForgotValues {
+  email: string;
+}
+
+interface ResetCodeValues {
+  code: string;
+}
+
+interface ResetPasswordValues {
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -40,6 +71,9 @@ export function LoginPage() {
 
   const form = useForm<FormValues>({ defaultValues: { email: "", password: "", displayName: "" } });
   const confirmForm = useForm<ConfirmValues>({ defaultValues: { code: "" } });
+  const forgotForm = useForm<ForgotValues>({ defaultValues: { email: "" } });
+  const resetCodeForm = useForm<ResetCodeValues>({ defaultValues: { code: "" } });
+  const resetPasswordForm = useForm<ResetPasswordValues>({ defaultValues: { newPassword: "", confirmPassword: "" } });
 
   function goToApp(session: { access_token: string; username: string }) {
     setSession(session.access_token, session.username);
@@ -109,6 +143,75 @@ export function LoginPage() {
     }
   }
 
+  async function onForgotSubmit(values: ForgotValues) {
+    setBanner(null);
+    const email = values.email.trim();
+    try {
+      // Siempre avanza al paso siguiente, exista o no la cuenta: el backend
+      // responde 204 en los dos casos a propósito (anti-enumeración, ver
+      // request_password_reset en backend/app/routes/auth_routes.py) -- si
+      // acá se distinguiera, esta pantalla delataría por sí sola qué correos
+      // están registrados. El error real (red caída, límite de pedidos) sí
+      // se muestra y NO avanza, porque en ese caso el código nunca salió.
+      await requestPasswordReset(email);
+      setView({ name: "reset-code", email });
+    } catch (err) {
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.forgotPassword.error });
+    }
+  }
+
+  async function onVerifyCodeSubmit(values: ResetCodeValues) {
+    if (view.name !== "reset-code") return;
+    setBanner(null);
+    const code = values.code.trim();
+    try {
+      // No cambia nada todavía (ver verify_password_reset_code en
+      // backend/app/routes/auth_routes.py: es de solo lectura, no consume el
+      // código) -- solo confirma que vale la pena pedir la contraseña nueva
+      // antes de hacerlo escribir dos veces.
+      await verifyPasswordResetCode(view.email, code);
+      setView({ name: "reset-password", email: view.email, code });
+    } catch (err) {
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resetPassword.verifyError });
+    }
+  }
+
+  async function onResetPasswordSubmit(values: ResetPasswordValues) {
+    if (view.name !== "reset-password") return;
+    setBanner(null);
+    if (values.newPassword !== values.confirmPassword) {
+      resetPasswordForm.setError("confirmPassword", { message: t.auth.resetPassword.passwordMismatch });
+      return;
+    }
+    try {
+      // El código ya se validó en el paso anterior, pero se vuelve a mandar
+      // acá: el backend lo revalida igual (ver reset_password en
+      // auth_routes.py), entre otras cosas por si venció justo en el medio.
+      goToApp(await resetPassword(view.email, view.code, values.newPassword));
+    } catch (err) {
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resetPassword.error });
+    }
+  }
+
+  async function onResendReset() {
+    if (view.name !== "reset-code" && view.name !== "reset-password") return;
+    setBanner(null);
+    setResending(true);
+    try {
+      await requestPasswordReset(view.email);
+      setBanner({ variant: "info", message: t.auth.resendCode.success });
+      // El código anterior (si el paso previo ya lo había validado) queda
+      // invalidado por este reenvío (ver set_password_reset_code en
+      // backend/app/database.py: uno nuevo reemplaza al pendiente) -- hay
+      // que volver a pedirlo y validarlo de cero.
+      if (view.name === "reset-password") setView({ name: "reset-code", email: view.email });
+    } catch (err) {
+      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resendCode.error });
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function onGoogleCredential(credential: string) {
     setBanner(null);
     try {
@@ -126,9 +229,13 @@ export function LoginPage() {
   const modeLabel =
     view.name === "confirm"
       ? t.auth.verifyEmail.modeLabel
-      : mode === "login"
-        ? t.auth.login.modeLabelLogin
-        : t.auth.login.modeLabelRegister;
+      : view.name === "forgot"
+        ? t.auth.forgotPassword.modeLabel
+        : view.name === "reset-code" || view.name === "reset-password"
+          ? t.auth.resetPassword.modeLabel
+          : mode === "login"
+            ? t.auth.login.modeLabelLogin
+            : t.auth.login.modeLabelRegister;
 
   return (
     <div className={styles.page}>
@@ -233,12 +340,24 @@ export function LoginPage() {
                 >
                   {mode === "login" ? t.auth.login.toggleToRegister : t.auth.login.toggleToLogin}
                 </button>
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    className={styles.toggleMode}
+                    onClick={() => {
+                      setView({ name: "forgot" });
+                      setBanner(null);
+                    }}
+                  >
+                    {t.auth.login.forgotPasswordLink}
+                  </button>
+                )}
               </div>
             </form>
 
             <GoogleSignIn onCredential={onGoogleCredential} />
           </>
-        ) : (
+        ) : view.name === "confirm" ? (
           <form onSubmit={confirmForm.handleSubmit(onConfirmSubmit)} noValidate>
             {view.notice && <p className={styles.tagline}>{view.notice}</p>}
             <div className="field">
@@ -279,6 +398,143 @@ export function LoginPage() {
               </button>
               <button type="button" className={styles.toggleMode} onClick={backToLogin}>
                 {t.auth.verifyEmail.backToLogin}
+              </button>
+            </div>
+          </form>
+        ) : view.name === "forgot" ? (
+          <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} noValidate>
+            <p className={styles.tagline}>{t.auth.forgotPassword.tagline}</p>
+            <div className="field">
+              <label htmlFor="forgot-email">{t.auth.login.emailLabel}</label>
+              <input
+                id="forgot-email"
+                type="email"
+                autoComplete="email"
+                placeholder={t.auth.login.emailPlaceholder}
+                {...forgotForm.register("email", {
+                  required: true,
+                  validate: (v) => EMAIL_RE.test(v.trim()) || t.auth.login.emailInvalid,
+                })}
+              />
+              {forgotForm.formState.errors.email && (
+                <p className={styles.fieldError}>{forgotForm.formState.errors.email.message || t.auth.login.emailInvalid}</p>
+              )}
+            </div>
+            <div className={styles.actions}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={forgotForm.formState.isSubmitting}
+                aria-busy={forgotForm.formState.isSubmitting}
+              >
+                {forgotForm.formState.isSubmitting ? (
+                  <>
+                    <Spinner /> {t.auth.forgotPassword.submitting}
+                  </>
+                ) : (
+                  t.auth.forgotPassword.submit
+                )}
+              </button>
+              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
+                {t.auth.forgotPassword.backToLogin}
+              </button>
+            </div>
+          </form>
+        ) : view.name === "reset-code" ? (
+          <form onSubmit={resetCodeForm.handleSubmit(onVerifyCodeSubmit)} noValidate>
+            <p className={styles.tagline}>{t.auth.resetPassword.notice(view.email)}</p>
+            <div className="field">
+              <label htmlFor="reset-code">{t.auth.resetPassword.codeLabel}</label>
+              <input
+                id="reset-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                autoComplete="one-time-code"
+                placeholder="123456"
+                {...resetCodeForm.register("code", {
+                  required: true,
+                  validate: (v) => /^\d{6}$/.test(v.trim()) || t.auth.resetPassword.codeInvalid,
+                })}
+              />
+              {resetCodeForm.formState.errors.code && (
+                <p className={styles.fieldError}>
+                  {resetCodeForm.formState.errors.code.message || t.auth.resetPassword.codeInvalid}
+                </p>
+              )}
+            </div>
+            <div className={styles.actions}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={resetCodeForm.formState.isSubmitting}
+                aria-busy={resetCodeForm.formState.isSubmitting}
+              >
+                {resetCodeForm.formState.isSubmitting ? (
+                  <>
+                    <Spinner /> {t.auth.resetPassword.verifying}
+                  </>
+                ) : (
+                  t.auth.resetPassword.verifyCode
+                )}
+              </button>
+              <button type="button" className={styles.toggleMode} onClick={onResendReset} disabled={resending}>
+                {t.auth.resetPassword.resendCode}
+              </button>
+              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
+                {t.auth.resetPassword.backToLogin}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={resetPasswordForm.handleSubmit(onResetPasswordSubmit)} noValidate>
+            <p className={styles.tagline}>{t.auth.resetPassword.codeVerifiedNotice}</p>
+            <div className="field">
+              <label htmlFor="reset-new-password">{t.auth.resetPassword.newPasswordLabel}</label>
+              <input
+                id="reset-new-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                {...resetPasswordForm.register("newPassword", {
+                  required: t.auth.login.passwordRequired,
+                  validate: (v) => v.length >= 10 || t.auth.resetPassword.newPasswordTooShort,
+                })}
+              />
+              {resetPasswordForm.formState.errors.newPassword && (
+                <p className={styles.fieldError}>{resetPasswordForm.formState.errors.newPassword.message}</p>
+              )}
+            </div>
+            <div className="field">
+              <label htmlFor="reset-confirm-password">{t.auth.resetPassword.confirmPasswordLabel}</label>
+              <input
+                id="reset-confirm-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                {...resetPasswordForm.register("confirmPassword", { required: t.auth.resetPassword.passwordMismatch })}
+              />
+              {resetPasswordForm.formState.errors.confirmPassword && (
+                <p className={styles.fieldError}>{resetPasswordForm.formState.errors.confirmPassword.message}</p>
+              )}
+            </div>
+            <div className={styles.actions}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={resetPasswordForm.formState.isSubmitting}
+                aria-busy={resetPasswordForm.formState.isSubmitting}
+              >
+                {resetPasswordForm.formState.isSubmitting ? (
+                  <>
+                    <Spinner /> {t.auth.resetPassword.submitting}
+                  </>
+                ) : (
+                  t.auth.resetPassword.submit
+                )}
+              </button>
+              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
+                {t.auth.resetPassword.backToLogin}
               </button>
             </div>
           </form>

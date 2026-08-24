@@ -85,6 +85,21 @@ export function resendConfirmation(email: string): Promise<void> {
   return apiFetch<void>("/api/auth/resend-confirmation", { method: "POST", body: { email } });
 }
 
+export function requestPasswordReset(email: string): Promise<void> {
+  return apiFetch<void>("/api/auth/forgot-password", { method: "POST", body: { email } });
+}
+
+export function verifyPasswordResetCode(email: string, code: string): Promise<void> {
+  return apiFetch<void>("/api/auth/verify-reset-code", { method: "POST", body: { email, code } });
+}
+
+export function resetPassword(email: string, code: string, newPassword: string): Promise<AuthSession> {
+  return apiFetch<AuthSession>("/api/auth/reset-password", {
+    method: "POST",
+    body: { email, code, new_password: newPassword },
+  });
+}
+
 export function googleLogin(idToken: string): Promise<AuthSession> {
   // El backend espera `id_token` (ver js/api.js#googleLogin), no `credential`
   // -- ese es el nombre del campo que devuelve el SDK de Google, pero no el
