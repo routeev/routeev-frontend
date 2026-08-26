@@ -52,8 +52,8 @@ export function TermsPage() {
           {s.ip.osmLabel}
         </a>
         {s.ip.part2}{" "}
-        <a href="https://carto.com/attributions" target="_blank" rel="noopener">
-          {s.ip.cartoLabel}
+        <a href="https://openfreemap.org" target="_blank" rel="noopener">
+          {s.ip.basemapLabel}
         </a>
         {s.ip.part3}
       </p>

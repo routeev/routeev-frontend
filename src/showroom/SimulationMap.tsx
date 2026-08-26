@@ -1,7 +1,8 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, useMap, ZoomControl } from "react-leaflet";
+import { BasemapLayer } from "../map/BasemapLayer";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
@@ -139,6 +140,8 @@ export function SimulationMap({
           // rueda y sin botones no habia NINGUNA forma de acercarse, y quien
           // se acercaba con doble click no tenia como volver.
           scrollWheelZoom={false}
+          // Lo fijaba el TileLayer que estaba aca abajo: ver MapCanvas.tsx.
+          maxZoom={19}
           ref={setMap}
           style={{ height: "100%" }}
         >
@@ -147,12 +150,7 @@ export function SimulationMap({
             zoomInTitle={t.showroom.simulationMap.zoomIn}
             zoomOutTitle={t.showroom.simulationMap.zoomOut}
           />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            subdomains="abcd"
-            maxZoom={19}
-          />
+          <BasemapLayer />
           <FitBounds bounds={bounds} />
           {tramosInfo.map((tramo) => (
             <Polyline

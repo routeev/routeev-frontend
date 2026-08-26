@@ -127,7 +127,7 @@ export const legal = {
       part1: "The code, design, and RouteEV brand belong to RouteEV. Map data comes from",
       osmLabel: "OpenStreetMap",
       part2: ", under the ODbL license, and base maps from",
-      cartoLabel: "CARTO",
+      basemapLabel: "OpenFreeMap",
       part3:
         "; both are credited on every map in the app. The Inter and JetBrains Mono typefaces are used under their open licenses.",
     },
