@@ -1,8 +1,9 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, Marker, useMap, ZoomControl } from "react-leaflet";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { BasemapLayer } from "./BasemapLayer";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
 import { ImprecisePickLink } from "./layers/ImprecisePickLink";
@@ -184,16 +185,16 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       // Arriba a la derecha no compite con nada: el dashboard del viaje está
       // anclado abajo.
       zoomControl={false}
+      // Antes lo fijaba el TileLayer (los PNG de CARTO llegaban hasta z19).
+      // El basemap de ahora es vectorial y no declara maximo, y sin este
+      // tope Leaflet deja acercarse indefinidamente: el estilo se queda sin
+      // detalle que mostrar y el mapa pasa a ser un plano gigante y vacio.
+      maxZoom={19}
       style={{ height: "100%", width: "100%" }}
     >
       <ZoomControl position="topright" zoomInTitle={mc.zoomIn} zoomOutTitle={mc.zoomOut} />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={19}
-      />
+      <BasemapLayer />
       <GraphLayer />
       <StationsLayer />
       <OriginDestinationMarkers />

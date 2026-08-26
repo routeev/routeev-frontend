@@ -128,7 +128,7 @@ export const legal = {
       part1: "El código, el diseño y la marca RouteEV pertenecen a RouteEV. Los datos cartográficos provienen de",
       osmLabel: "OpenStreetMap",
       part2: ", bajo licencia ODbL, y los mapas base de",
-      cartoLabel: "CARTO",
+      basemapLabel: "OpenFreeMap",
       part3:
         "; ambos están acreditados en cada mapa de la aplicación. Las tipografías Inter y JetBrains Mono se usan bajo sus licencias libres.",
     },

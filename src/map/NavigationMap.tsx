@@ -1,32 +1,17 @@
-import "maplibre-gl/dist/maplibre-gl.css";
-// maplibre-gl no tiene export default (solo exports nombrados, ver su
-// package.json/dist/maplibre-gl.mjs) -- import default rompía en runtime
-// con "does not provide an export named 'default'" pese a compilar bien en
-// tsc, porque ese chequeo lo hace el bundler (Vite/esbuild), no el tipado.
+// `import * as` y no import default: maplibre-gl no tiene export default
+// (el porque, largo, esta en basemap.ts).
 import * as maplibregl from "maplibre-gl";
-// El worker de MapLibre (parsea vector tiles fuera del hilo principal) rompe
-// en el BUILD DE PRODUCCIÓN si no se registra así -- `?url` a secas lo emite
-// tal cual, sin el chunk hermano (maplibre-gl-shared.mjs) del que depende, y
-// falla en su primer import con un 404 real que Vercel responde con el
-// index.html de la SPA (de ahí el "non-JavaScript MIME type" en consola).
-// `?worker&url` lo hace pasar por el pipeline de workers de Vite, que arma
-// un chunk autocontenido. Solo pasa en producción -- `vite dev` funciona
-// con cualquiera de los dos, por eso no se notó probando en local.
-import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useEffect, useRef } from "react";
+// El estilo del mapa base y el registro del worker de MapLibre viven en un
+// solo lugar, compartido con los mapas de Leaflet: con importar algo de ese
+// modulo el worker ya queda registrado (ver basemap.ts).
+import { BASEMAP_STYLE_URL } from "./basemap";
 import styles from "./NavigationMap.module.css";
-
-maplibregl.setWorkerUrl(workerUrl);
 
 // Mismo par que RouteLayers.tsx (COLOR_ASTAR): ninguna de las dos librerías
 // de mapa puede leer var() en runtime, así que el color queda hardcodeado
 // acá también.
 const ROUTE_COLOR = "#34e3a8";
-
-// gratis, sin API key ni límite de uso (ver openfreemap.org) -- mismo
-// criterio de "RouteEV no depende de un plan pago de terceros" que ya regía
-// para el resto de los datos del proyecto.
-const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 
 const NAV_ZOOM = 17;
 const NAV_PITCH = 60;
@@ -85,7 +70,7 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
+      style: BASEMAP_STYLE_URL,
       center: startLngLat,
       zoom: NAV_ZOOM,
       pitch: NAV_PITCH,
