@@ -5,7 +5,8 @@ import { useEffect, useRef } from "react";
 // El estilo del mapa base y el registro del worker de MapLibre viven en un
 // solo lugar, compartido con los mapas de Leaflet: con importar algo de ese
 // modulo el worker ya queda registrado (ver basemap.ts).
-import { BASEMAP_STYLE_URL } from "./basemap";
+import { useActiveTheme } from "../theme/useActiveTheme";
+import { basemapStyleForTheme } from "./basemap";
 import styles from "./NavigationMap.module.css";
 
 // Mismo par que RouteLayers.tsx (COLOR_ASTAR): ninguna de las dos librerías
@@ -68,6 +69,14 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
   // que React marca como error.
   const initialPositionRef = useRef(position);
   const routeCoordsRef = useRef(routeCoords);
+  // El tema se toma al MONTAR y no se sigue en vivo, a diferencia del mapa de
+  // planificacion (BasemapLayer). Cambiarlo aca obligaria a un setStyle()
+  // sobre esta instancia de MapLibre, y setStyle descarta las fuentes y capas
+  // que se agregaron despues del estilo -- o sea la linea del recorrido y el
+  // pin del destino, en medio de una navegacion en curso. Este mapa solo
+  // existe mientras hay un viaje arrancado: cambiar de tema manejando es raro,
+  // y perder el trazado de la ruta por eso no vale el canje.
+  const initialThemeRef = useRef(useActiveTheme());
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -76,7 +85,7 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: BASEMAP_STYLE_URL,
+      style: basemapStyleForTheme(initialThemeRef.current),
       center: startLngLat,
       zoom: NAV_ZOOM,
       pitch: NAV_PITCH,
