@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import type { NodeId } from "./graph";
 import type { TarifaRecarga } from "./showroom";
 
 export interface PeajePunto {
@@ -32,7 +33,7 @@ export interface RouteBreakdown {
 }
 
 export interface Recharge {
-  node_id: number;
+  node_id: NodeId;
   added_kwh: number;
   time_min: number;
   station_name: string;
@@ -49,7 +50,7 @@ export interface Recharge {
 export interface RouteResult {
   found: boolean;
   route_coords: [number, number][];
-  route: number[];
+  route: NodeId[];
   node_coords: [number, number][];
   breakdown: RouteBreakdown;
   recharges: Recharge[];
@@ -85,7 +86,7 @@ export interface RouteReserva {
  * Ver app/estaciones.py: estacion_a_dict.
  */
 export interface EstacionCercana {
-  node_id: number;
+  node_id: NodeId;
   nombre: string;
   direccion: string | null;
   departamento: string | null;
@@ -148,8 +149,8 @@ export interface CompareRoutesResult {
 }
 
 export interface CompareRoutesPayload {
-  origin_id: number;
-  destination_id: number;
+  origin_id: NodeId;
+  destination_id: NodeId;
   vehicle_id: number;
   start_battery_kwh?: number;
   // ¿Hay donde enchufar en el destino? El backend asume true si no se manda.
@@ -177,7 +178,7 @@ export interface RoutePlanPayload {
 
 /** Una parada de carga con la ficha completa (ver estaciones.estacion_a_dict en la API) -- lo que reemplaza a route/node_coords en v2. */
 export interface ParadaV2 {
-  node_id: number;
+  node_id: NodeId;
   nombre: string;
   direccion: string | null;
   departamento: string | null;
@@ -261,20 +262,20 @@ export function toCompareRoutesResult(
 }
 
 export interface LogTripPayload {
-  origin_id: number;
-  destination_id: number;
+  origin_id: NodeId;
+  destination_id: NodeId;
   vehicle_id: number;
   start_battery_kwh?: number;
   traveled_km: number;
-  recharge_node_ids: number[];
+  recharge_node_ids: NodeId[];
 }
 
 export interface HistoryEntry {
   id?: number;
   created_at: string;
-  origin_id: number;
+  origin_id: NodeId;
   origin_name?: string;
-  destination_id: number;
+  destination_id: NodeId;
   destination_name?: string;
   vehicle_id: number;
   start_battery_kwh?: number;

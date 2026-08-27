@@ -1,30 +1,13 @@
 import type L from "leaflet";
 import { create } from "zustand";
-import type { GraphNode, Station } from "../api/graph";
-import type { CompareRoutesPayload, CompareRoutesResult } from "../api/route";
+import type { GraphNode, NodeId, Station } from "../api/graph";
+import type { CompareRoutesResult } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
-import { normalizeForSearch } from "../shared/geo";
+import { haversineKm, normalizeForSearch } from "../shared/geo";
+import { pointKey, SAME_POINT_KM, SAME_SPOT_KM, type RoutePoint, type TripLogSeed } from "./routePoint";
 
 export type SearchableNode = GraphNode & { _norm: string };
 export type PickMode = "origin" | "destination";
-
-/**
- * Un click del mapa que SI se resolvió, pero a un nodo del grafo lejos de
- * donde la persona realmente tocó (ver IMPRECISE_CLICK_KM en ClickToPick).
- *
- * Se guarda el punto tocado ADEMAS del nodo elegido a proposito: con los dos
- * se puede dibujar en el mapa la linea entre "donde tocaste" y "donde quedó"
- * (ImprecisePickLink) y ofrecer aceptar o volver a marcar. Antes esto era un
- * banner de texto y nada mas -- el usuario leia "a 3,4 km de donde tocaste"
- * sin ninguna forma de ver hacia donde, ni de deshacerlo.
- */
-export interface ImprecisePick {
-  role: PickMode;
-  node: GraphNode;
-  clickLat: number;
-  clickLon: number;
-  distanceKm: number;
-}
 
 /**
  * Estado del mapa, portado de js/map/state.js. Único dominio de estado
@@ -55,13 +38,15 @@ interface MapState {
   myPosition: [number, number] | null;
   setMyPosition: (pos: [number, number] | null) => void;
 
-  nodesById: Map<number, GraphNode>;
   searchableNodes: SearchableNode[];
   stations: Station[];
   // Estación elegida a mano en StationsPanel (lista "todas las estaciones").
   // El mapa no dibuja las 200+ estaciones de una: solo esta, o -- si ya hay
   // una ruta calculada -- las que esa ruta realmente usa (ver StationsLayer).
-  selectedStationId: number | null;
+  // NodeId (string), no number: el id de una estación es el id de su nodo en
+  // el grafo, que el backend declara como string. Estaba tipado `number` por
+  // el mismo error que `GraphNode.id` (ver api/graph.ts).
+  selectedStationId: NodeId | null;
 
   vehicles: Vehicle[];
   vehiclesLoaded: boolean;
@@ -80,10 +65,14 @@ interface MapState {
    */
   cargadorEnDestino: boolean;
 
-  originId: number | null;
-  originNode: GraphNode | null;
-  destinationId: number | null;
-  destinationNode: GraphNode | null;
+  // Origen y destino son RoutePoint, no GraphNode: un punto puede ser una
+  // coordenada cruda de un toque en el mapa y no corresponder a ningún nodo
+  // del grafo (ver routePoint.ts). Los campos originId/destinationId que
+  // vivían acá se borraron a propósito en vez de dejarlos en null, para que
+  // el type-check enumerara a sus consumidores en vez de dejarlos compilando
+  // y rotos en silencio.
+  originNode: RoutePoint | null;
+  destinationNode: RoutePoint | null;
   pickMode: PickMode;
 
   // pickMode SIEMPRE vale "origin" o "destination" -- es "a cuál de los dos le
@@ -95,7 +84,6 @@ interface MapState {
   // es null la mayor parte del tiempo. NO es una compuerta: tocar el mapa fija
   // el punto igual con picking en null, como siempre.
   picking: PickMode | null;
-  imprecisePick: ImprecisePick | null;
 
   // Suben con CADA escritura del punto (incluso si vuelve a caer en el mismo
   // nodo). Es lo que le permite a RouteAutocompleteField soltar el texto
@@ -109,16 +97,14 @@ interface MapState {
   destinationRevision: number;
 
   lastResult: CompareRoutesResult | null;
-  lastRoutePayload: CompareRoutesPayload | null;
+  lastRoutePayload: TripLogSeed | null;
   // Sufijo " · viaje del <fecha>" cuando lastResult viene de un replay del
   // historial (useReplayFromHistory) en vez de un calculo nuevo.
   replaySuffix: string | undefined;
 
-  addNode: (node: GraphNode) => void;
-  addNodes: (nodes: GraphNode[]) => void;
   setSearchableNodes: (nodes: GraphNode[]) => void;
   setStations: (stations: Station[]) => void;
-  selectStation: (id: number | null) => void;
+  selectStation: (id: NodeId | null) => void;
 
   setVehicles: (vehicles: Vehicle[]) => void;
   addVehicle: (vehicle: Vehicle) => void;
@@ -128,19 +114,38 @@ interface MapState {
   setStartBatteryPct: (pct: number) => void;
   setCargadorEnDestino: (tiene: boolean) => void;
 
-  setOrigin: (node: GraphNode) => void;
-  setDestination: (node: GraphNode) => void;
+  setOrigin: (p: RoutePoint) => void;
+  setDestination: (p: RoutePoint) => void;
   clearOrigin: () => void;
   clearDestination: () => void;
   setPickMode: (mode: PickMode) => void;
   startPicking: (mode: PickMode) => void;
   stopPicking: () => void;
-  setImprecisePick: (pick: ImprecisePick) => void;
-  clearImprecisePick: () => void;
+
+  /**
+   * Completa el `snapId` (y opcionalmente el nombre) de un punto ya fijado,
+   * cuando vuelve la resolución en segundo plano de snapPoint.ts.
+   *
+   * `key` es el pointKey del punto que se pidió snapear: si el punto que hay
+   * ahora es otro — porque la persona volvió a tocar, o canceló — la respuesta
+   * se descarta en silencio. Eso reemplaza al par seqRef/vigenteRef que vivía
+   * en ClickToPick.
+   *
+   * NO sube originRevision ni toca lastResult: anotar el id no es "se movió el
+   * punto". Si subiera la revisión, RouteAutocompleteField le borraría a la
+   * persona el texto que esté tipeando ~300 ms después de tocar el mapa.
+   */
+  annotateSnap: (role: PickMode, key: string, patch: { snapId: NodeId; name?: string }) => void;
+
+  /**
+   * Actualiza los puntos del seed de log-trip sin pasar por setLastResult
+   * (que resetea selectedStationId). Lo usa ensureSnapIds al iniciar viaje.
+   */
+  updateTripSeed: (patch: Partial<Pick<TripLogSeed, "origin" | "destination">>) => void;
 
   setLastResult: (
     result: CompareRoutesResult | null,
-    payload: CompareRoutesPayload | null,
+    payload: TripLogSeed | null,
     replaySuffix?: string
   ) => void;
   resetTripPlanning: () => void;
@@ -153,7 +158,6 @@ export const useMapStore = create<MapState>((set, get) => ({
   myPosition: null,
   setMyPosition: (pos) => set({ myPosition: pos }),
 
-  nodesById: new Map(),
   searchableNodes: [],
   stations: [],
   selectedStationId: null,
@@ -165,13 +169,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   startBatteryPct: 100,
   cargadorEnDestino: true,
 
-  originId: null,
   originNode: null,
-  destinationId: null,
   destinationNode: null,
   pickMode: "origin",
   picking: null,
-  imprecisePick: null,
   originRevision: 0,
   destinationRevision: 0,
 
@@ -179,45 +180,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   lastRoutePayload: null,
   replaySuffix: undefined,
 
-  addNode: (node) =>
-    set((s) => {
-      s.nodesById.set(node.id, node);
-      return { nodesById: s.nodesById };
-    }),
-  // Variante en bloque para GraphLayer: el grafo trae ~63.800 nodos, y
-  // llamar addNode() uno por uno significaba 63.800 set() de Zustand
-  // seguidos apenas cargaba el mapa (cada uno arma un nuevo objeto de
-  // estado y recorre la lista de listeners) -- un tranco real y evitable
-  // en el momento mas sensible (la primera carga). Una sola llamada, un
-  // solo set().
-  addNodes: (nodes) =>
-    set((s) => {
-      for (const n of nodes) s.nodesById.set(n.id, n);
-      return { nodesById: s.nodesById };
-    }),
-
   setSearchableNodes: (nodes) => {
     const withNorm = nodes.map((n) => ({ ...n, _norm: normalizeForSearch(n.name) }));
-    set((s) => {
-      for (const n of withNorm) s.nodesById.set(n.id, n);
-      return { searchableNodes: withNorm, nodesById: s.nodesById };
-    });
+    set({ searchableNodes: withNorm });
   },
 
-  setStations: (stations) => {
-    set((s) => {
-      for (const st of stations) {
-        s.nodesById.set(st.node_id, {
-          id: st.node_id,
-          name: st.nombre,
-          lat: st.lat,
-          lon: st.lon,
-          is_charging_station: true,
-        });
-      }
-      return { stations, nodesById: s.nodesById };
-    });
-  },
+  setStations: (stations) => set({ stations }),
   selectStation: (id) => set({ selectedStationId: id }),
 
   setVehicles: (vehicles) =>
@@ -251,76 +219,74 @@ export const useMapStore = create<MapState>((set, get) => ({
         : { cargadorEnDestino: tiene, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
     ),
 
-  setOrigin: (node) =>
+  setOrigin: (p) =>
     set((s) => {
-      s.nodesById.set(node.id, node);
       // Cambiar el origen invalida cualquier ruta ya calculada: sin esto,
       // la polyline vieja (y sus paradas de recarga) quedaban dibujadas
       // sobre un origen/destino que ya no corresponden hasta el próximo
       // "Calcular ruta". Solo se limpia si el punto realmente cambió, para
-      // no pisar un resultado válido si se re-selecciona el mismo nodo.
-      const changed = node.id !== s.originId;
+      // no pisar un resultado válido si se re-selecciona el mismo lugar.
+      //
+      // "Cambió" se mide por DISTANCIA y no por id: con coordenadas crudas no
+      // hay id que comparar (ver SAME_SPOT_KM en routePoint.ts).
+      const prev = s.originNode;
+      const changed = prev == null || haversineKm(prev.lat, prev.lon, p.lat, p.lon) > SAME_SPOT_KM;
       return {
-        originId: node.id,
-        originNode: node,
-        nodesById: s.nodesById,
-        // Sube SIEMPRE, aunque el nodo sea el mismo: es "hubo una escritura",
+        originNode: p,
+        // Sube SIEMPRE, aunque sea el mismo punto: es "hubo una escritura",
         // no "cambió el punto" (ver el comentario de originRevision arriba).
         originRevision: s.originRevision + 1,
-        // Un aviso de "quedó lejos de donde tocaste" que era del origen deja
-        // de tener sentido apenas el origen se vuelve a fijar por cualquier
-        // vía. ClickToPick escribe el suyo DESPUES de este setOrigin, así que
-        // el suyo sobrevive.
-        ...(s.imprecisePick?.role === "origin" ? { imprecisePick: null } : {}),
         ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
       };
     }),
-  setDestination: (node) =>
+  setDestination: (p) =>
     set((s) => {
-      s.nodesById.set(node.id, node);
-      const changed = node.id !== s.destinationId;
+      const prev = s.destinationNode;
+      const changed = prev == null || haversineKm(prev.lat, prev.lon, p.lat, p.lon) > SAME_SPOT_KM;
       return {
-        destinationId: node.id,
-        destinationNode: node,
-        nodesById: s.nodesById,
+        destinationNode: p,
         destinationRevision: s.destinationRevision + 1,
-        ...(s.imprecisePick?.role === "destination" ? { imprecisePick: null } : {}),
         ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
       };
     }),
+
+  annotateSnap: (role, key, patch) =>
+    set((s) => {
+      const cur = role === "origin" ? s.originNode : s.destinationNode;
+      // El punto que hay ahora no es el que se pidió snapear: la persona
+      // volvió a tocar (o canceló) mientras la respuesta venía en camino.
+      if (cur == null || pointKey(cur.lat, cur.lon) !== key) return {};
+      const next: RoutePoint = { ...cur, snapId: patch.snapId, ...(patch.name ? { name: patch.name } : {}) };
+      return role === "origin" ? { originNode: next } : { destinationNode: next };
+    }),
+
+  updateTripSeed: (patch) =>
+    set((s) => (s.lastRoutePayload == null ? {} : { lastRoutePayload: { ...s.lastRoutePayload, ...patch } })),
   // El "x" para borrar un pin ya elegido: vuelve a pickMode a ese rol para
   // que el proximo click en el mapa lo fije de nuevo, mismo criterio que
   // setOrigin ya usa para AVANZAR el pickMode al elegir (ver arriba).
   clearOrigin: () =>
     set((s) => ({
-      originId: null,
       originNode: null,
       pickMode: "origin",
       originRevision: s.originRevision + 1,
-      ...(s.imprecisePick?.role === "origin" ? { imprecisePick: null } : {}),
-      ...(s.originId != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      ...(s.originNode != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
     })),
   clearDestination: () =>
     set((s) => ({
-      destinationId: null,
       destinationNode: null,
       pickMode: "destination",
       destinationRevision: s.destinationRevision + 1,
-      ...(s.imprecisePick?.role === "destination" ? { imprecisePick: null } : {}),
-      ...(s.destinationId != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      ...(s.destinationNode != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
     })),
   setPickMode: (mode) => set({ pickMode: mode }),
 
   // startPicking es lo que hacen los botones de chincheta del panel: además de
   // decir "el próximo toque va a este rol" (pickMode), enciende la señal de
   // "te estoy esperando" (banner sobre el mapa, cursor de mira, cargadores
-  // atenuados). Limpia el aviso de imprecisión porque un intento nuevo
-  // reemplaza al anterior -- si no, la tarjeta de "quedó lejos" seguía ahí
-  // hablando de un punto que la persona ya decidió volver a marcar.
-  startPicking: (mode) => set({ picking: mode, pickMode: mode, imprecisePick: null }),
+  // atenuados).
+  startPicking: (mode) => set({ picking: mode, pickMode: mode }),
   stopPicking: () => set({ picking: null }),
-  setImprecisePick: (pick) => set({ imprecisePick: pick }),
-  clearImprecisePick: () => set({ imprecisePick: null }),
 
   setLastResult: (result, payload, replaySuffix) =>
     set({ lastResult: result, lastRoutePayload: payload, replaySuffix, selectedStationId: null }),
@@ -335,13 +301,10 @@ export const useMapStore = create<MapState>((set, get) => ({
   // seria mas molesto que util.
   resetTripPlanning: () =>
     set({
-      originId: null,
       originNode: null,
-      destinationId: null,
       destinationNode: null,
       pickMode: "origin",
       picking: null,
-      imprecisePick: null,
       originRevision: 0,
       destinationRevision: 0,
       lastResult: null,
@@ -384,17 +347,22 @@ export function vehicleAutonomyKm(vehicle: Vehicle): number {
 export function calculateGateMissing(params: {
   vehiclesLoaded: boolean;
   hasSelectedVehicle: boolean;
-  originId: number | null;
-  destinationId: number | null;
+  origin: { lat: number; lon: number } | null;
+  destination: { lat: number; lon: number } | null;
 }): string[] {
-  const { vehiclesLoaded, hasSelectedVehicle, originId, destinationId } = params;
+  const { vehiclesLoaded, hasSelectedVehicle, origin, destination } = params;
   const missing: string[] = [];
   if (!vehiclesLoaded) missing.push("cargando vehículos...");
   else if (!hasSelectedVehicle) missing.push("elegí o creá un vehículo");
-  if (!originId) missing.push("fijá un origen");
-  if (!destinationId) missing.push("fijá un destino");
-  if (originId && destinationId && originId === destinationId) {
-    missing.push("origen y destino no pueden ser el mismo punto");
+  // `== null` y no `!`: un punto en el ecuador o en Greenwich tiene lat/lon 0,
+  // y aunque en Uruguay no pase, la versión con `!` ya contradecía a
+  // nextStep.ts, que siempre usó `== null`.
+  if (origin == null) missing.push("fijá un origen");
+  if (destination == null) missing.push("fijá un destino");
+  // Antes era `originId === destinationId`, binario porque lo definía el
+  // grafo. Con coordenadas hay que elegir un umbral: ver SAME_POINT_KM.
+  if (origin && destination && haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
+    missing.push("origen y destino están demasiado cerca");
   }
   return missing;
 }

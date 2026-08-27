@@ -1,5 +1,5 @@
 import type { RouteBreakdown, RouteResult } from "../api/route";
-import type { Station } from "../api/graph";
+import type { NodeId, Station } from "../api/graph";
 import type { Vehicle } from "../api/vehicles";
 
 /** Un tramo con peaje detectado no siempre tiene tarifa real conocida: distingue "sin costo" de "no sabemos el costo". */
@@ -12,7 +12,7 @@ export function pctOfCapacity(kwh: number, vehicle: Vehicle | null): number | nu
   return Math.max(0, Math.min(100, (kwh / vehicle.battery_capacity_kwh) * 100));
 }
 
-export function findStationDetail(stations: Station[], nodeId: number): Station | null {
+export function findStationDetail(stations: Station[], nodeId: NodeId): Station | null {
   return stations.find((s) => s.node_id === nodeId) ?? null;
 }
 

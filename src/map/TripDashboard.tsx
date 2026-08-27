@@ -394,6 +394,20 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             </div>
           )}
 
+          {/* El viaje terminó pero no se pudo guardar en el historial. Antes
+              esto era un console.warn: la persona veía "Llegaste" y el viaje
+              desaparecía sin más. Es dato real de un recorrido que ya ocurrió
+              y no se puede volver a producir, así que se dice. */}
+          {liveTrip.ui.saveError && (
+            <div
+              className={[styles.advisory, styles.advisoryDanger].join(" ")}
+              style={{ marginTop: 10 }}
+              role="alert"
+            >
+              {liveTrip.ui.saveError}
+            </div>
+          )}
+
           {(liveTrip.ui.active || liveTrip.ui.finished) && (
             <div className={styles.live}>
               <div className={styles.liveRow}>

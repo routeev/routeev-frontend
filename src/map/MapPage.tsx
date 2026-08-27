@@ -77,21 +77,27 @@ export function MapPage() {
   const hasResult = useMapStore((s) => s.lastResult != null);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
-  const originId = useMapStore((s) => s.originId);
-  const destinationId = useMapStore((s) => s.destinationId);
+  // Se selecciona el RoutePoint entero, no lat/lon por separado: la referencia
+  // que guarda el store es estable (zustand compara con Object.is y solo
+  // cambia cuando corre setOrigin/annotateSnap/clearOrigin), así que sirve
+  // tal cual como dep de los useMemo de abajo. Lo que NO se puede hacer es
+  // usar calculateGateMissing como selector, porque arma un array nuevo en
+  // cada llamada -- eso es lo que documenta su comentario en mapStore.ts, y
+  // es un problema distinto de este.
+  const origin = useMapStore((s) => s.originNode);
+  const destination = useMapStore((s) => s.destinationNode);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const picking = useMapStore((s) => s.picking);
   const stopPicking = useMapStore((s) => s.stopPicking);
-  const imprecisePick = useMapStore((s) => s.imprecisePick);
   const missing = useMemo(
     () =>
       calculateGateMissing({
         vehiclesLoaded,
         hasSelectedVehicle: !!selectedVehicleId,
-        originId,
-        destinationId,
+        origin,
+        destination,
       }),
-    [vehiclesLoaded, selectedVehicleId, originId, destinationId]
+    [vehiclesLoaded, selectedVehicleId, origin, destination]
   );
   // El mismo gate, pero redactado como UN paso a seguir en vez de un inventario
   // de faltantes: es lo único que le queda al panel para decir qué hacer, ahora
@@ -102,12 +108,12 @@ export function MapPage() {
         {
           vehiclesLoaded,
           hasSelectedVehicle: !!selectedVehicleId,
-          originId,
-          destinationId,
+          origin,
+          destination,
         },
         t.map.nextStep
       ),
-    [vehiclesLoaded, selectedVehicleId, originId, destinationId, t]
+    [vehiclesLoaded, selectedVehicleId, origin, destination, t]
   );
   useReplayFromHistory(vehiclesLoaded);
 
@@ -181,8 +187,7 @@ export function MapPage() {
   // estas condiciones es un caso en el que esconder el mapa sería un error, y
   // como valor derivado no puede quedar "pegado" en el estado equivocado.
   //   - Sin origen y destino puestos, el mapa ES la herramienta para ponerlos.
-  //   - Marcando un punto, o con el aviso de "quedó lejos de donde tocaste"
-  //     (que dibuja la distancia SOBRE el mapa), esconderlo no explicaría nada.
+  //   - Marcando un punto, esconderlo no explicaría nada.
   //   - Con el panel ya colapsado por el handle, esconder también el mapa deja
   //     la pantalla entera en blanco: son las dos únicas cosas que hay.
   //   - Con un resultado ya calculado, "Tu viaje" (el formulario que
@@ -198,12 +203,13 @@ export function MapPage() {
     !sidebarCollapsed &&
     !hasResult &&
     picking == null &&
-    imprecisePick == null &&
-    originId != null &&
-    destinationId != null;
+    origin != null &&
+    destination != null;
 
-  // Un error de "Calcular ruta" pisa uno viejo de click-en-el-mapa: es el
-  // mas reciente de los dos flujos que escriben este banner.
+  // Un error de "Calcular ruta" pisa uno de auto-localización (CaptureMap en
+  // MapCanvas.tsx, el único otro flujo que escribe acá): es el más reciente de
+  // los dos. Tocar el mapa ya no puede fallar -- fija el punto sin red de por
+  // medio -- así que ese tercer flujo dejó de existir.
   const banner: MapBanner = calc.error ? { message: calc.error, variant: "error" } : mapBanner;
 
   const ready = missing.length === 0;
@@ -249,7 +255,7 @@ export function MapPage() {
   function onSidebarScroll(e: React.UIEvent<HTMLDivElement>) {
     // Solo una vez que los dos puntos están puestos: antes de eso el mapa es
     // la herramienta principal, no un adorno que estorba.
-    if (originId == null || destinationId == null) return;
+    if (origin == null || destination == null) return;
     const top = e.currentTarget.scrollTop;
     if (top > MAP_COLLAPSE_SCROLL_PX) setScrolledPastMap(true);
     else if (top <= MAP_RESTORE_SCROLL_PX) setScrolledPastMap(false);

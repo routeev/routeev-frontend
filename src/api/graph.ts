@@ -1,21 +1,21 @@
 import { apiFetch } from "./client";
 
+/**
+ * Id de un nodo del grafo vial. Es un STRING, no un número: el backend lo
+ * declara `NodeId = Annotated[str, ...]` (routeev-api/app/schemas.py:95) y en
+ * los datos son `"n0"`, `"n11573"` (data/seed_graph.json) o `"station_7"` para
+ * las estaciones. El `id: number` que estaba acá era mentira de tipos desde
+ * siempre: nunca falló porque TypeScript no valida la respuesta de la red,
+ * pero cualquier cuenta o comparación numérica sobre un id estaba rota.
+ */
+export type NodeId = string;
+
 export interface GraphNode {
-  id: number;
+  id: NodeId;
   name: string;
   lat: number;
   lon: number;
   is_charging_station?: boolean;
-}
-
-export interface GraphEdge {
-  from: number;
-  to: number;
-}
-
-export interface GraphData {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
 }
 
 export interface StationConnector {
@@ -26,7 +26,7 @@ export interface StationConnector {
 }
 
 export interface Station {
-  node_id: number;
+  node_id: NodeId;
   nombre: string;
   lat: number;
   lon: number;
@@ -43,10 +43,6 @@ export interface GeocodeResult {
   node: GraphNode;
   matched_address: string;
   distance_to_node_km: number;
-}
-
-export function getGraph(): Promise<GraphData> {
-  return apiFetch<GraphData>("/api/graph");
 }
 
 export function getStations(): Promise<Station[]> {

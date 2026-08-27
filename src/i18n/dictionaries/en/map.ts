@@ -98,6 +98,8 @@ export const map = {
     readyToCalculate: "Ready to calculate.",
   },
   liveTrip: {
+    saveFailed: "The trip could not be saved to your history. Its data was lost.",
+    saveFailedSamePoint: "The trip could not be saved: origin and destination ended up too close to record it.",
     arrived: "You arrived at your destination",
     offRoute: (km: string) => `You're ${km} km from the calculated route: progress can't be tracked until you're on it.`,
     passedStation: (name: string) => `You passed ${name}: battery updated`,
@@ -154,23 +156,13 @@ export const map = {
     genericError: "We couldn't get your location.",
     unsupportedBrowser: "This browser can't give us your location.",
     grantPermissionHint: "If the browser asks, choose \"Allow\".",
-    impreciseOrigin: (km: string, name: string) =>
-      `You're ${km} km from the nearest street covered by the map. We used "${name}" as the origin, but it may not be accurate.`,
     originSet: (name: string) => `Origin set to ${name}.`,
-    locateError: "Couldn't place your position on the map.",
     noGpsFallback: "No GPS available: finding your approximate location via Wi-Fi...",
   },
   routeInput: {
     title: "Your trip",
     originPlaceholder: "Where are you leaving from?",
     destinationPlaceholder: "Where are you going?",
-    imprecise: {
-      title: (roleLabel: string, km: string) => `The ${roleLabel} ended up ${km} km from where you tapped.`,
-      body: (nodeName: string) =>
-        `The closest point we know around there is "${nodeName}". You'll see the dotted line between the two points on the map.`,
-      useThisPoint: "Use this point",
-      pickAnother: "Mark another point",
-    },
     chargerAtDestination: {
       legend: "Do you have somewhere to charge at your destination?",
       hint: "If you don't, we'll calculate the trip so you arrive with enough battery to reach the nearest charger.",
@@ -183,7 +175,7 @@ export const map = {
   nextStep: {
     chooseOrigin: "Choose where you're leaving from: tap the map or type an address.",
     chooseDestination: "Choose where you're going: tap the map or type an address.",
-    samePoint: "The origin and destination are the same point: change one of the two.",
+    samePoint: "The origin and destination are too close together: move one of them.",
     loadingVehicles: "Hang on, we're loading your vehicles.",
     addVehicle: "Add a vehicle below to calculate the trip.",
     readyToCalculate: 'Everything\'s ready: tap "Calculate route".',
@@ -237,12 +229,6 @@ export const map = {
     starLabel: (n: number) => `${n} out of 5 stars`,
   },
   layers: {
-    clickToPick: {
-      resolveError: "Couldn't resolve that point on the map.",
-    },
-    imprecisePickLink: {
-      tappedHere: "You tapped here",
-    },
     originDestinationMarkers: {
       origin: "Origin",
       destination: "Destination",
