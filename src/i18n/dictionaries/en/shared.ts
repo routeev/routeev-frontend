@@ -16,12 +16,11 @@ export const shared = {
     noMatches: "No catalog model matches. You can still fill in the details by hand.",
   },
   siteFooter: {
-    defaultNote: "RouteEV — made in Montevideo, Uruguay.",
     showroom: "Showroom",
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact us",
-    instagram: "Instagram",
+    instagram: "Follow us on Instagram",
     copyright: (year: number) => `© ${year} RouteEV. All rights reserved.`,
   },
   toastViewport: {

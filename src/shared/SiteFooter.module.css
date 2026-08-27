@@ -1,19 +1,15 @@
 .footer {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 36px 28px 24px;
-  border-top: 1px solid var(--border);
-  color: var(--text-faint);
-  font-size: 12.5px;
-}
-
-.top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 20px;
-  padding-bottom: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 28px;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 12.5px;
 }
 
 .brandCol {
@@ -27,12 +23,15 @@
   color: var(--text-muted);
 }
 
-/* Cierre formal de la página, separado del bloque de arriba (marca + nav)
-   por su propio borde -- mismo criterio que ".mobileMenuActions" en
-   SiteHeader.module.css para "acá empieza otra cosa", no un link más. */
-.bottom {
-  padding-top: 16px;
-  border-top: 1px solid var(--border-soft);
+/* Agrupa la nav de texto + el badge social como un solo bloque contra
+   .footer (justify-content:space-between lo separa de .brandCol como los
+   únicos dos ítems que le importan a ese layout) -- mismo criterio que
+   ".actions" en SiteHeader.module.css. */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .links {
@@ -59,18 +58,28 @@
   color: var(--accent-astar);
 }
 
-/* El único link externo del footer -- ícono + color propio en reposo para
-   que no se confunda con la navegación interna (Showroom/Privacidad/etc.),
-   que es texto liso a propósito. Mismo criterio de especificidad que
-   ".links a.linkActive" de arriba, para poder pisar el color base. */
-.links a.instagram {
+/* Badge circular del único link externo del footer -- separado de la nav de
+   texto (Showroom/Privacidad/etc.) a propósito, mismo patrón que un ícono
+   social de cualquier footer. En reposo ya lleva color propio (no el gris
+   liso de la nav) para notarse incluso sin el hover. */
+.social {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
   color: var(--accent-dijkstra);
+  flex-shrink: 0;
 }
 
-.instagram svg {
-  width: 15px;
-  height: 15px;
+.social:hover {
+  border-color: var(--accent-dijkstra);
+  background: var(--overlay-hover);
+}
+
+.social svg {
+  width: 16px;
+  height: 16px;
 }

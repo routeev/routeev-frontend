@@ -16,12 +16,11 @@ export const shared = {
     noMatches: "Ningún modelo del catálogo coincide. Igual podés completar los datos a mano.",
   },
   siteFooter: {
-    defaultNote: "RouteEV — hecho en Montevideo, Uruguay.",
     showroom: "Showroom",
     privacy: "Privacidad",
     terms: "Términos",
     contact: "Escribinos",
-    instagram: "Instagram",
+    instagram: "Seguinos en Instagram",
     copyright: (year: number) => `© ${year} RouteEV. Todos los derechos reservados.`,
   },
   toastViewport: {
