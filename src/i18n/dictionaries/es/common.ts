@@ -2,13 +2,9 @@
 // solo aparece en un área (map, profile, auth, etc.) va en el diccionario de
 // esa área, no acá.
 export const common = {
-  close: "Cerrar",
   cancel: "Cancelar",
   save: "Guardar",
   saving: "Guardando...",
-  loading: "Cargando...",
-  error: "Ocurrió un error",
-  retry: "Reintentar",
   languageSwitcherLabel: "Idioma",
   // Nombre nativo de cada idioma, invariante -- "Español"/"English" no
   // cambian según el idioma activo de la interfaz (mismo criterio que el

@@ -38,10 +38,6 @@ export function listEvModels(): Promise<EvModel[]> {
   return apiFetch<EvModel[]>("/api/vehicles/models");
 }
 
-export function lookupVehicleAi(query: string): Promise<EvModel> {
-  return apiFetch<EvModel>("/api/vehicles/lookup-ai", { method: "POST", body: { query } });
-}
-
 export function lookupVehicleAiPhoto(blob: Blob): Promise<EvModel> {
   const form = new FormData();
   form.append("file", blob, "vehiculo.jpg");

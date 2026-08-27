@@ -2,13 +2,9 @@
 // solo aparece en un área (map, profile, auth, etc.) va en el diccionario de
 // esa área, no acá.
 export const common = {
-  close: "Close",
   cancel: "Cancel",
   save: "Save",
   saving: "Saving...",
-  loading: "Loading...",
-  error: "Something went wrong",
-  retry: "Retry",
   languageSwitcherLabel: "Language",
   languageNameEs: "Español",
   languageNameEn: "English",

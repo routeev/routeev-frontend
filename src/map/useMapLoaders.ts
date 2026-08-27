@@ -66,7 +66,3 @@ export function useMapLoaders() {
 
   return { failed, loading, retry };
 }
-
-export function useEvModels() {
-  return useMapStore((s) => s.evModels);
-}

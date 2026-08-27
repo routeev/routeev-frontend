@@ -148,17 +148,6 @@ export interface CompareRoutesResult {
   astar: RouteResult;
 }
 
-export interface CompareRoutesPayload {
-  origin_id: NodeId;
-  destination_id: NodeId;
-  vehicle_id: number;
-  start_battery_kwh?: number;
-  // ¿Hay donde enchufar en el destino? El backend asume true si no se manda.
-  // En false el margen deja de ser "llegar con colchon" y pasa a ser "llegar
-  // pudiendo alcanzar un cargador" (ver reserva_para_destino en la API).
-  cargador_en_destino?: boolean;
-}
-
 // -- v2, Fase 4 de la migracion a Valhalla (POST /api/route/plan) ----------
 //
 // Convive con compareRoutes: no lo reemplaza todavia. origen/destino pasan a
@@ -309,10 +298,6 @@ export interface VehicleStat {
   total_cost_uyu: number | null;
   cost_uyu_per_km: number | null;
   total_recharges: number;
-}
-
-export function compareRoutes(payload: CompareRoutesPayload): Promise<CompareRoutesResult> {
-  return apiFetch<CompareRoutesResult>("/api/route/compare", { method: "POST", body: payload });
 }
 
 export function logTrip(payload: LogTripPayload): Promise<void> {
