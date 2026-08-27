@@ -1,8 +1,20 @@
 .slot {
   display: grid;
-  grid-template-columns: 12px 1fr 36px;
+  /* El "x" de borrar solo se renderiza si hay un pin puesto -- grid-column
+     explicito en .clear/.pin (mas abajo) para que .pin quede siempre en la
+     ultima columna sin importar si .clear esta en el DOM o no (el
+     auto-placement por orden de aparicion lo hubiera corrido a la columna
+     de .clear cuando falta, con el ancho equivocado). */
+  /* Las columnas de los botones son 10px mas anchas que el boton (28+10 y
+     36+10) porque el margin de un item de grid va ADENTRO de su columna: esos
+     10px son el antiguo `gap: 10px`, mudado a margin-left en .clear/.pin.
+     ¿Por que mudarlo? Porque el input necesita padding horizontal REAL (ver
+     .slot input, abajo) y el gap del grid vive AFUERA de la caja del input:
+     con gap, el texto arrancaba pegado al borde de su propia caja. Con las
+     columnas asi, cada elemento cae exactamente donde caia antes. */
+  grid-template-columns: 12px 1fr 38px 46px;
   align-items: center;
-  gap: 10px;
+  column-gap: 0;
 }
 
 .autocomplete {
@@ -14,8 +26,15 @@
   width: 100%;
   background: none;
   border: none;
-  border-radius: 0;
-  padding: 12px 0;
+  /* El radio no se ve (el input no tiene fondo ni borde propio) pero SI lo
+     sigue el anillo de foco de :focus-visible, que si no quedaba con esquinas
+     en angulo recto, distinto del resto de la app. */
+  border-radius: var(--radius-sm);
+  /* 10px a los costados: sin esto el texto (y sobre todo el anillo verde de
+     foco, que ademas estaba con outline-offset negativo) quedaba literalmente
+     pegado al borde de la caja mientras se escribia -- el unico input de la
+     app sin aire adentro. Reportado como "el texto queda contra el borde". */
+  padding: 12px 10px;
   font-weight: 500;
   text-overflow: ellipsis;
 }
@@ -25,7 +44,10 @@
 }
 
 .slot input:focus-visible {
-  outline-offset: -2px;
+  /* 0, no -2px: con el padding de arriba el anillo ya cae bien lejos del
+     texto y encima traza exactamente la caja del campo, que es lo que se
+     espera de un input enfocado. */
+  outline-offset: 0;
 }
 
 .marker {
@@ -46,21 +68,60 @@
 }
 
 .pin {
+  grid-column: 4;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  margin-left: 10px;
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  border-color: transparent;
-  background: none;
-  color: var(--text-faint);
+  border: 1px solid var(--border);
+  background: var(--bg-panel-raised);
+  /* Cada rol con su color, el mismo de su viñeta (.markerOrigin/.markerDest) y
+     el de su chincheta en el mapa. Antes las dos eran var(--text-faint): dos
+     iconos grises identicos que no se leian como botones ni decian a cual de
+     los dos campos pertenecian. */
+  color: var(--point-origin);
+}
+
+.pinDest {
+  color: var(--point-dest);
+}
+
+/* El cuadrado visible mide 36px porque la columna del grid mide 36px, pero un
+   dedo no apunta como un mouse: este pseudo-elemento estira el area REAL de
+   toque a 40px sin agrandar el boton ni descolocar la grilla. Mismo criterio
+   que button.small en base.css. Los 2px que se comen para cada lado caben en
+   el margin-left de 10px, asi que no pisa el "x" de borrar. */
+.pin::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+/* "Estoy esperando que toques el mapa". Cambia fondo, borde, color Y forma del
+   icono (chincheta -> mira, ver RouteAutocompleteField.tsx) mas el halo: el
+   estado no se comunica nunca solo por color. */
+.pin.pinActive {
+  background: var(--accent-astar);
+  border-color: var(--accent-astar);
+  color: #06231d;
+  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.22);
+}
+
+/* Sin nadie marcando activamente, este es el rol que se lleva el proximo toque
+   del mapa. Es una pista, no un estado apretado: por eso solo el borde. */
+.pin.pinNext {
+  border-color: var(--text-faint);
 }
 
 /* El fill por default de un <path>/<circle> de SVG es negro (initial value
    de la spec), no currentColor -- sin esto el icono ignoraba por completo
-   el `color` de .pin/.pin:hover/.pin.active de arriba y quedaba siempre
+   el `color` de .pin/.pinDest/.pinActive de arriba y quedaba siempre
    negro, casi invisible contra el panel oscuro. */
 .pin svg {
   width: 18px;
@@ -68,31 +129,82 @@
   fill: currentColor;
 }
 
+.clear {
+  grid-column: 3;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border-color: transparent;
+  background: none;
+  color: var(--text-faint);
+}
+
+/* Mismo estirado del area de toque que .pin, con mas margen porque el cuadrado
+   visible es mas chico (28px -> 40px). Cabe en el column-gap de 10px que
+   .clear/.pin llevan como margin-left. */
+.clear::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: var(--radius-sm);
+}
+
+.clear:hover {
+  color: var(--danger);
+  border-color: transparent;
+}
+
+.clear svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 @media (max-width: 640px) {
   .slot {
-    grid-template-columns: 12px 1fr 40px;
+    /* Mismo criterio que arriba: 40px de boton + los 10px de margin-left. */
+    grid-template-columns: 12px 1fr 50px 50px;
   }
   .pin {
     width: 40px;
     height: 40px;
   }
+  .clear {
+    width: 40px;
+    height: 40px;
+  }
+  .clear svg {
+    width: 17px;
+    height: 17px;
+  }
+  /* Ya miden 40px de verdad en mobile: el estirado deja de hacer falta y solo
+     traeria solapes entre los dos botones. */
+  .pin::after,
+  .clear::after {
+    inset: 0;
+  }
 }
 
 .pin:hover {
-  color: var(--text);
-  border-color: var(--border);
-}
-
-.pin:global(.active) {
-  background: var(--bg-panel-raised);
   border-color: var(--accent-astar);
-  color: var(--accent-astar);
 }
 
 .list {
   position: absolute;
   top: calc(100% + 6px);
-  left: -34px;
+  /* -24 y no -34: el input ahora arranca 10px mas a la izquierda (el gap del
+     grid se volvio padding del propio input, ver .slot arriba), asi que la
+     lista se corre lo mismo para seguir cayendo alineada con el panel. */
+  left: -24px;
   right: -12px;
   z-index: 20;
   margin: 0;
@@ -104,6 +216,10 @@
   box-shadow: var(--shadow-float);
   max-height: 260px;
   overflow-y: auto;
+  /* Los nombres de calle largos llegan hasta el borde derecho y la barra de
+     scroll de escritorio se dibuja encima. Misma corrección que en
+     StationsPanel .list y TripDashboard .dashboard. */
+  scrollbar-gutter: stable;
 }
 
 .item {

@@ -1,3 +1,5 @@
+import type { map as enMap } from "../i18n/dictionaries/en/map";
+
 /**
  * Asesor de velocidad recomendada durante el viaje en vivo, portado 1:1 de
  * js/map/liveTrip.js. Modelo puramente informativo (no toca el cálculo de
@@ -46,13 +48,10 @@ function speedForTargetMargin(speedKmh: number, margin: number, targetMargin: nu
   return speedForConsumptionFactor(targetFactor);
 }
 
-export function computeSpeedAdvisory({
-  speedKmh,
-  batteryKwh,
-  consumptionKwhKm,
-  remainingKm,
-  pendingRecharge,
-}: SpeedAdvisoryInput): SpeedAdvisory | null {
+export function computeSpeedAdvisory(
+  { speedKmh, batteryKwh, consumptionKwhKm, remainingKm, pendingRecharge }: SpeedAdvisoryInput,
+  t: (typeof enMap)["speedAdvisory"]
+): SpeedAdvisory | null {
   if (speedKmh == null || remainingKm < 0.15) return null;
 
   const affordableRate = batteryKwh / remainingKm;
@@ -62,9 +61,7 @@ export function computeSpeedAdvisory({
   if (margin >= COMFORTABLE_MARGIN) {
     return {
       kind: "ok",
-      text: pendingRecharge
-        ? "A este ritmo estás gastando menos de lo previsto: es posible que no necesites la parada de carga planeada."
-        : "Vas a llegar con margen de batería a este ritmo.",
+      text: pendingRecharge ? t.pendingRechargeNotNeeded : t.arrivingWithMargin,
     };
   }
 
@@ -74,8 +71,8 @@ export function computeSpeedAdvisory({
     return {
       kind: "tight",
       text:
-        `Vas a llegar, pero muy justo de batería (te sobraría apenas ${Math.max(0, Math.round((margin - 1) * 100))}% a este ritmo).` +
-        (vale ? ` Bajando a ~${Math.round(suggestedSpeed)} km/h tendrías más margen.` : " Mantené este ritmo, sin acelerar."),
+        t.tightBase(Math.max(0, Math.round((margin - 1) * 100))) +
+        (vale ? t.tightSuggestion(Math.round(suggestedSpeed)) : t.tightMaintain),
     };
   }
 
@@ -84,15 +81,13 @@ export function computeSpeedAdvisory({
     return {
       kind: "warn",
       text:
-        `Al ritmo actual (~${Math.round(speedKmh)} km/h) no te alcanza la batería para llegar. Bajando a ~${Math.round(suggestedSpeed)} km/h deberías llegar con lo que te queda` +
-        (pendingRecharge ? ", sin necesidad de la parada de carga planeada." : "."),
+        t.warnBase(Math.round(speedKmh), Math.round(suggestedSpeed)) +
+        (pendingRecharge ? t.warnPendingRecharge : t.warnNoPendingRecharge),
     };
   }
 
   return {
     kind: "danger",
-    text: pendingRecharge
-      ? "No te alcanza la batería aunque bajes la velocidad: seguí el plan y parás en la próxima estación de carga."
-      : "No te alcanza la batería para llegar aunque bajes la velocidad.",
+    text: pendingRecharge ? t.dangerPendingRecharge : t.dangerNoPendingRecharge,
   };
 }

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import { Polyline, useMap } from "react-leaflet";
 import { getGraph } from "../../api/graph";
@@ -8,8 +8,13 @@ import { useMapStore } from "../mapStore";
 /** Dibuja el grafo vial completo (todas las aristas) y ajusta el mapa a su extensión. */
 export function GraphLayer() {
   const map = useMap();
-  const query = useQuery({ queryKey: ["graph"], queryFn: getGraph });
-  const addNode = useMapStore((s) => s.addNode);
+  // staleTime: Infinity -- ver el comentario en useMapLoaders.ts (misma
+  // key: el grafo no cambia mientras el backend esta corriendo). Ademas de
+  // ahorrar el refetch, evita que el efecto de abajo vuelva a correr
+  // fitBounds() sobre el pais entero (pisando el auto-locate del usuario)
+  // cada vez que la pestaña recupera el foco.
+  const query = useQuery({ queryKey: ["graph"], queryFn: getGraph, staleTime: Infinity });
+  const addNodes = useMapStore((s) => s.addNodes);
 
   const segments = useMemo<[number, number][][]>(() => {
     if (!query.data) return [];
@@ -23,14 +28,30 @@ export function GraphLayer() {
     return segs;
   }, [query.data]);
 
+  // Antes esto corria en CADA cambio de query.data (no solo "la primera
+  // vez que llegan los datos" como decia el comentario -- nada lo
+  // garantizaba) y SIEMPRE hacia fitBounds a Uruguay entero, sin mirar si
+  // CaptureMap ya habia centrado el mapa en la ubicacion real del usuario
+  // (MapCanvas.tsx) O si ya habia un viaje armado/calculado (RouteLayers).
+  // El grafo pesa ~1,6 MB/63.800 nodos: si tarda mas en llegar que
+  // cualquiera de esas dos cosas -- nada raro con ese peso, sobre todo en
+  // el celular -- este fitBounds las deshacia un instante despues de que
+  // ya habian funcionado bien. Por eso el chequeo de abajo mira los TRES
+  // estados mas especificos, no solo la ubicacion.
+  const hasFitOnce = useRef(false);
   useEffect(() => {
-    if (!query.data) return;
-    for (const n of query.data.nodes) addNode(n);
+    if (!query.data || hasFitOnce.current) return;
+    addNodes(query.data.nodes);
+    hasFitOnce.current = true;
+    const state = useMapStore.getState();
+    // fitBounds a todo el pais es solo el respaldo para cuando no hay
+    // nada mas especifico todavia -- si ya hay ubicacion real, un origen/
+    // destino en camino, o un viaje ya calculado/repetido del historial,
+    // esa vista gana siempre.
+    if (state.myPosition || state.lastResult || state.originId != null || state.destinationId != null) return;
     const bounds = L.latLngBounds(query.data.nodes.map((n): [number, number] => [n.lat, n.lon]));
     map.fitBounds(bounds, { padding: [20, 20] });
-    // Solo la primera vez que llegan los datos del grafo.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query.data]);
+  }, [query.data, map, addNodes]);
 
   if (!segments.length) return null;
   return <Polyline positions={segments} pathOptions={{ color: "#3a4552", weight: 1.4, opacity: 0.65 }} />;

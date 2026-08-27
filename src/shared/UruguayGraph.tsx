@@ -1,3 +1,4 @@
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./UruguayGraph.module.css";
 
 /**
@@ -87,6 +88,7 @@ const LABEL_OFFSET: Record<LabelSide, { dx: number; dy: number; anchor: "start" 
 };
 
 export function UruguayGraph() {
+  const { t } = useTranslation();
   const routePoints = ROUTE_IDS.map((id) => byId.get(id)!);
   const routePath = routePoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
@@ -95,7 +97,7 @@ export function UruguayGraph() {
       className={styles.root}
       viewBox="0 0 440 500"
       role="img"
-      aria-label="Mapa de Uruguay con las 19 capitales departamentales y una ruta de ejemplo entre Montevideo y Rivera, con una parada de carga en Tacuarembó"
+      aria-label={t.shared.uruguayGraph.mapAriaLabel}
     >
       <g className={styles.edge}>
         {EDGES.map(([a, b]) => {

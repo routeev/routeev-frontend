@@ -29,6 +29,25 @@
   --ok: #34e3a8;
   --accent-live: #3aa0ff;
 
+  /* Tripleta RGB de --bg, para componer rgba(var(--bg-rgb), X) en overlays y
+     degradés que necesitan un alpha propio (un div.module.css no puede leer
+     los canales de un var() hex a mano) -- evita que esos overlays queden
+     pegados al negro cuando --bg pasa a claro. */
+  --bg-rgb: 10, 14, 19;
+  /* Tinte de hover/resalte sutil sobre un panel: agrega luz en oscuro,
+     agrega sombra en claro (agregar blanco sobre un fondo ya blanco no se
+     nota). Mismo criterio para el shimmer de los skeletons. */
+  --overlay-hover: rgba(255, 255, 255, 0.08);
+  --overlay-shimmer: rgba(255, 255, 255, 0.055);
+  /* Texto/hover de button.primary: fijos por fuera de --accent-astar porque
+     ese token cambia de intensidad entre temas (ver el bloque [data-theme
+     ="light"] mas abajo) y estos dos necesitan su propio ajuste, no seguir
+     el mismo valor que el texto general. Mismo criterio para el texto del
+     error-banner contra --danger-dim. */
+  --button-primary-text: #06231d;
+  --button-primary-hover: #63e9cb;
+  --error-text: #ffd7d7;
+
   --font-display: "Space Grotesk", "Inter", system-ui, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --font-body: "Inter", system-ui, "Segoe UI", sans-serif;
@@ -58,4 +77,60 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-24: 96px;
+}
+
+/* -----------------------------------------------------------------------
+   Tema claro. Oscuro sigue siendo el default de siempre (el :root de
+   arriba) -- esto solo pisa lo que cambia cuando alguien elige "claro" a
+   mano (ver src/theme/theme.ts, persistido en localStorage). No hay
+   prefers-color-scheme como default automático a propósito: la app entera
+   se diseñó y probó en oscuro, así que cambiar el default con solo un
+   ajuste de SO habría sorprendido a cualquiera que ya la usa sin haber
+   pedido el cambio.
+
+   El mapa (Leaflet/MapLibre, tiles + rutas + marcadores en markers.module.css,
+   NavigationMap.module.css, SimulationMap.module.css) queda FUERA de este
+   tema a propósito: ninguna de las dos librerías puede leer variables CSS en
+   tiempo de ejecución (los colores de ruta están hardcodeados en JS -- ver
+   RouteLayers.tsx, NavigationMap.tsx), así que las tiles siguen siendo las
+   oscuras de CARTO/OpenFreeMap sin importar el tema de la app. Retonar eso
+   (tiles claras + recalibrar el contraste de cada marcador) es un trabajo
+   aparte, no esta pasada.
+----------------------------------------------------------------------- */
+:root[data-theme="light"] {
+  --bg: #eef1f4;
+  --bg-panel: #ffffff;
+  --bg-panel-raised: #ffffff;
+  --border: #d7dee5;
+  --border-soft: #e6eaee;
+
+  --text: #182029;
+  --text-muted: #5b6673;
+  --text-faint: #6b7684;
+
+  /* Los tonos de acento se oscurecen respecto del original: calibrados para
+     resaltar sobre --bg casi negro, un verde/naranja/violeta/azul tan
+     brillante pierde contraste como texto o ícono sobre un fondo casi
+     blanco. Los "-dim" invierten de sentido: en oscuro son una versión
+     apagada/oscura para rellenos sutiles; en claro tienen que ser una
+     versión clara para seguir leyéndose como "el mismo acento, más sutil"
+     sobre --bg-panel blanco en vez de perderse. */
+  --accent-astar: #0f9d72;
+  --accent-astar-dim: #d3f0e6;
+  --accent-dijkstra: #c3721f;
+  --accent-dijkstra-dim: #f6e3cd;
+
+  --point-origin: #182029;
+  --point-dest: #7c4fd6;
+
+  --danger: #d13f3f;
+  --danger-dim: #fbe0e0;
+  --ok: #0f9d72;
+  --accent-live: #1f7fd6;
+
+  --bg-rgb: 238, 241, 244;
+  --overlay-hover: rgba(10, 14, 19, 0.05);
+  --overlay-shimmer: rgba(10, 14, 19, 0.06);
+  --button-primary-hover: #17b385;
+  --error-text: #7a1f1f;
 }

@@ -3,17 +3,20 @@ import { render, screen } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
+import { LanguageProvider } from "../i18n/LanguageProvider";
 import { LandingPage } from "./LandingPage";
 
 function renderLanding() {
   const queryClient = new QueryClient();
   return render(
     <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <LandingPage />
-        </MemoryRouter>
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <LandingPage />
+          </MemoryRouter>
+        </QueryClientProvider>
+      </LanguageProvider>
     </HelmetProvider>
   );
 }
@@ -39,7 +42,7 @@ describe("LandingPage", () => {
 
   it("renders all four real stats", () => {
     renderLanding();
-    expect(screen.getByText("895")).toBeInTheDocument();
-    expect(screen.getByText("209")).toBeInTheDocument();
+    expect(screen.getByText("631")).toBeInTheDocument();
+    expect(screen.getByText("259")).toBeInTheDocument();
   });
 });

@@ -16,6 +16,15 @@ const common = {
   "aria-hidden": true,
 };
 
+export function IconHome() {
+  return (
+    <svg {...common}>
+      <path d="M4 11 12 4l8 7" />
+      <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+
 export function IconCar() {
   return (
     <svg {...common}>
@@ -71,6 +80,27 @@ export function IconLogout() {
       <path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" />
       <line x1="9" y1="12" x2="20" y2="12" />
       <path d="M16 8l4 4-4 4" />
+    </svg>
+  );
+}
+
+/** Gatillo del dropdown de idioma (LanguageSwitcher): "hay más opciones abajo". */
+export function IconChevronDown() {
+  return (
+    <svg {...common} width={14} height={14}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/** Fila "Idioma" del menú móvil de SiteHeader -- mismo lugar que ocupan
+    IconHome/IconCar/etc. al lado de los demás links de ese menú. */
+export function IconGlobe() {
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17" />
+      <path d="M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5s-1.3 6.1-3.8 8.5c-2.5-2.4-3.8-5.4-3.8-8.5s1.3-6.1 3.8-8.5Z" />
     </svg>
   );
 }

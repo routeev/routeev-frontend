@@ -2,33 +2,79 @@
 <html lang="es-UY">
   <head>
     <meta charset="UTF-8" />
+    <!-- Sincrónico y lo más arriba posible a propósito: fija data-theme antes
+         de que se aplique cualquier CSS, para que quien eligió "claro" no
+         vea un parpadeo en oscuro (el default de toda la vida) al entrar
+         directo a /app o /profile (recargando, o abriendo un link). Ver
+         src/theme/theme.ts -- misma clave de localStorage y mismas dos
+         rutas. El tema es una preferencia de la aplicación, no del sitio
+         entero: fuera de esas rutas (landing, showroom, legales, login)
+         siempre se queda en el oscuro de toda la vida. */
+    <script>
+      (function () {
+        try {
+          var path = location.pathname;
+          var enApp = path === "/app" || path.indexOf("/app/") === 0 || path === "/profile" || path.indexOf("/profile/") === 0;
+          if (enApp && localStorage.getItem("routeev_theme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <!-- /favicon.ico explícito (no solo el SVG): Google Search y varios
+         crawlers/navegadores viejos chequean esa ruta fija sin mirar el
+         <link>, y sin este archivo caía al catch-all de la SPA (index.html
+         servido como si fuera el ícono), por eso no aparecía en resultados
+         de Google pese a que el SVG andaba bien en el navegador.
+         El .ico en sí también importa: Google pide un ícono cuadrado de al
+         menos 48x48px para mostrarlo en los resultados -- el que había solo
+         traía un frame de 16x16 adentro, por debajo del mínimo, así que
+         aunque el archivo cargaba bien igual quedaba afuera. Ahora trae
+         16/32/48 empaquetados, más un PNG de 48x48 aparte por si algún
+         crawler mira el <link> en vez de abrir el .ico. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0e13" />
+    <!-- data-fallback: contenido de la home, solo para quien NO ejecuta JS
+         (compartir un link en WhatsApp/Slack/Twitter, que arma la vista
+         previa leyendo el HTML crudo, sin correr React). Cada página ya
+         pone las suyas propias con Helmet -- sin el data-fallback para
+         identificarlas y sacarlas en el mount (ver App.tsx), estas
+         quedaban conviviendo con las de Helmet como una <meta> repetida
+         (mismo name/property, texto distinto) en TODAS las rutas, no solo
+         la home, y Google no tiene garantía de cuál de las dos usa. -->
     <meta
       name="description"
-      content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 209 estaciones de UTE. 895 modelos precargados, sin crear cuenta."
+      content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 259 estaciones de carga de UTE y de operadores privados. 631 modelos precargados, sin crear cuenta."
+      data-fallback="true"
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="es_UY" />
-    <meta property="og:site_name" content="RouteEV" />
-    <meta property="og:url" content="https://routeev.uy/" />
-    <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+    <meta property="og:type" content="website" data-fallback="true" />
+    <meta property="og:locale" content="es_UY" data-fallback="true" />
+    <meta property="og:site_name" content="RouteEV" data-fallback="true" />
+    <meta property="og:url" content="https://routeev.uy/" data-fallback="true" />
+    <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." data-fallback="true" />
     <meta
       property="og:description"
-      content="Elegí uno de 895 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      content="Elegí uno de 631 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      data-fallback="true"
     />
-    <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="RouteEV — planificá viajes en auto eléctrico por Uruguay" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
+    <meta property="og:image" content="https://routeev.uy/img/og-cover.png" data-fallback="true" />
+    <meta property="og:image:width" content="1200" data-fallback="true" />
+    <meta property="og:image:height" content="631" data-fallback="true" />
+    <meta property="og:image:alt" content="RouteEV — planificá viajes en auto eléctrico por Uruguay" data-fallback="true" />
+    <meta name="twitter:card" content="summary_large_image" data-fallback="true" />
+    <meta name="twitter:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." data-fallback="true" />
     <meta
       name="twitter:description"
-      content="Elegí uno de 895 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      content="Elegí uno de 631 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
+      data-fallback="true"
     />
-    <meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" />
+    <meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" data-fallback="true" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

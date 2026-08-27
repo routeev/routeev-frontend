@@ -5,6 +5,17 @@
   height: auto;
 }
 
+/* Mismo quiebre que el hero pasa a una sola columna (LandingPage.module.css):
+   a 400px de ancho, el alto real del SVG (viewBox 440x500, casi cuadrado)
+   se comía una pantalla entera antes de llegar a las estadísticas de abajo.
+   Más chico acá, no oculto: sigue siendo la prueba concreta de un viaje
+   real, solo sin obligar a un scroll extra para ver el resto del hero. */
+@media (max-width: 900px) {
+  .root {
+    max-width: 260px;
+  }
+}
+
 .edge {
   stroke: var(--border);
   stroke-width: 1;

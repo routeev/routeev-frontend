@@ -27,6 +27,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Sin efecto en los botones de un solo hijo (texto solo) que ya usaban
+     esta clase -- gap no hace nada entre un único elemento. Hace falta para
+     los que ahora llevan un ícono adelante del texto (ver VehiclePanel.tsx),
+     que si no quedaban pegados sin aire entre los dos. */
+  gap: 6px;
   border-radius: var(--radius-sm);
   font-weight: 600;
   text-decoration: none;
@@ -40,12 +45,12 @@
 
 .primary {
   background: var(--accent-astar);
-  color: #06231d;
+  color: var(--button-primary-text);
   border: 1px solid var(--accent-astar);
 }
 
 .primary:hover {
-  background: #63e9cb;
+  background: var(--button-primary-hover);
 }
 
 .ghost {

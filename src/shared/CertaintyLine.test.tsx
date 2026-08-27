@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { LanguageProvider } from "../i18n/LanguageProvider";
 import { CertaintyLine, type CertaintyPoint } from "./CertaintyLine";
 
 const feasibleTrip: CertaintyPoint[] = [
@@ -16,17 +17,29 @@ const infeasibleTrip: CertaintyPoint[] = [
 
 describe("CertaintyLine", () => {
   it("renders a feasible trip with a neutral label", () => {
-    render(<CertaintyLine points={feasibleTrip} scale="macro" />);
+    render(
+      <LanguageProvider>
+        <CertaintyLine points={feasibleTrip} scale="macro" />
+      </LanguageProvider>
+    );
     expect(screen.getByRole("img", { name: /perfil de batería a lo largo del viaje/i })).toBeInTheDocument();
   });
 
   it("flags an infeasible trip in its accessible name", () => {
-    render(<CertaintyLine points={infeasibleTrip} scale="macro" />);
+    render(
+      <LanguageProvider>
+        <CertaintyLine points={infeasibleTrip} scale="macro" />
+      </LanguageProvider>
+    );
     expect(screen.getByRole("img", { name: /no es factible/i })).toBeInTheDocument();
   });
 
   it("renders nothing with fewer than two points", () => {
-    const { container } = render(<CertaintyLine points={[{ km: 0, batteryPct: 90 }]} />);
+    const { container } = render(
+      <LanguageProvider>
+        <CertaintyLine points={[{ km: 0, batteryPct: 90 }]} />
+      </LanguageProvider>
+    );
     expect(container).toBeEmptyDOMElement();
   });
 });

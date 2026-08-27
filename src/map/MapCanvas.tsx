@@ -1,26 +1,65 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
+import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, Marker, useMap, ZoomControl } from "react-leaflet";
+import { useTranslation } from "../i18n/LanguageProvider";
+import { BasemapLayer } from "./BasemapLayer";
 import { ClickToPick } from "./layers/ClickToPick";
 import { GraphLayer } from "./layers/GraphLayer";
+import { ImprecisePickLink } from "./layers/ImprecisePickLink";
 import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
 import { StationsLayer } from "./layers/StationsLayer";
+import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { myLocationIcon } from "./markerIcons";
 import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
 const MONTEVIDEO: [number, number] = [-34.89, -56.16];
-const AUTO_LOCATE_ZOOM = 15;
+
+// El mapa cambia de tamaño real cuando el panel "Datos del viaje" se
+// colapsa/expande en pantalla angosta (ver .dashboardWrap/.mapWrap en
+// MapPage.module.css: ahora comparten alto real, no es un panel flotando
+// encima). Sin este reencuadre el recorrido calculado podía quedar cortado
+// o descentrado dentro del espacio nuevo -- se llama tanto al terminar de
+// calcular como en cada resize del contenedor (ver CaptureMap abajo).
+function refitToRoute(map: L.Map) {
+  const result = useMapStore.getState().lastResult;
+  if (!result?.astar.found) return;
+  const bounds = L.polyline(result.astar.route_coords).getBounds();
+  map.fitBounds(bounds, { padding: [40, 40], animate: false });
+}
 
 interface CaptureMapProps {
   onLocateFail: (msg: string) => void;
 }
 
 function CaptureMap({ onLocateFail }: CaptureMapProps) {
+  const { t } = useTranslation();
+  const mc = t.map.mapCanvas;
   const map = useMap();
   const [myPosition, setMyPosition] = useState<[number, number] | null>(null);
+  // MapCanvas pasa un `(msg) => onMapError(msg, "warn")` inline como
+  // onLocateFail: una funcion nueva en CADA render de MapPage/MapCanvas
+  // (ninguno de los dos memoiza). Si el efecto de auto-locate de abajo
+  // dependiera de ese valor directamente, un solo fallo de geolocalizacion
+  // dispara onLocateFail -> setMapBanner en MapPage -> re-render -> nueva
+  // identidad de onLocateFail -> el efecto se vuelve a correr -> nuevo
+  // intento de geolocalizacion -> nuevo fallo -> bucle infinito (medido:
+  // ~1700 pedidos de ubicacion en el tiempo de un solo click). El ref
+  // siempre apunta a la version mas nueva sin forzar al efecto a
+  // re-ejecutarse por eso.
+  const onLocateFailRef = useRef(onLocateFail);
+  // La asignacion va en un efecto sin lista de dependencias (corre despues de
+  // CADA commit) y no suelta en el cuerpo del componente: escribir un ref
+  // durante el render rompe la pureza que React necesita para poder descartar
+  // o repetir un render. Queda declarado primero a proposito -- los efectos
+  // corren en orden de declaracion, asi que el ref ya apunta a la version
+  // buena antes de que arranque el auto-locate de abajo.
+  useEffect(() => {
+    onLocateFailRef.current = onLocateFail;
+  });
 
   useEffect(() => {
     // Use the store setter via getState inside the effect to avoid
@@ -51,24 +90,43 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
       (pos) => {
         if (cancelled) return;
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-        map.setView(coords, AUTO_LOCATE_ZOOM);
+        // El GPS puede tardar bastante en resolver (varios segundos no es
+        // raro) -- si para cuando esto llega la persona ya fijó un origen/
+        // destino o ya calculó una ruta, mover la cámara acá se la pisa de
+        // golpe, el mismo problema que ya se arregló para el grafo (ver
+        // GraphLayer.tsx) pero del lado del auto-locate. myPosition SI se
+        // guarda igual (lo sigue necesitando, p. ej., el botón "volver" de
+        // StationDetailPanel), solo la vista de la cámara se salta.
+        const state = useMapStore.getState();
+        if (!state.lastResult && state.originId == null && state.destinationId == null) {
+          map.setView(coords, AUTO_LOCATE_ZOOM);
+        }
         setMyPosition(coords);
+        // Tambien al store, no solo al estado local: es lo que le permite a
+        // StationDetailPanel volver a centrar aca al salir del detalle de
+        // una estacion, sin que ese componente tenga que ser descendiente
+        // de CaptureMap.
+        state.setMyPosition(coords);
       },
       (err) => {
         if (cancelled) return;
+        // Mismo nivel de detalle que ERROR_MESSAGES en useGeolocation.ts (el
+        // boton "Usar mi ubicacion"): el mensaje generico de antes ("no
+        // diste permiso...") no le daba a nadie un paso concreto para
+        // arreglarlo. PERMISSION_DENIED en el navegador casi siempre es una
+        // decision YA GUARDADA de una vez anterior (por eso nunca vuelve a
+        // preguntar) -- el candado en la barra de direcciones es el unico
+        // lugar para revertirla.
         const reason =
-          err.code === err.PERMISSION_DENIED
-            ? "no diste permiso de ubicación (o está apagada en el dispositivo/sistema)"
-            : "no se pudo determinar tu ubicación";
-        onLocateFail(
-          `No pudimos centrar el mapa en tu ubicación: ${reason}. Mostrando Uruguay entero.`
-        );
+          err.code === err.PERMISSION_DENIED ? mc.reasonPermissionDenied : mc.reasonUnableToDetermine;
+        onLocateFailRef.current(mc.locateFailed(reason));
       }
     );
     return () => {
       cancelled = true;
     };
-  }, [map, onLocateFail]);
+    // Solo [map]: ver el comentario de onLocateFailRef arriba.
+  }, [map]);
 
   useEffect(() => {
     // Leaflet mide su contenedor una sola vez al montar y no vuelve a
@@ -78,10 +136,28 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     // mapa queda con el tamaño viejo cacheado y los tiles se ven
     // cortados/desplazados hasta el próximo resize real de la ventana.
     const container = map.getContainer();
-    const observer = new ResizeObserver(() => map.invalidateSize());
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+      // El resize puede venir de .dashboardWrap colapsandose/expandiendose
+      // (ver MapPage.module.css): reencuadra el recorrido calculado al
+      // espacio nuevo en vez de dejarlo donde haya quedado la camara.
+      refitToRoute(map);
+    });
     observer.observe(container);
     return () => observer.disconnect();
   }, [map]);
+
+  const hasResult = useMapStore((s) => s.lastResult != null);
+  useEffect(() => {
+    // El sidebar ("Tu viaje") pasa a display:none apenas hay un resultado
+    // calculado (ver MapPage.tsx/.sidebarReplaced), asi que .mapWrap crece
+    // de golpe en pantalla angosta. Medido: el ResizeObserver de arriba no
+    // siempre lo agarra a tiempo con un cambio asi de brusco -- quedaban
+    // tiles cargados solo para el tamaño chico de antes, con el resto del
+    // mapa en blanco hasta el proximo resize real de la ventana.
+    map.invalidateSize();
+    refitToRoute(map);
+  }, [map, hasResult]);
 
   if (!myPosition) return null;
   return (
@@ -95,25 +171,35 @@ interface MapCanvasProps {
 }
 
 export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
+  const { t } = useTranslation();
+  const mc = t.map.mapCanvas;
   return (
     <MapContainer
       center={MONTEVIDEO}
       zoom={13}
       preferCanvas
-      zoomControl
+      // El control de zoom por defecto de Leaflet va arriba a la IZQUIERDA, y
+      // ahí es exactamente donde vive el panel "Tu viaje" (372px desde el
+      // borde izquierdo, ver MapPage.module.css) -- quedaba tapado por el
+      // panel o pintando encima de él, según qué caja ganara el z-index.
+      // Arriba a la derecha no compite con nada: el dashboard del viaje está
+      // anclado abajo.
+      zoomControl={false}
+      // Antes lo fijaba el TileLayer (los PNG de CARTO llegaban hasta z19).
+      // El basemap de ahora es vectorial y no declara maximo, y sin este
+      // tope Leaflet deja acercarse indefinidamente: el estilo se queda sin
+      // detalle que mostrar y el mapa pasa a ser un plano gigante y vacio.
+      maxZoom={19}
       style={{ height: "100%", width: "100%" }}
     >
+      <ZoomControl position="topright" zoomInTitle={mc.zoomIn} zoomOutTitle={mc.zoomOut} />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={19}
-      />
+      <BasemapLayer />
       <GraphLayer />
       <StationsLayer />
       <OriginDestinationMarkers />
       <RouteLayers />
+      <ImprecisePickLink />
       <LiveTripMarker position={liveTripPosition} />
       <ClickToPick onError={onMapError} />
     </MapContainer>

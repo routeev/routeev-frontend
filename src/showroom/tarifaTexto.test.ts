@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { TarifaRecarga } from "../api/showroom";
+import { showroom as showroomEs } from "../i18n/dictionaries/es/showroom";
 import { formatUyu } from "../shared/format";
 import { num } from "./num";
 import { tarifaLinea } from "./tarifaTexto";
+
+const tt = showroomEs.tarifaTexto;
 
 function tarifa(overrides: Partial<TarifaRecarga> = {}): TarifaRecarga {
   return {
@@ -26,15 +29,15 @@ describe("tarifaLinea", () => {
   // lo que se testea acá es la composición de la línea (qué rama, qué partes,
   // en qué orden), no cómo ICU imprime el es-UY.
   it("arma la línea según lo que el operador publica", () => {
-    expect(tarifaLinea(tarifa())).toBe(
+    expect(tarifaLinea(tarifa(), tt)).toBe(
       `Tarifa UTE DC: $ ${num(12.4, 2)}/kWh + ${formatUyu(91)} de conexión · pasados 10 min sin cargar: $ ${num(8.5, 2)}/min`
     );
     // Sin cargo de ocupación, la cola informativa no aparece.
-    expect(tarifaLinea(tarifa({ ocupacion_uyu_min: null, ocupacion_tolerancia_min: null }))).toBe(
+    expect(tarifaLinea(tarifa({ ocupacion_uyu_min: null, ocupacion_tolerancia_min: null }), tt)).toBe(
       `Tarifa UTE DC: $ ${num(12.4, 2)}/kWh + ${formatUyu(91)} de conexión`
     );
     // Operador sin pliego: aviso fijo, nunca números inventados.
-    expect(tarifaLinea(tarifa({ tarifa_conocida: false }))).toBe(
+    expect(tarifaLinea(tarifa({ tarifa_conocida: false }), tt)).toBe(
       "Tarifa del operador no publicada — costo no incluido en el total"
     );
   });

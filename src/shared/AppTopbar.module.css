@@ -22,6 +22,17 @@
   color: var(--text-faint);
 }
 
+/* Agrupa .right + el botón hamburguesa como un solo bloque contra .topbar
+   (justify-content:space-between la separa de .brand como las únicas dos
+   cosas que le importan a ese layout) -- sin este wrapper, .right y el
+   hamburguesa quedarían separados por todo el espacio libre en vez de
+   pegados como un solo grupo a la derecha. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .right {
   display: flex;
   align-items: center;
@@ -34,14 +45,116 @@
   gap: 6px;
 }
 
-.userChip {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
+.userMenu {
+  position: relative;
+}
+
+.userMenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
   background: var(--bg-panel-raised);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.userMenuBtn:hover {
+  border-color: var(--accent-astar);
+}
+
+.userMenuAvatar,
+.userMenuAvatarFallback {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.userMenuAvatar {
+  object-fit: cover;
+}
+
+.userMenuAvatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-hover);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.userMenuName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userMenuDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 2000;
+  min-width: 180px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float);
+}
+
+/* "Ir a mi perfil" es un <Link> (elemento <a>) y "Cerrar sesión" un
+   <button> -- mismos estilos de acá, pero el CSS global de base.css les da
+   un look de base distinto a cada tag (`a { color: var(--accent-astar) }`
+   más subrayado del navegador; `button { font-weight: 600 }`) que esta
+   clase no pisaba del todo. text-decoration y font-weight explícitos para
+   que los dos ítems queden iguales sin importar qué tag sea cada uno. */
+.userMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.userMenuItem:hover {
+  background: var(--bg);
+  border-color: transparent;
+}
+
+/* "Mi perfil" cuando ya estás en /profile: mismo criterio que .linkActive de
+   SiteHeader.module.css (color de acento, sin desactivar el click -- ir a
+   donde ya estás no rompe nada, y sacar el link entero sería más
+   inconsistente que dejarlo). */
+.userMenuItemActive {
+  color: var(--accent-astar);
+}
+
+.userMenuItemActive svg {
+  color: var(--accent-astar);
+}
+
+.userMenuItem svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .menuToggle {

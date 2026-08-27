@@ -1,6 +1,10 @@
 .dashboard {
   height: 100%;
   overflow-y: auto;
+  /* Mismo problema que en StationsPanel .list: las filas de las paradas de
+     carga (.stopRow) son `justify-content: space-between` y la barra de scroll
+     de escritorio se dibuja encima del valor de la derecha. */
+  scrollbar-gutter: stable;
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
   padding: 16px 20px 20px;
@@ -8,7 +12,7 @@
 
 .header {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
@@ -26,11 +30,19 @@
 .routeLabel {
   font-size: 12.5px;
   color: var(--text-faint);
+  margin-top: 2px;
 }
 
+/* Un solo grid para las 8 tarjetas (ya no separadas por sección "Recorrido/
+   Batería/Costo y peajes" -- cada label ya es autodescriptivo, y partirlas
+   en bloques forzaba un salto de fila por sección aunque sobrara ancho).
+   auto-fit acomoda tantas columnas como entren: cuanto más ancho el panel
+   (ver .dashboard, sin tope de ancho), menos filas hacen falta para
+   mostrarlas todas -- en un panel bien ancho de desktop entran las 8 en una
+   sola fila, sin escribir ningún media query a mano para eso. */
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -127,10 +139,21 @@
   border-bottom: 1px solid var(--border);
 }
 
+.controlActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .startBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 12px 22px;
+}
+
+.cancelPlanBtn {
   padding: 12px 22px;
 }
 
@@ -244,7 +267,7 @@
 
 @media (max-width: 860px) {
   .stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -252,4 +275,46 @@
   .stats {
     grid-template-columns: 1fr;
   }
+}
+
+/* "Donde cargar al llegar": la estacion mas cercana al destino, cuando el
+   usuario dijo que alla no tiene enchufe. Es la respuesta a la pregunta que
+   sigue a "¿llego?", asi que va arriba de las estadisticas del viaje y no
+   perdida entre ellas. */
+.cargadorDestino {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-astar);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-raised);
+}
+
+.cargadorDestinoTitulo {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cargadorDestinoNombre {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cargadorDestinoDato {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.cargadorDestinoAviso {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--accent-dijkstra);
 }

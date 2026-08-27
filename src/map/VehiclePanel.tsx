@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import buttons from "../shared/buttons.module.css";
+import { IconCar } from "../shared/NavIcons";
 import { readNumberInput } from "../shared/readNumberInput";
 import { useMapStore, vehicleAutonomyKm } from "./mapStore";
 
 export function VehiclePanel() {
+  const { t } = useTranslation();
+  const vp = t.map.vehiclePanel;
   const vehicles = useMapStore((s) => s.vehicles);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
@@ -17,15 +21,15 @@ export function VehiclePanel() {
         const pct = Math.max(0, Math.min(100, startBatteryPct || 0));
         const autonomyFullKm = vehicleAutonomyKm(vehicle);
         const rangeAtPct = autonomyFullKm * (pct / 100);
-        return `${pct}% de batería · autonomía estimada ${rangeAtPct.toFixed(0)} km (${autonomyFullKm.toFixed(0)} km a batería llena para este vehículo)`;
+        return vp.batteryHint(pct, rangeAtPct.toFixed(0), autonomyFullKm.toFixed(0));
       })()
-    : "Elegí o creá un vehículo primero.";
+    : vp.chooseVehicleFirst;
 
   return (
     <section className="panel">
-      <h2>Vehículo</h2>
+      <h2>{vp.title}</h2>
       <div className="field">
-        <label htmlFor="vehicle-select">Vehículo activo</label>
+        <label htmlFor="vehicle-select">{vp.activeVehicle}</label>
         <select
           id="vehicle-select"
           value={selectedVehicleId ?? ""}
@@ -34,7 +38,7 @@ export function VehiclePanel() {
         >
           {vehicles.length === 0 ? (
             <option value="">
-              {vehiclesLoaded ? "No hay vehículos: creá uno abajo" : "Cargando vehículos..."}
+              {vehiclesLoaded ? vp.noVehicles : vp.loadingVehicles}
             </option>
           ) : (
             vehicles.map((v) => (
@@ -48,7 +52,7 @@ export function VehiclePanel() {
         </select>
       </div>
       <div className="field">
-        <label htmlFor="start-battery">Batería inicial (%)</label>
+        <label htmlFor="start-battery">{vp.startBattery}</label>
         <input
           id="start-battery"
           type="number"
@@ -61,8 +65,19 @@ export function VehiclePanel() {
         />
         <div className="hint">{batteryHint}</div>
       </div>
-      <Link to="/profile" className={buttons.ghost}>
-        + Agregar nuevo vehículo
+      {/* Icono de auto, no el "+" de texto que tenia antes -- pedido
+          explicito de un logo/icono. El verbo "Agregar" ya dice que es alta,
+          el "+" al lado del icono era redundante. IconCar ya trae su propio
+          stroke=currentColor/tamaño (ver NavIcons.tsx), no hace falta
+          .btn-icon encima.
+          ?agregar-vehiculo=1: VehiclesPanel.tsx (en /profile) lo lee al
+          montar para abrir el formulario de alta solo -- pedido explicito de
+          que este link no solo lleve a /profile, sino que deje lista la
+          pantalla para cargar el vehiculo de una, sin un segundo click en
+          "+ Agregar vehiculo" al llegar. */}
+      <Link to="/profile?agregar-vehiculo=1" className={buttons.ghost}>
+        <IconCar />
+        {vp.addVehicle}
       </Link>
     </section>
   );

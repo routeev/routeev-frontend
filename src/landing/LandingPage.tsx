@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { getToken } from "../api/session";
+import { useTranslation } from "../i18n/LanguageProvider";
 import buttons from "../shared/buttons.module.css";
 import { GradientWaves } from "../shared/GradientWaves";
 import { Reveal } from "../shared/Reveal";
@@ -10,58 +11,41 @@ import { UruguayGraph } from "../shared/UruguayGraph";
 import { StatCard } from "./StatCard";
 import styles from "./LandingPage.module.css";
 
-const STATS = [
-  {
-    value: 63800,
-    places: [10000, 1000, ".", 100, 10, 1] as const,
-    suffix: "+",
-    label: "Intersecciones reales de OpenStreetMap",
-  },
-  { value: 19, label: "Departamentos cubiertos" },
-  { value: 209, label: "Estaciones de carga UTE en el mapa" },
-  { value: 895, label: "Modelos de auto eléctrico precargados" },
-];
-
-const HOW_IT_WORKS = [
-  {
-    title: "Cargá tu vehículo",
-    body: "Elegí un modelo real de un catálogo de autos eléctricos (Nissan Leaf, Tesla, BYD, y más) o cargá los datos de batería y consumo a mano.",
-  },
-  {
-    title: "Marcá origen y destino",
-    body: "Hacé click en el mapa, escribí una dirección, o elegí de una lista de intersecciones reales.",
-  },
-  {
-    title: "Se calcula la ruta",
-    body: "El sistema busca el camino más eficiente para tu auto, revisando la batería arista por arista y sumando recargas si hacen falta.",
-  },
-  {
-    title: "Mirá los datos del viaje",
-    body: "Distancia, tiempo, energía, peajes, y cada parada de carga con su dirección y potencia real.",
-  },
-];
-
 export function LandingPage() {
   const loggedIn = Boolean(getToken());
+  const { t, lang } = useTranslation();
+
+  const STATS = [
+    {
+      value: 63800,
+      places: [10000, 1000, ".", 100, 10, 1] as const,
+      suffix: "+",
+      label: t.landing.stats.intersections,
+    },
+    { value: 19, label: t.landing.stats.departments },
+    { value: 259, label: t.landing.stats.stations },
+    { value: 631, label: t.landing.stats.models },
+  ];
+
+  const HOW_IT_WORKS = [
+    t.landing.howItWorks.steps.loadVehicle,
+    t.landing.howItWorks.steps.markOriginDestination,
+    t.landing.howItWorks.steps.calculateRoute,
+    t.landing.howItWorks.steps.viewTripData,
+  ];
 
   return (
     <div className={styles.page}>
       <Helmet>
-        <title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
-        <meta
-          name="description"
-          content="Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 209 estaciones de UTE. 895 modelos precargados, sin crear cuenta."
-        />
+        <title>{t.landing.meta.title}</title>
+        <meta name="description" content={t.landing.meta.description} />
         <link rel="canonical" href="https://routeev.uy/" />
         <meta property="og:type" content="website" />
-        <meta property="og:locale" content="es_UY" />
+        <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/" />
-        <meta property="og:title" content="¿Llega tu auto eléctrico? Fijate antes de salir." />
-        <meta
-          property="og:description"
-          content="Elegí uno de 895 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay."
-        />
+        <meta property="og:title" content={t.landing.meta.ogTitle} />
+        <meta property="og:description" content={t.landing.meta.ogDescription} />
         <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -70,8 +54,7 @@ export function LandingPage() {
             "@type": "WebApplication",
             name: "RouteEV",
             url: "https://routeev.uy/",
-            description:
-              "Planificador de viajes para vehículos eléctricos en Uruguay: calcula si tu auto llega, dónde parar a cargar y cuánto cuesta, sobre el mapa vial real del país.",
+            description: t.landing.meta.jsonLdDescription,
             applicationCategory: "TravelApplication",
             operatingSystem: "Any (web)",
             offers: { "@type": "Offer", price: "0", priceCurrency: "UYU" },
@@ -79,20 +62,39 @@ export function LandingPage() {
             author: { "@type": "Organization", name: "RouteEV", email: "routemindtbo@gmail.com" },
           })}
         </script>
+        {/* Aparte del WebApplication de arriba: es el tipo WebSite +
+            "name" el que Google documenta como señal para el nombre que
+            muestra en los resultados de búsqueda (al lado del favicon,
+            "RouteEV" en vez del dominio "routeev.uy") -- og:site_name ya
+            lo decía, esto refuerza la misma señal por el otro camino. */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "RouteEV",
+            url: "https://routeev.uy/",
+          })}
+        </script>
       </Helmet>
 
-      <SiteHeader navLinks={[{ href: "/showroom", label: "Showroom" }, { href: "#como-funciona", label: "Cómo funciona" }, { href: "#datos-reales", label: "Datos reales" }]}>
+      <SiteHeader
+        navLinks={[
+          { href: "/showroom", label: t.landing.nav.showroom },
+          { href: "#como-funciona", label: t.landing.nav.howItWorks },
+          { href: "#datos-reales", label: t.landing.nav.realData },
+        ]}
+      >
         {loggedIn ? (
           <Link to="/app" className={buttons.primary}>
-            Ir a la app
+            {t.landing.header.goToApp}
           </Link>
         ) : (
           <>
             <Link to="/login" className={buttons.navLink}>
-              Iniciar sesión
+              {t.landing.header.login}
             </Link>
             <Link to="/login?crear=1" className={buttons.primary}>
-              Crear cuenta
+              {t.landing.header.createAccount}
             </Link>
           </>
         )}
@@ -112,33 +114,27 @@ export function LandingPage() {
           />
           <div className={[styles.section, styles.hero].join(" ")}>
             <div>
-              <p className={styles.eyebrow}>Movilidad eléctrica</p>
+              <p className={styles.eyebrow}>{t.landing.hero.eyebrow}</p>
               <h1>
-                Tu viaje por Uruguay
+                {t.landing.hero.titleLine1}
                 <br />
-                no se detiene; tu batería tampoco.
+                {t.landing.hero.titleLine2}
               </h1>
-              <p className={styles.heroSub}>
-                RouteEV calcula la ruta más eficiente para tu vehículo eléctrico sobre el mapa vial real del
-                país, revisando tu batería tramo a tramo y sumando las paradas de carga que hagan falta en el
-                camino.
-              </p>
+              <p className={styles.heroSub}>{t.landing.hero.subtitle}</p>
               <div className={styles.heroActions}>
                 <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-                  Ver el catálogo y simular un viaje
+                  {t.landing.hero.ctaPrimary}
                 </Link>
                 <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-                  Crear cuenta gratis
+                  {t.landing.hero.ctaSecondary}
                 </Link>
               </div>
-              <p className={styles.heroNote}>
-                El catálogo no pide cuenta: entrás, elegís un auto y calculás el viaje.
-              </p>
+              <p className={styles.heroNote}>{t.landing.hero.note}</p>
             </div>
 
             <div className={styles.heroVisual}>
               <UruguayGraph />
-              <p className={styles.heroVisualCaption}>Montevideo → Rivera · 497 km, 1 parada de carga</p>
+              <p className={styles.heroVisualCaption}>{t.landing.hero.visualCaption}</p>
             </div>
           </div>
         </section>
@@ -158,64 +154,64 @@ export function LandingPage() {
 
         <Reveal className={[styles.section, styles.split].join(" ")}>
           <div>
-            <p className={styles.eyebrow}>El problema</p>
-            <h2>La autonomía real no es la del folleto.</h2>
-            <p>
-              Un vehículo eléctrico rinde distinto en cada calle: el tráfico, la velocidad y el propio
-              consumo del auto cambian cuánta batería queda al llegar. Los mapas comunes calculan el camino
-              más corto o más rápido, pero ninguno te avisa si esa ruta es la que tu batería puede hacer, ni
-              dónde parar a cargar si no.
-            </p>
+            <p className={styles.eyebrow}>{t.landing.problem.eyebrow}</p>
+            <h2>{t.landing.problem.title}</h2>
+            <p>{t.landing.problem.body}</p>
           </div>
           <div>
-            <p className={styles.eyebrow}>La solución</p>
-            <h2>Un motor de rutas que entiende de baterías.</h2>
-            <p>
-              RouteEV construye el camino sobre el grafo vial real del país (no una aproximación): cada
-              calle pesa lo que realmente cuesta recorrerla, y el sistema revisa tu batería antes de cada
-              tramo. Si no alcanza, busca una estación de carga real en el camino, sin que tengas que
-              planearlo vos.
-            </p>
+            <p className={styles.eyebrow}>{t.landing.solution.eyebrow}</p>
+            <h2>{t.landing.solution.title}</h2>
+            <p>{t.landing.solution.body}</p>
           </div>
         </Reveal>
 
         <Reveal className={[styles.section, styles.showroom].join(" ")}>
           <div>
-            <p className={styles.eyebrow}>Showroom · sin cuenta</p>
-            <h2>Antes de comprarlo, fijate si llega.</h2>
-            <p>
-              Buscá cualquiera de los 895 autos eléctricos del catálogo y mirá sus números de verdad:
-              batería, autonomía real, consumo, cuánto cuesta cada 100 km en pesos y cuánto tarda en cargar
-              en las estaciones que existen en Uruguay.
-            </p>
-            <p>
-              Y con el auto elegido, calculá un viaje concreto como si lo pidieras desde el mapa: el mismo
-              motor de rutas devuelve la distancia, el tiempo, la batería con la que llegás, los peajes, el
-              costo total y en qué estación de carga hay que parar, con su dirección y su potencia.
-            </p>
+            <p className={styles.eyebrow}>{t.landing.showroomSection.eyebrow}</p>
+            <h2>{t.landing.showroomSection.title}</h2>
+            <p>{t.landing.showroomSection.body1}</p>
+            <p>{t.landing.showroomSection.body2}</p>
             <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-              Entrar al showroom
+              {t.landing.showroomSection.cta}
             </Link>
           </div>
+          {/* Check, no "01-04": la lista de pasos numerados de verdad es
+              "Cómo funciona" un poco más abajo en esta misma página -- con
+              el mismo estilo de número acá, las dos se leían como la misma
+              lista repetida en el scroll. Este es un resumen de lo que
+              ofrece el showroom, no una instrucción a seguir en orden. */}
           <ul className={styles.showroomSteps}>
-            <li>
-              <span className={styles.stepNum}>01</span> Buscás el modelo por su nombre
-            </li>
-            <li>
-              <span className={styles.stepNum}>02</span> Ves su ficha completa, con foto
-            </li>
-            <li>
-              <span className={styles.stepNum}>03</span> Elegís desde dónde y hasta dónde
-            </li>
-            <li>
-              <span className={styles.stepNum}>04</span> Te dice si llega, y dónde para a cargar
-            </li>
+            {[
+              t.landing.showroomSection.steps.search,
+              t.landing.showroomSection.steps.view,
+              t.landing.showroomSection.steps.choose,
+              t.landing.showroomSection.steps.result,
+            ].map((step) => (
+              <li key={step}>
+                <svg
+                  className={styles.showroomStepIcon}
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8 12.5l2.5 2.5L16 9.5" />
+                </svg>
+                {step}
+              </li>
+            ))}
           </ul>
         </Reveal>
 
         <Reveal id="como-funciona" className={[styles.section, styles.steps].join(" ")}>
-          <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>Cómo funciona</p>
-          <h2 className={styles.stepsTitle}>Cuatro pasos, un viaje calculado.</h2>
+          <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>{t.landing.howItWorks.eyebrow}</p>
+          <h2 className={styles.stepsTitle}>{t.landing.howItWorks.title}</h2>
           <ol className={styles.stepsList}>
             {HOW_IT_WORKS.map((step, i) => (
               <li key={step.title}>
@@ -228,14 +224,14 @@ export function LandingPage() {
         </Reveal>
 
         <Reveal className={[styles.section, styles.finalCta].join(" ")}>
-          <h2>Probalo con tu auto.</h2>
-          <p>Elegí un modelo, marcá un viaje que hagas de verdad y fijate si llega. No pide cuenta.</p>
+          <h2>{t.landing.finalCta.title}</h2>
+          <p>{t.landing.finalCta.body}</p>
           <div className={[styles.heroActions, styles.heroActionsCenter].join(" ")}>
             <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-              Calcular un viaje
+              {t.landing.finalCta.ctaPrimary}
             </Link>
             <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-              Crear cuenta gratis
+              {t.landing.finalCta.ctaSecondary}
             </Link>
           </div>
         </Reveal>

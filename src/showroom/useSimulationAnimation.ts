@@ -1,5 +1,6 @@
 import type L from "leaflet";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
 import { armarSegmentos, puntoDeSegmento, segmentoEnTiempo, type Segment, type TramoInfo } from "./simulationTimeline";
@@ -23,6 +24,7 @@ export function useSimulationAnimation(
   bateriaInicialPct: number,
   tiempoTotalMin: number
 ) {
+  const { t } = useTranslation();
   const markerRef = useRef<L.Marker | null>(null);
   const kmRef = useRef<HTMLElement | null>(null);
   const batRef = useRef<HTMLElement | null>(null);
@@ -52,19 +54,24 @@ export function useSimulationAnimation(
       }
       if (statusRef.current) {
         if (seg.type === "charge") {
-          statusRef.current.textContent = `Cargando en ${seg.parada.nombre}… (+${num(seg.parada.kwh, 1)} kWh, ${formatDuration(seg.parada.minutos)} reales)`;
+          statusRef.current.textContent = t.showroom.simulationAnimation.cargandoEn(
+            seg.parada.nombre,
+            num(seg.parada.kwh, 1),
+            formatDuration(seg.parada.minutos)
+          );
           statusRef.current.classList.add("charging");
           statusRef.current.classList.remove("done");
         } else if (seg.type === "turn") {
-          statusRef.current.textContent = "Llegó al destino. Iniciando la vuelta…";
+          statusRef.current.textContent = t.showroom.simulationAnimation.llegoIniciaVuelta;
           statusRef.current.classList.remove("charging", "done");
         } else {
-          statusRef.current.textContent = seg.tramo.nombre === "vuelta" ? "Volviendo…" : "En ruta…";
+          statusRef.current.textContent =
+            seg.tramo.nombre === "vuelta" ? t.showroom.simulationAnimation.volviendo : t.showroom.simulationAnimation.enRuta;
           statusRef.current.classList.remove("charging", "done");
         }
       }
     },
-    [capacidadKwh, tiempoTotalMin]
+    [capacidadKwh, tiempoTotalMin, t]
   );
 
   const play = useCallback(() => {
@@ -81,7 +88,10 @@ export function useSimulationAnimation(
       const last = segments[segments.length - 1]!;
       pintar(last, 1, totalKm, totalMs);
       if (statusRef.current) {
-        statusRef.current.textContent = tramosInfo.length > 1 ? "Ida y vuelta completa." : "Llegó a destino.";
+        statusRef.current.textContent =
+          tramosInfo.length > 1
+            ? t.showroom.simulationAnimation.idaYVueltaCompleta
+            : t.showroom.simulationAnimation.llegoADestino;
         statusRef.current.classList.remove("charging");
         statusRef.current.classList.add("done");
       }
@@ -109,7 +119,7 @@ export function useSimulationAnimation(
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
-  }, [tramosInfo, capacidadKwh, bateriaInicialPct, pintar]);
+  }, [tramosInfo, capacidadKwh, bateriaInicialPct, pintar, t]);
 
   useEffect(() => {
     return () => {

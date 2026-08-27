@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { StationReview, StationReviewsPayload } from "../api/stationReviews";
+import { LanguageProvider } from "../i18n/LanguageProvider";
 import { StationReviews } from "./StationReviews";
 
 // El módulo entero se mockea: así el test no toca red, ni token, ni
@@ -44,7 +45,9 @@ function renderReviews() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <StationReviews nodeId="n123" />
+      <LanguageProvider>
+        <StationReviews nodeId="n123" />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

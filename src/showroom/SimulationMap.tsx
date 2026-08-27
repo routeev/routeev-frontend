@@ -1,7 +1,9 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MapContainer, Marker, Polyline, Popup, useMap, ZoomControl } from "react-leaflet";
+import { BasemapLayer } from "../map/BasemapLayer";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
 import type { TramoInfo } from "./simulationTimeline";
@@ -45,10 +47,25 @@ function carIcon() {
   });
 }
 
+/**
+ * Encuadra el trayecto entero. Es la misma operacion que corre al montar y la
+ * que dispara el boton "Ver el trayecto completo", por eso vive suelta acá y
+ * no adentro de FitBounds: son el mismo "volver a la vista de siempre".
+ *
+ * animate se apaga con prefers-reduced-motion: el vuelo de camara de Leaflet
+ * es movimiento en pantalla como cualquier otro, y el reset de base.css solo
+ * alcanza a las transiciones de CSS.
+ */
+function fitTrayecto(map: L.Map, bounds: [number, number][]) {
+  if (!bounds.length) return;
+  const animate = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24], animate });
+}
+
 function FitBounds({ bounds }: { bounds: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (bounds.length) map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24] });
+    fitTrayecto(map, bounds);
     // Solo al montar: es la unica vez que hace falta encuadrar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,12 +101,22 @@ export function SimulationMap({
   bateriaInicialPct,
   tiempoTotalMin,
 }: SimulationMapProps) {
+  const { t } = useTranslation();
   const { markerRef, kmRef, batRef, timeRef, fillRef, statusRef, playing, play } =
     useSimulationAnimation(tramosInfo, capacidadKwh, bateriaInicialPct, tiempoTotalMin);
 
   const bounds = useMemo(() => tramosInfo.flatMap((t) => t.coords), [tramosInfo]);
   const origen = tramosInfo[0]!.coords[0]!;
   const destinoFinal = tramosInfo[0]!.coords[tramosInfo[0]!.coords.length - 1]!;
+
+  // La instancia real de Leaflet, para que el boton de "ver todo" (que vive
+  // AFUERA del <MapContainer>, junto al de repetir) pueda reencuadrar. Es
+  // estado y no un ref porque el primer render todavia no tiene mapa y el
+  // boton tiene que quedar deshabilitado hasta que exista.
+  const [map, setMap] = useState<L.Map | null>(null);
+  const verTodo = useCallback(() => {
+    if (map) fitTrayecto(map, bounds);
+  }, [map, bounds]);
 
   useEffect(() => {
     play();
@@ -103,16 +130,27 @@ export function SimulationMap({
         <MapContainer
           center={[-32.5, -56]}
           zoom={6}
+          // El control de zoom por defecto se apaga para poner el nuestro con
+          // titulos en castellano y arriba a la izquierda (arriba a la derecha
+          // ya viven los botones de repetir/ver todo).
           zoomControl={false}
+          // A proposito: la rueda del mouse tiene que seguir scrolleando la
+          // pagina, no acercando el mapa -- este mapa esta en el medio de una
+          // pagina larga. Por eso mismo hacian falta botones de zoom: sin
+          // rueda y sin botones no habia NINGUNA forma de acercarse, y quien
+          // se acercaba con doble click no tenia como volver.
           scrollWheelZoom={false}
+          // Lo fijaba el TileLayer que estaba aca abajo: ver MapCanvas.tsx.
+          maxZoom={19}
+          ref={setMap}
           style={{ height: "100%" }}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            subdomains="abcd"
-            maxZoom={19}
+          <ZoomControl
+            position="topleft"
+            zoomInTitle={t.showroom.simulationMap.zoomIn}
+            zoomOutTitle={t.showroom.simulationMap.zoomOut}
           />
+          <BasemapLayer />
           <FitBounds bounds={bounds} />
           {tramosInfo.map((tramo) => (
             <Polyline
@@ -137,7 +175,8 @@ export function SimulationMap({
               >
                 <Popup>
                   <b>{parada.nombre}</b>
-                  <br />+{num(parada.kwh, 1)} kWh · {formatDuration(parada.minutos)}
+                  <br />
+                  {t.showroom.simulationMap.popupParada(num(parada.kwh, 1), formatDuration(parada.minutos))}
                 </Popup>
               </Marker>
             ))
@@ -151,27 +190,37 @@ export function SimulationMap({
           <Marker position={origen} icon={carIcon()} zIndexOffset={1000} ref={markerRef} />
         </MapContainer>
       </div>
-      <button
-        type="button"
-        className={["ghost", styles.replay].join(" ")}
-        onClick={play}
-        disabled={playing}
-      >
-        ↻ Repetir animación
-      </button>
+      <div className={styles.mapActions}>
+        <button
+          type="button"
+          className={["ghost", styles.mapAction].join(" ")}
+          onClick={verTodo}
+          disabled={!map}
+        >
+          {t.showroom.simulationMap.verTrayecto}
+        </button>
+        <button
+          type="button"
+          className={["ghost", styles.mapAction].join(" ")}
+          onClick={play}
+          disabled={playing}
+        >
+          {t.showroom.simulationMap.repetirAnimacion}
+        </button>
+      </div>
 
       <div className={styles.live}>
         <div className={styles.liveRow}>
           <div className={styles.liveItem}>
-            <span>Recorrido</span>
+            <span>{t.showroom.simulationMap.recorrido}</span>
             <b ref={kmRef} />
           </div>
           <div className={styles.liveItem}>
-            <span>Batería</span>
+            <span>{t.showroom.simulationMap.bateria}</span>
             <b ref={batRef} />
           </div>
           <div className={styles.liveItem}>
-            <span>Tiempo de viaje</span>
+            <span>{t.showroom.simulationMap.tiempoDeViaje}</span>
             <b ref={timeRef} />
           </div>
         </div>
@@ -179,7 +228,7 @@ export function SimulationMap({
           <div className={styles.progressFill} ref={fillRef} />
         </div>
         <div className={styles.status} ref={statusRef}>
-          Arrancando…
+          {t.showroom.simulationMap.arrancando}
         </div>
       </div>
     </div>

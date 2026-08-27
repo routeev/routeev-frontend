@@ -54,6 +54,71 @@ export interface RouteBattery {
   // false: ni agregando recargas se pudo respetar el margen pedido -- la ruta
   // devuelta es la mejor SIN margen y hay que mostrar la advertencia.
   margen_alcanzado: boolean;
+  // La reserva que la busqueda exigio DE VERDAD. Opcional: ausente en
+  // respuestas guardadas por versiones viejas (replay del historial).
+  //
+  // Hace falta para poder explicar por que un viaje no da: sin esto la pantalla
+  // ve margen_pct = 10 y una ruta descartada por una reserva que en realidad
+  // equivalia al 22%, porque el cargador del destino estaba a 40 km.
+  reserva?: RouteReserva;
+}
+
+export interface RouteReserva {
+  kwh: number;
+  // La reserva como % de la capacidad. Puede ser MAYOR que margen_pct.
+  pct: number;
+  // "margen": el colchon de siempre.
+  // "cargador_destino": subio para poder alcanzar un cargador al llegar.
+  motivo: "margen" | "cargador_destino";
+}
+
+/**
+ * Estacion de carga con su distancia a un punto por el que se pregunto.
+ * Ver app/estaciones.py: estacion_a_dict.
+ */
+export interface EstacionCercana {
+  node_id: number;
+  nombre: string;
+  direccion: string | null;
+  departamento: string | null;
+  ciudad: string | null;
+  operador: string | null;
+  potencia_kw: number | null;
+  lat: number;
+  lon: number;
+  // EN LINEA RECTA, no por calle: la pantalla tiene que decirlo asi. Mostrar
+  // "a 12 km" cuando por calle son 17 es exactamente el numero de mas que hace
+  // que alguien se quede sin bateria confiando en la app.
+  distancia_km_recta: number;
+}
+
+/**
+ * El cargador mas cercano al destino, cuando se pidio la ruta declarando que
+ * alla no hay donde enchufar. Es EstacionCercana mas por que importa.
+ */
+export interface CargadorDestino extends EstacionCercana {
+  // Energia estimada para llegar hasta el, con el factor de seguridad aplicado.
+  energia_estimada_kwh: number;
+  // true si la reserva efectivamente subio para poder alcanzarlo.
+  cubierto_por_la_reserva: boolean;
+  // true si esta tan lejos que cubrirlo pediria media bateria: se informa, pero
+  // la reserva no lo intenta. Ahi el problema no es el margen, es que no hay
+  // infraestructura, y corresponde decirlo.
+  demasiado_lejos: boolean;
+}
+
+/**
+ * El respaldo de una parada: a que OTRO cargador se llegaria si el de esa
+ * parada no funciona. Mismo shape que el cargador del destino, porque es la
+ * misma pregunta hecha en otro momento del viaje.
+ */
+export type CargadorRespaldo = CargadorDestino;
+
+export interface RespaldoParada {
+  node_id: string;
+  estacion: string;
+  // null cuando el backend no supo calcularlo (o es una respuesta vieja).
+  respaldo?: CargadorRespaldo | null;
 }
 
 export interface CompareRoutesResult {
@@ -61,6 +126,15 @@ export interface CompareRoutesResult {
   destination: { name: string };
   // Ausente en respuestas guardadas por versiones viejas (replay del historial).
   bateria?: RouteBattery;
+  // Con dato solo cuando se pidio con cargador_en_destino: false.
+  cargador_destino?: CargadorDestino | null;
+  // Si el plan garantiza que a cada parada se llega con bateria para alcanzar
+  // otro cargador en caso de que ese no funcione. Opcional: una API vieja no lo
+  // manda y la interfaz simplemente no muestra la seccion.
+  respaldo_paradas?: {
+    cubierto: boolean;
+    paradas: RespaldoParada[];
+  };
   dijkstra: RouteResult | null;
   astar: RouteResult;
 }
@@ -70,6 +144,10 @@ export interface CompareRoutesPayload {
   destination_id: number;
   vehicle_id: number;
   start_battery_kwh?: number;
+  // ¿Hay donde enchufar en el destino? El backend asume true si no se manda.
+  // En false el margen deja de ser "llegar con colchon" y pasa a ser "llegar
+  // pudiendo alcanzar un cargador" (ver reserva_para_destino en la API).
+  cargador_en_destino?: boolean;
 }
 
 export interface LogTripPayload {

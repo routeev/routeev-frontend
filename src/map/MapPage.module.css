@@ -34,7 +34,24 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* En escritorio la barra de scroll siempre está dibujada y se come ~15px de
+     ancho POR ENCIMA del contenido: las filas de las estaciones y las
+     tarjetas del viaje son `justify-content: space-between`, así que lo que
+     tapaba era justo la columna de la derecha (kW, operador). Reservar la
+     canaleta aunque no haga falta cuesta esos 15px una sola vez y nada se
+     mueve cuando la lista pasa a tener scroll. Misma corrección en
+     StationsPanel .list y TripDashboard .dashboard -- este .sidebarScroll
+     además ANIDA a ese .list adentro, así que sin esto se superponían dos
+     barras de scroll distintas contra el mismo texto. */
+  scrollbar-gutter: stable;
   padding: 16px 16px 4px;
+}
+
+/* Sin la barra de "Calcular ruta" abajo (ver MapPage.tsx: no existe hasta que
+   se puede calcular), el scroll queda pegado al borde del panel. Ese respiro
+   lo daba la barra. */
+.sidebarScrollNoCta {
+  padding-bottom: 16px;
 }
 
 .sidebarScroll > :global(.panel) {
@@ -79,10 +96,137 @@
   flex-direction: column;
 }
 
+.navigationMapFallback {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
 .mapWrap {
   flex: 1;
   min-height: 0;
   background: var(--bg);
+  position: relative;
+  /* LA línea que arregla "los botones de zoom pintan encima del panel Tu
+     viaje".
+     leaflet.css le pone z-index 1000 a .leaflet-top/.leaflet-bottom (ahí viven
+     los controles). Ni .layout (position: relative sin z-index) ni .mainArea
+     (position: absolute sin z-index) creaban un contexto de apilamiento, así
+     que ese 1000 no quedaba encerrado en el mapa: competía de igual a igual
+     contra el z-index 500 del .sidebar en el contexto raíz, y ganaba.
+     `isolation: isolate` crea el contexto sin depender del position, así que
+     funciona igual en el split de escritorio (mapWrap absoluto) y en el
+     apilado de mobile (mapWrap estático) -- de ahí que no sea `z-index: 0`.
+     Adentro, Leaflet puede seguir usando los z-index que quiera. */
+  isolation: isolate;
+}
+
+/* Cursor de mira mientras se está marcando un punto: la especificidad de dos
+   clases le gana al `cursor: grab` que Leaflet pone en .leaflet-grab. Es la
+   mitad "el sistema te está esperando" que faltaba, junto con el cartel de
+   abajo y los cargadores atenuados (StationsLayer). */
+.mapWrapPicking :global(.leaflet-container),
+.mapWrapPicking :global(.leaflet-marker-icon) {
+  cursor: crosshair;
+}
+
+/* Los controles de Leaflet salen con el tema claro de leaflet.css y con
+   botones de 30px: contra este mapa oscuro se ven como un parche, y 30px es
+   poco para un dedo. Escopado a .mapWrap para no tocar el mapa del showroom,
+   que tiene su propio tema. */
+.mapWrap :global(.leaflet-bar) {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+}
+
+.mapWrap :global(.leaflet-bar a) {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 20px;
+  background: var(--bg-panel);
+  color: var(--text);
+  border-bottom-color: var(--border);
+}
+
+.mapWrap :global(.leaflet-bar a:hover),
+.mapWrap :global(.leaflet-bar a:focus-visible) {
+  background: var(--bg-panel-raised);
+  color: var(--accent-astar);
+}
+
+.mapWrap :global(.leaflet-bar a.leaflet-disabled) {
+  background: var(--bg-panel);
+  color: var(--text-faint);
+}
+
+/* "Tocá el mapa para marcar el origen/destino". Flota sobre el mapa, corrido a
+   la derecha del panel fijo de 372px para no quedar debajo de él. z-index
+   1100: adentro del contexto de .mapWrap tiene que ganarle a los 1000 de los
+   controles de Leaflet, y ese contexto entero sigue quedando por debajo del
+   sidebar. */
+.pickBar {
+  position: absolute;
+  top: 14px;
+  left: calc(372px + 42px);
+  right: 68px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--accent-astar);
+  border-radius: var(--radius-pill);
+  background: rgba(10, 14, 19, 0.92);
+  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-float);
+}
+
+/* Mismo par de formas que las viñetas de los campos de origen/destino (círculo
+   lleno vs. cuadradito, ver RouteAutocompleteField.module.css): cuál de los dos
+   se está marcando no puede depender solo de blanco vs. violeta. */
+.pickDot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--point-origin);
+}
+
+.pickDotDest {
+  border-radius: 2px;
+  background: var(--point-dest);
+}
+
+.pickText {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.pickCancel {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: none;
+  border-color: var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pickCancel:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+
+/* Vuelta al mapa después de que se corrió solo al scrollear el panel. En el
+   split de escritorio el mapa nunca se corre, así que este botón no existe
+   ahí -- se enciende en el media query de abajo. */
+.showMap {
+  display: none;
 }
 
 .dashboardWrap {
@@ -90,6 +234,15 @@
   right: 14px;
   bottom: 14px;
   left: calc(372px + 42px);
+  /* Sin esto, en un monitor ancho el panel se estira hasta el borde
+     derecho de la pantalla entera -- la grilla de 6 stats (auto-fit,
+     TripDashboard.module.css) reparte ese ancho parejo entre las 6
+     tarjetas y cada una queda con mucho mas aire vacio alrededor de un
+     dato chico ("32.3 km") del que necesita. Con un tope, sigue pegado
+     al sidebar (misma esquina de siempre) pero denso en vez de disperso;
+     en ventanas angostas (entre 860 y ~1100px) el right:14px de arriba
+     lo sigue achicando por debajo de este tope sin overflow. */
+  max-width: 680px;
   /* `height`, not `max-height`: TripDashboard's own `height: 100%` (see
      TripDashboard.module.css) needs a containing block with an explicit
      height to resolve against, or the percentage is ignored, the inner
@@ -105,9 +258,25 @@
      and swallow clicks meant for ClickToPick's Leaflet handler. The actual
      panel re-enables pointer events on itself once it has content. */
   pointer-events: none;
+  /* Columna, no el default: en pantalla angosta .dashboardHandle (ver más
+     abajo) se apila arriba de la sección, igual que .sidebarHandle arriba de
+     .sidebarScroll/.sidebarCta. En escritorio .dashboardHandle está
+     display:none, así que la sección sigue siendo el único hijo real. */
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboardHandle {
+  display: none;
 }
 
 .dashboardWrap :global(section) {
+  /* flex:1 (no solo el height:100% propio de TripDashboard.module.css)
+     porque ahora puede tener un hermano arriba (.dashboardHandle, en
+     pantalla angosta) -- sin esto se seguiría midiendo contra la altura
+     ENTERA de .dashboardWrap en vez de lo que le queda después del handle. */
+  flex: 1;
+  min-height: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-float);
@@ -121,6 +290,31 @@
    mobile el bottom sheet ya se resuelve deslizando (ver .sidebarHandle) y
    los botones/inputs mas grandes ahi son touch targets a proposito. */
 @media (min-width: 861px) {
+  /* Con un resultado calculado, TripDashboard vive adentro del sidebar fijo
+     (ver el ternario de MapPage.tsx) -- el panel flotante de abajo
+     (.dashboardWrap) queda redundante y se apaga entero en vez de mostrar la
+     misma info dos veces. En pantalla angosta sigue siendo el único lugar
+     donde "Datos del viaje" se muestra (el sidebar entero se reemplaza por
+     display:none, ver .sidebarReplaced más abajo), así que esta regla no
+     puede vivir fuera de este media query. */
+  .dashboardWrap {
+    display: none;
+  }
+  /* Sin tope de ancho ni padding propio: TripDashboard pasa a ocupar el
+     mismo panel fijo de 372px que "Tu viaje" ocupaba, así que su borde/fondo/
+     padding de "tarjeta flotante" (pensados para :global(section) sobre el
+     mapa, ver .dashboardWrap :global(section) arriba) sobrarían acá --
+     .sidebarScroll ya es el borde exterior del panel. */
+  .sidebarScrollDashboard {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebarScrollDashboard :global(section) {
+    flex: 1;
+    min-height: 0;
+    border-top: none;
+  }
   .sidebarScroll :global(.panel) h2 {
     font-size: 12px;
     margin-bottom: 10px;
@@ -209,16 +403,142 @@
     border-radius: var(--radius-pill);
     background: var(--border);
   }
+  /* Con un resultado calculado, "Datos del viaje" (.dashboardWrap) reemplaza
+     a "Tu viaje": ambos son paneles flotantes independientes en pantalla
+     angosta y sin esto quedaban superpuestos (el sidebar se veia atras/al
+     costado del dashboard). Volver a verlo es cancelar el viaje (boton X en
+     TripDashboard, que limpia lastResult). */
+  .sidebar.sidebarReplaced {
+    display: none;
+  }
   .mainArea {
     position: static;
     flex: 1;
     min-height: 220px;
+    /* Acompaña el colapso del mapa (.mapCollapsed, abajo). El
+       prefers-reduced-motion global de base.css ya lo deja en ~0ms. */
+    transition:
+      flex-basis 0.24s ease,
+      min-height 0.24s ease;
   }
+  /* En pantalla angosta el panel deja de flotar ENCIMA del mapa (position:
+     absolute) y pasa a compartir el alto real de .mainArea con .mapWrap
+     (que ya es flex:1): así el mapa queda arriba con su propio espacio
+     visible, no tapado por detrás del panel, y crece de verdad cuando el
+     panel se colapsa en vez de solo "destaparse" un mapa que ya ocupaba
+     toda la pantalla. RouteLayers/CaptureMap reencuadran el recorrido cada
+     vez que este reparto cambia (ver el ResizeObserver en MapCanvas.tsx). */
   .dashboardWrap {
-    position: absolute;
-    inset: auto 10px 10px 10px;
-    height: 62%;
+    position: relative;
+    /* Resetea el left/right/bottom del position:absolute de escritorio:
+       con position:relative esos offsets no se ignoran, se APLICAN como
+       corrimiento desde la posición normal -- sin esto el panel quedaba
+       empujado cientos de px afuera de la pantalla. */
+    inset: auto;
+    /* 0 por default: antes de calcular no hay nada que mostrar (TripDashboard
+       no renderiza nada sin resultado) y sin esto igual reclamaba 62% del
+       alto, dejando al mapa una tira minúscula mientras "Tu viaje" todavía
+       está en pantalla. Pasa a .expanded recién con un resultado calculado. */
+    flex: 0 0 0;
+    min-height: 0;
+    transition: flex-basis 0.22s ease;
+  }
+  .dashboardWrap.expanded {
+    flex-basis: 62%;
+  }
+  /* Deslizando el handle hacia abajo (o tocándolo) se achica el panel a la
+     franja del handle nomás, mismo criterio que .sidebar.collapsed: el mapa
+     recupera casi toda la pantalla sin perder el resultado ya calculado
+     (sigue ahí, solo colapsado). */
+  .dashboardWrap.collapsed {
+    flex-basis: 40px;
+  }
+  .dashboardWrap.collapsed :global(section) {
+    display: none;
+  }
+  .dashboardHandle {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    cursor: grab;
+    /* Mismo motivo que .sidebarHandle: es este handle el que interpreta el
+       gesto de arrastre a mano, no el scroll/gesto por default del navegador. */
+    touch-action: none;
+    pointer-events: auto;
+    /* A diferencia de .sidebar (donde el fondo/borde va en el contenedor
+       entero), acá el fondo vive solo en <section>: sin esto el handle
+       flotaba transparente sobre el mapa y el "pill" quedaba casi invisible.
+       Con esto el handle y la sección forman una sola tarjeta continua. */
+    background: var(--bg-panel);
+    /* Solo arriba: a los costados y abajo el panel ya queda pegado al borde
+       de la pantalla (ver .dashboardWrap), un borde ahí se veía como una
+       línea perdida justo en el filo -- mismo criterio que .sidebar. */
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .dashboardHandle::before {
+    content: "";
+    width: 36px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+  }
+  /* Esquinas superiores en 0 para que calcen justo debajo del handle (que ya
+     las redondea el arriba); sin bordes/radio a los costados y abajo por el
+     mismo motivo que en .dashboardHandle. Solo en mobile, donde el handle
+     existe. */
+  .dashboardWrap :global(section) {
+    border: none;
+    border-radius: 0;
+  }
+  /* Acá está el punto (b) del reporte de Gonzalo: en pantalla angosta el mapa
+     chico es una caja fija que "por momentos no aporta nada" y le deja al
+     panel un tercio de la pantalla para escribir direcciones, elegir vehículo
+     y leer el resultado. Una vez que origen y destino ya están puestos (antes
+     de eso el mapa ES la herramienta), bajar dentro del panel lo corre y el
+     panel se queda con todo. Vuelve solo al volver arriba, o con el botón
+     "Ver el mapa". Nada de esto pasa arriba de 860px: el split de escritorio
+     queda igual que siempre. */
+  .mapCollapsed .mainArea {
+    flex: 0 0 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  /* El max-height del sidebar es lo que reparte la pantalla: sin soltarlo, el
+     lugar que deja el mapa quedaría como una franja vacía. */
+  .mapCollapsed .sidebar {
+    max-height: 100%;
+  }
+  .showMap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex-shrink: 0;
+    /* align-self stretch por default en el .sidebar (flex column): los
+       margenes laterales solos ya lo dejan del ancho del panel. */
+    min-height: 40px;
+    margin: 0 14px 6px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--bg-panel-raised);
+  }
+  .pickBar {
     left: 10px;
+    /* Deja libre la columna de los botones de zoom (arriba a la derecha). */
+    right: 58px;
+    top: 10px;
+    padding: 6px 6px 6px 12px;
+  }
+  .pickText {
+    font-size: 13px;
+  }
+  .pickCancel {
+    padding: 8px 12px;
   }
 }
 

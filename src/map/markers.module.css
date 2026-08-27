@@ -78,6 +78,14 @@
   stroke-linejoin: round;
 }
 
+.stationHit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .station {
   display: flex;
   align-items: center;
@@ -86,14 +94,25 @@
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, 0.4);
   box-shadow: 0 0 8px rgba(242, 161, 84, 0.6);
-  width: 100%;
-  height: 100%;
+  width: 20px;
+  height: 20px;
+}
+
+/* Operador privado (eONE, DISA/EVE Move, Evergo...): mismo rayo, otro color,
+   para que se lea de un vistazo que ese cargador no es de la red de UTE. */
+.stationPrivada {
+  background: var(--accent-astar);
+  box-shadow: 0 0 8px rgba(52, 227, 168, 0.55);
 }
 
 .station svg {
   width: 11px;
   height: 11px;
   fill: #241d00;
+}
+
+.stationPrivada svg {
+  fill: #06231d;
 }
 
 .toll {

@@ -6,8 +6,22 @@
   flex-direction: column;
 }
 
+/* 780px, no 1100px: "Mi cuenta"/"Consumo y gasto"/"Historial de viajes"
+   son listas angostas de texto, no grillas -- a 1100px en un monitor
+   normal quedaban pegadas a la izquierda con una franja vacía enorme a
+   la derecha. Mismo orden de magnitud que el max-width de las páginas
+   legales (720px, LegalLayout.module.css), ya pensado para lectura, no
+   para llenar el ancho entero. La grilla de vehículos (.vehicleGrid,
+   auto-fill) se sigue acomodando sola con menos columnas por fila.
+   Se probó un ancho mayor solo para los paneles con tablas anchas
+   (Consumo/Historial, ver el historial de git) para que entraran sin
+   scroll horizontal -- pedido explícito de deshacerlo: se veían más
+   grandes que el resto de los paneles, y eso se nota más que el scroll
+   que evitaba. Todos los paneles vuelven a compartir el mismo ancho; las
+   tablas que no entran siguen resolviéndose con la barra de scroll fina
+   (ver .tableScroll más abajo), no ensanchando el panel. */
 .main {
-  max-width: 1100px;
+  max-width: 780px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 20px 60px;
@@ -41,9 +55,37 @@
 
 /* --- Tablas de datos --- */
 
+/* overflow-x:auto se mantiene (las tablas de acá -- Consumo por mes,
+   Vehículos, Historial -- tienen mas columnas de las que entran en una
+   pantalla angosta, sacarlo haria que el texto se desborde del panel).
+   La barra en si es fina y discreta, no la gruesa que pone el sistema por
+   default -- se había sacado del todo (display:none) por pedido explícito,
+   pero sin NINGÚN indicio de que hay más columnas a la derecha (Distancia
+   Promedio, Tiempo, Costo, Recargas...) esas columnas quedaban invisibles
+   de verdad, no solo con la barra escondida: nadie se enteraba de que
+   podía scrollear para verlas. Esta es la version intermedia: se nota que
+   hay para donde scrollear, sin el bloque ancho de siempre. */
 .tableScroll {
   overflow-x: auto;
   margin-top: 12px;
+  scrollbar-width: thin;
+}
+
+.tableScroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
 }
 
 .table {
@@ -108,11 +150,16 @@
 
 /* --- Mi cuenta --- */
 
+/* Encabezado: foto + identidad, sin ningún control de edición acá -- antes
+   el nombre grande de arriba tenía al lado un lápiz que en realidad editaba
+   el USERNAME (no el nombre que mostraba), y el lápiz del nombre para
+   mostrar vivía suelto más abajo sin ningún texto que dijera qué controlaba.
+   Editar cualquier dato ahora vive SOLO en .accountFields, cada uno con su
+   propio label -- ver el comentario ahí. */
 .accountRow {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 4px;
 }
 
 .avatarWrap {
@@ -140,7 +187,7 @@
   justify-content: center;
   font-size: 24px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-hover);
 }
 
 .avatarWrap .photoEdit {
@@ -159,6 +206,177 @@
 .accountUsername {
   font-size: 16px;
   font-weight: 600;
+}
+
+/* Lista de campos editables (Nombre, Usuario, Correo, Contraseña y, en
+   mobile, Idioma y tema): mismo patrón repetido para los cinco -- label chico
+   arriba, valor abajo, y el botón de editar al final de la fila, siempre a
+   la altura de ESE campo y ningún otro. Reemplaza el layout ad-hoc que tenía
+   cada uno antes (ver el comentario de .accountRow arriba). */
+.accountFields {
+  margin-top: 18px;
+}
+
+.accountField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.accountField:last-child {
+  border-bottom: none;
+}
+
+.accountFieldMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.accountFieldLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.accountFieldValue {
+  font-size: 14px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.accountFieldEmpty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* Botón de editar de cada fila: con borde propio (a diferencia del lápiz
+   suelto que tenía antes cada campo) para que se lea como un control con el
+   que se puede interactuar, no como un adorno chico al lado del texto --
+   pedido explícito de "ajustar la posición de los botones". */
+.accountFieldEdit {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.accountFieldEdit:hover {
+  color: var(--text);
+  border-color: var(--accent-astar);
+}
+
+/* En el celular el botón se toca con el dedo: mismo criterio de 44px que ya
+   usa .usernameEditRow input más abajo. */
+@media (max-width: 640px) {
+  .accountFieldEdit {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* El <label> del campo va arriba de la fila, no adentro: si entrara en el
+   flex se sentaría al lado del input y se leería como parte de la fila de
+   botones. */
+.usernameEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.usernameEditRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.usernameEditRow input {
+  width: 160px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+/* En el celular el campo se toca con el dedo: 44px de alto, el mismo criterio
+   que base.css ya aplica a button.small. En desktop se deja compacto. */
+@media (max-width: 640px) {
+  .usernameEditRow input {
+    min-height: 44px;
+  }
+}
+
+/* Error de un campo puntual. Copia deliberada de .fieldError del login
+   (LoginPage.module.css): era la única convención de la app para esto, y un
+   error de formulario tiene que verse igual en todas las pantallas. */
+.fieldError {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--danger);
+}
+
+/* Eliminar cuenta: separada del resto de "Mi cuenta" con su propio borde,
+   para que se lea como una zona aparte y no como una opción más de la
+   lista -- es la única acción del panel que es irreversible de verdad. */
+.dangerZone {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.dangerZoneTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.dangerZone .fieldError {
+  margin-bottom: 8px;
+}
+
+/* Idioma y tema: misma fila que el resto de .accountFields (.accountField ya
+   le da el padding/borde-inferior), solo que esta además necesita esconderse
+   en escritorio -- vive acá (y no en AppTopbar) en mobile a propósito, ver el
+   comentario en AppTopbar.tsx sobre por qué se sacaron de al lado del botón
+   hamburguesa. En escritorio los mismos dos controles ya están en la barra
+   (a la izquierda del chip de usuario), así que mostrarlos acá también sería
+   un duplicado sin motivo. Mismo corte de 860px que AppTopbar.module.css,
+   para que sea exactamente el tamaño en el que uno de los dos lugares deja
+   de verse y el otro empieza.
+   display:none DESPUÉS de .accountField en el archivo a propósito: son la
+   misma propiedad, y en CSS (misma especificidad) gana la regla que aparece
+   más abajo -- así este selector le puede pisar el display:flex a
+   .accountField sin necesitar más especificidad. */
+.preferencesRow {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .preferencesRow {
+    display: flex;
+  }
+}
+
+.preferencesControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* --- Vehículos --- */
@@ -184,7 +402,7 @@
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-hover);
 }
 
 .artWrap {

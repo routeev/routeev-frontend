@@ -1,6 +1,7 @@
 import L from "leaflet";
 import { useEffect } from "react";
 import { Marker, Polyline, Popup, useMap } from "react-leaflet";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { formatUyu } from "../../shared/format";
 import { tollIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
@@ -11,6 +12,8 @@ const COLOR_ASTAR = "#34e3a8";
 const COLOR_DIJKSTRA = "#f2a154";
 
 export function RouteLayers() {
+  const { t } = useTranslation();
+  const rl = t.map.layers.routeLayers;
   const map = useMap();
   const result = useMapStore((s) => s.lastResult);
 
@@ -46,7 +49,7 @@ export function RouteLayers() {
       )}
       {peajes.map((p, i) => (
         <Marker key={i} position={[p.lat, p.lon]} icon={tollIcon()} zIndexOffset={400}>
-          <Popup>{p.monto_uyu ? `Peaje: ${formatUyu(p.monto_uyu)}` : "Tramo con peaje (monto exacto no disponible)"}</Popup>
+          <Popup>{p.monto_uyu ? rl.tollAmount(formatUyu(p.monto_uyu)) : rl.tollUnknownAmount}</Popup>
         </Marker>
       ))}
     </>

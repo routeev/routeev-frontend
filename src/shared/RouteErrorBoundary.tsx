@@ -1,4 +1,5 @@
 import { isRouteErrorResponse, useRouteError } from "react-router-dom";
+import { useTranslation } from "../i18n/LanguageProvider";
 import styles from "./RouteErrorBoundary.module.css";
 
 // Distintos mensajes segun navegador para el mismo fallo (import dinamico o
@@ -16,20 +17,19 @@ function isStaleChunkError(error: unknown): boolean {
 /** errorElement raiz (routes.tsx): pantalla de error propia en vez del
  * "Unexpected Application Error!" generico de react-router. */
 export function RouteErrorBoundary() {
+  const { t } = useTranslation();
   const error = useRouteError();
   const staleChunk = !isRouteErrorResponse(error) && isStaleChunkError(error);
 
   return (
     <div className={styles.wrap}>
       <p className={styles.eyebrow}>RouteEV</p>
-      <h1>{staleChunk ? "Hay una versión nueva de la app" : "Algo salió mal"}</h1>
+      <h1>{staleChunk ? t.shared.routeErrorBoundary.staleChunkTitle : t.shared.routeErrorBoundary.genericTitle}</h1>
       <p className={styles.body}>
-        {staleChunk
-          ? "Recargá la página para actualizar a la última versión."
-          : "Recargá la página. Si el problema sigue, probá de nuevo en unos minutos."}
+        {staleChunk ? t.shared.routeErrorBoundary.staleChunkBody : t.shared.routeErrorBoundary.genericBody}
       </p>
       <button type="button" className="primary" onClick={() => window.location.reload()}>
-        Recargar
+        {t.shared.routeErrorBoundary.reload}
       </button>
     </div>
   );

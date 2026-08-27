@@ -9,22 +9,81 @@ import {
 } from "../api/vehicles";
 import { Banner } from "../shared/Banner";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import type { Dictionary } from "../i18n/dictionaries/en";
+import { useTranslation } from "../i18n/LanguageProvider";
 import { MODEL_SEARCH_MIN_CHARS, filterModelLabels } from "../shared/evModelSearch";
+import { ModelCombobox } from "../shared/ModelCombobox";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
+import { Spinner } from "../shared/Spinner";
+import { toast } from "../shared/toastStore";
 import styles from "./ProfilePage.module.css";
 
 const emptyForm = { name: "", capacity: "", consumption: "", chargingPower: "" };
+
+type CampoForm = keyof typeof emptyForm;
+type ErroresForm = Partial<Record<CampoForm, string>>;
+
+/** El id del <input> de cada campo, para poder mandarle el foco al primero que falle. */
+const ID_POR_CAMPO: Record<CampoForm, string> = {
+  name: "p-name",
+  capacity: "p-capacity",
+  consumption: "p-consumption",
+  chargingPower: "p-charging-power",
+};
+
+/** El orden en el que están en pantalla: el foco tiene que ir al de más arriba. */
+const ORDEN_CAMPOS: CampoForm[] = ["name", "capacity", "consumption", "chargingPower"];
+
+/**
+ * QA MEDIO 19: estos campos son `required` con `min` dentro de un <form>, así
+ * que hasta ahora los rechazaba el propio navegador con SU cartel, en inglés
+ * ("Please fill out this field", "Value must be greater than or equal to
+ * 0.1"), en el medio de una pantalla íntegramente en castellano. Con
+ * noValidate el navegador se corre y los mensajes los ponemos acá.
+ *
+ * Los números se escriben con punto y no con coma a propósito, aunque en
+ * Uruguay se escriba "0,18": son campos <input type="number">, y ese tipo de
+ * campo directamente NO deja tipear la coma (el navegador la descarta al
+ * sanear el valor). Decirle a alguien que escriba "0,18" en un campo donde la
+ * coma no entra sería mandarlo a pelear con el teclado.
+ */
+function validar(f: typeof emptyForm, msgs: Dictionary["profile"]["addVehicle"]): ErroresForm {
+  const errores: ErroresForm = {};
+
+  if (!f.name.trim()) {
+    errores.name = msgs.nameRequired;
+  }
+
+  const invalido = (valor: string, min: number) => {
+    const n = Number(valor);
+    return valor.trim() === "" || !Number.isFinite(n) || n < min;
+  };
+
+  if (invalido(f.capacity, 0.1)) {
+    errores.capacity = msgs.capacityInvalid;
+  }
+  if (invalido(f.consumption, 0.01)) {
+    errores.consumption = msgs.consumptionInvalid;
+  }
+  if (invalido(f.chargingPower, 0.5)) {
+    errores.chargingPower = msgs.chargingPowerInvalid;
+  }
+
+  return errores;
+}
 
 interface AddVehicleFormProps {
   onCreated: () => void;
 }
 
 export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(emptyForm);
+  const [errores, setErrores] = useState<ErroresForm>({});
   const [modelSearch, setModelSearch] = useState("");
   // El catálogo se pide recién cuando el usuario escribió lo suficiente como
   // para ofrecerle opciones: abrir el perfil (o clickear el campo) ya no
-  // descarga los 895 modelos. Una vez traído no se vuelve a pedir
+  // descarga los 631 modelos. Una vez traído no se vuelve a pedir
   // (staleTime): el catálogo no cambia mientras el backend esté corriendo.
   const modelsQuery = useQuery({
     queryKey: ["evModels"],
@@ -76,17 +135,21 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
         consumption: model.consumo_kwh_km != null ? String(model.consumo_kwh_km) : "",
         chargingPower: model.potencia_carga_kw != null ? String(model.potencia_carga_kw) : "",
       });
+      // Los datos que acaban de entrar solos invalidan cualquier error viejo.
+      setErrores({});
       setPhotoStatus({
-        text: `Identificado: ${model.marca} ${model.modelo}. Revisá los datos y guardá.`,
+        text: t.profile.addVehicle.identifiedStatus(model.marca, model.modelo),
         ok: true,
       });
     },
     onError: (err) => {
-      setPhotoStatus({
-        text:
-          err instanceof Error ? err.message : "No se pudo identificar el vehículo con esa foto.",
-        ok: false,
-      });
+      const text =
+        err instanceof Error ? err.message : t.profile.addVehicle.identifyError;
+      setPhotoStatus({ text, ok: false });
+      // Además del texto de al lado del botón: identificar por foto puede
+      // tardar varios segundos, tiempo de sobra para que la persona haya
+      // dejado de mirar esa esquina de la pantalla.
+      toast.error(text);
     },
   });
 
@@ -109,8 +172,9 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       }
       return vehicle;
     },
-    onSuccess: () => {
+    onSuccess: (vehicle) => {
       setForm(emptyForm);
+      setErrores({});
       setModelSearch("");
       setModelPhoto(null);
       setPendingPhoto(null);
@@ -119,12 +183,17 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
         if (prev) URL.revokeObjectURL(prev);
         return null;
       });
+      // El formulario se vacía y el vehículo aparece en la grilla de arriba,
+      // que puede quedar fuera de la pantalla: sin este aviso, el único
+      // indicio de que salió bien era que los campos se borraron -- que es
+      // exactamente lo que se ve cuando algo se pierde.
+      toast.ok(t.profile.addVehicle.vehicleCreated(vehicle.name));
       onCreated();
     },
     // Acá cae, entre otros, el 409 de nombre repetido: el backend ya manda un
     // mensaje explicando cuál es el nombre que choca.
     onError: (err) =>
-      setError(err instanceof Error ? err.message : "No se pudo crear el vehículo."),
+      setError(err instanceof Error ? err.message : t.profile.addVehicle.createError),
   });
 
   function onModelSearchChange(value: string) {
@@ -137,31 +206,51 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       consumption: String(model.consumo_kwh_km),
       chargingPower: String(model.potencia_carga_kw),
     });
+    setErrores({});
     setModelPhoto(cloudinaryResize(model.foto_url, 100) ?? null);
+  }
+
+  /** Editar un campo borra su error: el cartel rojo tiene que irse al corregirlo, no al mandar. */
+  function setCampo(campo: CampoForm, valor: string) {
+    setForm((f) => ({ ...f, [campo]: valor }));
+    setErrores((prev) => (prev[campo] ? { ...prev, [campo]: undefined } : prev));
   }
 
   return (
     <form
       className="inline-form"
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
+        const nuevos = validar(form, t.profile.addVehicle);
+        setErrores(nuevos);
+        const primerCampoRoto = ORDEN_CAMPOS.find((campo) => nuevos[campo]);
+        if (primerCampoRoto) {
+          // Mandar el foco, no solo pintar el mensaje: con cuatro campos
+          // apilados, el que falla puede estar fuera de la pantalla y el
+          // formulario se ve igual de "quieto" que si el botón no anduviera.
+          document.getElementById(ID_POR_CAMPO[primerCampoRoto])?.focus();
+          return;
+        }
         create.mutate();
       }}
     >
       <div className={styles.photoIdRow}>
         <label className={styles.photoIdBtn}>
-          <span aria-hidden="true">📷</span> Identificar con una foto
+          {identify.isPending ? <Spinner /> : <span aria-hidden="true">📷</span>}{" "}
+          {t.profile.addVehicle.identifyWithPhoto}
           <input
             type="file"
             accept="image/*"
             capture="environment"
             hidden
+            disabled={identify.isPending}
             onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = "";
               if (!file) return;
-              setPhotoStatus({ text: "Identificando el vehículo con IA...", ok: false });
+              setPhotoStatus({ text: t.profile.addVehicle.identifying, ok: false });
               identify.mutate(file);
             }}
           />
@@ -175,43 +264,48 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
       )}
 
       <div className={styles.formDivider}>
-        <span>o buscá / completá a mano</span>
+        <span>{t.profile.addVehicle.orSearchManually}</span>
       </div>
 
-      <div className="field">
-        <label htmlFor="p-model-search">Modelo (opcional, precarga los datos)</label>
-        <input
-          id="p-model-search"
-          type="text"
-          list="p-model-datalist"
-          autoComplete="off"
-          placeholder={`Escribí al menos ${MODEL_SEARCH_MIN_CHARS} letras (ej. Nissan Leaf, Tesla Model 3)...`}
-          value={modelSearch}
-          onChange={(e) => onModelSearchChange(e.target.value)}
-        />
-        <datalist id="p-model-datalist">
-          {modelOptions.map((label) => (
-            <option key={label} value={label} />
-          ))}
-        </datalist>
-        {modelPhoto && <img src={modelPhoto} className={styles.modelPhotoPreview} alt="" />}
-      </div>
+      {/* QA BAJO 22: esto era un <input list> con un <datalist>, y el
+          desplegable lo dibujaba el navegador -- blanco, con la tipografía del
+          sistema y un ancho que no era el del campo, encima de una UI oscura.
+          ModelCombobox lo reemplaza con la misma lógica de búsqueda (mínimo de
+          letras, tope de opciones, sin tildes) pero con el estilo de la app. */}
+      <ModelCombobox
+        id="p-model-search"
+        label={t.profile.addVehicle.modelLabel}
+        placeholder={t.profile.addVehicle.modelPlaceholder(MODEL_SEARCH_MIN_CHARS)}
+        value={modelSearch}
+        options={modelOptions}
+        loading={modelsQuery.isFetching}
+        minChars={MODEL_SEARCH_MIN_CHARS}
+        photoUrl={modelPhoto}
+        onChange={onModelSearchChange}
+      />
 
       <div className="field">
-        <label htmlFor="p-name">Nombre</label>
+        <label htmlFor="p-name">{t.profile.addVehicle.nameLabel}</label>
         <input
           type="text"
           id="p-name"
           required
-          placeholder="ej. Nissan Leaf"
+          placeholder={t.profile.addVehicle.namePlaceholder}
           value={form.name}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          aria-invalid={Boolean(errores.name)}
+          aria-describedby={errores.name ? "p-name-error" : undefined}
+          onChange={(e) => setCampo("name", e.target.value)}
         />
+        {errores.name && (
+          <p className={styles.fieldError} id="p-name-error">
+            {errores.name}
+          </p>
+        )}
       </div>
 
       <div className={styles.fieldRow}>
         <div className="field">
-          <label htmlFor="p-capacity">Batería (kWh)</label>
+          <label htmlFor="p-capacity">{t.profile.addVehicle.batteryLabel}</label>
           <input
             id="p-capacity"
             type="number"
@@ -220,11 +314,18 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
             required
             placeholder="40"
             value={form.capacity}
-            onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
+            aria-invalid={Boolean(errores.capacity)}
+            aria-describedby={errores.capacity ? "p-capacity-error" : undefined}
+            onChange={(e) => setCampo("capacity", e.target.value)}
           />
+          {errores.capacity && (
+            <p className={styles.fieldError} id="p-capacity-error">
+              {errores.capacity}
+            </p>
+          )}
         </div>
         <div className="field">
-          <label htmlFor="p-consumption">Consumo (kWh/km)</label>
+          <label htmlFor="p-consumption">{t.profile.addVehicle.consumptionLabel}</label>
           <input
             id="p-consumption"
             type="number"
@@ -233,11 +334,18 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
             required
             placeholder="0.18"
             value={form.consumption}
-            onChange={(e) => setForm((f) => ({ ...f, consumption: e.target.value }))}
+            aria-invalid={Boolean(errores.consumption)}
+            aria-describedby={errores.consumption ? "p-consumption-error" : undefined}
+            onChange={(e) => setCampo("consumption", e.target.value)}
           />
+          {errores.consumption && (
+            <p className={styles.fieldError} id="p-consumption-error">
+              {errores.consumption}
+            </p>
+          )}
         </div>
         <div className="field">
-          <label htmlFor="p-charging-power">Carga (kW)</label>
+          <label htmlFor="p-charging-power">{t.profile.addVehicle.chargingLabel}</label>
           <input
             id="p-charging-power"
             type="number"
@@ -246,14 +354,36 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
             required
             placeholder="22"
             value={form.chargingPower}
-            onChange={(e) => setForm((f) => ({ ...f, chargingPower: e.target.value }))}
+            aria-invalid={Boolean(errores.chargingPower)}
+            aria-describedby={errores.chargingPower ? "p-charging-power-error" : undefined}
+            onChange={(e) => setCampo("chargingPower", e.target.value)}
           />
+          {errores.chargingPower && (
+            <p className={styles.fieldError} id="p-charging-power-error">
+              {errores.chargingPower}
+            </p>
+          )}
         </div>
       </div>
 
-      {error && <Banner variant="error">{error}</Banner>}
-      <button type="submit" className="primary small" disabled={create.isPending}>
-        {create.isPending ? "Creando..." : "Crear vehículo"}
+      {error && (
+        <Banner variant="error" alert>
+          {error}
+        </Banner>
+      )}
+      <button
+        type="submit"
+        className="primary small"
+        disabled={create.isPending}
+        aria-busy={create.isPending}
+      >
+        {create.isPending ? (
+          <>
+            <Spinner /> {t.profile.addVehicle.creating}
+          </>
+        ) : (
+          t.profile.addVehicle.createVehicle
+        )}
       </button>
     </form>
   );
