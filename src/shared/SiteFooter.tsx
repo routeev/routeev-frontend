@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Brand } from "./Brand";
+import { IconInstagram } from "./NavIcons";
 import styles from "./SiteFooter.module.css";
 
 interface SiteFooterProps {
@@ -50,7 +51,13 @@ export function SiteFooter({ note }: SiteFooterProps) {
           {t.shared.siteFooter.terms}
         </Link>
         <a href="mailto:routemindtbo@gmail.com">{t.shared.siteFooter.contact}</a>
-        <a href="https://www.instagram.com/routeev.uy/" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://www.instagram.com/routeev.uy/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.instagram}
+        >
+          <IconInstagram />
           {t.shared.siteFooter.instagram}
         </a>
       </nav>

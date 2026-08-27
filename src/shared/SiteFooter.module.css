@@ -42,3 +42,19 @@
 .links a.linkActive {
   color: var(--accent-astar);
 }
+
+/* El único link externo del footer -- ícono + color propio en reposo para
+   que no se confunda con la navegación interna (Showroom/Privacidad/etc.),
+   que es texto liso a propósito. Mismo criterio de especificidad que
+   ".links a.linkActive" de arriba, para poder pisar el color base. */
+.links a.instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-dijkstra);
+}
+
+.instagram svg {
+  width: 15px;
+  height: 15px;
+}

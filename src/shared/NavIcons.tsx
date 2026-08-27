@@ -93,6 +93,17 @@ export function IconChevronDown() {
   );
 }
 
+/** SiteFooter: distingue el link a Instagram de los demás, que son puro texto. */
+export function IconInstagram() {
+  return (
+    <svg {...common}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="16.8" cy="7.2" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /** Fila "Idioma" del menú móvil de SiteHeader -- mismo lugar que ocupan
     IconHome/IconCar/etc. al lado de los demás links de ese menú. */
 export function IconGlobe() {
