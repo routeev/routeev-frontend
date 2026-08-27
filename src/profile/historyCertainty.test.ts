@@ -12,7 +12,7 @@ function route(overrides: Partial<RouteResult> = {}): RouteResult {
   return {
     found: true,
     route_coords: COORDS,
-    route: [1, 2, 3],
+    route: ["n1", "n2", "n3"],
     node_coords: COORDS,
     breakdown: {
       energia_kwh: 20,
@@ -48,7 +48,7 @@ describe("certaintyPointsFromRoute", () => {
 
   it("adds a vertical jump at each recharge stop", () => {
     const points = certaintyPointsFromRoute(
-      route({ recharges: [{ node_id: 2, added_kwh: 15, time_min: 20, station_name: "Estación X" }] }),
+      route({ recharges: [{ node_id: "n2", added_kwh: 15, time_min: 20, station_name: "Estación X" }] }),
       50,
       50
     );

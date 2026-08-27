@@ -1,4 +1,6 @@
 import type { map as enMap } from "../i18n/dictionaries/en/map";
+import { haversineKm } from "../shared/geo";
+import { SAME_POINT_KM } from "./routePoint";
 
 /**
  * "¿Qué me toca hacer ahora?" en una sola frase, para el panel de /app.
@@ -32,20 +34,23 @@ export function nextTripStep(
   params: {
     vehiclesLoaded: boolean;
     hasSelectedVehicle: boolean;
-    originId: number | null;
-    destinationId: number | null;
+    origin: { lat: number; lon: number } | null;
+    destination: { lat: number; lon: number } | null;
   },
   t: (typeof enMap)["nextStep"]
 ): TripStep {
-  const { vehiclesLoaded, hasSelectedVehicle, originId, destinationId } = params;
+  const { vehiclesLoaded, hasSelectedVehicle, origin, destination } = params;
 
-  if (originId == null) {
+  if (origin == null) {
     return { text: t.chooseOrigin, done: false };
   }
-  if (destinationId == null) {
+  if (destination == null) {
     return { text: t.chooseDestination, done: false };
   }
-  if (originId === destinationId) {
+  // Antes era `originId === destinationId`: con coordenadas crudas dos toques
+  // nunca dan el mismo valor exacto, así que la regla pasa a ser por distancia
+  // (ver SAME_POINT_KM en routePoint.ts).
+  if (haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
     return { text: t.samePoint, done: false };
   }
   if (!vehiclesLoaded) {

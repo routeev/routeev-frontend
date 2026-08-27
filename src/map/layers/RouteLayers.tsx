@@ -5,17 +5,27 @@ import { useTranslation } from "../../i18n/LanguageProvider";
 import { formatUyu } from "../../shared/format";
 import { tollIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
+import { useActiveTheme } from "../../theme/useActiveTheme";
 
-// Mismo par que --accent-astar/--accent-dijkstra (src/styles/tokens.css):
-// Leaflet no puede leer var() en runtime.
-const COLOR_ASTAR = "#34e3a8";
-const COLOR_DIJKSTRA = "#f2a154";
+// Mismos valores que --accent-astar/--accent-dijkstra en cada tema
+// (src/styles/tokens.css): Leaflet no puede leer var() en runtime, y con
+// preferCanvas menos todavia, asi que hay que duplicarlos a mano.
+//
+// El par claro NO es el oscuro aclarado: son los tonos que el sistema de
+// diseno ya tenia calibrados para fondo claro. El verde menta del tema oscuro
+// sobre el basemap `positron` (casi blanco) queda practicamente invisible, y
+// la ruta es lo unico que la persona vino a ver.
+const COLORES_RUTA = {
+  dark: { astar: "#34e3a8", dijkstra: "#f2a154" },
+  light: { astar: "#0f9d72", dijkstra: "#c3721f" },
+} as const;
 
 export function RouteLayers() {
   const { t } = useTranslation();
   const rl = t.map.layers.routeLayers;
   const map = useMap();
   const result = useMapStore((s) => s.lastResult);
+  const colores = COLORES_RUTA[useActiveTheme()];
 
   useEffect(() => {
     if (result?.astar.found) {
@@ -38,13 +48,13 @@ export function RouteLayers() {
       {result.dijkstra?.found && (
         <Polyline
           positions={result.dijkstra.route_coords}
-          pathOptions={{ color: COLOR_DIJKSTRA, weight: 5, opacity: 0.85, dashArray: "2 10", lineCap: "round" }}
+          pathOptions={{ color: colores.dijkstra, weight: 5, opacity: 0.85, dashArray: "2 10", lineCap: "round" }}
         />
       )}
       {result.astar.found && (
         <Polyline
           positions={result.astar.route_coords}
-          pathOptions={{ color: COLOR_ASTAR, weight: 4, opacity: 0.95, lineCap: "round" }}
+          pathOptions={{ color: colores.astar, weight: 4, opacity: 0.95, lineCap: "round" }}
         />
       )}
       {peajes.map((p, i) => (

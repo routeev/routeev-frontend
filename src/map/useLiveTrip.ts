@@ -1,9 +1,12 @@
 import L from "leaflet";
 import { useCallback, useRef, useState } from "react";
+import { getNearestNode, type NodeId } from "../api/graph";
 import { logTrip } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { computeCompassHeading, haversineKm, smoothBearingDeg } from "../shared/geo";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
+import type { RoutePoint } from "./routePoint";
+import { ensureSnapIds } from "./snapPoint";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
 
@@ -85,7 +88,7 @@ const COMPASS_UPDATE_INTERVAL_MS = 200;
 // converge a la orientación real mucho más rápido en tiempo real.
 const COMPASS_SMOOTHING_ALPHA = 0.35;
 
-type RechargeStop = { nodeId: number; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
+type RechargeStop = { nodeId: NodeId; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
 
 // iOS no expone alpha/beta/gamma "en crudo" de forma confiable para brújula
 // -- en cambio da esta propiedad no estándar, ya compensada por Apple según
@@ -170,6 +173,15 @@ export interface LiveTripUi {
   // conjetura más sobre qué está pasando en un dispositivo que no puedo ver.
   gpsAccuracyM: number | null;
   gpsGapMs: number | null;
+  /**
+   * Por qué no se pudo guardar el viaje en el historial, o null si se guardó.
+   *
+   * Antes un fallo acá era un `console.warn` y nada más: el viaje se perdía
+   * en silencio y la persona veía "Llegaste" igual. Guardar el viaje es el
+   * único momento en que se escriben datos reales de un recorrido, así que
+   * fallar sin decirlo es perder información que no se puede recuperar.
+   */
+  saveError: string | null;
 }
 
 const initialUi: LiveTripUi = {
@@ -188,6 +200,7 @@ const initialUi: LiveTripUi = {
   advisory: null,
   gpsAccuracyM: null,
   gpsGapMs: null,
+  saveError: null,
 };
 
 /** Seguimiento de la ubicación REAL durante "Iniciar viaje", portado de js/map/liveTrip.js. */
@@ -204,18 +217,55 @@ export function useLiveTrip() {
   const orientationCleanupRef = useRef<(() => void) | null>(null);
 
   const logCompletedOrPartial = useCallback((trip: TripRecord, traveledKmOverride?: number) => {
-    const payload = useMapStore.getState().lastRoutePayload;
-    if (!payload) return;
+    const seed = useMapStore.getState().lastRoutePayload;
+    if (!seed) return;
+    // TODO lo que sale de `trip` se lee ACÁ, antes de cualquier await: end()
+    // deja tripRef en null enseguida, y leerlo después guardaría el viaje como
+    // si nunca hubiera cargado.
     const traveledKm = traveledKmOverride ?? trip.lastTrustedKm;
-    logTrip({
-      origin_id: payload.origin_id,
-      destination_id: payload.destination_id,
-      vehicle_id: payload.vehicle_id,
-      start_battery_kwh: payload.start_battery_kwh,
-      traveled_km: traveledKm,
-      recharge_node_ids: trip.rechargeStops.filter((r) => r.applied).map((r) => r.nodeId),
-    }).catch((e) => console.warn("No se pudo guardar el viaje en el historial:", e instanceof Error ? e.message : e));
-  }, []);
+    const rechargeNodeIds = trip.rechargeStops.filter((r) => r.applied).map((r) => r.nodeId);
+
+    // `POST /api/route/log-trip` sigue siendo v1 y valida los puntos contra el
+    // grafo semilla, así que acá hace falta el id del nodo. En la práctica ya
+    // está puesto (lo resolvió snapInBackground al tocar el mapa, o
+    // ensureSnapIds al iniciar el viaje): este getNearestNode es el último
+    // recurso para el caso raro de que las dos veces haya fallado la red.
+    const resolveSnapId = async (p: RoutePoint) => p.snapId ?? (await getNearestNode(p.lat, p.lon)).id;
+
+    void (async () => {
+      try {
+        const [originId, destinationId] = await Promise.all([
+          resolveSnapId(seed.origin),
+          resolveSnapId(seed.destination),
+        ]);
+        // Dos puntos distintos pueden caer en el MISMO nodo del grafo semilla:
+        // el gate de cliente y servidor mide 50 m entre coordenadas, pero el
+        // grafo no tiene un nodo cada 50 m -- en zona mal cubierta el cruce
+        // más cercano puede estar a kilómetros, así que dos puntos separados
+        // igual colisionan. log-trip v1 no tiene el chequeo de origen==destino
+        // que sí tiene /compare: entra a astar.search(GRAPH, x, x), que
+        // devuelve una ruta de un solo nodo, y responde 400. Se corta acá para
+        // no mandar un pedido que ya se sabe que falla, y sobre todo para
+        // poder decir POR QUÉ.
+        if (originId === destinationId) {
+          setUi((u) => ({ ...u, saveError: lt.saveFailedSamePoint }));
+          return;
+        }
+        await logTrip({
+          origin_id: originId,
+          destination_id: destinationId,
+          vehicle_id: seed.vehicle_id,
+          start_battery_kwh: seed.start_battery_kwh,
+          traveled_km: traveledKm,
+          recharge_node_ids: rechargeNodeIds,
+        });
+        setUi((u) => ({ ...u, saveError: null }));
+      } catch (e) {
+        console.warn("No se pudo guardar el viaje en el historial:", e instanceof Error ? e.message : e);
+        setUi((u) => ({ ...u, saveError: lt.saveFailed }));
+      }
+    })();
+  }, [lt]);
 
   const end = useCallback(() => {
     const trip = tripRef.current;
@@ -393,7 +443,11 @@ export function useLiveTrip() {
           )
         : null;
 
-      setUi({
+      setUi((u) => ({
+        // Se preserva saveError: este setUi corre en CADA fix del GPS, y
+        // armar el objeto entero borraría un aviso de "no se pudo guardar"
+        // apenas llegara la siguiente posición.
+        saveError: u.saveError,
         active: true,
         finished: false,
         livePosition: [latitude, longitude],
@@ -409,7 +463,7 @@ export function useLiveTrip() {
         advisory,
         gpsAccuracyM: accuracyM,
         gpsGapMs: gapMs,
-      });
+      }));
     },
     [logCompletedOrPartial, lt, t]
   );
@@ -434,6 +488,13 @@ export function useLiveTrip() {
     end();
     const result = useMapStore.getState().lastResult;
     if (!result?.astar.found) return;
+    // Segunda oportunidad para completar los snapId que el toque no alcanzó a
+    // resolver: el viaje va a terminar en `log-trip`, que todavía los pide.
+    //
+    // SIN await, y no solo por latencia: attachDeviceOrientation() más abajo
+    // tiene que seguir colgando de forma síncrona del gesto del click o iOS
+    // niega el permiso del sensor y la brújula del mapa 3D deja de girar.
+    void ensureSnapIds();
     const vehicle = selectedVehicle(useMapStore.getState());
     if (!vehicle) return;
     const startBatteryKwh = batteryPctToKwh(vehicle, useMapStore.getState().startBatteryPct);

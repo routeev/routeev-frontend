@@ -38,46 +38,6 @@
   color: var(--accent-astar);
 }
 
-/* Aviso de "el punto quedó lejos de donde tocaste". Naranja como el resto de
-   los avisos que no rompen nada (.warn-banner en base.css) y con el mismo
-   naranja que la linea punteada que se dibuja en el mapa. */
-.impreciseCard {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--accent-dijkstra-dim);
-  border-left: 3px solid var(--accent-dijkstra);
-  border-radius: var(--radius-sm);
-  background: rgba(242, 161, 84, 0.08);
-}
-
-.impreciseTitle {
-  margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-dijkstra);
-  line-height: 1.4;
-}
-
-.impreciseBody {
-  margin: 0 0 10px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.impreciseActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* min-height, no solo padding: estos dos botones son la salida del aviso y hay
-   que poder tocarlos sin apuntar. */
-.impreciseActions button {
-  min-height: 40px;
-  padding: 8px 14px;
-}
-
 /* "¿Tenes donde cargar en el destino?" -- la pregunta que cambia que significa
    el margen de bateria. Aparece recien cuando hay destino puesto, para no ser
    otra fila fija ocupando pantalla sin aportar (ver RouteInputPanel.tsx).

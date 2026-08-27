@@ -5,7 +5,8 @@ import "@maplibre/maplibre-gl-leaflet";
 import L from "leaflet";
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
-import { BASEMAP_ATTRIBUTION, BASEMAP_STYLE_URL } from "./basemap";
+import { useActiveTheme } from "../theme/useActiveTheme";
+import { BASEMAP_ATTRIBUTION, basemapStyleForTheme } from "./basemap";
 
 /**
  * Mapa base de los mapas de Leaflet (MapCanvas y SimulationMap).
@@ -19,10 +20,11 @@ import { BASEMAP_ATTRIBUTION, BASEMAP_STYLE_URL } from "./basemap";
  */
 export function BasemapLayer() {
   const map = useMap();
+  const theme = useActiveTheme();
 
   useEffect(() => {
     const layer = L.maplibreGL({
-      style: BASEMAP_STYLE_URL,
+      style: basemapStyleForTheme(theme),
       // El plugin apaga el control de atribucion propio de MapLibre (que se
       // dibujaria sobre el canvas, encima del de Leaflet) y usa este texto
       // para el de Leaflet, el unico que queda a la vista.
@@ -32,7 +34,13 @@ export function BasemapLayer() {
     return () => {
       layer.remove();
     };
-  }, [map]);
+    // `theme` en las deps: al cambiarlo se rehace la capa con el otro estilo.
+    // Se rehace entera en vez de llamar a setStyle() sobre la instancia de
+    // MapLibre de adentro porque es una accion deliberada y poco frecuente, y
+    // rehacerla no puede quedar en un estado a medias. El mapa de Leaflet NO
+    // se toca, asi que el encuadre (centro y zoom) se mantiene: lo unico que
+    // parpadea es el fondo.
+  }, [map, theme]);
 
   return null;
 }

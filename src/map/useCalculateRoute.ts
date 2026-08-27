@@ -10,13 +10,14 @@ import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
  * resultado se adapta con toCompareRoutesResult a la MISMA forma que ya
  * consume el resto de la interfaz -- ver ese helper para el porqué.
  *
- * `lastRoutePayload` (lo que guarda setLastResult para más abajo) sigue
- * siendo el payload VIEJO, con origin_id/destination_id: eso es lo que
- * useLiveTrip.ts necesita para POST /api/route/log-trip al terminar el
- * viaje, y ese endpoint todavía no tiene una v2 -- sigue validando contra el
- * grafo vial de siempre. state.originId/destinationId (los ids reales, que
- * ClickToPick.tsx sigue resolviendo igual que siempre) no cambiaron en nada
- * de esta migración, así que ese payload sigue siendo válido tal cual.
+ * `lastRoutePayload` (lo que guarda setLastResult para más abajo) es el seed
+ * de log-trip: guarda los PUNTOS enteros, no ids. `POST /api/route/log-trip`
+ * todavía es v1 y valida contra el grafo vial, así que va a necesitar un id
+ * de nodo — pero ese id puede no existir todavía cuando se calcula la ruta,
+ * porque el toque en el mapa ahora fija una coordenada cruda y el nodo se
+ * resuelve en segundo plano (ver snapPoint.ts). Guardar el punto y no el id
+ * deja que se complete solo por el camino; useLiveTrip lo resuelve recién al
+ * guardar el viaje.
  */
 export function useCalculateRoute() {
   const setLastResult = useMapStore((s) => s.setLastResult);
@@ -36,11 +37,12 @@ export function useCalculateRoute() {
         start_battery_kwh: startBatteryKwh,
         ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
       };
-      // Payload "de siempre", para el historial (ver el docstring de arriba)
-      // -- no es lo que viaja por la red, es lo que log-trip necesita.
-      const legacyPayload = {
-        origin_id: state.originId!,
-        destination_id: state.destinationId!,
+      // Lo que log-trip va a necesitar cuando el viaje termine. Guarda los
+      // PUNTOS enteros, no ids: su `snapId` puede completarse más tarde (ver
+      // snapPoint.ts) y useLiveTrip lo resuelve recién al guardar.
+      const tripSeed = {
+        origin,
+        destination,
         vehicle_id: state.selectedVehicleId!,
         start_battery_kwh: startBatteryKwh,
         ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
@@ -48,7 +50,7 @@ export function useCalculateRoute() {
 
       const v2Result = await planRoute(v2Payload);
       const result = toCompareRoutesResult(v2Result, origin.name, destination.name);
-      return { result, payload: legacyPayload };
+      return { result, payload: tripSeed };
     },
     onSuccess: ({ result, payload }) => {
       setLastResult(result, payload);

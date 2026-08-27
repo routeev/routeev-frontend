@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
 import { useMapStore, type SearchableNode } from "./mapStore";
+import { fromNode } from "./routePoint";
 import styles from "./RouteAutocompleteField.module.css";
 
 type Item = { type: "node"; node: SearchableNode } | { type: "geocode"; label: string };
@@ -113,7 +114,9 @@ export function RouteAutocompleteField({
   }, [debouncedEditingText, searchableNodes]);
 
   function chooseNode(n: GraphNode) {
-    setNode(n);
+    // Un nodo del autocompletado o de la geocodificación YA es un nodo real
+    // del grafo, así que nace con snapId puesto y no necesita snap de fondo.
+    setNode(fromNode(n));
     if (role === "origin") setPickMode("destination");
     setEditingText(null);
     setOpen(false);
@@ -126,7 +129,6 @@ export function RouteAutocompleteField({
     setResult({ text: ra.searching, kind: "" });
     try {
       const res = await geocode(label);
-      useMapStore.getState().addNode(res.node);
       chooseNode(res.node);
       let msg = ra.addressFound(res.matched_address);
       let kind: "warn" | "" = "";

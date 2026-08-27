@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
-import { getStations, type Station } from "../../api/graph";
+import { getStations, type NodeId, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
 import { useTranslation } from "../../i18n/LanguageProvider";
 import { esPrivada } from "../esPrivada";
@@ -19,8 +19,8 @@ const STATION_MARKER_ZOOM = 16;
  * ambos). Alejar del todo (pais entero) vuelve a mostrar las ~200+, que es
  * el trade-off aceptado de mostrar "lo que ves" en vez de nada.
  */
-function useStationsInView(stations: Station[] | undefined): Set<number> {
-  const [ids, setIds] = useState<Set<number>>(() => new Set());
+function useStationsInView(stations: Station[] | undefined): Set<NodeId> {
+  const [ids, setIds] = useState<Set<NodeId>>(() => new Set());
 
   const map = useMapEvents({
     moveend: recompute,
@@ -32,7 +32,7 @@ function useStationsInView(stations: Station[] | undefined): Set<number> {
       return;
     }
     const bounds = map.getBounds();
-    const next = new Set<number>();
+    const next = new Set<NodeId>();
     for (const st of stations) {
       if (bounds.contains([st.lat, st.lon])) next.add(st.node_id);
     }
@@ -84,7 +84,7 @@ export function StationsLayer() {
       // el mapa se encuadra sobre la ruta entera al calcular, y esa área
       // suele traer consigo decenas de estaciones que no tienen nada que
       // ver con el viaje. Pedido explícito de no mezclarlas.
-      const ids = new Set<number>();
+      const ids = new Set<NodeId>();
       const primary = lastResult.astar.found
         ? lastResult.astar
         : (lastResult.dijkstra ?? lastResult.astar);

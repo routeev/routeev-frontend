@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { getNearestNode } from "../api/graph";
 import { useTranslation } from "../i18n/LanguageProvider";
-import { haversineKm } from "../shared/geo";
 import { useMapStore } from "./mapStore";
+import { fromCoords } from "./routePoint";
+import { snapInBackground } from "./snapPoint";
 
 type ResultKind = "" | "warn" | "error";
 
@@ -63,33 +63,21 @@ export function useGeolocation() {
     setBusy(true);
     setResult({ text: geo.grantPermissionHint, kind: "" });
 
-    const onSuccess = async (pos: GeolocationPosition) => {
+    const onSuccess = (pos: GeolocationPosition) => {
       const { latitude, longitude } = pos.coords;
-      try {
-        const node = await getNearestNode(latitude, longitude);
-        useMapStore.getState().addNode(node);
-        setOrigin(node);
-        setPickMode("destination");
-        const map = useMapStore.getState().leafletMap;
-        map?.setView([node.lat, node.lon], Math.max(map.getZoom(), 15));
-
-        const distanciaKm = haversineKm(latitude, longitude, node.lat, node.lon);
-        if (distanciaKm > 2) {
-          setResult({
-            text: geo.impreciseOrigin(distanciaKm.toFixed(1), node.name),
-            kind: "warn",
-          });
-        } else {
-          setResult({ text: geo.originSet(node.name), kind: "" });
-        }
-      } catch (err) {
-        setResult({
-          text: err instanceof Error ? err.message : geo.locateError,
-          kind: "error",
-        });
-      } finally {
-        setBusy(false);
-      }
+      // "Salgo desde acá" es literal: el origen es la ubicación real, no el
+      // cruce más cercano del grafo. Antes esto esperaba a /api/graph/nearest
+      // y podía terminar poniendo el origen a kilómetros de donde estaba la
+      // persona, con un aviso de "quedó impreciso" como único consuelo.
+      const p = fromCoords(latitude, longitude);
+      setOrigin(p);
+      setPickMode("destination");
+      const map = useMapStore.getState().leafletMap;
+      map?.setView([latitude, longitude], Math.max(map.getZoom(), 15));
+      setResult({ text: geo.originSet(p.name), kind: "" });
+      setBusy(false);
+      // El nombre de la calle llega después, sin bloquear (ver snapPoint.ts).
+      void snapInBackground("origin", latitude, longitude);
     };
 
     const onFinalError = (err: GeolocationPositionError) => {

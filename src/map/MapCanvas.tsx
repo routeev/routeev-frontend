@@ -5,8 +5,6 @@ import { MapContainer, Marker, useMap, ZoomControl } from "react-leaflet";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { BasemapLayer } from "./BasemapLayer";
 import { ClickToPick } from "./layers/ClickToPick";
-import { GraphLayer } from "./layers/GraphLayer";
-import { ImprecisePickLink } from "./layers/ImprecisePickLink";
 import { LiveTripMarker } from "./layers/LiveTripMarker";
 import { OriginDestinationMarkers } from "./layers/OriginDestinationMarkers";
 import { RouteLayers } from "./layers/RouteLayers";
@@ -16,7 +14,22 @@ import { myLocationIcon } from "./markerIcons";
 import { getCurrentPositionWithFallback } from "./useGeolocation";
 import { useMapStore } from "./mapStore";
 
-const MONTEVIDEO: [number, number] = [-34.89, -56.16];
+/**
+ * Encuadre inicial: el país entero.
+ *
+ * Antes el mapa abría en Montevideo a zoom 13 y era GraphLayer el que, al
+ * llegar el grafo, hacía fitBounds a Uruguay. Al sacar esa capa el encuadre
+ * se quedaba en la capital, así que se repone acá — que además es donde
+ * corresponde, porque es una decisión de la vista y no de una capa de datos.
+ *
+ * Los números son el `meta.outer_bbox_regional` del propio grafo semilla
+ * (routeev-api/data/seed_graph.json), o sea la misma extensión que el mapa
+ * mostraba antes.
+ */
+const URUGUAY_BOUNDS: [[number, number], [number, number]] = [
+  [-35.05, -58.45],
+  [-30.05, -53.1],
+];
 
 // El mapa cambia de tamaño real cuando el panel "Datos del viaje" se
 // colapsa/expande en pantalla angosta (ver .dashboardWrap/.mapWrap en
@@ -93,12 +106,11 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
         // El GPS puede tardar bastante en resolver (varios segundos no es
         // raro) -- si para cuando esto llega la persona ya fijó un origen/
         // destino o ya calculó una ruta, mover la cámara acá se la pisa de
-        // golpe, el mismo problema que ya se arregló para el grafo (ver
-        // GraphLayer.tsx) pero del lado del auto-locate. myPosition SI se
-        // guarda igual (lo sigue necesitando, p. ej., el botón "volver" de
-        // StationDetailPanel), solo la vista de la cámara se salta.
+        // golpe. myPosition SI se guarda igual (lo sigue necesitando, p. ej.,
+        // el botón "volver" de StationDetailPanel), solo la vista de la
+        // cámara se salta.
         const state = useMapStore.getState();
-        if (!state.lastResult && state.originId == null && state.destinationId == null) {
+        if (!state.lastResult && state.originNode == null && state.destinationNode == null) {
           map.setView(coords, AUTO_LOCATE_ZOOM);
         }
         setMyPosition(coords);
@@ -175,8 +187,7 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
   const mc = t.map.mapCanvas;
   return (
     <MapContainer
-      center={MONTEVIDEO}
-      zoom={13}
+      bounds={URUGUAY_BOUNDS}
       preferCanvas
       // El control de zoom por defecto de Leaflet va arriba a la IZQUIERDA, y
       // ahí es exactamente donde vive el panel "Tu viaje" (372px desde el
@@ -195,11 +206,9 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       <ZoomControl position="topright" zoomInTitle={mc.zoomIn} zoomOutTitle={mc.zoomOut} />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
       <BasemapLayer />
-      <GraphLayer />
       <StationsLayer />
       <OriginDestinationMarkers />
       <RouteLayers />
-      <ImprecisePickLink />
       <LiveTripMarker position={liveTripPosition} />
       <ClickToPick onError={onMapError} />
     </MapContainer>

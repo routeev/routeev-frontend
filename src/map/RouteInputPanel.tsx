@@ -19,11 +19,7 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   const picking = useMapStore((s) => s.picking);
   const startPicking = useMapStore((s) => s.startPicking);
   const stopPicking = useMapStore((s) => s.stopPicking);
-  const imprecisePick = useMapStore((s) => s.imprecisePick);
-  const clearImprecisePick = useMapStore((s) => s.clearImprecisePick);
-  const clearOrigin = useMapStore((s) => s.clearOrigin);
-  const clearDestination = useMapStore((s) => s.clearDestination);
-  const destinationId = useMapStore((s) => s.destinationId);
+  const hasDestination = useMapStore((s) => s.destinationNode != null);
   const cargadorEnDestino = useMapStore((s) => s.cargadorEnDestino);
   const setCargadorEnDestino = useMapStore((s) => s.setCargadorEnDestino);
   const geolocation = useGeolocation();
@@ -32,16 +28,6 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   // Sin esto no había forma de salir del modo más que fijando un punto.
   const togglePicking = (role: "origin" | "destination") =>
     picking === role ? stopPicking() : startPicking(role);
-
-  function volverAMarcar() {
-    if (!imprecisePick) return;
-    // Se borra el punto que quedó lejos ANTES de volver al modo marcar: dejarlo
-    // puesto haría que la chincheta equivocada siguiera en el mapa compitiendo
-    // visualmente con el intento nuevo.
-    if (imprecisePick.role === "origin") clearOrigin();
-    else clearDestination();
-    startPicking(imprecisePick.role);
-  }
 
   const cargadorOpciones = [
     { id: "yes", label: ri.chargerAtDestination.yes, valor: true },
@@ -83,27 +69,7 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
         {step.text}
       </p>
 
-      {imprecisePick && (
-        // Calmo y sin bloquear: una tarjeta en el panel, no un modal. El mapa
-        // dibuja al mismo tiempo la línea entre los dos puntos
-        // (ImprecisePickLink), así que esto puede ser corto.
-        <div className={styles.impreciseCard} role="status">
-          <p className={styles.impreciseTitle}>
-            {ri.imprecise.title(t.map.routeAutocomplete.roleLabel(imprecisePick.role), imprecisePick.distanceKm.toFixed(1))}
-          </p>
-          <p className={styles.impreciseBody}>{ri.imprecise.body(imprecisePick.node.name)}</p>
-          <div className={styles.impreciseActions}>
-            <button type="button" className="primary small" onClick={() => clearImprecisePick()}>
-              {ri.imprecise.useThisPoint}
-            </button>
-            <button type="button" className="ghost small" onClick={volverAMarcar}>
-              {ri.imprecise.pickAnother}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {destinationId != null && (
+      {hasDestination && (
         // Solo con destino puesto: antes de eso la pregunta no tiene sujeto
         // ("¿en el destino?" ¿cuál?) y sería una fila más ocupando pantalla sin
         // aportar, que es justo lo que se sacó del panel.
@@ -146,11 +112,10 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
       )}
 
       {/* alert y no un status pasivo: este banner lleva el fallo de "Calcular
-          ruta" y el "no se pudo resolver ese punto del mapa", y vive al fondo
-          del panel, debajo del botón de ubicación y dentro de un contenedor con
-          scroll. En un teléfono, quien aprieta el botón verde de abajo no ve
-          aparecer nada: sin anuncio, la lectura es "no pasó nada" y se cierra
-          la app. */}
+          ruta" y vive al fondo del panel, debajo del botón de ubicación y
+          dentro de un contenedor con scroll. En un teléfono, quien aprieta el
+          botón verde de abajo no ve aparecer nada: sin anuncio, la lectura es
+          "no pasó nada" y se cierra la app. */}
       {banner && (
         <Banner variant={banner.variant} alert>
           {banner.message}

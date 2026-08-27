@@ -13,6 +13,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // un chunk autocontenido. Solo pasa en produccion -- `vite dev` funciona
 // con cualquiera de los dos, por eso no se noto probando en local.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import type { Theme } from "../theme/theme";
 
 // El registro va aca, en el modulo del basemap, y no en cada componente que
 // dibuja un mapa: los modulos ES se evaluan una sola vez y antes que quien
@@ -28,7 +29,21 @@ maplibregl.setWorkerUrl(workerUrl);
 // CARTO, que desde su cambio de plan estampan un cartel "API KEY REQUIRED"
 // sobre cada tile que sirven sin cuenta: seguian cargando, pero con la marca
 // de agua encima del mapa.
-export const BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+//
+// El mapa sigue al tema de la aplicacion, igual que en routeev-movil (ver
+// alla src/theme/mapStyle.ts, que usa este mismo par). Antes quedaba siempre
+// oscuro por una razon que ya no aplica: el basemap dejo de ser un TileLayer
+// de imagenes y pasa por MapLibre GL (ver BasemapLayer.tsx), que acepta una
+// URL de estilo. Lo que si sigue sin poder leer var() es Leaflet para las
+// polilineas de encima -- eso se resuelve aparte, en RouteLayers.
+//
+// `positron` es el equivalente claro de `dark` en OpenFreeMap.
+export const DARK_BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+export const LIGHT_BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+
+export function basemapStyleForTheme(theme: Theme): string {
+  return theme === "light" ? LIGHT_BASEMAP_STYLE_URL : DARK_BASEMAP_STYLE_URL;
+}
 
 // OpenFreeMap sirve tiles derivados de OpenStreetMap: acreditar a los dos es
 // obligatorio (ODbL) y va en el control de atribucion de cada mapa.
