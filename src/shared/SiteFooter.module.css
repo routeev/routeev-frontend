@@ -1,6 +1,6 @@
 .footer {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 20px;
@@ -36,7 +36,9 @@
 
 .links {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  column-gap: 12px;
 }
 
 .links a {
@@ -70,16 +72,36 @@
   height: 30px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  color: var(--accent-dijkstra);
+  color: var(--accent-astar);
   flex-shrink: 0;
 }
 
 .social:hover {
-  border-color: var(--accent-dijkstra);
+  border-color: var(--accent-astar);
   background: var(--overlay-hover);
 }
 
 .social svg {
   width: 16px;
   height: 16px;
+}
+
+/* Debajo de este ancho, la fila brand/nav+badge ya no entra cómoda en una
+   sola línea (o entra pero muy apretada) -- apilar de una vez en vez de
+   dejar que .footer decida el corte solas: brandCol arriba a todo el ancho,
+   .right abajo con la nav a la izquierda y el badge fijo a la derecha, en
+   vez de que el badge quede colgando en el medio del wrap. Mismo breakpoint
+   que ModelCombobox.module.css/ToastViewport.module.css. */
+@media (max-width: 640px) {
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    padding: 28px 20px;
+  }
+
+  .right {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
