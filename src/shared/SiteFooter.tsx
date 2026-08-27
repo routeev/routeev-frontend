@@ -50,6 +50,9 @@ export function SiteFooter({ note }: SiteFooterProps) {
           {t.shared.siteFooter.terms}
         </Link>
         <a href="mailto:routemindtbo@gmail.com">{t.shared.siteFooter.contact}</a>
+        <a href="https://www.instagram.com/routeev.uy/" target="_blank" rel="noopener noreferrer">
+          {t.shared.siteFooter.instagram}
+        </a>
       </nav>
     </footer>
   );

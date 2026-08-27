@@ -21,6 +21,7 @@ export const shared = {
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact us",
+    instagram: "Instagram",
   },
   toastViewport: {
     dismiss: "Dismiss this notification",
