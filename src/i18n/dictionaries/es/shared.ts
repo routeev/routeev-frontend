@@ -22,6 +22,7 @@ export const shared = {
     terms: "Términos",
     contact: "Escribinos",
     instagram: "Instagram",
+    copyright: (year: number) => `© ${year} RouteEV. Todos los derechos reservados.`,
   },
   toastViewport: {
     dismiss: "Cerrar este aviso",

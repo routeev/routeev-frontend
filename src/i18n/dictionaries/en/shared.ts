@@ -22,6 +22,7 @@ export const shared = {
     terms: "Terms",
     contact: "Contact us",
     instagram: "Instagram",
+    copyright: (year: number) => `© ${year} RouteEV. All rights reserved.`,
   },
   toastViewport: {
     dismiss: "Dismiss this notification",
