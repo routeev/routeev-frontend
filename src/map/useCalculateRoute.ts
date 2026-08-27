@@ -1,8 +1,23 @@
 import { useMutation } from "@tanstack/react-query";
-import { compareRoutes } from "../api/route";
+import { planRoute, toCompareRoutesResult } from "../api/route";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
 
-/** Botón "Calcular ruta", portado de js/map/routeCalc.js. */
+/**
+ * Botón "Calcular ruta", portado de js/map/routeCalc.js.
+ *
+ * Llama a planRoute() (v2, ver VALHALLA.md §9) en vez de compareRoutes():
+ * origen/destino viajan como coordenadas, no como ids del grafo propio. El
+ * resultado se adapta con toCompareRoutesResult a la MISMA forma que ya
+ * consume el resto de la interfaz -- ver ese helper para el porqué.
+ *
+ * `lastRoutePayload` (lo que guarda setLastResult para más abajo) sigue
+ * siendo el payload VIEJO, con origin_id/destination_id: eso es lo que
+ * useLiveTrip.ts necesita para POST /api/route/log-trip al terminar el
+ * viaje, y ese endpoint todavía no tiene una v2 -- sigue validando contra el
+ * grafo vial de siempre. state.originId/destinationId (los ids reales, que
+ * ClickToPick.tsx sigue resolviendo igual que siempre) no cambiaron en nada
+ * de esta migración, así que ese payload sigue siendo válido tal cual.
+ */
 export function useCalculateRoute() {
   const setLastResult = useMapStore((s) => s.setLastResult);
 
@@ -10,24 +25,30 @@ export function useCalculateRoute() {
     mutationFn: async () => {
       const state = useMapStore.getState();
       const vehicle = selectedVehicle(state);
-      // El margen de seguridad NO se manda: lo fija el backend (10% por
-      // defecto, ver schemas.py) y el resultado vuelve en `bateria`. Mandar
-      // el campo rompería contra un backend deployado sin él (extra=forbid).
-      //
-      // `cargador_en_destino` sí se manda, pero SOLO cuando el usuario dijo que
-      // no tiene: el default del backend es true, así que omitirlo en el caso
-      // normal deja el pedido idéntico al de antes y no arriesga el extra=forbid
-      // contra un backend viejo. Cuando alguien dice que no tiene dónde
-      // enchufar, en cambio, mandarlo es el punto entero del cálculo.
-      const payload = {
+      const origin = state.originNode!;
+      const destination = state.destinationNode!;
+      const startBatteryKwh = vehicle ? batteryPctToKwh(vehicle, state.startBatteryPct) : undefined;
+
+      const v2Payload = {
+        origen: { lat: origin.lat, lon: origin.lon },
+        destino: { lat: destination.lat, lon: destination.lon },
+        vehicle_id: state.selectedVehicleId!,
+        start_battery_kwh: startBatteryKwh,
+        ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
+      };
+      // Payload "de siempre", para el historial (ver el docstring de arriba)
+      // -- no es lo que viaja por la red, es lo que log-trip necesita.
+      const legacyPayload = {
         origin_id: state.originId!,
         destination_id: state.destinationId!,
         vehicle_id: state.selectedVehicleId!,
-        start_battery_kwh: vehicle ? batteryPctToKwh(vehicle, state.startBatteryPct) : undefined,
+        start_battery_kwh: startBatteryKwh,
         ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
       };
-      const result = await compareRoutes(payload);
-      return { result, payload };
+
+      const v2Result = await planRoute(v2Payload);
+      const result = toCompareRoutesResult(v2Result, origin.name, destination.name);
+      return { result, payload: legacyPayload };
     },
     onSuccess: ({ result, payload }) => {
       setLastResult(result, payload);

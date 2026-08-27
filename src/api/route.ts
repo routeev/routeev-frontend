@@ -36,6 +36,14 @@ export interface Recharge {
   added_kwh: number;
   time_min: number;
   station_name: string;
+  // Solo presente cuando este resultado vino de planRoute() (v2, ver
+  // toCompareRoutesResult mas abajo). Un resultado viejo, guardado en el
+  // historial ANTES de esta version y reproducido con "Ver" (replay), no
+  // los tiene -- useLiveTrip.ts cae a su alternativa (route/node_coords)
+  // cuando faltan, asi que "Iniciar viaje" sobre un replay viejo sigue
+  // funcionando igual que siempre.
+  lat?: number;
+  lon?: number;
 }
 
 export interface RouteResult {
@@ -148,6 +156,108 @@ export interface CompareRoutesPayload {
   // En false el margen deja de ser "llegar con colchon" y pasa a ser "llegar
   // pudiendo alcanzar un cargador" (ver reserva_para_destino en la API).
   cargador_en_destino?: boolean;
+}
+
+// -- v2, Fase 4 de la migracion a Valhalla (POST /api/route/plan) ----------
+//
+// Convive con compareRoutes: no lo reemplaza todavia. origen/destino pasan a
+// ser coordenadas (ver VALHALLA.md §9) en vez de ids del grafo propio -- por
+// eso toCompareRoutesResult existe: adapta la respuesta nueva a la MISMA
+// forma que ya consume toda la interfaz (StationsLayer, TripDashboard,
+// tripStats, useLiveTrip), para no tener que tocar ninguno de esos archivos.
+
+export interface RoutePlanPayload {
+  origen: { lat: number; lon: number };
+  destino: { lat: number; lon: number };
+  vehicle_id: number;
+  start_battery_kwh?: number;
+  cargador_en_destino?: boolean;
+  comparar?: boolean;
+}
+
+/** Una parada de carga con la ficha completa (ver estaciones.estacion_a_dict en la API) -- lo que reemplaza a route/node_coords en v2. */
+export interface ParadaV2 {
+  node_id: number;
+  nombre: string;
+  direccion: string | null;
+  departamento: string | null;
+  ciudad: string | null;
+  operador: string | null;
+  potencia_kw: number | null;
+  conectores: unknown;
+  lat: number;
+  lon: number;
+  added_kwh: number;
+  time_min: number;
+}
+
+interface RouteResultV2 {
+  found: boolean;
+  algorithm: string;
+  cost_total: number | null;
+  route_coords: [number, number][];
+  nodes_expanded: number;
+  execution_time_ms: number;
+  breakdown: RouteBreakdown;
+}
+
+export interface CompareRoutesResultV2 {
+  bateria?: RouteBattery;
+  cargador_destino?: CargadorDestino | null;
+  respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };
+  paradas: ParadaV2[];
+  astar: RouteResultV2;
+  dijkstra: RouteResultV2 | null;
+}
+
+export function planRoute(payload: RoutePlanPayload): Promise<CompareRoutesResultV2> {
+  return apiFetch<CompareRoutesResultV2>("/api/route/plan", { method: "POST", body: payload });
+}
+
+/**
+ * Adapta una respuesta de planRoute() (v2) a la misma forma que devuelve
+ * compareRoutes() (v1), para que el resto de la interfaz no tenga que saber
+ * cual de las dos calculó la ruta. `originName`/`destinationName` van aparte
+ * porque v2 no los devuelve (no hay grafo propio que los sepa de memoria):
+ * el llamador ya los tiene, son el nombre que se muestra en los campos de
+ * "¿Desde dónde salís?"/"¿A dónde vas?" al elegir el punto.
+ *
+ * `dijkstra.recharges` queda vacío a propósito: v2 solo arma la ficha
+ * completa de paradas para el resultado de A* (el que se dibuja y compara),
+ * no para Dijkstra -- que además, por la garantía central del motor (los dos
+ * algoritmos dan el mismo óptimo), casi nunca termina siendo el resultado
+ * que se muestra.
+ */
+export function toCompareRoutesResult(
+  v2: CompareRoutesResultV2,
+  originName: string,
+  destinationName: string
+): CompareRoutesResult {
+  const recharges: Recharge[] = v2.paradas.map((p) => ({
+    node_id: p.node_id,
+    added_kwh: p.added_kwh,
+    time_min: p.time_min,
+    station_name: p.nombre,
+    lat: p.lat,
+    lon: p.lon,
+  }));
+  const toRouteResult = (r: RouteResultV2, withRecharges: boolean): RouteResult => ({
+    found: r.found,
+    route_coords: r.route_coords,
+    route: [],
+    node_coords: [],
+    breakdown: r.breakdown,
+    recharges: withRecharges ? recharges : [],
+  });
+  return {
+    origin: { name: originName },
+    destination: { name: destinationName },
+    bateria: v2.bateria,
+    cargador_destino: v2.cargador_destino,
+    respaldo_paradas: v2.respaldo_paradas,
+    astar: toRouteResult(v2.astar, true),
+    dijkstra: v2.dijkstra ? toRouteResult(v2.dijkstra, false) : null,
+  };
 }
 
 export interface LogTripPayload {

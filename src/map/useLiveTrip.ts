@@ -475,8 +475,19 @@ export function useLiveTrip() {
 
     const rechargeStops: RechargeStop[] = result.astar.recharges
       .map((rc) => {
-        const idx = nodeIds.indexOf(rc.node_id);
-        const nodeLatLng = idx >= 0 ? nodeCoords[idx] : null;
+        // rc.lat/lon: presentes cuando este resultado vino de planRoute()
+        // (v2, ver toCompareRoutesResult en api/route.ts) -- la posición de
+        // la parada, directa, sin ir a buscarla por índice. Un resultado
+        // VIEJO, reproducido desde el historial con "Ver" (replay, calculado
+        // en su momento contra el v1), no los tiene: para ese caso sigue
+        // sirviendo route/node_coords, que ese sí trae completos.
+        const nodeLatLng: [number, number] | null =
+          rc.lat != null && rc.lon != null
+            ? [rc.lat, rc.lon]
+            : (() => {
+                const idx = nodeIds.indexOf(rc.node_id);
+                return idx >= 0 ? nodeCoords[idx] : null;
+              })();
         const cumKm = nodeLatLng ? nearestCumulativeDistance(coords, cum, nodeLatLng[0], nodeLatLng[1]) : 0;
         return { nodeId: rc.node_id, cumKm, addedKwh: rc.added_kwh, stationName: rc.station_name, applied: false };
       })
