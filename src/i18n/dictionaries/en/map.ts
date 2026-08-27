@@ -99,7 +99,7 @@ export const map = {
   },
   liveTrip: {
     saveFailed: "The trip could not be saved to your history. Its data was lost.",
-    saveFailedSamePoint: "The trip could not be saved: origin and destination ended up too close to record it.",
+    saveNoPlan: "This route comes from a trip you already saved. Calculate the route again to record a new one.",
     arrived: "You arrived at your destination",
     offRoute: (km: string) => `You're ${km} km from the calculated route: progress can't be tracked until you're on it.`,
     passedStation: (name: string) => `You passed ${name}: battery updated`,

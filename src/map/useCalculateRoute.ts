@@ -11,13 +11,11 @@ import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
  * consume el resto de la interfaz -- ver ese helper para el porqué.
  *
  * `lastRoutePayload` (lo que guarda setLastResult para más abajo) es el seed
- * de log-trip: guarda los PUNTOS enteros, no ids. `POST /api/route/log-trip`
- * todavía es v1 y valida contra el grafo vial, así que va a necesitar un id
- * de nodo — pero ese id puede no existir todavía cuando se calcula la ruta,
- * porque el toque en el mapa ahora fija una coordenada cruda y el nodo se
- * resuelve en segundo plano (ver snapPoint.ts). Guardar el punto y no el id
- * deja que se complete solo por el camino; useLiveTrip lo resuelve recién al
- * guardar el viaje.
+ * del viaje: el `plan_id` que la API acaba de guardar, más los dos nombres que
+ * la persona tiene en pantalla. Nada más — el vehículo, la batería inicial, el
+ * origen y el destino ya viven en el plan del lado del servidor, así que al
+ * terminar el viaje no hay que volver a mandarlos (ni se puede: el cliente no
+ * tiene por qué poder reescribir con qué auto se hizo un viaje).
  */
 export function useCalculateRoute() {
   const setLastResult = useMapStore((s) => s.setLastResult);
@@ -37,20 +35,14 @@ export function useCalculateRoute() {
         start_battery_kwh: startBatteryKwh,
         ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
       };
-      // Lo que log-trip va a necesitar cuando el viaje termine. Guarda los
-      // PUNTOS enteros, no ids: su `snapId` puede completarse más tarde (ver
-      // snapPoint.ts) y useLiveTrip lo resuelve recién al guardar.
-      const tripSeed = {
-        origin,
-        destination,
-        vehicle_id: state.selectedVehicleId!,
-        start_battery_kwh: startBatteryKwh,
-        ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
-      };
-
       const v2Result = await planRoute(v2Payload);
       const result = toCompareRoutesResult(v2Result, origin.name, destination.name);
-      return { result, payload: tripSeed };
+      // Sin plan_id no hay viaje que guardar, y eso es lo correcto: la API sólo
+      // guarda el plan cuando encontró una ruta.
+      const payload = v2Result.plan_id
+        ? { plan_id: v2Result.plan_id, origin_name: origin.name, destination_name: destination.name }
+        : null;
+      return { result, payload };
     },
     onSuccess: ({ result, payload }) => {
       setLastResult(result, payload);

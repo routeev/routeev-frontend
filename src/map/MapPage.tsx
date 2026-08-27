@@ -79,7 +79,7 @@ export function MapPage() {
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
   // Se selecciona el RoutePoint entero, no lat/lon por separado: la referencia
   // que guarda el store es estable (zustand compara con Object.is y solo
-  // cambia cuando corre setOrigin/annotateSnap/clearOrigin), así que sirve
+  // cambia cuando corre setOrigin/annotateName/clearOrigin), así que sirve
   // tal cual como dep de los useMemo de abajo. Lo que NO se puede hacer es
   // usar calculateGateMissing como selector, porque arma un array nuevo en
   // cada llamada -- eso es lo que documenta su comentario en mapStore.ts, y

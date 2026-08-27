@@ -192,6 +192,17 @@ interface RouteResultV2 {
 }
 
 export interface CompareRoutesResultV2 {
+  /**
+   * El plan que la API guardó de esta ruta, para que `logTrip()` pueda
+   * registrar el viaje después sin que nadie recalcule nada (ver
+   * `POST /api/route/trip`). null cuando no hubo ruta: sin ruta no hay viaje.
+   *
+   * Vive 24 h. Es lo ÚNICO que hace falta guardar del cálculo: el vehículo, la
+   * batería inicial, el origen y el destino los fija el plan del lado del
+   * servidor, así que el cliente no puede (ni tiene por qué) reescribirlos al
+   * guardar.
+   */
+  plan_id: string | null;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };
@@ -250,22 +261,47 @@ export function toCompareRoutesResult(
   };
 }
 
-export interface LogTripPayload {
-  origin_id: NodeId;
-  destination_id: NodeId;
-  vehicle_id: number;
-  start_battery_kwh?: number;
+/**
+ * Lo que `POST /api/route/trip` necesita para guardar un viaje recorrido.
+ *
+ * Es corto a propósito. Todo lo que describe el VIAJE PLANEADO (vehículo,
+ * batería inicial, origen, destino, geometría) ya está en el plan que la API
+ * guardó al calcular la ruta: acá va solo lo que el plan no podía saber,
+ * porque todavía no había pasado.
+ *
+ * Los dos nombres son las etiquetas que la persona ya tenía en pantalla al
+ * elegir los puntos. Son sugerencias: la API las valida y, si el viaje se
+ * cortó antes de llegar, descarta la del destino y nombra el lugar real.
+ */
+export interface TripLogPayload {
+  plan_id: string;
   traveled_km: number;
   recharge_node_ids: NodeId[];
+  origin_name?: string;
+  destination_name?: string;
 }
 
 export interface HistoryEntry {
   id?: number;
   created_at: string;
-  origin_id: NodeId;
+  /**
+   * Nodos del grafo semilla. Sólo los viajes de la era v1 los tienen: desde
+   * `POST /api/route/trip` un punto es una coordenada y estas dos columnas
+   * quedan en NULL. Las filas viejas siguen ahí y se siguen mostrando.
+   */
+  origin_id?: NodeId | null;
   origin_name?: string;
-  destination_id: NodeId;
+  destination_id?: NodeId | null;
   destination_name?: string;
+  /** El dato de verdad de un punto desde la migración a coordenadas. Ausente en las filas v1. */
+  origin_lat?: number | null;
+  origin_lon?: number | null;
+  destination_lat?: number | null;
+  destination_lon?: number | null;
+  /** Si el viaje llegó al destino planeado o se cortó antes. null en las filas v1, que no lo registraban. */
+  arrived?: boolean | null;
+  /** Qué motor calculó esta fila: null/"seed" las v1, "valhalla" las nuevas. */
+  route_engine?: string | null;
   vehicle_id: number;
   start_battery_kwh?: number;
   distance_km: number | null;
@@ -300,8 +336,20 @@ export interface VehicleStat {
   total_recharges: number;
 }
 
-export function logTrip(payload: LogTripPayload): Promise<void> {
-  return apiFetch<void>("/api/route/log-trip", { method: "POST", body: payload });
+/** Respuesta de `POST /api/route/trip`. */
+export interface TripLogResult {
+  saved: boolean;
+  /** true cuando este viaje YA estaba guardado: el plan sólo se consume una vez. */
+  duplicado: boolean;
+  arrived: boolean;
+  origen: { nombre: string; fuente: string };
+  destino: { nombre: string; fuente: string; lat: number; lon: number };
+  distance_km: number;
+  recharge_count: number;
+}
+
+export function logTrip(payload: TripLogPayload): Promise<TripLogResult> {
+  return apiFetch<TripLogResult>("/api/route/trip", { method: "POST", body: payload });
 }
 
 export function getHistory(): Promise<HistoryEntry[]> {

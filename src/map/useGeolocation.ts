@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { useMapStore } from "./mapStore";
 import { fromCoords } from "./routePoint";
-import { snapInBackground } from "./snapPoint";
+import { nameInBackground } from "./pointName";
 
 type ResultKind = "" | "warn" | "error";
 
@@ -76,8 +76,8 @@ export function useGeolocation() {
       map?.setView([latitude, longitude], Math.max(map.getZoom(), 15));
       setResult({ text: geo.originSet(p.name), kind: "" });
       setBusy(false);
-      // El nombre de la calle llega después, sin bloquear (ver snapPoint.ts).
-      void snapInBackground("origin", latitude, longitude);
+      // El nombre de la calle llega después, sin bloquear (ver pointName.ts).
+      void nameInBackground("origin", latitude, longitude);
     };
 
     const onFinalError = (err: GeolocationPositionError) => {

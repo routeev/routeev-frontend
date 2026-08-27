@@ -3,7 +3,7 @@ import { useMapEvents } from "react-leaflet";
 import { useMapStore, type PickMode } from "../mapStore";
 import { claimPickRole, DOUBLE_CLICK_GUARD_MS } from "../pickSequence";
 import { fromCoords } from "../routePoint";
-import { snapInBackground } from "../snapPoint";
+import { nameInBackground } from "../pointName";
 
 /**
  * Fija origen/destino al tocar el mapa, portado de js/map/mapCore.js.
@@ -16,7 +16,7 @@ import { snapInBackground } from "../snapPoint";
  * ya no hace falta porque el punto no se mueve.
  *
  * El nodo del grafo se sigue buscando, pero en segundo plano y sin bloquear
- * nada (ver snapPoint.ts): solo lo necesita el historial.
+ * nada (ver pointName.ts): es solo la etiqueta que se muestra en el campo.
  *
  * El guard contra el doble-click-para-zoom de Leaflet vive en pickSequence.ts
  * (DOUBLE_CLICK_GUARD_MS / claimPickRole) junto con la explicación del bug que
@@ -72,7 +72,7 @@ export function ClickToPick({ onError }: ClickToPickProps) {
     claimedRef.current.length = 0;
     // Ya no hace falta desautorizar nada en vuelo: fijar el punto es
     // síncrono. El snap de fondo que pueda quedar dando vueltas se descarta
-    // solo, porque annotateSnap compara el pointKey del punto vigente.
+    // solo, porque annotateName compara el pointKey del punto vigente.
   }, [picking]);
 
   function releaseClaim(role: PickMode) {
@@ -101,7 +101,7 @@ export function ClickToPick({ onError }: ClickToPickProps) {
     }
     // Sin await, y después de fijar: buscar el nodo del grafo es solo para el
     // historial y no puede demorar el pin ni el cálculo.
-    void snapInBackground(role, lat, lon);
+    void nameInBackground(role, lat, lon);
   }
 
   useMapEvents({

@@ -123,25 +123,19 @@ interface MapState {
   stopPicking: () => void;
 
   /**
-   * Completa el `snapId` (y opcionalmente el nombre) de un punto ya fijado,
-   * cuando vuelve la resolución en segundo plano de snapPoint.ts.
+   * Le pone el nombre de la calle a un punto ya fijado, cuando vuelve la
+   * resolución en segundo plano de pointName.ts.
    *
-   * `key` es el pointKey del punto que se pidió snapear: si el punto que hay
+   * `key` es el pointKey del punto que se pidió nombrar: si el punto que hay
    * ahora es otro — porque la persona volvió a tocar, o canceló — la respuesta
    * se descarta en silencio. Eso reemplaza al par seqRef/vigenteRef que vivía
    * en ClickToPick.
    *
-   * NO sube originRevision ni toca lastResult: anotar el id no es "se movió el
-   * punto". Si subiera la revisión, RouteAutocompleteField le borraría a la
+   * NO sube originRevision ni toca lastResult: ponerle nombre no es "se movió
+   * el punto". Si subiera la revisión, RouteAutocompleteField le borraría a la
    * persona el texto que esté tipeando ~300 ms después de tocar el mapa.
    */
-  annotateSnap: (role: PickMode, key: string, patch: { snapId: NodeId; name?: string }) => void;
-
-  /**
-   * Actualiza los puntos del seed de log-trip sin pasar por setLastResult
-   * (que resetea selectedStationId). Lo usa ensureSnapIds al iniciar viaje.
-   */
-  updateTripSeed: (patch: Partial<Pick<TripLogSeed, "origin" | "destination">>) => void;
+  annotateName: (role: PickMode, key: string, name: string) => void;
 
   setLastResult: (
     result: CompareRoutesResult | null,
@@ -250,18 +244,16 @@ export const useMapStore = create<MapState>((set, get) => ({
       };
     }),
 
-  annotateSnap: (role, key, patch) =>
+  annotateName: (role, key, name) =>
     set((s) => {
       const cur = role === "origin" ? s.originNode : s.destinationNode;
-      // El punto que hay ahora no es el que se pidió snapear: la persona
+      // El punto que hay ahora no es el que se pidió nombrar: la persona
       // volvió a tocar (o canceló) mientras la respuesta venía en camino.
       if (cur == null || pointKey(cur.lat, cur.lon) !== key) return {};
-      const next: RoutePoint = { ...cur, snapId: patch.snapId, ...(patch.name ? { name: patch.name } : {}) };
+      const next: RoutePoint = { ...cur, name };
       return role === "origin" ? { originNode: next } : { destinationNode: next };
     }),
 
-  updateTripSeed: (patch) =>
-    set((s) => (s.lastRoutePayload == null ? {} : { lastRoutePayload: { ...s.lastRoutePayload, ...patch } })),
   // El "x" para borrar un pin ya elegido: vuelve a pickMode a ese rol para
   // que el proximo click en el mapa lo fije de nuevo, mismo criterio que
   // setOrigin ya usa para AVANZAR el pickMode al elegir (ver arriba).

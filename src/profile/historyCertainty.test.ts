@@ -71,3 +71,51 @@ describe("certaintyPointsFromRoute", () => {
     }
   });
 });
+
+describe("certaintyPointsFromRoute con viajes guardados por POST /api/route/trip", () => {
+  // Un viaje de esa era se guarda con route: [] y node_coords: [] -- sus ids
+  // eran de un grafo efímero que ya no existe. La posición de cada recarga
+  // viaja en el propio Recharge.
+  const V2 = {
+    route: [] as string[],
+    node_coords: [] as [number, number][],
+  };
+
+  it("ubica la recarga por su coordenada, no por el índice del nodo", () => {
+    const points = certaintyPointsFromRoute(
+      route({
+        ...V2,
+        recharges: [
+          { node_id: "station_7", added_kwh: 15, time_min: 20, station_name: "UTE Pando", lat: -34.5, lon: -56.0 },
+        ],
+      }),
+      50,
+      50
+    );
+    const stop = points.find((p) => p.chargeStop)!;
+    // La parada del medio: si se hubiera buscado por índice, indexOf daría -1
+    // y la recarga caería en el km 0 sin ningún error -- la curva mostraría el
+    // auto cargando a full en la salida y llegando vacío.
+    expect(stop.km).toBeGreaterThan(0);
+    expect(stop.km).toBeLessThan(points[points.length - 1]!.km);
+    expect(stop.label).toBe("UTE Pando");
+  });
+
+  it("la batería baja antes de la recarga y sube después", () => {
+    const points = certaintyPointsFromRoute(
+      route({
+        ...V2,
+        recharges: [
+          { node_id: "station_7", added_kwh: 15, time_min: 20, station_name: "UTE Pando", lat: -34.5, lon: -56.0 },
+        ],
+      }),
+      50,
+      50
+    );
+    const i = points.findIndex((p) => p.chargeStop);
+    expect(points[i - 1]!.batteryPct).toBeLessThan(points[0]!.batteryPct);
+    expect(points[i]!.batteryPct).toBeGreaterThan(points[i - 1]!.batteryPct);
+    // Y el par de la recarga comparte km: es un salto vertical.
+    expect(points[i]!.km).toBe(points[i - 1]!.km);
+  });
+});

@@ -1,4 +1,4 @@
-import type { GraphNode, NodeId } from "../api/graph";
+import type { GraphNode } from "../api/graph";
 
 /**
  * Un origen o un destino, venga de donde venga: un toque en el mapa, el
@@ -8,19 +8,19 @@ import type { GraphNode, NodeId } from "../api/graph";
  * Antes esto era un `GraphNode`, o sea que TODO punto tenía que ser un nodo
  * del grafo vial — por eso el toque en el mapa llamaba a `/api/graph/nearest`
  * y "saltaba" al cruce más cercano, que en ruta abierta puede estar a
- * kilómetros. Como `POST /api/route/plan` ya recibe coordenadas (la migración
- * a Valhalla), ese salto no le aporta nada al ruteo: solo degrada el punto que
- * se manda.
+ * kilómetros.
  *
- * `snapId` es lo único que quedó de aquello: el nodo del grafo más cercano,
- * que NO se usa para calcular la ruta sino solo para `POST /api/route/log-trip`,
- * que sigue siendo v1 y valida contra el grafo semilla. Arranca en null y se
- * completa en segundo plano (ver snapPoint.ts). El día que exista una v2 de
- * log-trip por coordenadas, se borra este campo y snapPoint.ts entero.
+ * Ya no queda nada de aquello: un punto es una coordenada y un nombre, y las
+ * dos cosas que le pedíamos al grafo se resolvieron en otro lado. El ruteo
+ * recibe coordenadas (`POST /api/route/plan`) y el historial también
+ * (`POST /api/route/trip`), que además nombra el punto del lado del servidor,
+ * con los mismos datos y sin una llamada de red en el peor momento posible.
+ *
+ * El `name` de acá es sólo lo que se MUESTRA en el campo mientras se arma el
+ * viaje. Se manda como sugerencia al guardar, pero quien decide el nombre que
+ * queda en el historial es la API.
  */
 export interface RoutePoint {
-  /** Nodo del grafo más cercano. Solo para el historial; null hasta que llegue el snap. */
-  snapId: NodeId | null;
   name: string;
   lat: number;
   lon: number;
@@ -44,14 +44,14 @@ export function pointKey(lat: number, lon: number): string {
   return `${lat.toFixed(6)},${lon.toFixed(6)}`;
 }
 
-/** Un punto que YA es un nodo del grafo: autocompletado, geocodificación, replay. */
+/** Un punto elegido del autocompletado o de la geocodificación, que ya trae nombre. */
 export function fromNode(n: GraphNode): RoutePoint {
-  return { snapId: n.id, name: n.name, lat: n.lat, lon: n.lon };
+  return { name: n.name, lat: n.lat, lon: n.lon };
 }
 
 /** Un punto que es solo una coordenada: toque en el mapa o GPS. */
 export function fromCoords(lat: number, lon: number): RoutePoint {
-  return { snapId: null, name: formatCoords(lat, lon), lat, lon };
+  return { name: formatCoords(lat, lon), lat, lon };
 }
 
 /**
@@ -76,34 +76,36 @@ export const SAME_SPOT_KM = 0.01;
  * Montevideo están a unos 85-100 m, y son un viaje legítimo que se tiene que
  * poder calcular. Con 100 m quedaban bloqueadas.
  *
- * Ojo con lo que este umbral NO garantiza: que los dos puntos caigan en nodos
- * distintos del grafo semilla, que es lo que `POST /api/route/log-trip` (v1)
- * necesita para guardar el viaje. El grafo no tiene un nodo cada 50 m — en
- * zona mal cubierta el cruce más cercano puede estar a kilómetros — así que
- * dos puntos bien separados igual pueden colisionar en el mismo nodo. Eso se
- * detecta al guardar, en useLiveTrip.ts, no acá.
+ * Mismo valor que `SAME_POINT_KM` en la API (app/config.py): los dos lados
+ * tienen que coincidir o el cliente deja pedir algo que el servidor rechaza.
  */
 export const SAME_POINT_KM = 0.05;
 
 /**
- * 2 km. Más lejos que esto NO se adopta el nombre del nodo snapeado.
+ * 2 km. Más lejos que esto NO se adopta el nombre de la calle más cercana para
+ * mostrar en el campo (ver pointName.ts).
  *
  * Si alguien toca en medio del campo y el cruce más cercano está a 4 km,
  * poner ese nombre en el campo es mentirle sobre dónde marcó. Mismo umbral
  * que ya usa `/api/graph/geocode` (distance_to_node_km > 2) para el aviso
- * equivalente al buscar una dirección escrita.
+ * equivalente al buscar una dirección escrita, y el mismo CALLE_MAX_KM que
+ * usa la API para nombrar el punto al guardar el viaje (app/nombres.py).
  */
 export const SNAP_NAME_MAX_KM = 2;
 
 /**
- * Lo que `POST /api/route/log-trip` necesita para guardar el viaje recorrido.
- * Se arma al calcular la ruta y se guarda en el store hasta que el viaje
- * termina — los `snapId` de sus puntos pueden completarse por el camino.
+ * Lo que hay que recordar de un cálculo de ruta para poder guardar el viaje
+ * cuando termine. Se arma al calcular y vive en el store hasta entonces.
+ *
+ * Antes esto llevaba los dos puntos enteros, el vehículo y la batería inicial,
+ * porque `POST /api/route/log-trip` recalculaba la ruta al guardar y necesitaba
+ * todos los ingredientes. Ahora el plan ya está guardado del lado del servidor
+ * y lo único que hace falta para nombrarlo es su id. Lo que queda son los dos
+ * nombres, que el servidor NO puede saber: son las etiquetas que la persona vio
+ * en pantalla al elegir los puntos.
  */
 export interface TripLogSeed {
-  origin: RoutePoint;
-  destination: RoutePoint;
-  vehicle_id: number;
-  start_battery_kwh?: number;
-  cargador_en_destino?: boolean;
+  plan_id: string;
+  origin_name: string;
+  destination_name: string;
 }
