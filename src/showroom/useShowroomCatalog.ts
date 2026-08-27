@@ -24,7 +24,15 @@ const COMPARADORES: Partial<Record<Orden, (a: ShowroomModel, b: ShowroomModel) =
  * no hace falta ir al servidor en cada tecla.
  */
 export function useShowroomCatalog() {
-  const catalogQuery = useQuery({ queryKey: ["showroomModels"], queryFn: () => showroomModels() });
+  // staleTime: Infinity -- catalogo estatico (mismo criterio que
+  // useMapLoaders.ts: stations/searchableNodes/evModels). Sin esto, "se baja
+  // una sola vez" de arriba no era cierto: volver a esta pantalla, o solo
+  // volver a la pestaña del navegador, disparaba un refetch igual.
+  const catalogQuery = useQuery({
+    queryKey: ["showroomModels"],
+    queryFn: () => showroomModels(),
+    staleTime: Infinity,
+  });
   // Modelos encontrados por IA (fuera del catálogo): se suman en memoria,
   // quedan buscables por lo que dure la visita (agregarModelo en el original).
   const [extraModels, setExtraModels] = useState<ShowroomModel[]>([]);

@@ -21,7 +21,15 @@ interface GoogleSignInProps {
  */
 export function GoogleSignIn({ onCredential }: GoogleSignInProps) {
   const { t } = useTranslation();
-  const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
+  // staleTime: Infinity -- config publica del deploy, no cambia mientras el
+  // backend esta corriendo (mismo criterio que el catalogo estatico de
+  // useShowroomCatalog.ts/useMapLoaders.ts).
+  const { data: cfg } = useQuery({
+    queryKey: ["authConfig"],
+    queryFn: authConfig,
+    retry: false,
+    staleTime: Infinity,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   // El prop `width` de GoogleLogin es un ancho fijo en px que Google usa tal
   // cual para dibujar el iframe del botón -- no es responsive. En celulares

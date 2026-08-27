@@ -19,7 +19,13 @@ const BATERIA_MAX = 100;
 export function SimulationForm({ model }: SimulationFormProps) {
   const { t } = useTranslation();
   const sf = t.showroom.simulationForm;
-  const destinosQuery = useQuery({ queryKey: ["showroomDestinos"], queryFn: showroomDestinos });
+  // staleTime: Infinity -- catalogo estatico, mismo criterio que
+  // useShowroomCatalog.ts/useMapLoaders.ts.
+  const destinosQuery = useQuery({
+    queryKey: ["showroomDestinos"],
+    queryFn: showroomDestinos,
+    staleTime: Infinity,
+  });
   const destinos = destinosQuery.data ?? [];
 
   // Montevideo primero en la lista; un destino lejos por defecto -- el caso

@@ -20,7 +20,8 @@ export function ShowroomPage() {
   const sp = t.showroom.page;
   const catalog = useShowroomCatalog();
   const { addModel } = catalog;
-  const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false });
+  // staleTime: Infinity -- ver el mismo comentario en GoogleSignIn.tsx.
+  const { data: cfg } = useQuery({ queryKey: ["authConfig"], queryFn: authConfig, retry: false, staleTime: Infinity });
   const [searchParams, setSearchParams] = useSearchParams();
   const fichaId = searchParams.get("modelo");
   const fichaRef = useRef<HTMLDivElement | null>(null);
