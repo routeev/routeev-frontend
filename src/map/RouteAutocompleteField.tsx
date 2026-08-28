@@ -114,8 +114,8 @@ export function RouteAutocompleteField({
   }, [debouncedEditingText, searchableNodes]);
 
   function chooseNode(n: GraphNode) {
-    // Un nodo del autocompletado o de la geocodificación YA es un nodo real
-    // del grafo, así que nace con snapId puesto y no necesita snap de fondo.
+    // Un punto del autocompletado o de la geocodificación ya viene con su
+    // nombre, así que no hace falta ir a buscarlo (ver pointName.ts).
     setNode(fromNode(n));
     if (role === "origin") setPickMode("destination");
     setEditingText(null);

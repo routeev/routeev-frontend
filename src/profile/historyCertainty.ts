@@ -27,11 +27,26 @@ export function certaintyPointsFromRoute(
   const ratePerKm = result.breakdown.energia_kwh / totalKm;
   const pct = (kwh: number) => Math.max(0, Math.min(100, (kwh / capacityKwh) * 100));
 
-  // Cada recarga cae en el km acumulado del nodo donde ocurrió.
+  // Cada recarga cae en el km acumulado del punto donde ocurrió.
+  //
+  // `rc.lat/lon`: presentes en los viajes guardados por `POST /api/route/trip`.
+  // Ahí NO hay alternativa — un resultado de esa era se guarda con `route: []`
+  // y `node_coords: []`, porque sus ids eran de un grafo efímero que ya no
+  // existe. Buscar el índice devolvería -1 y TODAS las recargas terminarían en
+  // el km 0, sin ningún error: la curva mostraría el auto cargando a full en la
+  // salida y llegando vacío. Es la rotura más silenciosa de la migración.
+  //
+  // Los viajes v1 no traen lat/lon, pero sí traen route/node_coords completos,
+  // que es de donde salía la posición antes.
   const stops = result.recharges
     .map((rc) => {
-      const idx = result.route.indexOf(rc.node_id);
-      const latLng = idx >= 0 ? result.node_coords[idx] : null;
+      const latLng: [number, number] | null =
+        rc.lat != null && rc.lon != null
+          ? [rc.lat, rc.lon]
+          : (() => {
+              const idx = result.route.indexOf(rc.node_id);
+              return idx >= 0 ? (result.node_coords[idx] ?? null) : null;
+            })();
       const cumKm = latLng ? nearestCumulativeDistance(coords, cum, latLng[0], latLng[1]) : 0;
       return { cumKm, addedKwh: rc.added_kwh, name: rc.station_name };
     })

@@ -54,20 +54,22 @@ describe("calculateGateMissing", () => {
 });
 
 describe("routePoint", () => {
-  it("un toque en el mapa nace sin nodo del grafo", () => {
+  it("un toque en el mapa se nombra con su coordenada hasta que llegue la calle", () => {
     const p = fromCoords(-34.9055, -56.1851);
-    expect(p.snapId).toBeNull();
-    // El nombre provisorio es la coordenada, hasta que llegue el snap.
     expect(p.name).toBe("-34.9055, -56.1851");
+    expect(p.lat).toBe(-34.9055);
+    expect(p.lon).toBe(-56.1851);
   });
 
-  it("un nodo del autocompletado nace con su id puesto", () => {
+  it("un punto del autocompletado ya viene nombrado", () => {
     const p = fromNode({ id: "n42", name: "18 de Julio y Rivera", lat: -34.9, lon: -56.18 });
-    expect(p.snapId).toBe("n42");
     expect(p.name).toBe("18 de Julio y Rivera");
+    // Un punto es una coordenada y un nombre: el id del grafo no viaja con él.
+    // Lo único que lo necesitaba era log-trip v1.
+    expect("snapId" in p).toBe(false);
   });
 
-  // pointKey es lo que descarta la respuesta de un snap viejo: dos toques
+  // pointKey es lo que descarta la respuesta de un nombrado viejo: dos toques
   // distintos NO pueden compartir clave.
   it("distingue dos toques separados por menos de un metro", () => {
     expect(pointKey(-34.9055, -56.1851)).not.toBe(pointKey(-34.905509, -56.1851));

@@ -99,7 +99,7 @@ export const map = {
   },
   liveTrip: {
     saveFailed: "El viaje no se pudo guardar en el historial. Los datos del recorrido se perdieron.",
-    saveFailedSamePoint: "El viaje no se pudo guardar: el origen y el destino quedaron demasiado cerca como para registrarlo.",
+    saveNoPlan: "Este recorrido es de un viaje ya guardado. Volvé a calcular la ruta para poder registrar uno nuevo.",
     arrived: "Llegaste a destino",
     offRoute: (km: string) => `Estás a ${km} km de la ruta calculada: el progreso no se puede seguir hasta que estés sobre ella.`,
     passedStation: (name: string) => `Pasaste por ${name}: batería actualizada`,
