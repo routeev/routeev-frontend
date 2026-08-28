@@ -139,102 +139,120 @@ export function LandingPage() {
           </div>
         </section>
 
-        <Reveal id="datos-reales" className={[styles.section, styles.stats].join(" ")}>
-          {STATS.map((stat, i) => (
-            <StatCard
-              key={stat.label}
-              index={i}
-              value={stat.value}
-              places={stat.places ? [...stat.places] : undefined}
-              suffix={stat.suffix}
-              label={stat.label}
-            />
-          ))}
-        </Reveal>
-
-        <Reveal className={[styles.section, styles.split].join(" ")}>
-          <div>
-            <p className={styles.eyebrow}>{t.landing.problem.eyebrow}</p>
-            <h2>{t.landing.problem.title}</h2>
-            <p>{t.landing.problem.body}</p>
-          </div>
-          <div>
-            <p className={styles.eyebrow}>{t.landing.solution.eyebrow}</p>
-            <h2>{t.landing.solution.title}</h2>
-            <p>{t.landing.solution.body}</p>
-          </div>
-        </Reveal>
-
-        <Reveal className={[styles.section, styles.showroom].join(" ")}>
-          <div>
-            <p className={styles.eyebrow}>{t.landing.showroomSection.eyebrow}</p>
-            <h2>{t.landing.showroomSection.title}</h2>
-            <p>{t.landing.showroomSection.body1}</p>
-            <p>{t.landing.showroomSection.body2}</p>
-            <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-              {t.landing.showroomSection.cta}
-            </Link>
-          </div>
-          {/* Check, no "01-04": la lista de pasos numerados de verdad es
-              "Cómo funciona" un poco más abajo en esta misma página -- con
-              el mismo estilo de número acá, las dos se leían como la misma
-              lista repetida en el scroll. Este es un resumen de lo que
-              ofrece el showroom, no una instrucción a seguir en orden. */}
-          <ul className={styles.showroomSteps}>
-            {[
-              t.landing.showroomSection.steps.search,
-              t.landing.showroomSection.steps.view,
-              t.landing.showroomSection.steps.choose,
-              t.landing.showroomSection.steps.result,
-            ].map((step) => (
-              <li key={step}>
-                <svg
-                  className={styles.showroomStepIcon}
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M8 12.5l2.5 2.5L16 9.5" />
-                </svg>
-                {step}
-              </li>
+        {/* Cada sección de acá para abajo vive dentro de su propia "franja"
+            (.band, a todo el ancho -- mismo patrón que .heroWrap/.hero:
+            wrapper de fondo suelto por fuera, columna de 1180px centrada
+            adentro) con fondo alternado (.bandAlt) y una línea divisoria
+            arriba. Antes todas compartían el mismo fondo de la página sin
+            ningún límite entre una y otra más que el padding vertical -- en
+            un scroll largo y todo oscuro, esa falta de límite se leía como
+            una sola sección corrida. */}
+        <section className={styles.band}>
+          <Reveal id="datos-reales" className={[styles.section, styles.stats].join(" ")}>
+            {STATS.map((stat, i) => (
+              <StatCard
+                key={stat.label}
+                index={i}
+                value={stat.value}
+                places={stat.places ? [...stat.places] : undefined}
+                suffix={stat.suffix}
+                label={stat.label}
+              />
             ))}
-          </ul>
-        </Reveal>
+          </Reveal>
+        </section>
 
-        <Reveal id="como-funciona" className={[styles.section, styles.steps].join(" ")}>
-          <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>{t.landing.howItWorks.eyebrow}</p>
-          <h2 className={styles.stepsTitle}>{t.landing.howItWorks.title}</h2>
-          <ol className={styles.stepsList}>
-            {HOW_IT_WORKS.map((step, i) => (
-              <li key={step.title}>
-                <span className={styles.stepNum}>{String(i + 1).padStart(2, "0")}</span>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </Reveal>
+        <section className={[styles.band, styles.bandAlt].join(" ")}>
+          <Reveal className={[styles.section, styles.split].join(" ")}>
+            <div>
+              <p className={styles.eyebrow}>{t.landing.problem.eyebrow}</p>
+              <h2>{t.landing.problem.title}</h2>
+              <p>{t.landing.problem.body}</p>
+            </div>
+            <div>
+              <p className={styles.eyebrow}>{t.landing.solution.eyebrow}</p>
+              <h2>{t.landing.solution.title}</h2>
+              <p>{t.landing.solution.body}</p>
+            </div>
+          </Reveal>
+        </section>
 
-        <Reveal className={[styles.section, styles.finalCta].join(" ")}>
-          <h2>{t.landing.finalCta.title}</h2>
-          <p>{t.landing.finalCta.body}</p>
-          <div className={[styles.heroActions, styles.heroActionsCenter].join(" ")}>
-            <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-              {t.landing.finalCta.ctaPrimary}
-            </Link>
-            <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-              {t.landing.finalCta.ctaSecondary}
-            </Link>
-          </div>
-        </Reveal>
+        <section className={styles.band}>
+          <Reveal className={[styles.section, styles.showroom].join(" ")}>
+            <div>
+              <p className={styles.eyebrow}>{t.landing.showroomSection.eyebrow}</p>
+              <h2>{t.landing.showroomSection.title}</h2>
+              <p>{t.landing.showroomSection.body1}</p>
+              <p>{t.landing.showroomSection.body2}</p>
+              <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
+                {t.landing.showroomSection.cta}
+              </Link>
+            </div>
+            {/* Check, no "01-04": la lista de pasos numerados de verdad es
+                "Cómo funciona" un poco más abajo en esta misma página -- con
+                el mismo estilo de número acá, las dos se leían como la misma
+                lista repetida en el scroll. Este es un resumen de lo que
+                ofrece el showroom, no una instrucción a seguir en orden. */}
+            <ul className={styles.showroomSteps}>
+              {[
+                t.landing.showroomSection.steps.search,
+                t.landing.showroomSection.steps.view,
+                t.landing.showroomSection.steps.choose,
+                t.landing.showroomSection.steps.result,
+              ].map((step) => (
+                <li key={step}>
+                  <svg
+                    className={styles.showroomStepIcon}
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8 12.5l2.5 2.5L16 9.5" />
+                  </svg>
+                  {step}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </section>
+
+        <section className={[styles.band, styles.bandAlt].join(" ")}>
+          <Reveal id="como-funciona" className={[styles.section, styles.steps].join(" ")}>
+            <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>{t.landing.howItWorks.eyebrow}</p>
+            <h2 className={styles.stepsTitle}>{t.landing.howItWorks.title}</h2>
+            <ol className={styles.stepsList}>
+              {HOW_IT_WORKS.map((step, i) => (
+                <li key={step.title}>
+                  <span className={styles.stepNum}>{String(i + 1).padStart(2, "0")}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+        </section>
+
+        <section className={styles.band}>
+          <Reveal className={[styles.section, styles.finalCta].join(" ")}>
+            <h2>{t.landing.finalCta.title}</h2>
+            <p>{t.landing.finalCta.body}</p>
+            <div className={[styles.heroActions, styles.heroActionsCenter].join(" ")}>
+              <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
+                {t.landing.finalCta.ctaPrimary}
+              </Link>
+              <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
+                {t.landing.finalCta.ctaSecondary}
+              </Link>
+            </div>
+          </Reveal>
+        </section>
       </main>
 
       <SiteFooter />

@@ -12,6 +12,23 @@
   padding-right: 28px;
 }
 
+/* Franja a todo el ancho para cada sección (mismo patrón que .heroWrap/.hero
+   de más abajo: fondo suelto por fuera, columna de 1180px centrada adentro
+   vía .section). La línea de arriba es lo que de verdad separa una sección
+   de la siguiente en el scroll -- antes no había ningún límite ahí, solo
+   padding vertical sobre el mismo fondo continuo. */
+.band {
+  border-top: 1px solid var(--border-soft);
+}
+
+/* Alterna con el fondo base de la página (--bg, que .band ya hereda sin
+   pisar nada) para que la franja se note aunque alguien no repare en la
+   línea -- --bg-panel es el mismo tono que ya usan las cards (StatCard,
+   showroomSteps), así que no es un color nuevo en la paleta. */
+.bandAlt {
+  background: var(--bg-panel);
+}
+
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -95,17 +112,19 @@
    background:var(--border)" para las divisiones se ve roto en las esquinas. */
 
 .stats {
-  display: grid;
-  /* minmax(0, 1fr) y no 1fr a secas: un grid track sin ese piso se estira
-     hasta el min-content de lo que tenga adentro -- "63.800+" (Counter en
-     fuente mono, un span por dígito, no puede achicarse ni envolver) es
-     mucho más ancho que "19"/"259"/"631", así que esa columna quedaba más
-     ancha que las otras tres pese a que las cuatro decían "1fr" (mismo
-     problema en las dos reglas de abajo, con 2 columnas en mobile). Con el
-     piso en 0, las cuatro se reparten el ancho disponible en partes
-     iguales de verdad, y el texto que no entra lo recorta SpotlightCard
-     (overflow: hidden) en vez de forzar la columna a crecer. */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* flex, no grid con columnas "1fr": un track de grid proporcional cambia
+     de tamaño con el viewport por diseño (4 anchas en desktop, 2 más
+     angostas en mobile) -- funcionaba, pero daba tarjetas de un tamaño
+     distinto según la pantalla, que es exactamente lo que no se quería acá.
+     Con flex-wrap + un ancho FIJO en cada tarjeta (StatCard.module.css
+     .card), las cuatro miden lo mismo siempre, en cualquier pantalla: en
+     desktop entran las 4 en una fila, en mobile van envolviendo de a las
+     que entren (normalmente 1 por fila) sin necesitar ningún breakpoint
+     propio -- por eso las dos reglas de "@media .stats" que había antes
+     ya no hacen falta, se sacaron. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   padding-top: 64px;
   padding-bottom: 64px;
@@ -245,7 +264,6 @@
   text-align: center;
   padding-top: 70px;
   padding-bottom: 90px;
-  border-top: 1px solid var(--border);
 }
 
 .finalCta h2 {
@@ -268,9 +286,6 @@
     padding-top: 40px;
     min-height: 0;
   }
-  .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .split,
   .showroom {
     grid-template-columns: 1fr;
@@ -284,8 +299,5 @@
 @media (max-width: 520px) {
   .stepsList {
     grid-template-columns: 1fr;
-  }
-  .stats {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

@@ -1,16 +1,13 @@
+/* Ancho fijo a propósito -- ver el comentario de .stats en
+   LandingPage.module.css: es lo que garantiza que las 4 tarjetas midan lo
+   mismo en cualquier pantalla, en vez de estirarse/achicarse con el
+   viewport. Calibrado para que "63.800+" (el número más largo, ver
+   .digits/StatCard.tsx) entre con margen de sobra al padding de acá. */
 .card {
+  width: 260px;
+  flex-shrink: 0;
   padding: 28px 24px;
   text-align: center;
-}
-
-/* Menos padding horizontal en las 2 columnas de mobile (LandingPage.module.css
-   .stats): "63.800+" es el número más largo del odómetro y a 152px de
-   tarjeta (ver ese archivo) el padding de escritorio no dejaba lugar de
-   sobra -- esto le da margen real, no al límite. */
-@media (max-width: 520px) {
-  .card {
-    padding: 24px 12px;
-  }
 }
 
 .digits {
@@ -22,7 +19,7 @@
 }
 
 .suffix {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--accent-astar);
 }
