@@ -12,21 +12,13 @@
   padding-right: 28px;
 }
 
-/* Franja a todo el ancho para cada sección (mismo patrón que .heroWrap/.hero
-   de más abajo: fondo suelto por fuera, columna de 1180px centrada adentro
-   vía .section). La línea de arriba es lo que de verdad separa una sección
-   de la siguiente en el scroll -- antes no había ningún límite ahí, solo
-   padding vertical sobre el mismo fondo continuo. */
+/* Separa cada sección de la siguiente en el scroll -- antes no había ningún
+   límite ahí, solo padding vertical sobre el mismo fondo continuo. Se probó
+   también con fondo alternado (--bg-panel) entre secciones, tipo cebra: no
+   convenció (feedback explícito), así que queda solo la línea, sin cambio
+   de fondo -- todas las secciones sobre el mismo --bg de siempre. */
 .band {
   border-top: 1px solid var(--border-soft);
-}
-
-/* Alterna con el fondo base de la página (--bg, que .band ya hereda sin
-   pisar nada) para que la franja se note aunque alguien no repare en la
-   línea -- --bg-panel es el mismo tono que ya usan las cards (StatCard,
-   showroomSteps), así que no es un color nuevo en la paleta. */
-.bandAlt {
-  background: var(--bg-panel);
 }
 
 .eyebrow {

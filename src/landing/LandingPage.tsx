@@ -142,11 +142,12 @@ export function LandingPage() {
         {/* Cada sección de acá para abajo vive dentro de su propia "franja"
             (.band, a todo el ancho -- mismo patrón que .heroWrap/.hero:
             wrapper de fondo suelto por fuera, columna de 1180px centrada
-            adentro) con fondo alternado (.bandAlt) y una línea divisoria
-            arriba. Antes todas compartían el mismo fondo de la página sin
-            ningún límite entre una y otra más que el padding vertical -- en
-            un scroll largo y todo oscuro, esa falta de límite se leía como
-            una sola sección corrida. */}
+            adentro) con una línea divisoria arriba. Antes todas compartían
+            el mismo fondo de la página sin ningún límite entre una y otra
+            más que el padding vertical -- en un scroll largo y todo oscuro,
+            esa falta de límite se leía como una sola sección corrida.
+            Se probó también con fondo alternado entre franjas (tipo cebra):
+            no convenció, así que quedó solo la línea. */}
         <section className={styles.band}>
           <Reveal id="datos-reales" className={[styles.section, styles.stats].join(" ")}>
             {STATS.map((stat, i) => (
@@ -162,7 +163,7 @@ export function LandingPage() {
           </Reveal>
         </section>
 
-        <section className={[styles.band, styles.bandAlt].join(" ")}>
+        <section className={styles.band}>
           <Reveal className={[styles.section, styles.split].join(" ")}>
             <div>
               <p className={styles.eyebrow}>{t.landing.problem.eyebrow}</p>
@@ -223,7 +224,7 @@ export function LandingPage() {
           </Reveal>
         </section>
 
-        <section className={[styles.band, styles.bandAlt].join(" ")}>
+        <section className={styles.band}>
           <Reveal id="como-funciona" className={[styles.section, styles.steps].join(" ")}>
             <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>{t.landing.howItWorks.eyebrow}</p>
             <h2 className={styles.stepsTitle}>{t.landing.howItWorks.title}</h2>
