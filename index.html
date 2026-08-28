@@ -21,19 +21,22 @@
         } catch (e) {}
       })();
     </script>
-    <!-- /favicon.ico explícito (no solo el SVG): Google Search y varios
-         crawlers/navegadores viejos chequean esa ruta fija sin mirar el
-         <link>, y sin este archivo caía al catch-all de la SPA (index.html
-         servido como si fuera el ícono), por eso no aparecía en resultados
-         de Google pese a que el SVG andaba bien en el navegador.
+    <!-- /favicon.ico explícito (no solo el <link>): Google Search y varios
+         crawlers/navegadores viejos chequean esa ruta fija directamente, y
+         sin este archivo caía al catch-all de la SPA (index.html servido
+         como si fuera el ícono), por eso no aparecía en resultados de
+         Google pese a que el ícono andaba bien en el navegador.
          El .ico en sí también importa: Google pide un ícono cuadrado de al
          menos 48x48px para mostrarlo en los resultados -- el que había solo
          traía un frame de 16x16 adentro, por debajo del mínimo, así que
          aunque el archivo cargaba bien igual quedaba afuera. Ahora trae
          16/32/48 empaquetados, más un PNG de 48x48 aparte por si algún
-         crawler mira el <link> en vez de abrir el .ico. -->
+         crawler mira el <link> en vez de abrir el .ico.
+         Sin favicon.svg a propósito: el pack de marca actual (ver
+         public/img/logo-mark.png) solo trae PNG -- un SVG a mano acá se
+         desincroniza fácil del resto de los íconos, que si son fieles al
+         original. -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

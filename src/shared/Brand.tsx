@@ -10,7 +10,7 @@ interface BrandProps {
 export function Brand({ size = 16 }: BrandProps) {
   return (
     <Link to="/" className={styles.lockup} style={{ fontSize: size }}>
-      <img src="/img/logo-mark.svg" className={styles.icon} alt="" />
+      <img src="/img/logo-mark.png" className={styles.icon} alt="" />
       <span className={styles.word}>Route</span>
       <span className={styles.ai}>EV</span>
     </Link>
