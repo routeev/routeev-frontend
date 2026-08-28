@@ -96,7 +96,16 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr) y no 1fr a secas: un grid track sin ese piso se estira
+     hasta el min-content de lo que tenga adentro -- "63.800+" (Counter en
+     fuente mono, un span por dígito, no puede achicarse ni envolver) es
+     mucho más ancho que "19"/"259"/"631", así que esa columna quedaba más
+     ancha que las otras tres pese a que las cuatro decían "1fr" (mismo
+     problema en las dos reglas de abajo, con 2 columnas en mobile). Con el
+     piso en 0, las cuatro se reparten el ancho disponible en partes
+     iguales de verdad, y el texto que no entra lo recorta SpotlightCard
+     (overflow: hidden) en vez de forzar la columna a crecer. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   padding-top: 64px;
   padding-bottom: 64px;
@@ -260,7 +269,7 @@
     min-height: 0;
   }
   .stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .split,
   .showroom {
@@ -277,6 +286,6 @@
     grid-template-columns: 1fr;
   }
   .stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

@@ -3,6 +3,16 @@
   text-align: center;
 }
 
+/* Menos padding horizontal en las 2 columnas de mobile (LandingPage.module.css
+   .stats): "63.800+" es el número más largo del odómetro y a 152px de
+   tarjeta (ver ese archivo) el padding de escritorio no dejaba lugar de
+   sobra -- esto le da margen real, no al límite. */
+@media (max-width: 520px) {
+  .card {
+    padding: 24px 12px;
+  }
+}
+
 .digits {
   display: flex;
   align-items: baseline;
@@ -12,7 +22,7 @@
 }
 
 .suffix {
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--accent-astar);
 }

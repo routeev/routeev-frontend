@@ -36,7 +36,7 @@ export function StatCard({ value, places, suffix, label, index }: StatCardProps)
         <div className={styles.valueRow}>
           <span className="sr-only">{`${num(value)}${suffix ?? ""}`}</span>
           <span aria-hidden="true" className={styles.digits}>
-            <Counter value={target} places={places} fontSize={30} fontWeight={700} textColor="var(--accent-astar)" fadeBackground="var(--bg-panel)" />
+            <Counter value={target} places={places} fontSize={22} fontWeight={700} textColor="var(--accent-astar)" fadeBackground="var(--bg-panel)" />
             {suffix && <span className={styles.suffix}>{suffix}</span>}
           </span>
         </div>
