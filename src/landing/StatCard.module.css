@@ -5,7 +5,6 @@
    .digits/StatCard.tsx) entre con margen de sobra al padding de acá. */
 .card {
   width: 260px;
-  flex-shrink: 0;
   padding: 28px 24px;
   text-align: center;
 }

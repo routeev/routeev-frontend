@@ -99,10 +99,32 @@
   gap: 10px;
 }
 
+/* Antes era texto suelto directo sobre el degradé del hero -- sin ningún
+   contenedor quedaba flotando sin ancla visual, como un dato que se olvidó
+   de tener diseño. Un badge/pill (mismo radius-pill que usa el resto de la
+   app -- LanguageSwitcher, botones) lo agrupa como una sola pieza y lo
+   distingue del fondo animado detrás. */
 .heroVisualCaption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-faint);
+  color: var(--text-muted);
+  background: rgba(var(--bg-rgb), 0.55);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  backdrop-filter: blur(4px);
+}
+
+.heroVisualCaption::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  flex-shrink: 0;
 }
 
 /* --- Stats ---
@@ -112,22 +134,39 @@
    background:var(--border)" para las divisiones se ve roto en las esquinas. */
 
 .stats {
-  /* flex, no grid con columnas "1fr": un track de grid proporcional cambia
-     de tamaño con el viewport por diseño (4 anchas en desktop, 2 más
-     angostas en mobile) -- funcionaba, pero daba tarjetas de un tamaño
-     distinto según la pantalla, que es exactamente lo que no se quería acá.
-     Con flex-wrap + un ancho FIJO en cada tarjeta (StatCard.module.css
-     .card), las cuatro miden lo mismo siempre, en cualquier pantalla: en
-     desktop entran las 4 en una fila, en mobile van envolviendo de a las
-     que entren (normalmente 1 por fila) sin necesitar ningún breakpoint
-     propio -- por eso las dos reglas de "@media .stats" que había antes
-     ya no hacen falta, se sacaron. */
-  display: flex;
-  flex-wrap: wrap;
+  /* Grid con columnas de ancho FIJO (260px, igual que StatCard.module.css
+     .card) en vez de "1fr": un track proporcional cambia de tamaño con el
+     viewport por diseño, que es exactamente lo que no se quería acá -- las
+     cuatro tienen que medir lo mismo siempre, en cualquier pantalla.
+     No es flex-wrap libre a propósito: dejar que el navegador decida cuántas
+     entran por fila (como estaba antes) daba anchos "de sobra" donde 3
+     entraban cómodas pero la 4ª no, y esa quedaba sola y centrada en su
+     propia fila -- una tarjeta huérfana, nada prolijo. Con columnas
+     explícitas por breakpoint (4/2/1) el corte es intencional, no accidental
+     del ancho que sobró. */
+  display: grid;
+  grid-template-columns: repeat(4, 260px);
   justify-content: center;
   gap: 16px;
-  padding-top: 64px;
-  padding-bottom: 64px;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
+}
+
+/* 4×260 + 3×16 de gap = 1088px de contenido -- por debajo de eso ya no
+   entran las 4 cómodas dentro de .section (1180px - 56px de padding =
+   1124px, así que el corte real cae un poco antes por el propio padding).
+   Breakpoint propio en vez de los 900/520 de siempre: el resto de las
+   secciones no depende de un ancho de tarjeta fijo, esta sí. */
+@media (max-width: 1150px) {
+  .stats {
+    grid-template-columns: repeat(2, 260px);
+  }
+}
+
+@media (max-width: 620px) {
+  .stats {
+    grid-template-columns: 260px;
+  }
 }
 
 /* --- Problema / Solucion --- */
@@ -136,8 +175,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 56px;
-  padding-top: 80px;
-  padding-bottom: 80px;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
 }
 
 .split h2 {
@@ -161,8 +200,13 @@
   grid-template-columns: 1.15fr 1fr;
   gap: 56px;
   align-items: center;
-  padding-top: 20px;
-  padding-bottom: 80px;
+  /* padding-top solía ser 20px, mucho menos que el resto -- a propósito
+     cuando esta sección todavía vivía pegada a "Problema/Solución" sobre el
+     mismo fondo corrido. Ahora que cada una tiene su propia franja (.band,
+     con borde y fondo alternado, ver arriba) esa cercanía deliberada ya no
+     hace falta: el ritmo parejo con el resto se lee más prolijo. */
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
 }
 
 .showroom h2 {
@@ -217,8 +261,8 @@
 /* --- Como funciona --- */
 
 .steps {
-  padding-top: 40px;
-  padding-bottom: 90px;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
 }
 
 .stepsTitle {
@@ -262,8 +306,8 @@
 
 .finalCta {
   text-align: center;
-  padding-top: 70px;
-  padding-bottom: 90px;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
 }
 
 .finalCta h2 {
