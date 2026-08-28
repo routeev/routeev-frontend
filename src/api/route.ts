@@ -6,6 +6,13 @@ export interface PeajePunto {
   lat: number;
   lon: number;
   monto_uyu: number | null;
+  /**
+   * Nombre de la barrera ("Ruta Interbalnearia - Pando (km 32.4)"). Presente
+   * en los cálculos hechos con `POST /api/route/plan`, que detecta el peaje
+   * sobre la geometría real y sabe cuál es. Ausente en los viejos, que solo
+   * marcaban el punto medio de un tramo con `toll=yes`.
+   */
+  nombre?: string;
 }
 
 export interface RouteBreakdown {
@@ -27,6 +34,12 @@ export interface RouteBreakdown {
   costo_uyu_recargas?: number;
   // Recargas en operadores sin tarifario publicado: quedan FUERA del total.
   recargas_sin_tarifa?: number;
+  /**
+   * Tramos donde Valhalla marcó peaje y no se pudo identificar la barrera: el
+   * total de peajes está INCOMPLETO, no en cero. Mismo criterio que
+   * `recargas_sin_tarifa`.
+   */
+  peajes_sin_tarifa?: number;
   // Alineado 1 a 1 con `recharges` (mismo orden); trae node_id por si los
   // largos no coinciden y hay que caer a matchear por estación.
   recargas_costos?: ({ node_id: string } & TarifaRecarga)[];

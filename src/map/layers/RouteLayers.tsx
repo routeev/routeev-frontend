@@ -59,7 +59,11 @@ export function RouteLayers() {
       )}
       {peajes.map((p, i) => (
         <Marker key={i} position={[p.lat, p.lon]} icon={tollIcon()} zIndexOffset={400}>
-          <Popup>{p.monto_uyu ? rl.tollAmount(formatUyu(p.monto_uyu)) : rl.tollUnknownAmount}</Popup>
+          <Popup>
+            {p.nombre ? <strong>{p.nombre}</strong> : null}
+            {p.nombre ? <br /> : null}
+            {p.monto_uyu ? rl.tollAmount(formatUyu(p.monto_uyu)) : rl.tollUnknownAmount}
+          </Popup>
         </Marker>
       ))}
     </>
