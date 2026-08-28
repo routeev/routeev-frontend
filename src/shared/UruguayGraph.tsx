@@ -21,8 +21,16 @@ interface Node {
   side?: LabelSide;
 }
 
+// Las 19, todas con su etiqueta -- antes 6 quedaban como puntos sin nombre
+// (artigas/flores/florida/lavalleja/sanjose/canelones), invisibles al lado
+// de las otras 13: el grafo tenía los 19 departamentos de verdad, pero no
+// se LEÍA como "todo el país" a simple vista. Mismo criterio que ya usaba
+// el resto: el nombre más reconocible de cada departamento, no
+// necesariamente su capital literal (Punta del Este y no Maldonado, Melo y
+// no Cerro Largo) -- Trinidad/Minas sí son las capitales de Flores/Lavalleja,
+// pero son el nombre por el que esos departamentos se conocen.
 const NODES: Node[] = [
-  { id: "artigas", x: 70, y: 20 },
+  { id: "artigas", x: 70, y: 20, label: "Artigas", side: "top" },
   { id: "rivera", x: 250, y: 18, label: "Rivera", side: "top" },
   { id: "salto", x: 55, y: 110, label: "Salto", side: "left" },
   { id: "paysandu", x: 78, y: 195, label: "Paysandú", side: "left" },
@@ -31,14 +39,14 @@ const NODES: Node[] = [
   { id: "rionegro", x: 62, y: 262, label: "Fray Bentos", side: "left" },
   { id: "durazno", x: 218, y: 270, label: "Durazno", side: "right" },
   { id: "treintaytres", x: 358, y: 278, label: "Treinta y Tres", side: "right" },
-  { id: "flores", x: 152, y: 300 },
+  { id: "flores", x: 152, y: 300, label: "Trinidad", side: "left" },
   { id: "soriano", x: 78, y: 332, label: "Mercedes", side: "left" },
-  { id: "florida", x: 197, y: 355 },
-  { id: "lavalleja", x: 302, y: 345 },
+  { id: "florida", x: 197, y: 355, label: "Florida", side: "right" },
+  { id: "lavalleja", x: 302, y: 345, label: "Minas", side: "right" },
   { id: "rocha", x: 402, y: 390, label: "Rocha", side: "right" },
-  { id: "sanjose", x: 118, y: 400 },
+  { id: "sanjose", x: 118, y: 400, label: "San José", side: "left" },
   { id: "colonia", x: 42, y: 420, label: "Colonia", side: "left" },
-  { id: "canelones", x: 168, y: 435 },
+  { id: "canelones", x: 168, y: 435, label: "Canelones", side: "top" },
   { id: "montevideo", x: 150, y: 470, label: "Montevideo", side: "bottom" },
   { id: "maldonado", x: 332, y: 450, label: "Punta del Este", side: "right" },
 ];
