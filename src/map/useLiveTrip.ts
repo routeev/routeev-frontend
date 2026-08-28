@@ -455,16 +455,23 @@ export function useLiveTrip() {
 
   const handleError = useCallback(
     (err: GeolocationPositionError) => {
-      const isPermission = err.code === err.PERMISSION_DENIED;
-      const text = isPermission
-        ? lt.permissionDenied
-        : err.code === err.TIMEOUT
-          ? lt.searchingGps
-          : lt.locationUnavailable;
-      setUi((u) => ({ ...u, active: true, statusText: text, statusKind: isPermission ? "warn" : u.statusKind }));
       // Un timeout pasajero no mata el viaje (el navegador reintenta watchPosition
       // solo); un permiso denegado es terminal.
-      if (isPermission) end();
+      if (err.code === err.PERMISSION_DENIED) {
+        // end() PRIMERO, el mensaje DESPUES -- al revés (que es como estaba)
+        // el reset de end() a initialUi pisaba en el mismo tick el statusText
+        // que se acababa de poner, antes de que React llegara a pintarlo: el
+        // viaje terminaba en silencio, sin decir por qué. TripDashboard solo
+        // muestra este statusText cuando !active (línea "!liveTrip.ui.active
+        // && !liveTrip.ui.finished && liveTrip.ui.statusText"), así que
+        // setearlo recién después de que end() ya dejó active en false es lo
+        // que hace falta para que se vea.
+        end();
+        setUi((u) => ({ ...u, statusText: lt.permissionDenied, statusKind: "warn" }));
+        return;
+      }
+      const text = err.code === err.TIMEOUT ? lt.searchingGps : lt.locationUnavailable;
+      setUi((u) => ({ ...u, active: true, statusText: text }));
     },
     [end, lt]
   );
