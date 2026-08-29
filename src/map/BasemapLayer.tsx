@@ -32,7 +32,25 @@ export function BasemapLayer() {
     });
     layer.addTo(map);
     return () => {
-      layer.remove();
+      // try/catch a proposito: @maplibre/maplibre-gl-leaflet sincroniza zoom
+      // entre Leaflet y el MapLibre de adentro escuchando eventos del mapa
+      // de Leaflet -- si este efecto se re-dispara rapido (entrar a /app con
+      // el tema guardado en claro, por ejemplo: arranca en oscuro por
+      // defecto y syncThemeForRoute lo corrige a claro casi en el mismo
+      // tick, rehaciendo la capa de nuevo) puede quedar un evento en cola
+      // que le pega a la instancia de MapLibre ya destruida antes de que
+      // termine de inicializarse. Confirmado en produccion: "Uncaught
+      // TypeError: Cannot read properties of null (reading 'getZoom')"
+      // adentro del bundle de la libreria, no de este archivo. No es un bug
+      // nuestro para arreglar de raiz (es interno a la libreria de terceros)
+      // -- esto evita que ese caso de carrera tire un error sin capturar a
+      // la consola. El basemap ya quedo reemplazado por la capa nueva antes
+      // de que esto pueda pasar, asi que no hay nada visible que se pierda.
+      try {
+        layer.remove();
+      } catch (e) {
+        console.warn("No se pudo remover limpio el basemap anterior (known issue de maplibre-gl-leaflet):", e);
+      }
     };
     // `theme` en las deps: al cambiarlo se rehace la capa con el otro estilo.
     // Se rehace entera en vez de llamar a setStyle() sobre la instancia de
