@@ -2,9 +2,30 @@ import type { RouteBreakdown, RouteResult } from "../api/route";
 import type { NodeId, Station } from "../api/graph";
 import type { Vehicle } from "../api/vehicles";
 
-/** Un tramo con peaje detectado no siempre tiene tarifa real conocida: distingue "sin costo" de "no sabemos el costo". */
+/** Un peaje detectado no siempre tiene tarifa conocida: distingue "sin costo" de "no sabemos el costo". */
 export function hayPeajeSinMonto(b: RouteBreakdown): boolean {
-  return (b.peajes_puntos ?? []).some((p) => p.monto_uyu == null);
+  // `peajes_sin_tarifa`: tramos donde el motor marcó peaje y no se identificó
+  // la barrera. `monto_uyu == null`: la forma vieja del mismo problema, en los
+  // cálculos hechos contra el grafo semilla.
+  return (b.peajes_sin_tarifa ?? 0) > 0 || (b.peajes_puntos ?? []).some((p) => p.monto_uyu == null);
+}
+
+/**
+ * Si este viaje pasa por algún peaje.
+ *
+ * NO se puede preguntar por `b.peaje`: ese es el penalty en minutos-equivalente
+ * de la función de costo, y las aristas del grafo de estaciones nacen con 0
+ * (los peajes se detectan después, sobre la geometría real — ver app/peajes.py
+ * en la API). Preguntarle a él es lo que hacía que un viaje Montevideo-Punta
+ * del Este dijera "Sin peajes" mientras cruzaba la Interbalnearia dos veces.
+ *
+ * Los tres términos son la misma pregunta desde tres ángulos, y hace falta que
+ * estén los tres: el monto para un peaje ya tarifado, los puntos para uno
+ * detectado sin monto, y el penalty para los resultados guardados por el motor
+ * viejo, que traen eso y no lo demás.
+ */
+export function hayPeajes(b: RouteBreakdown): boolean {
+  return b.peaje_uyu > 0 || (b.peajes_puntos ?? []).length > 0 || b.peaje > 0;
 }
 
 export function pctOfCapacity(kwh: number, vehicle: Vehicle | null): number | null {
@@ -66,7 +87,7 @@ export function summarizeTrip(vehicle: Vehicle | null, startBatteryKwh: number, 
     homeEnergyKwh: b.energia_casa_kwh ?? null,
     publicEnergyKwh: b.energia_recargada_kwh ?? null,
     tollCount: (b.peajes_puntos ?? []).length,
-    hasTolls: b.peaje > 0,
+    hasTolls: hayPeajes(b),
     arrivalPct: pctOfCapacity(arrivalBatteryKwh, vehicle),
     arrivalKwh: arrivalBatteryKwh,
     rechargeCount: r.recharges.length,
