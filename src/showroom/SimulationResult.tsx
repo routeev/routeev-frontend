@@ -1,12 +1,10 @@
 import { useMemo } from "react";
 import type { ShowroomModel, SimulateResult } from "../api/showroom";
-import { CertaintyLine } from "../shared/CertaintyLine";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration, formatUyu } from "../shared/format";
-import { certaintyPointsFromSegments } from "./certaintyProfile";
 import { num } from "./num";
 import { SimulationMap } from "./SimulationMap";
-import { armarSegmentos, armarTramos } from "./simulationTimeline";
+import { armarTramos } from "./simulationTimeline";
 import { tarifaLinea } from "./tarifaTexto";
 import styles from "./SimulationResult.module.css";
 
@@ -25,11 +23,6 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
   const sr = t.showroom.simulationResult;
   const tramosInfo = useMemo(() => armarTramos(resultado), [resultado]);
   const tieneMapa = resultado.detalle.tramos.every((t) => Array.isArray(t.route_coords) && t.route_coords.length > 1);
-  const certaintyPoints = useMemo(() => {
-    if (!tieneMapa) return [];
-    const { segments } = armarSegmentos(tramosInfo, (model.bateria_kwh * bateria) / 100);
-    return certaintyPointsFromSegments(segments, model.bateria_kwh, desde, hasta);
-  }, [tieneMapa, tramosInfo, model.bateria_kwh, bateria, desde, hasta]);
 
   if (!resultado.llega) {
     return (
@@ -66,12 +59,12 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
         </div>
       )}
 
-      {certaintyPoints.length >= 2 && (
-        <div className={styles.profile}>
-          <CertaintyLine points={certaintyPoints} scale="macro" />
-        </div>
-      )}
-
+      {/* Acá vivía el perfil batería-vs-distancia (<CertaintyLine
+          scale="macro">). Se retiró a pedido: con los nombres reales de las
+          paradas las etiquetas del eje se pisaban unas a otras y la
+          animación del mapa de arriba ya cuenta la misma historia (la
+          batería bajando tramo a tramo) mejor. La versión "micro" del
+          historial (/profile) sigue viva -- ahí no dibuja etiquetas. */}
       <p className={[styles.veredicto, styles.si].join(" ")}>{sr.llega}</p>
       <p className={styles.detalle}>{sr.llegaDetalle(desde, hasta, bateria, d.tramos.length > 1)}</p>
 
