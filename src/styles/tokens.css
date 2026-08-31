@@ -88,14 +88,19 @@
    ajuste de SO habría sorprendido a cualquiera que ya la usa sin haber
    pedido el cambio.
 
-   El mapa (Leaflet/MapLibre, tiles + rutas + marcadores en markers.module.css,
-   NavigationMap.module.css, SimulationMap.module.css) queda FUERA de este
-   tema a propósito: ninguna de las dos librerías puede leer variables CSS en
-   tiempo de ejecución (los colores de ruta están hardcodeados en JS -- ver
-   RouteLayers.tsx, NavigationMap.tsx), así que las tiles siguen siendo las
-   oscuras de CARTO/OpenFreeMap sin importar el tema de la app. Retonar eso
-   (tiles claras + recalibrar el contraste de cada marcador) es un trabajo
-   aparte, no esta pasada.
+   Los mapas TAMBIÉN siguen el tema, pero no por CSS: el basemap es una URL
+   de estilo de OpenFreeMap que se le pasa a MapLibre (ver basemap.ts +
+   BasemapLayer.tsx para los mapas de Leaflet, y el efecto del tema en
+   NavigationMap.tsx para el modo navegación). Lo que las librerías de mapa
+   NO pueden leer en runtime son variables CSS para lo que se les pasa por
+   JS: los colores de las polilíneas van como hex duplicados a mano (ver
+   COLORES_RUTA en RouteLayers.tsx y ROUTE_COLOR en NavigationMap.tsx). Los
+   marcadores (DivIcon de Leaflet, Marker de MapLibre) sí son DOM normal y
+   usan var() como cualquier otro elemento.
+
+   Excepción deliberada: el mapa del showroom (SimulationMap) vive fuera de
+   /app y el showroom es siempre oscuro (ver theme.ts), así que sus colores
+   hardcodeados oscuros están bien ahí.
 ----------------------------------------------------------------------- */
 :root[data-theme="light"] {
   --bg: #eef1f4;

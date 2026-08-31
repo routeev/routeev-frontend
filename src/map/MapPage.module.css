@@ -177,7 +177,12 @@
   padding: 8px 8px 8px 14px;
   border: 1px solid var(--accent-astar);
   border-radius: var(--radius-pill);
-  background: rgba(10, 14, 19, 0.92);
+  /* rgba(var(--bg-rgb)) y no un hex fijo: este cartel vive en /app, que SÍ
+     tiene tema claro -- con el rgba(10,14,19) hardcodeado de antes quedaba
+     como una barra negra flotando sobre el mapa claro (reporte real, con
+     captura). El token trae la tripleta del fondo de cada tema y el alpha
+     mantiene el mapa insinuándose atrás, igual que siempre. */
+  background: rgba(var(--bg-rgb), 0.92);
   backdrop-filter: blur(4px);
   box-shadow: var(--shadow-float);
 }
