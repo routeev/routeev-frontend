@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Marker, Polyline, Popup, useMap } from "react-leaflet";
 import { useTranslation } from "../../i18n/LanguageProvider";
 import { formatUyu } from "../../shared/format";
-import { tollIcon } from "../markerIcons";
+import { radarIcon, tollIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
 import { useActiveTheme } from "../../theme/useActiveTheme";
 
@@ -42,6 +42,7 @@ export function RouteLayers() {
   // usa igual A*, que trae el "no se encontró ruta" a mostrar.
   const primary = result.astar.found ? result.astar : (result.dijkstra ?? result.astar);
   const peajes = primary.breakdown.peajes_puntos ?? [];
+  const radares = primary.breakdown.radares_puntos ?? [];
 
   return (
     <>
@@ -60,6 +61,11 @@ export function RouteLayers() {
       {peajes.map((p, i) => (
         <Marker key={i} position={[p.lat, p.lon]} icon={tollIcon()} zIndexOffset={400}>
           <Popup>{p.monto_uyu ? rl.tollAmount(formatUyu(p.monto_uyu)) : rl.tollUnknownAmount}</Popup>
+        </Marker>
+      ))}
+      {radares.map((r, i) => (
+        <Marker key={i} position={[r.lat, r.lon]} icon={radarIcon()} zIndexOffset={400}>
+          <Popup>{r.maxspeed_kmh != null ? rl.radarWithSpeed(r.nombre, r.maxspeed_kmh) : rl.radarLabel(r.nombre)}</Popup>
         </Marker>
       ))}
     </>

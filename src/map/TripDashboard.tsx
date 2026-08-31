@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { useMapStore, selectedVehicle, batteryPctToKwh } from "./mapStore";
+import { getRadarVibrationEnabled, setRadarVibrationEnabled } from "./radarAlertPrefs";
 import { findStationDetail, pctOfCapacity, hayPeajeSinMonto, summarizeTrip } from "./tripStats";
 import type { LiveTripUi } from "./useLiveTrip";
 import styles from "./TripDashboard.module.css";
@@ -56,6 +58,8 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const stations = useMapStore((s) => s.stations);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const vehicle = useMapStore(selectedVehicle);
+  // Lazy init: lee localStorage una sola vez al montar, no en cada render.
+  const [radarVibrationEnabled, setRadarVibrationEnabledState] = useState(getRadarVibrationEnabled);
 
   if (!result) return null;
 
@@ -381,6 +385,21 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 {td.cancelPlan}
               </button>
             )}
+            {/* Vive acá (visible tanto antes de arrancar como durante el
+                viaje) en vez de en una pantalla de ajustes aparte: es la
+                única preferencia que existe hoy sobre el viaje en vivo, y
+                separarla en su propio panel sería más navegación que ajuste. */}
+            <label className={styles.radarVibrationToggle}>
+              <input
+                type="checkbox"
+                checked={radarVibrationEnabled}
+                onChange={(e) => {
+                  setRadarVibrationEnabled(e.target.checked);
+                  setRadarVibrationEnabledState(e.target.checked);
+                }}
+              />
+              {td.live.radarVibration}
+            </label>
           </div>
 
           {/* "Iniciar viaje" puede rechazarse sin llegar a arrancar el
@@ -451,6 +470,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               >
                 {liveTrip.ui.statusText}
               </div>
+              {/* Aviso puntual de radar: arriba del advisory de batería (que
+                  es un estado continuo, no algo que pida atención inmediata)
+                  porque esto sí la pide -- role="alert" para que un lector de
+                  pantalla lo anuncie apenas aparece, igual que saveError más
+                  arriba. */}
+              {liveTrip.ui.radarAlert && (
+                <div className={[styles.advisory, styles.radarAlert].join(" ")} role="alert">
+                  {liveTrip.ui.radarAlert.maxspeedKmh != null
+                    ? td.live.radarAlertWithSpeed(liveTrip.ui.radarAlert.nombre, liveTrip.ui.radarAlert.maxspeedKmh)
+                    : td.live.radarAlert(liveTrip.ui.radarAlert.nombre)}
+                </div>
+              )}
               {liveTrip.ui.advisory && (
                 <div
                   className={[

@@ -5,6 +5,7 @@ import { logTrip } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { computeCompassHeading, haversineKm, smoothBearingDeg } from "../shared/geo";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
+import { getRadarVibrationEnabled } from "./radarAlertPrefs";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
 
@@ -88,6 +89,39 @@ const COMPASS_SMOOTHING_ALPHA = 0.35;
 
 type RechargeStop = { nodeId: NodeId; cumKm: number; addedKwh: number; stationName: string; applied: boolean };
 
+// Aviso de radar: umbral en TIEMPO, no en una distancia fija -- "a la
+// velocidad actual, en cuántos segundos llego". Una distancia fija avisa
+// tarde en autopista (a 150 km/h, 300 m son menos de 8 segundos) y demasiado
+// temprano en ciudad (a 30 km/h, esos mismos 300 m son 36 segundos, mucho
+// antes de que haga falta prestar atención). Ver speedAdvisory.ts para el
+// mismo criterio aplicado al margen de batería.
+const RADAR_ALERT_LOOKAHEAD_SEC = 15;
+// Piso de velocidad para el cálculo del umbral: sin esto, parado en el
+// tráfico (o sin dato de velocidad todavía, al toque de arrancar el viaje) el
+// umbral en distancia se iría a casi cero y el aviso llegaría demasiado
+// tarde -- o nunca, si la persona está parada justo antes del radar.
+const RADAR_ALERT_MIN_SPEED_KMH = 20;
+// Techo de velocidad para el cálculo del umbral: en autopista a alta
+// velocidad no hace falta que el aviso se dispare a varios kilómetros de
+// distancia para dar tiempo de reacción.
+const RADAR_ALERT_MAX_SPEED_KMH = 150;
+// Una vez mostrado, el aviso se mantiene visible hasta pasar el radar (más
+// este colchón) en vez de desaparecer a los pocos segundos por un timer: así
+// sigue viéndose mientras se frena, y se va solo justo cuando ya quedó atrás.
+const RADAR_ALERT_CLEAR_BUFFER_KM = 0.05;
+
+type RadarStop = { nombre: string; maxspeedKmh: number | null; cumKm: number; avisado: boolean };
+
+function radarAlertThresholdKm(speedKmh: number | null): number {
+  const v = Math.max(RADAR_ALERT_MIN_SPEED_KMH, Math.min(RADAR_ALERT_MAX_SPEED_KMH, speedKmh ?? RADAR_ALERT_MIN_SPEED_KMH));
+  return (v * RADAR_ALERT_LOOKAHEAD_SEC) / 3600;
+}
+
+export interface RadarAlert {
+  nombre: string;
+  maxspeedKmh: number | null;
+}
+
 // iOS no expone alpha/beta/gamma "en crudo" de forma confiable para brújula
 // -- en cambio da esta propiedad no estándar, ya compensada por Apple según
 // la inclinación real del celular y la orientación de pantalla. Cuando está
@@ -130,6 +164,11 @@ interface TripRecord {
   lastTrustedKm: number;
   hasLeftDestination: boolean;
   rechargeStops: RechargeStop[];
+  radars: RadarStop[];
+  // El radar que se está avisando ahora mismo (o null si no hay ninguno
+  // activo). Distinto de `avisado` en cada RadarStop: `avisado` es "ya se
+  // avisó, no se vuelve a avisar", esto es "el aviso sigue en pantalla".
+  activeRadarAlert: RadarStop | null;
   consumption: number;
   capacityKwh: number;
   batteryStart: number;
@@ -164,6 +203,10 @@ export interface LiveTripUi {
   statusText: string;
   statusKind: StatusKind;
   advisory: SpeedAdvisory | null;
+  // Aviso puntual de radar adelante, distinto de `advisory` (que es un
+  // estado continuo de la batería): aparece, se muestra mientras se pasa el
+  // radar, y desaparece solo -- ver RADAR_ALERT_CLEAR_BUFFER_KM.
+  radarAlert: RadarAlert | null;
   // TEMP DEBUG, revert junto con el bloque que lo muestra en TripDashboard:
   // diagnóstico para el próximo viaje real (precisión que reporta el propio
   // GPS del celular, y cada cuánto llega un fix nuevo) -- sin esto, cada
@@ -196,6 +239,7 @@ const initialUi: LiveTripUi = {
   statusText: "",
   statusKind: "",
   advisory: null,
+  radarAlert: null,
   gpsAccuracyM: null,
   gpsGapMs: null,
   saveError: null,
@@ -372,6 +416,29 @@ export function useLiveTrip() {
       // junto con el resto del estado del viaje.
       trip.lastFix = { lat: latitude, lon: longitude, tMs: now };
 
+      // Aviso de radar. Igual que rechargeStops arriba, solo se evalúa
+      // onRoute: fuera de ruta clampedKm no es una posición real, así que ni
+      // dispara un aviso nuevo ni lo da por pasado.
+      if (onRoute) {
+        if (trip.activeRadarAlert && clampedKm > trip.activeRadarAlert.cumKm + RADAR_ALERT_CLEAR_BUFFER_KM) {
+          trip.activeRadarAlert = null;
+        }
+        if (!trip.activeRadarAlert) {
+          const candidate = trip.radars.find((r) => !r.avisado && r.cumKm >= clampedKm);
+          if (candidate && candidate.cumKm - clampedKm <= radarAlertThresholdKm(trip.speedKmh)) {
+            const triggered: RadarStop = { ...candidate, avisado: true };
+            trip.radars = trip.radars.map((r) => (r === candidate ? triggered : r));
+            trip.activeRadarAlert = triggered;
+            if (getRadarVibrationEnabled() && typeof navigator.vibrate === "function") {
+              navigator.vibrate([120, 80, 120]);
+            }
+          }
+        }
+      }
+      const radarAlert: RadarAlert | null = trip.activeRadarAlert
+        ? { nombre: trip.activeRadarAlert.nombre, maxspeedKmh: trip.activeRadarAlert.maxspeedKmh }
+        : null;
+
       const distToDestM = haversineKm(latitude, longitude, trip.destination[0], trip.destination[1]) * 1000;
       if (distToDestM > DEPARTED_FROM_DESTINATION_M) trip.hasLeftDestination = true;
 
@@ -446,6 +513,7 @@ export function useLiveTrip() {
         statusText,
         statusKind,
         advisory,
+        radarAlert,
         gpsAccuracyM: accuracyM,
         gpsGapMs: gapMs,
       }));
@@ -539,6 +607,18 @@ export function useLiveTrip() {
       })
       .sort((a, b) => a.cumKm - b.cumKm);
 
+    // radares_puntos: ausente en un backend viejo o en un replay del
+    // historial calculado antes de esta versión -- ahí simplemente no hay
+    // radares que avisar, igual que peajes_puntos en RouteLayers.tsx.
+    const radarStops: RadarStop[] = (result.astar.breakdown.radares_puntos ?? [])
+      .map((r) => ({
+        nombre: r.nombre,
+        maxspeedKmh: r.maxspeed_kmh,
+        cumKm: nearestCumulativeDistance(coords, cum, r.lat, r.lon),
+        avisado: false,
+      }))
+      .sort((a, b) => a.cumKm - b.cumKm);
+
     const trip: TripRecord = {
       watchId: null,
       coords,
@@ -547,6 +627,8 @@ export function useLiveTrip() {
       lastTrustedKm: 0,
       hasLeftDestination: false,
       rechargeStops,
+      radars: radarStops,
+      activeRadarAlert: null,
       consumption: vehicle.consumption_kwh_per_km,
       capacityKwh: vehicle.battery_capacity_kwh,
       batteryStart: startBatteryKwh,

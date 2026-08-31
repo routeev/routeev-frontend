@@ -10,6 +10,11 @@ const CAR_SVG =
 // (circulo/target) para diferenciarlos incluso sin leer el color.
 const FLAG_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h11l-2.2 3.5L17 11H6"/></svg>';
+// Silueta de cámara (cuerpo + visor + lente), mismo criterio que BOLT_SVG/
+// CAR_SVG/FLAG_SVG de arriba: un ícono vectorial propio, no un emoji, para
+// que se vea igual en cualquier plataforma.
+const RADAR_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="12.5" height="9" rx="1.6"/><path d="M16 11.3 20.6 8.4a.85.85 0 0 1 1.3.72v7.76a.85.85 0 0 1-1.3.72L16 14.7Z"/><circle cx="9.75" cy="12.5" r="2.5" fill="#2b0b0b"/></svg>';
 
 /**
  * Origen: circulo tipo "target" (punto de partida). Destino: pin clasico
@@ -77,6 +82,16 @@ export function tollIcon(): L.DivIcon {
     html: `<div class="${styles.toll}">$</div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
+  });
+}
+
+/** Radar de velocidad fijo que la ruta cruza -- mismo criterio visual que tollIcon, en rojo (--danger) para distinguirlo del peaje (amarillo). */
+export function radarIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<div class="${styles.radar}">${RADAR_SVG}</div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
   });
 }
 

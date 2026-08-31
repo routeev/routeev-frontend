@@ -265,6 +265,29 @@
   border-color: var(--danger);
 }
 
+/* Aviso de radar: puntual y pasajero (aparece, se ve mientras se pasa el
+   radar, se va solo), a diferencia del advisory de batería que es un estado
+   continuo -- el borde izquierdo grueso lo separa visualmente del resto de
+   la columna de avisos en vez de ser una fila más entre ellos. */
+.radarAlert {
+  border-left: 4px solid var(--danger);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.radarVibrationToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.radarVibrationToggle input {
+  cursor: pointer;
+}
+
 @media (max-width: 860px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
