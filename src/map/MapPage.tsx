@@ -7,6 +7,7 @@ import { Banner } from "../shared/Banner";
 import buttons from "../shared/buttons.module.css";
 import { IconUser } from "../shared/NavIcons";
 import { MapCanvas } from "./MapCanvas";
+import type { NavChargeStop, NavRadar } from "./NavigationMap";
 import { RouteInputPanel } from "./RouteInputPanel";
 import { StationDetailPanel } from "./StationDetailPanel";
 import { StationsPanel } from "./StationsPanel";
@@ -24,6 +25,8 @@ import styles from "./MapPage.module.css";
 // arrancado, la minoría de las visitas a /app. Cargarlo siempre en el bundle
 // del mapa penalizaría a todo el mundo por una función que la mayoría nunca
 // prende. Mismo patrón que lazyPages.tsx para las pantallas enteras.
+// El import de tipos de abajo es `import type` a propósito: se borra al
+// compilar, así que no mete el módulo real en este chunk.
 const NavigationMap = lazy(() => import("./NavigationMap").then((m) => ({ default: m.NavigationMap })));
 
 // Referencia estable para "sin ruta calculada todavía": un `?? []` inline en
@@ -73,8 +76,13 @@ export function MapPage() {
   const loaders = useMapLoaders();
   const liveTrip = useLiveTrip();
   const calc = useCalculateRoute();
-  const routeCoords = useMapStore((s) => s.lastResult?.astar.route_coords ?? EMPTY_ROUTE);
-  const hasResult = useMapStore((s) => s.lastResult != null);
+  // Se selecciona el resultado ENTERO (referencia estable: solo cambia con
+  // setLastResult) y lo demás se deriva, en vez de una suscripción por dato:
+  // routeCoords, hasResult y los marcadores del modo navegación de abajo
+  // salen todos del mismo objeto.
+  const result = useMapStore((s) => s.lastResult);
+  const routeCoords = result?.astar.route_coords ?? EMPTY_ROUTE;
+  const hasResult = result != null;
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
   const selectedVehicleId = useMapStore((s) => s.selectedVehicleId);
   // Se selecciona el RoutePoint entero, no lat/lon por separado: la referencia
@@ -115,6 +123,37 @@ export function MapPage() {
       ),
     [vehiclesLoaded, selectedVehicleId, origin, destination, t]
   );
+  // Paradas de carga y radares del plan, resueltos a lat/lon para el modo
+  // navegación (NavigationMap recibe datos listos, no lee el store). La
+  // posición de cada parada: lat/lon directos cuando el resultado vino de
+  // planRoute() (v2); para un replay viejo del historial, el mismo fallback
+  // por índice de route/node_coords que ya usa useLiveTrip.ts.
+  const navChargeStops = useMemo<NavChargeStop[]>(() => {
+    if (!result?.astar.found) return [];
+    const a = result.astar;
+    return a.recharges.flatMap((rc) => {
+      const pos: [number, number] | null =
+        rc.lat != null && rc.lon != null
+          ? [rc.lat, rc.lon]
+          : (() => {
+              const idx = a.route.indexOf(rc.node_id);
+              return idx >= 0 ? (a.node_coords[idx] ?? null) : null;
+            })();
+      return pos ? [{ lat: pos[0], lon: pos[1], name: rc.station_name }] : [];
+    });
+  }, [result]);
+  const navRadars = useMemo<NavRadar[]>(() => {
+    if (!result?.astar.found) return [];
+    // radares_puntos: ausente en un backend viejo o en un replay guardado
+    // antes de esta versión -- ahí simplemente no hay radares que marcar,
+    // mismo criterio que useLiveTrip.ts para el aviso.
+    return (result.astar.breakdown.radares_puntos ?? []).map((r) => ({
+      lat: r.lat,
+      lon: r.lon,
+      name: r.nombre,
+      maxspeedKmh: r.maxspeed_kmh,
+    }));
+  }, [result]);
   useReplayFromHistory(vehiclesLoaded);
 
   useEffect(() => {
@@ -409,6 +448,8 @@ export function MapPage() {
                   position={liveTrip.ui.livePosition}
                   heading={liveTrip.ui.heading}
                   routeCoords={routeCoords}
+                  chargeStops={navChargeStops}
+                  radars={navRadars}
                 />
               </Suspense>
             ) : (
