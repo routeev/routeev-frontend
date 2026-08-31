@@ -15,6 +15,18 @@ export interface PeajePunto {
   nombre?: string;
 }
 
+/**
+ * Un radar de velocidad fijo que la ruta cruza (ver app/radares.py:
+ * a_puntos). Mismo shape que PeajePunto, sin monto -- un radar no cobra
+ * nada, solo avisa.
+ */
+export interface RadarPunto {
+  lat: number;
+  lon: number;
+  maxspeed_kmh: number | null;
+  nombre: string;
+}
+
 export interface RouteBreakdown {
   energia_kwh: number;
   tiempo_min: number;
@@ -23,6 +35,9 @@ export interface RouteBreakdown {
   peaje: number;
   peaje_uyu: number;
   peajes_puntos?: PeajePunto[];
+  // Igual que peajes_puntos: ausente en respuestas de un backend viejo o en
+  // replays del historial guardados antes de esta versión.
+  radares_puntos?: RadarPunto[];
   // OJO semántica: cuando costo_uyu_recargas está presente (backend nuevo),
   // esto es SOLO la energía cargada en casa.
   costo_uyu_energia: number;

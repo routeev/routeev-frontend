@@ -79,6 +79,9 @@ export const map = {
       tripTime: "Trip time",
       speed: "Speed",
       gpsDebug: (accuracy: string, gap: string) => `GPS: accuracy ±${accuracy}m · every ${gap}s`,
+      radarAlert: (name: string) => `⚠️ Radar ahead: ${name}`,
+      radarAlertWithSpeed: (name: string, maxspeed: number) => `⚠️ Radar ahead: ${name} (max ${maxspeed} km/h)`,
+      radarVibration: "Vibrate when approaching a radar",
     },
   },
   page: {
@@ -236,6 +239,8 @@ export const map = {
     routeLayers: {
       tollAmount: (amount: string) => `Toll: ${amount}`,
       tollUnknownAmount: "Toll segment (exact amount not available)",
+      radarLabel: (name: string) => `Radar: ${name}`,
+      radarWithSpeed: (name: string, maxspeed: number) => `Radar: ${name} (max ${maxspeed} km/h)`,
     },
     stationsLayer: {
       detailInMenu: "Full details and reviews in the menu.",
