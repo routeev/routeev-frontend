@@ -16,6 +16,15 @@ const ROUTE_COLOR = "#34e3a8";
 
 const NAV_ZOOM = 17;
 const NAV_PITCH = 60;
+
+// Mismos trazados que markerIcons.ts (BOLT_SVG/RADAR_SVG): este mapa no es
+// Leaflet y no puede reusar esos DivIcon, pero el dibujo tiene que ser EL
+// MISMO que la persona ya vio en el mapa de planificacion -- un simbolo
+// nuevo para la misma cosa obligaria a re-aprenderlo manejando.
+const BOLT_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2 4.5 13.4h6.1L10.2 22l8.9-11.6h-6.3L13.2 2Z"/></svg>';
+const RADAR_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="12.5" height="9" rx="1.6"/><path d="M16 11.3 20.6 8.4a.85.85 0 0 1 1.3.72v7.76a.85.85 0 0 1-1.3.72L16 14.7Z"/><circle cx="9.75" cy="12.5" r="2.5" fill="#2b0b0b"/></svg>';
 // Bajado de 900 probando en un celular real: con el intervalo real de
 // watchPosition (varios segundos entre fixes, no uno fijo), una animación
 // tan larga no llegaba a asentarse antes del próximo fix -- la cámara
@@ -33,6 +42,41 @@ function routeToGeoJSON(coords: [number, number][]): GeoJSON.Feature<GeoJSON.Lin
   };
 }
 
+/**
+ * La linea del recorrido vive DENTRO del estilo del mapa (source + layer),
+ * asi que cualquier setStyle() la descarta junto con el estilo viejo. Por eso
+ * esta afuera y es idempotente (el getSource evita duplicarla): se llama
+ * tanto en el "load" inicial como despues de cada cambio de tema (ver el
+ * efecto del tema en el componente).
+ */
+function addRouteLine(map: maplibregl.Map, coords: [number, number][]) {
+  if (map.getSource("route")) return;
+  map.addSource("route", { type: "geojson", data: routeToGeoJSON(coords) });
+  map.addLayer({
+    id: "route-line",
+    type: "line",
+    source: "route",
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": ROUTE_COLOR, "line-width": 5, "line-opacity": 0.9 },
+  });
+}
+
+/** Parada de carga del plan, para marcarla sobre el recorrido en vivo. */
+export interface NavChargeStop {
+  lat: number;
+  lon: number;
+  /** Nombre de la estación ("ANCAP América"), va como tooltip nativo. */
+  name: string;
+}
+
+/** Radar de velocidad fijo que la ruta cruza, para marcarlo en vivo. */
+export interface NavRadar {
+  lat: number;
+  lon: number;
+  name: string;
+  maxspeedKmh: number | null;
+}
+
 interface NavigationMapProps {
   /** [lat, lon]. null hasta que el primer fix del GPS llega (ver useLiveTrip.ts). */
   position: [number, number] | null;
@@ -40,6 +84,10 @@ interface NavigationMapProps {
   heading: number | null;
   /** Recorrido completo calculado, fijo durante todo el viaje. */
   routeCoords: [number, number][];
+  /** Paradas de carga planificadas (donde hay que enchufar). Fijas durante el viaje. */
+  chargeStops: NavChargeStop[];
+  /** Radares fijos sobre la ruta. Fijos durante el viaje, como el recorrido. */
+  radars: NavRadar[];
 }
 
 /**
@@ -49,7 +97,7 @@ interface NavigationMapProps {
  * distinto (MapLibre GL) en vez de una capa más del mapa de planificación
  * (MapCanvas.tsx), que se sigue usando para todo lo demás.
  */
-export function NavigationMap({ position, heading, routeCoords }: NavigationMapProps) {
+export function NavigationMap({ position, heading, routeCoords, chargeStops, radars }: NavigationMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
@@ -69,14 +117,24 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
   // que React marca como error.
   const initialPositionRef = useRef(position);
   const routeCoordsRef = useRef(routeCoords);
-  // El tema se toma al MONTAR y no se sigue en vivo, a diferencia del mapa de
-  // planificacion (BasemapLayer). Cambiarlo aca obligaria a un setStyle()
-  // sobre esta instancia de MapLibre, y setStyle descarta las fuentes y capas
-  // que se agregaron despues del estilo -- o sea la linea del recorrido y el
-  // pin del destino, en medio de una navegacion en curso. Este mapa solo
-  // existe mientras hay un viaje arrancado: cambiar de tema manejando es raro,
-  // y perder el trazado de la ruta por eso no vale el canje.
-  const initialThemeRef = useRef(useActiveTheme());
+  // El valor MAS NUEVO de routeCoords, a diferencia del ref de arriba (que
+  // congela el inicial a proposito): lo actualiza el efecto que sigue a
+  // routeCoords, y lo lee el callback de "style.load" del efecto del tema,
+  // que corre en un momento arbitrario posterior.
+  const latestRouteCoordsRef = useRef(routeCoords);
+  // El tema SI se sigue en vivo (ver el efecto mas abajo), igual que en el
+  // mapa de planificacion (BasemapLayer). La primera version de este mapa lo
+  // congelaba al montar para no pagar el costo de setStyle() -- que descarta
+  // las fuentes y capas agregadas a mano -- pero eso dejaba el mapa en el
+  // color viejo contra una interfaz ya cambiada (reporte real, con captura:
+  // panel claro sobre mapa oscuro en medio de un viaje). El costo se paga
+  // re-agregando la linea del recorrido cuando el estilo nuevo termina de
+  // cargar (addRouteLine, idempotente); los marcadores (posicion, destino,
+  // paradas, radares) son DOM aparte del estilo y sobreviven solos.
+  const theme = useActiveTheme();
+  // El tema que el mapa tiene APLICADO ahora: le evita al efecto del tema
+  // re-aplicar en el primer render el mismo estilo que el montaje ya puso.
+  const appliedThemeRef = useRef(theme);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -85,7 +143,7 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: basemapStyleForTheme(initialThemeRef.current),
+      style: basemapStyleForTheme(appliedThemeRef.current),
       center: startLngLat,
       zoom: NAV_ZOOM,
       pitch: NAV_PITCH,
@@ -135,14 +193,7 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
 
     map.on("load", () => {
       loadedRef.current = true;
-      map.addSource("route", { type: "geojson", data: routeToGeoJSON(routeCoordsRef.current) });
-      map.addLayer({
-        id: "route-line",
-        type: "line",
-        source: "route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": ROUTE_COLOR, "line-width": 5, "line-opacity": 0.9 },
-      });
+      addRouteLine(map, routeCoordsRef.current);
     });
 
     return () => {
@@ -154,6 +205,59 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
     // Solo al montar: ver el comentario de los refs arriba.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cambiar el tema en medio del viaje re-estila el mapa en vivo (el bug que
+  // esto arregla: el mapa quedaba en el color viejo contra la interfaz ya
+  // cambiada). "style.load" dispara una vez por cada estilo aplicado -- a
+  // diferencia de "load", que es solo el primero de la vida del mapa -- y es
+  // el momento en que ya se puede volver a colgar la linea del recorrido que
+  // setStyle acaba de descartar. Si el tema cambia dos veces rapido, los dos
+  // callbacks terminan corriendo sobre el ultimo estilo: addRouteLine es
+  // idempotente justo para eso.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || appliedThemeRef.current === theme) return;
+    appliedThemeRef.current = theme;
+    map.setStyle(basemapStyleForTheme(theme));
+    map.once("style.load", () => addRouteLine(map, latestRouteCoordsRef.current));
+  }, [theme]);
+
+  // Paradas de carga y radares del plan: los mismos simbolos que la persona
+  // ya vio en el mapa de planificacion (markerIcons.ts), aca como Markers de
+  // MapLibre. Son DOM aparte del estilo del mapa -- sobreviven a un setStyle
+  // por cambio de tema sin re-agregarse, a diferencia de la linea de la ruta.
+  // El plan es fijo durante el viaje, asi que esto corre una vez en la
+  // practica; el efecto igual limpia y rehace por si el resultado cambia.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const markers: maplibregl.Marker[] = [];
+    const markerElement = (className: string, svg: string, title: string, speedKmh?: number | null) => {
+      const el = document.createElement("div");
+      el.className = className;
+      el.innerHTML = svg;
+      el.title = title;
+      if (speedKmh != null) {
+        // Mini cartel de limite pegado bajo la camara: manejando no hay hover
+        // que valga, el limite tiene que leerse en el mapa mismo.
+        const chip = document.createElement("span");
+        chip.className = styles.radarSpeed;
+        chip.textContent = String(speedKmh);
+        el.appendChild(chip);
+      }
+      return el;
+    };
+    for (const stop of chargeStops) {
+      const el = markerElement(styles.stopMarker, BOLT_SVG, stop.name);
+      markers.push(new maplibregl.Marker({ element: el }).setLngLat([stop.lon, stop.lat]).addTo(map));
+    }
+    for (const radar of radars) {
+      const title = radar.maxspeedKmh != null ? `${radar.name} · ${radar.maxspeedKmh} km/h` : radar.name;
+      const el = markerElement(styles.radarMarker, RADAR_SVG, title, radar.maxspeedKmh);
+      markers.push(new maplibregl.Marker({ element: el }).setLngLat([radar.lon, radar.lat]).addTo(map));
+    }
+    return () => markers.forEach((m) => m.remove());
+  }, [chargeStops, radars]);
 
   // Sigue la posición/rumbo real en vivo. bearing = heading es lo que rota
   // el mapa entero para que "arriba" sea siempre hacia dónde se viaja; sin
@@ -179,8 +283,12 @@ export function NavigationMap({ position, heading, routeCoords }: NavigationMapP
   // trip.coords se fija una vez en start()), pero si el efecto de montaje
   // corrió antes de que este prop tuviera su valor final, esto lo corrige.
   useEffect(() => {
+    latestRouteCoordsRef.current = routeCoords;
     const map = mapRef.current;
     if (!map || !loadedRef.current) return;
+    // Puede no existir en la ventana entre un setStyle por cambio de tema y
+    // su "style.load" (que la re-agrega leyendo latestRouteCoordsRef, recien
+    // actualizado arriba): ahi el ?. alcanza, no se pierde nada.
     const source = map.getSource("route") as maplibregl.GeoJSONSource | undefined;
     source?.setData(routeToGeoJSON(routeCoords));
   }, [routeCoords]);

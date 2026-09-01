@@ -39,3 +39,73 @@
   stroke-width: 1;
   stroke-linejoin: round;
 }
+
+/* Parada de carga del plan: el mismo simbolo (rayo sobre circulo naranja) que
+   markers.module.css usa en el mapa de planificacion, redibujado aca porque
+   este mapa no es Leaflet y no comparte esos DivIcon. Un toque mas grande que
+   alla (26px vs 20px): en modo navegacion se mira de reojo, con el mapa en
+   movimiento. */
+.stopMarker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--accent-dijkstra);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(242, 161, 84, 0.6);
+}
+
+.stopMarker svg {
+  width: 13px;
+  height: 13px;
+  fill: #241d00;
+}
+
+/* Radar fijo sobre la ruta: misma camara en circulo rojo que el mapa de
+   planificacion, mismo criterio de tamano que .stopMarker. */
+.radarMarker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--danger);
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(239, 91, 91, 0.6);
+}
+
+.radarMarker svg {
+  width: 14px;
+  height: 14px;
+  fill: #2b0b0b;
+}
+
+/* Mini cartel de limite (circulo blanco, aro rojo, numero): el formato de la
+   señal real de velocidad, debajo de la camara. Absoluto para que el ancla
+   del marcador siga siendo el centro de la camara, no el conjunto. Colores
+   literales a proposito: son los de la señal fisica, no tokens del tema. */
+.radarSpeed {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 2px;
+  background: #ffffff;
+  border: 2.5px solid #d13f3f;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: #182029;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}

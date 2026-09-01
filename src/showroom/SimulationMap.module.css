@@ -3,6 +3,14 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border);
+  /* Mismo arreglo que .mapWrap en MapPage.module.css: leaflet.css le pone
+     z-index 400-1000 a los panes/controles de adentro, y sin un contexto de
+     apilamiento propio esos números compiten en el contexto raíz contra el
+     z-index 20 del header sticky del sitio (SiteHeader) -- al scrollear la
+     ficha, el mapa se dibujaba ENCIMA del header (reporte real, con
+     captura). `isolation: isolate` encierra todos esos z-index acá adentro
+     sin depender de position/z-index propios. */
+  isolation: isolate;
 }
 
 .map {
