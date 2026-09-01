@@ -13,9 +13,13 @@
 
 .sidebar {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  bottom: 14px;
+  /* 20px, no 14px: pedido explícito de más aire contra el borde de la
+     ventana -- el panel se sentía demasiado pegado. .dashboardWrap más
+     abajo sube el mismo delta (+6px) para conservar el gap ENTRE los dos
+     paneles flotantes, no solo el gap contra el borde. */
+  top: 20px;
+  left: 20px;
+  bottom: 20px;
   z-index: 500;
   width: 372px;
   display: flex;
@@ -239,9 +243,13 @@
 
 .dashboardWrap {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
-  left: calc(372px + 42px);
+  /* Mismo +6px que .sidebar de arriba (14->20), y el mismo delta sumado acá
+     abajo al "372px + 42px" para conservar el gap ENTRE los dos paneles
+     flotantes tal cual estaba -- lo único que crece es el aire contra el
+     borde de la ventana. */
+  right: 20px;
+  bottom: 20px;
+  left: calc(372px + 48px);
   /* Sin esto, en un monitor ancho el panel se estira hasta el borde
      derecho de la pantalla entera -- la grilla de 6 stats (auto-fit,
      TripDashboard.module.css) reparte ese ancho parejo entre las 6
@@ -391,11 +399,16 @@
     left: auto;
     bottom: auto;
     width: auto;
+    /* Antes quedaba pegado a los tres bordes (izquierda/derecha/abajo) --
+       pedido explícito de más aire ahí, igual que en escritorio. Con margen
+       a los costados y abajo pasa a leerse como una tarjeta flotante, no
+       una hoja fundida al borde del celular, así que los 4 bordes se
+       redondean parejo en vez de solo los de arriba. */
+    margin: 0 12px 12px;
     max-height: 58%;
-    border: none;
-    border-top: 1px solid var(--border);
-    border-radius: var(--radius) var(--radius) 0 0;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.28), 0 -16px 48px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-float);
     transition: max-height 0.22s ease;
   }
   /* Colapsado: deslizando el handle hacia abajo (o tocandolo) se achica el
@@ -461,6 +474,12 @@
        corrimiento desde la posición normal -- sin esto el panel quedaba
        empujado cientos de px afuera de la pantalla. */
     inset: auto;
+    /* Antes quedaba pegado a los costados y abajo (igual que .sidebar) --
+       mismo pedido de más aire contra el borde. Corre el handle y la
+       sección juntos (ver más abajo), así que los dos siguen leyéndose
+       como una sola tarjeta continua, solo que ahora flotando en vez de
+       fundida al borde del celular. */
+    margin: 0 12px 12px;
     /* 0 por default: antes de calcular no hay nada que mostrar (TripDashboard
        no renderiza nada sin resultado) y sin esto igual reclamaba 62% del
        alto, dejando al mapa una tira minúscula mientras "Tu viaje" todavía
@@ -513,12 +532,14 @@
     background: var(--border);
   }
   /* Esquinas superiores en 0 para que calcen justo debajo del handle (que ya
-     las redondea el arriba); sin bordes/radio a los costados y abajo por el
-     mismo motivo que en .dashboardHandle. Solo en mobile, donde el handle
-     existe. */
+     las redondea arriba, con su propio border-top) -- las de ABAJO ahora sí
+     se redondean, porque .dashboardWrap ya no llega hasta el borde de la
+     pantalla (ver el margin de arriba). border-top en 0 por el mismo motivo:
+     el handle ya pone esa costura. Solo en mobile, donde el handle existe. */
   .dashboardWrap :global(section) {
-    border: none;
-    border-radius: 0;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
   }
   /* Acá está el punto (b) del reporte de Gonzalo: en pantalla angosta el mapa
      chico es una caja fija que "por momentos no aporta nada" y le deja al
