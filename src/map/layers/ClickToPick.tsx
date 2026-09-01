@@ -115,6 +115,14 @@ export function ClickToPick({ onError }: ClickToPickProps) {
       // Pedido explícito: mientras haya resultado, solo "Cancelar viaje" (en
       // TripDashboard) puede volver a abrir el mapa para elegir de nuevo.
       if (useMapStore.getState().lastResult != null) return;
+      // Pedido explícito: tocar el mapa sin haber apretado antes la chincheta
+      // del panel ("Marcar el origen/destino tocando el mapa") ya no fija
+      // nada. `picking` pasa de ser una señal puramente decorativa (el
+      // comentario viejo de mapStore.ts decía literalmente "NO es una
+      // compuerta") a ser la compuerta de verdad: sin picking, un toque
+      // cualquiera (mirar de cerca un tramo, la ubicación de una estación)
+      // ya no corre el riesgo de mover un punto que la persona no quiso tocar.
+      if (useMapStore.getState().picking == null) return;
       // lat/lng se copian ACA: el objeto de evento de Leaflet se reusa entre
       // eventos, y para cuando corre el timeout puede ya no describir este
       // toque.

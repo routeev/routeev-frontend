@@ -81,8 +81,15 @@ interface MapState {
   // el botón de chincheta y está esperando tocar el mapa": los cargadores
   // seguian dibujados encima justo cuando estorban, el cursor no cambiaba y
   // nada le avisaba que el mapa la estaba esperando. `picking` es esa señal, y
-  // es null la mayor parte del tiempo. NO es una compuerta: tocar el mapa fija
-  // el punto igual con picking en null, como siempre.
+  // es null la mayor parte del tiempo.
+  //
+  // SÍ es una compuerta (pedido explícito, cambio de comportamiento a
+  // propósito): ClickToPick.tsx ignora cualquier toque mientras picking sea
+  // null. Antes cualquier click en el mapa fijaba el punto igual, chincheta
+  // apretada o no -- eso hacía que mirar de cerca un tramo de la ruta, o
+  // tocar cerca de una estación, corriera el riesgo de mover el origen o el
+  // destino sin que la persona lo pidiera. Ahora hace falta apretar la
+  // chincheta primero, siempre.
   picking: PickMode | null;
 
   // Suben con CADA escritura del punto (incluso si vuelve a caer en el mismo
