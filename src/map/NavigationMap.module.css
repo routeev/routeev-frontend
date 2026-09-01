@@ -66,17 +66,18 @@
 /* Radar fijo sobre la ruta: misma camara en circulo rojo que el mapa de
    planificacion, mismo criterio de tamano que .stopMarker.
 
-   SIN `position` propio, nunca: este div ES el elemento del Marker de
-   MapLibre, y la libreria lo posiciona con su clase .maplibregl-marker
-   (position: absolute + transform). Un `position: relative` aca -- que es
-   como nacio esta regla, para anclarle el chip del limite -- tiene la MISMA
-   especificidad que la regla de la libreria, asi que gana el orden de los
-   estilos en el bundle... y este modulo carga despues: los radares caian al
-   flujo normal del documento y cada uno se dibujaba ~26px (su propio alto)
-   mas abajo que el anterior, una cascada diagonal que se alejaba de la ruta
-   (reporte real, con captura). El chip no lo necesita: position absolute de
-   la libreria tambien vuelve al elemento contenedor de sus hijos absolutos. */
+   `absolute` y NO `relative`: esta clase va en el MISMO elemento que
+   maplibre posiciona (.maplibregl-marker, position: absolute + transform),
+   y con especificidad empatada gana el ORDEN de los stylesheets, que cambia
+   entre dev y el build de prod. Cuando este archivo quedaba despues,
+   `relative` pisaba el `absolute` de maplibre y los radares entraban al
+   flujo normal del contenedor: se apilaban en columna y cada marker quedaba
+   ~26px mas abajo que el anterior, acumulativo -- la diagonal de radares
+   "en el agua" del reporte real, con captura. `absolute` dice lo mismo que
+   maplibre gane quien gane, y sigue siendo containing block para el cartel
+   de limite (.radarSpeed), que era el unico motivo del `relative`. */
 .radarMarker {
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
