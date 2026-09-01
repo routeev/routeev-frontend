@@ -311,13 +311,28 @@
   font-weight: 600;
 }
 
+/* Fila propia debajo de los botones, no un tercer ítem apretado al costado
+   de "Iniciar/Cancelar viaje": en el panel angosto el texto terminaba
+   partido en tres líneas verticales al lado del botón (reporte real, con
+   captura). flex-basis 100% dentro del mismo .controlActions (que ya es
+   flex-wrap) lo baja a su fila sin tocar el markup, en las dos vistas: con
+   el viaje calculado y durante el viaje en vivo. */
 .radarVibrationToggle {
-  display: inline-flex;
+  flex-basis: 100%;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 12.5px;
   color: var(--text-muted);
   cursor: pointer;
+}
+
+/* Solo el color del texto: la caja del tilde es el <Checkbox> compartido
+   (shared/Checkbox.module.css), que trae sus propios estados de hover/focus
+   -- acá no hay ningún input nativo que estilizar. */
+.radarVibrationToggle:hover {
+  color: var(--text);
 }
 
 /* "Donde cargar al llegar": la estacion mas cercana al destino, cuando el
