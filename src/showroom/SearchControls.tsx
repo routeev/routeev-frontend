@@ -1,4 +1,6 @@
+import { Field, Label } from "@headlessui/react";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { Checkbox } from "../shared/Checkbox";
 import type { Orden } from "./useShowroomCatalog";
 import { num } from "./num";
 import styles from "./SearchControls.module.css";
@@ -94,15 +96,10 @@ export function SearchControls({
           <option value="consumo">{sc.ordenConsumo}</option>
         </select>
 
-        <label className={styles.chip}>
-          <input
-            type="checkbox"
-            checked={soloDc}
-            onChange={(e) => onSoloDcChange(e.target.checked)}
-            aria-describedby={AYUDA_DC_ID}
-          />
-          {sc.soloDc}
-        </label>
+        <Field className={styles.chip}>
+          <Checkbox checked={soloDc} onChange={onSoloDcChange} aria-describedby={AYUDA_DC_ID} />
+          <Label>{sc.soloDc}</Label>
+        </Field>
 
         <span className={["mono-num", styles.count].join(" ")}>{count > 0 ? sc.count(num(count), count) : ""}</span>
       </div>

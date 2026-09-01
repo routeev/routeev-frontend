@@ -34,15 +34,18 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  /* En escritorio la barra de scroll siempre está dibujada y se come ~15px de
-     ancho POR ENCIMA del contenido: las filas de las estaciones y las
-     tarjetas del viaje son `justify-content: space-between`, así que lo que
-     tapaba era justo la columna de la derecha (kW, operador). Reservar la
-     canaleta aunque no haga falta cuesta esos 15px una sola vez y nada se
-     mueve cuando la lista pasa a tener scroll. Misma corrección en
-     StationsPanel .list y TripDashboard .dashboard -- este .sidebarScroll
-     además ANIDA a ese .list adentro, así que sin esto se superponían dos
-     barras de scroll distintas contra el mismo texto. */
+  /* En escritorio la barra de scroll siempre está dibujada y se come ancho
+     POR ENCIMA del contenido: las filas de las estaciones y las tarjetas del
+     viaje son `justify-content: space-between`, así que lo que tapaba era
+     justo la columna de la derecha (kW, operador). Reservar la canaleta
+     aunque no haga falta cuesta ese ancho una sola vez y nada se mueve
+     cuando la lista pasa a tener scroll -- con la scrollbar-width: thin de
+     base.css son ~10px, no los ~15px de la barra clásica del sistema (el
+     navegador recalcula la canaleta sola, no hay un número fijo que tocar
+     acá). Misma corrección en StationsPanel .list y TripDashboard .dashboard
+     -- este .sidebarScroll además ANIDA a ese .list adentro, así que sin
+     esto se superponían dos barras de scroll distintas contra el mismo
+     texto. */
   scrollbar-gutter: stable;
   padding: 16px 16px 4px;
 }

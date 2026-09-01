@@ -284,10 +284,6 @@
   cursor: pointer;
 }
 
-.radarVibrationToggle input {
-  cursor: pointer;
-}
-
 @media (max-width: 860px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);

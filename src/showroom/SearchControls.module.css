@@ -88,15 +88,7 @@
   color: var(--text);
 }
 
-.chip input {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  accent-color: var(--accent-astar);
-  cursor: pointer;
-}
-
-.chip:has(input:checked) {
+.chip:has([data-checked]) {
   border-color: var(--accent-astar);
   color: var(--accent-astar);
 }
