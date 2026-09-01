@@ -10,13 +10,10 @@
   /* El padding lo pone esta seccion y no el contenedor: en escritorio el
      panel reemplaza a "Tu viaje" adentro del sidebar y
      .sidebarScrollDashboard le pone padding:0 justamente para eso (ver
-     MapPage.module.css). Asimetrico a proposito -- a la derecha va un poco
-     menos porque ahi ya esta la canaleta de la barra de scroll
-     (scrollbar-gutter arriba), que suma su propio aire. Pedido explicito de
-     mas aire en los cuatro lados (antes 16/6/0/10 -- el 0 de abajo dejaba la
-     ultima fila, "Vibrar al acercarme a un radar", pegada al borde del
-     panel). */
-  padding: 20px 14px 16px 16px;
+     MapPage.module.css). Asimetrico a proposito -- a la derecha va menos
+     porque ahi ya esta la canaleta de la barra de scroll (scrollbar-gutter
+     arriba), que suma su propio aire. */
+  padding: 16px 6px 0px 10px;
   border-radius: 4%;
 }
 
@@ -27,10 +24,7 @@
    px mas de datos visibles sin scrollear. */
 @media (max-width: 860px) {
   .dashboard {
-    /* Mismo pedido que en desktop -- el 0 de abajo dejaba la ultima fila
-       pegada al borde. Sigue mas apretado que el desktop a proposito (ver
-       el comentario de arriba: comparte alto con el mapa), pero no en 0. */
-    padding: 14px 12px 14px;
+    padding: 10px 8px 0px;
   }
 }
 
