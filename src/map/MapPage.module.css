@@ -278,6 +278,17 @@
   display: none;
 }
 
+/* Con el detalle de una estación abierto, "Datos del viaje" se apaga entero
+   (handle incluido): el detalle lo REEMPLAZA, igual que reemplaza al
+   formulario dentro del sidebar. Solo se nota en pantalla angosta -- en el
+   split de escritorio .dashboardWrap ya está en display:none siempre --
+   pero sin esto ahí convivían el detalle (sidebar) y el dashboard (panel
+   flotante) peleándose el alto de la pantalla. Doble clase para ganarle en
+   especificidad a las reglas de .dashboardWrap del media query de abajo. */
+.dashboardWrap.dashboardWrapReplaced {
+  display: none;
+}
+
 .dashboardWrap :global(section) {
   /* flex:1 (no solo el height:100% propio de TripDashboard.module.css)
      porque ahora puede tener un hermano arriba (.dashboardHandle, en

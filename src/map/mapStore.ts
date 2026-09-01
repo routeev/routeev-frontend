@@ -116,6 +116,11 @@ interface MapState {
 
   setOrigin: (p: RoutePoint) => void;
   setDestination: (p: RoutePoint) => void;
+  /**
+   * Invierte origen y destino tal cual estén (funciona también con uno solo
+   * puesto: lo mueve al otro rol). Con los dos vacíos no hace nada.
+   */
+  swapEnds: () => void;
   clearOrigin: () => void;
   clearDestination: () => void;
   setPickMode: (mode: PickMode) => void;
@@ -241,6 +246,33 @@ export const useMapStore = create<MapState>((set, get) => ({
         destinationNode: p,
         destinationRevision: s.destinationRevision + 1,
         ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      };
+    }),
+
+  swapEnds: () =>
+    set((s) => {
+      if (s.originNode == null && s.destinationNode == null) return {};
+      const nextOrigin = s.destinationNode;
+      const nextDestination = s.originNode;
+      return {
+        originNode: nextOrigin,
+        destinationNode: nextDestination,
+        // Las dos revisiones suben: cada campo tiene que soltar el texto
+        // tipeado a medias y mostrar el nombre del punto que le llegó del
+        // otro rol (ver el comentario de originRevision arriba).
+        originRevision: s.originRevision + 1,
+        destinationRevision: s.destinationRevision + 1,
+        // Con un solo punto puesto, el swap lo mueve al otro rol y deja este
+        // vacío: el próximo toque del mapa tiene que ir al hueco, no pisar el
+        // punto que se acaba de mover -- mismo criterio que clearOrigin/
+        // clearDestination.
+        pickMode: nextOrigin == null ? "origin" : nextDestination == null ? "destination" : s.pickMode,
+        // Invertir el sentido invalida la ruta calculada, igual que mover
+        // cualquiera de los dos puntos: la ida no es la vuelta (paradas de
+        // carga y consumo cambian con la pendiente y el punto de partida).
+        lastResult: null,
+        lastRoutePayload: null,
+        replaySuffix: undefined,
       };
     }),
 

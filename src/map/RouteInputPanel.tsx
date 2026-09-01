@@ -19,6 +19,8 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   const picking = useMapStore((s) => s.picking);
   const startPicking = useMapStore((s) => s.startPicking);
   const stopPicking = useMapStore((s) => s.stopPicking);
+  const swapEnds = useMapStore((s) => s.swapEnds);
+  const hasOrigin = useMapStore((s) => s.originNode != null);
   const hasDestination = useMapStore((s) => s.destinationNode != null);
   const cargadorEnDestino = useMapStore((s) => s.cargadorEnDestino);
   const setCargadorEnDestino = useMapStore((s) => s.setCargadorEnDestino);
@@ -46,7 +48,26 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
           isNextTarget={picking == null && pickMode === "origin"}
           onPickTarget={() => togglePicking("origin")}
         />
-        <div className={styles.connector} aria-hidden="true" />
+        {/* La fila entre los dos campos: la línea punteada que los une (como
+            siempre) más el botón de invertir, alineado a la columna de las
+            chinchetas para que los tres botones de la derecha se lean como
+            una misma columna de acciones. Deshabilitado sin ningún punto
+            puesto: invertir dos vacíos no significa nada. */}
+        <div className={styles.connectorRow}>
+          <div className={styles.connector} aria-hidden="true" />
+          <button
+            type="button"
+            className={styles.swap}
+            disabled={!hasOrigin && !hasDestination}
+            title={ri.swapPoints}
+            onClick={() => swapEnds()}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3ZM9 3 5 6.99h3V14h2V6.99h3L9 3Z" />
+            </svg>
+            <span className="sr-only">{ri.swapPoints}</span>
+          </button>
+        </div>
         <RouteAutocompleteField
           role="destination"
           placeholder={ri.destinationPlaceholder}
