@@ -3,6 +3,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import buttons from "../shared/buttons.module.css";
 import { IconCar } from "../shared/NavIcons";
 import { readNumberInput } from "../shared/readNumberInput";
+import { Select } from "../shared/Select";
 import { useMapStore, vehicleAutonomyKm } from "./mapStore";
 
 export function VehiclePanel() {
@@ -30,26 +31,22 @@ export function VehiclePanel() {
       <h2>{vp.title}</h2>
       <div className="field">
         <label htmlFor="vehicle-select">{vp.activeVehicle}</label>
-        <select
+        {/* Sin vehículos la lista queda vacía y el estado ("cargando" o "no
+            tenés ninguno") pasa a ser el placeholder del gatillo, en vez de
+            una opción falsa adentro del desplegable que se podía elegir. */}
+        <Select
           id="vehicle-select"
-          value={selectedVehicleId ?? ""}
+          value={selectedVehicleId}
           disabled={vehicles.length === 0}
-          onChange={(e) => selectVehicle(Number(e.target.value))}
-        >
-          {vehicles.length === 0 ? (
-            <option value="">
-              {vehiclesLoaded ? vp.noVehicles : vp.loadingVehicles}
-            </option>
-          ) : (
-            vehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name.includes(`${v.battery_capacity_kwh} kWh`)
-                  ? v.name
-                  : `${v.name} (${v.battery_capacity_kwh} kWh)`}
-              </option>
-            ))
-          )}
-        </select>
+          placeholder={vehiclesLoaded ? vp.noVehicles : vp.loadingVehicles}
+          onChange={selectVehicle}
+          options={vehicles.map((v) => ({
+            value: v.id,
+            label: v.name.includes(`${v.battery_capacity_kwh} kWh`)
+              ? v.name
+              : `${v.name} (${v.battery_capacity_kwh} kWh)`,
+          }))}
+        />
       </div>
       <div className="field">
         <label htmlFor="start-battery">{vp.startBattery}</label>

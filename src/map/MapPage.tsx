@@ -97,6 +97,18 @@ export function MapPage() {
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const picking = useMapStore((s) => s.picking);
   const stopPicking = useMapStore((s) => s.stopPicking);
+  // El detalle de una estación REEMPLAZA al dashboard dentro del sidebar
+  // (ver el ternario de sidebarScroll): todo lo que se estiliza "porque el
+  // sidebar muestra Datos del viaje" tiene que mirar esta condición y no
+  // `hasResult` a secas. Con `hasResult` a secas pasaban dos cosas al elegir
+  // un cargador con una ruta calculada (reporte real, con captura): en
+  // escritorio el detalle heredaba el padding 0 / flex de
+  // .sidebarScrollDashboard (pensados para TripDashboard, que trae los
+  // suyos) y quedaba pegado a los bordes del panel; en pantalla angosta
+  // directamente no se veía, porque .sidebarReplaced esconde el sidebar
+  // entero.
+  const stationDetailOpen = selectedStationId != null;
+  const sidebarShowsDashboard = hasResult && !stationDetailOpen;
   const missing = useMemo(
     () =>
       calculateGateMissing({
@@ -330,7 +342,7 @@ export function MapPage() {
 
       <div className={`${styles.layout} ${mapCollapsed ? styles.mapCollapsed : ""}`}>
         <aside
-          className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""} ${hasResult ? styles.sidebarReplaced : ""}`}
+          className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""} ${sidebarShowsDashboard ? styles.sidebarReplaced : ""}`}
         >
           <div
             className={styles.sidebarHandle}
@@ -361,7 +373,7 @@ export function MapPage() {
           )}
           <div
             className={`${styles.sidebarScroll} ${ready ? "" : styles.sidebarScrollNoCta} ${
-              hasResult ? styles.sidebarScrollDashboard : ""
+              sidebarShowsDashboard ? styles.sidebarScrollDashboard : ""
             }`}
             ref={sidebarScrollRef}
             onScroll={onSidebarScroll}
@@ -476,7 +488,7 @@ export function MapPage() {
           <div
             className={`${styles.dashboardWrap} ${
               hasResult ? (dashboardCollapsed ? styles.collapsed : styles.expanded) : ""
-            }`}
+            } ${stationDetailOpen ? styles.dashboardWrapReplaced : ""}`}
           >
             {/* Solo con un resultado calculado: sin esto habría un handle
                 arrastrable sin nada que mostrar/esconder debajo. Solo se ve

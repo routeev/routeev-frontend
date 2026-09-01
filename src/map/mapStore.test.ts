@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { calculateGateMissing } from "./mapStore";
+import { beforeEach, describe, expect, it } from "vitest";
+import type { CompareRoutesResult } from "../api/route";
+import { calculateGateMissing, useMapStore } from "./mapStore";
 import { fromCoords, fromNode, pointKey, SAME_POINT_KM } from "./routePoint";
 
 // calculateGateMissing es una función pura exportada: no necesita el store
@@ -50,6 +51,69 @@ describe("calculateGateMissing", () => {
       "cargando vehículos..."
     );
     expect(calculateGateMissing({ ...LISTO, hasSelectedVehicle: false })).toContain("elegí o creá un vehículo");
+  });
+});
+
+describe("swapEnds", () => {
+  // El store es un singleton de módulo: cada caso arranca del estado limpio
+  // que MapPage también usa al montar.
+  beforeEach(() => useMapStore.getState().resetTripPlanning());
+
+  const origen = fromCoords(-34.9055, -56.1851);
+  const destino = fromCoords(-34.9633, -54.9497);
+
+  it("intercambia los dos puntos y sube las dos revisiones", () => {
+    const s = useMapStore.getState();
+    s.setOrigin(origen);
+    s.setDestination(destino);
+    const antes = useMapStore.getState();
+
+    antes.swapEnds();
+
+    const despues = useMapStore.getState();
+    expect(despues.originNode).toBe(destino);
+    expect(despues.destinationNode).toBe(origen);
+    // Las revisiones son lo que hace que cada campo suelte el texto tipeado
+    // y muestre el nombre del punto que le llegó del otro rol.
+    expect(despues.originRevision).toBe(antes.originRevision + 1);
+    expect(despues.destinationRevision).toBe(antes.destinationRevision + 1);
+  });
+
+  it("mueve un único punto al otro rol y apunta el próximo toque al hueco", () => {
+    useMapStore.getState().setOrigin(origen);
+    useMapStore.getState().swapEnds();
+
+    const s = useMapStore.getState();
+    expect(s.originNode).toBeNull();
+    expect(s.destinationNode).toBe(origen);
+    // El hueco quedó en el origen: el próximo toque del mapa va ahí, no a
+    // pisar el punto recién movido.
+    expect(s.pickMode).toBe("origin");
+  });
+
+  it("con los dos vacíos no hace nada", () => {
+    const antes = useMapStore.getState();
+    antes.swapEnds();
+    const despues = useMapStore.getState();
+    expect(despues.originRevision).toBe(antes.originRevision);
+    expect(despues.destinationRevision).toBe(antes.destinationRevision);
+  });
+
+  it("invalida la ruta ya calculada: la ida no es la vuelta", () => {
+    const s = useMapStore.getState();
+    s.setOrigin(origen);
+    s.setDestination(destino);
+    // Solo la forma que el swap tiene que limpiar: el contenido no se lee.
+    s.setLastResult({ origin: { name: "a" }, destination: { name: "b" } } as CompareRoutesResult, {
+      plan_id: "p1",
+      origin_name: "a",
+      destination_name: "b",
+    });
+
+    s.swapEnds();
+
+    expect(useMapStore.getState().lastResult).toBeNull();
+    expect(useMapStore.getState().lastRoutePayload).toBeNull();
   });
 });
 

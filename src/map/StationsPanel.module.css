@@ -8,8 +8,11 @@
      lo último de cada fila -- los kW y el chip del operador -- queda contra el
      borde derecho, que es exactamente donde el navegador dibuja la barra de
      scroll en escritorio, POR ENCIMA del contenido. Reservar la canaleta le
-     devuelve esos ~15px a la fila y además evita que todo salte de lugar
-     cuando la lista pasa de caber a no caber. */
+     devuelve ese ancho a la fila y además evita que todo salte de lugar
+     cuando la lista pasa de caber a no caber. El ancho reservado sigue al de
+     la scrollbar-width global (ver base.css): ~10px con la barra fina propia,
+     no los ~15px de la barra clásica del sistema -- no hace falta un numero
+     fijo aca, el navegador la recalcula sola. */
   scrollbar-gutter: stable;
 }
 

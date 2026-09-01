@@ -7,7 +7,25 @@
   scrollbar-gutter: stable;
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
-  padding: 16px 20px 20px;
+  /* El padding lo pone esta seccion y no el contenedor: en escritorio el
+     panel reemplaza a "Tu viaje" adentro del sidebar y
+     .sidebarScrollDashboard le pone padding:0 justamente para eso (ver
+     MapPage.module.css). Asimetrico a proposito -- a la derecha va menos
+     porque ahi ya esta la canaleta de la barra de scroll (scrollbar-gutter
+     arriba), que suma su propio aire. */
+  padding: 16px 6px 0px 10px;
+  border-radius: 4%;
+}
+
+/* En pantalla angosta el panel deja de vivir en el sidebar y pasa a ser la
+   tarjeta flotante sobre el mapa (.dashboardWrap en MapPage.module.css, mismo
+   corte de 860px): ahi ocupa el ancho de la pantalla y comparte alto con el
+   mapa, asi que va mas apretado -- cada px de alto que se ahorra arriba es un
+   px mas de datos visibles sin scrollear. */
+@media (max-width: 860px) {
+  .dashboard {
+    padding: 10px 8px 0px;
+  }
 }
 
 .header {
@@ -36,14 +54,16 @@
 /* Un solo grid para las 8 tarjetas (ya no separadas por sección "Recorrido/
    Batería/Costo y peajes" -- cada label ya es autodescriptivo, y partirlas
    en bloques forzaba un salto de fila por sección aunque sobrara ancho).
-   auto-fit acomoda tantas columnas como entren: cuanto más ancho el panel
-   (ver .dashboard, sin tope de ancho), menos filas hacen falta para
-   mostrarlas todas -- en un panel bien ancho de desktop entran las 8 en una
-   sola fila, sin escribir ningún media query a mano para eso. */
+   2 columnas fijas, no auto-fit con minmax(160px): con un resultado
+   calculado este panel vive adentro del sidebar de 372px (ver el ternario de
+   MapPage.tsx y .sidebarScrollDashboard), donde quedan ~320px utiles -- por
+   debajo de los 330px que auto-fit necesitaba para dos columnas de 160px,
+   asi que terminaba cayendo a una sola columna y cada dato se comia una fila
+   entera. Los valores son cortos ("1.9 km", "19 km/h"), no necesitan 160px. */
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
   margin-bottom: 16px;
 }
 
@@ -51,7 +71,11 @@
   background: var(--bg-panel-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 11px 13px;
+  padding: 10px 11px;
+  /* Los labels ("Velocidad promedio", "Batería consumida") rozan el ancho de
+     una tarjeta de media columna; sin esto una palabra larga desbordaba la
+     tarjeta en vez de cortarse. */
+  overflow-wrap: anywhere;
 }
 
 .statLabel {
@@ -66,8 +90,14 @@
   letter-spacing: -0.01em;
 }
 
+/* 20px y no 25: con dos columnas la tarjeta deja ~136px de contenido, y el
+   valor es monoespaciado (mono-num => JetBrains Mono, ~0.6em por caracter).
+   Un tiempo largo ("1 h 23 min", lo que devuelve formatDuration pasada la
+   hora) son 10 caracteres = ~150px a 25px, o sea que desbordaba la tarjeta;
+   a 20px entra con aire de sobra y sigue leyendose como el dato grande
+   frente al resto (17px). */
 .statValueLarge {
-  font-size: 25px;
+  font-size: 20px;
   line-height: 1.15;
 }
 
@@ -146,15 +176,18 @@
   flex-wrap: wrap;
 }
 
+/* 16px a los costados y no 22: los dos botones van uno al lado del otro
+   (.controlActions) y en el sidebar hay ~328px -- con 22px la fila se pasaba
+   por unos pocos px y "Cancelar plan" caia a una segunda linea el solo. */
 .startBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 22px;
+  padding: 12px 16px;
 }
 
 .cancelPlanBtn {
-  padding: 12px 22px;
+  padding: 12px 16px;
 }
 
 .startBtn svg {
@@ -171,7 +204,10 @@
 .liveRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
+  /* 16px de separacion entre columnas y no 22: mismo motivo que .startBtn --
+     en el sidebar estos datos en vivo entran justos, y 22px empujaba el
+     ultimo a una fila propia sin necesidad. */
+  gap: 10px 16px;
   margin-bottom: 8px;
 }
 
@@ -275,29 +311,28 @@
   font-weight: 600;
 }
 
+/* Fila propia debajo de los botones, no un tercer ítem apretado al costado
+   de "Iniciar/Cancelar viaje": en el panel angosto el texto terminaba
+   partido en tres líneas verticales al lado del botón (reporte real, con
+   captura). flex-basis 100% dentro del mismo .controlActions (que ya es
+   flex-wrap) lo baja a su fila sin tocar el markup, en las dos vistas: con
+   el viaje calculado y durante el viaje en vivo. */
 .radarVibrationToggle {
-  display: inline-flex;
+  flex-basis: 100%;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 12.5px;
   color: var(--text-muted);
   cursor: pointer;
 }
 
-.radarVibrationToggle input {
-  cursor: pointer;
-}
-
-@media (max-width: 860px) {
-  .stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .stats {
-    grid-template-columns: 1fr;
-  }
+/* Solo el color del texto: la caja del tilde es el <Checkbox> compartido
+   (shared/Checkbox.module.css), que trae sus propios estados de hover/focus
+   -- acá no hay ningún input nativo que estilizar. */
+.radarVibrationToggle:hover {
+  color: var(--text);
 }
 
 /* "Donde cargar al llegar": la estacion mas cercana al destino, cuando el

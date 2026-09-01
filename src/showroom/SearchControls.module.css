@@ -61,12 +61,16 @@
   margin-top: 14px;
 }
 
-.filters select {
-  width: auto;
+/* Mismas medidas que tenía el <select> nativo acá (más chico que uno de
+   formulario y sobre --bg-panel, no --bg): ahora se pasan como custom
+   properties, que es la manera que Select.module.css deja para ajustarlo sin
+   alcanzar sus clases hasheadas desde afuera. */
+.filterSelect {
+  --select-width: auto;
+  --select-bg: var(--bg-panel);
+  --select-font-size: 13px;
+  --select-padding: 9px 12px;
   min-width: 168px;
-  background: var(--bg-panel);
-  font-size: 13px;
-  padding: 9px 12px;
 }
 
 .chip {
@@ -88,15 +92,7 @@
   color: var(--text);
 }
 
-.chip input {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  accent-color: var(--accent-astar);
-  cursor: pointer;
-}
-
-.chip:has(input:checked) {
+.chip:has([data-checked]) {
   border-color: var(--accent-astar);
   color: var(--accent-astar);
 }

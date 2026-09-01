@@ -34,15 +34,18 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  /* En escritorio la barra de scroll siempre está dibujada y se come ~15px de
-     ancho POR ENCIMA del contenido: las filas de las estaciones y las
-     tarjetas del viaje son `justify-content: space-between`, así que lo que
-     tapaba era justo la columna de la derecha (kW, operador). Reservar la
-     canaleta aunque no haga falta cuesta esos 15px una sola vez y nada se
-     mueve cuando la lista pasa a tener scroll. Misma corrección en
-     StationsPanel .list y TripDashboard .dashboard -- este .sidebarScroll
-     además ANIDA a ese .list adentro, así que sin esto se superponían dos
-     barras de scroll distintas contra el mismo texto. */
+  /* En escritorio la barra de scroll siempre está dibujada y se come ancho
+     POR ENCIMA del contenido: las filas de las estaciones y las tarjetas del
+     viaje son `justify-content: space-between`, así que lo que tapaba era
+     justo la columna de la derecha (kW, operador). Reservar la canaleta
+     aunque no haga falta cuesta ese ancho una sola vez y nada se mueve
+     cuando la lista pasa a tener scroll -- con la scrollbar-width: thin de
+     base.css son ~10px, no los ~15px de la barra clásica del sistema (el
+     navegador recalcula la canaleta sola, no hay un número fijo que tocar
+     acá). Misma corrección en StationsPanel .list y TripDashboard .dashboard
+     -- este .sidebarScroll además ANIDA a ese .list adentro, así que sin
+     esto se superponían dos barras de scroll distintas contra el mismo
+     texto. */
   scrollbar-gutter: stable;
   padding: 16px 16px 4px;
 }
@@ -275,6 +278,17 @@
   display: none;
 }
 
+/* Con el detalle de una estación abierto, "Datos del viaje" se apaga entero
+   (handle incluido): el detalle lo REEMPLAZA, igual que reemplaza al
+   formulario dentro del sidebar. Solo se nota en pantalla angosta -- en el
+   split de escritorio .dashboardWrap ya está en display:none siempre --
+   pero sin esto ahí convivían el detalle (sidebar) y el dashboard (panel
+   flotante) peleándose el alto de la pantalla. Doble clase para ganarle en
+   especificidad a las reglas de .dashboardWrap del media query de abajo. */
+.dashboardWrap.dashboardWrapReplaced {
+  display: none;
+}
+
 .dashboardWrap :global(section) {
   /* flex:1 (no solo el height:100% propio de TripDashboard.module.css)
      porque ahora puede tener un hermano arriba (.dashboardHandle, en
@@ -314,6 +328,13 @@
     padding: 0;
     display: flex;
     flex-direction: column;
+    /* Sin la canaleta de scroll que .sidebarScroll reserva para los demas
+       paneles: acá el que scrollea es TripDashboard adentro (height:100% +
+       overflow-y:auto propios), no este contenedor, asi que su canaleta
+       nunca se usa -- quedaba reservada igual y se sumaba a la de adentro,
+       dejando el contenido con 16px de aire a la izquierda contra 36px a la
+       derecha (16 de padding + 10 + 10 de dos canaletas apiladas). */
+    scrollbar-gutter: auto;
   }
   .sidebarScrollDashboard :global(section) {
     flex: 1;

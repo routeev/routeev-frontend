@@ -1,4 +1,7 @@
+import { Field, Label } from "@headlessui/react";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { Checkbox } from "../shared/Checkbox";
+import { Select } from "../shared/Select";
 import type { Orden } from "./useShowroomCatalog";
 import { num } from "./num";
 import styles from "./SearchControls.module.css";
@@ -74,35 +77,35 @@ export function SearchControls({
         <label className="sr-only" htmlFor="sr-marca">
           {sc.marcaLabel}
         </label>
-        <select id="sr-marca" value={marca} onChange={(e) => onMarcaChange(e.target.value)}>
-          <option value="">{sc.todasLasMarcas}</option>
-          {marcas.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+        <Select
+          id="sr-marca"
+          className={styles.filterSelect}
+          value={marca}
+          onChange={onMarcaChange}
+          options={[{ value: "", label: sc.todasLasMarcas }, ...marcas.map((m) => ({ value: m, label: m }))]}
+        />
 
         <label className="sr-only" htmlFor="sr-orden">
           {sc.ordenLabel}
         </label>
-        <select id="sr-orden" value={orden} onChange={(e) => onOrdenChange(e.target.value as Orden)}>
-          <option value="relevancia">{sc.ordenRelevancia}</option>
-          <option value="autonomia">{sc.ordenAutonomia}</option>
-          <option value="bateria">{sc.ordenBateria}</option>
-          <option value="carga">{sc.ordenCarga}</option>
-          <option value="consumo">{sc.ordenConsumo}</option>
-        </select>
+        <Select
+          id="sr-orden"
+          className={styles.filterSelect}
+          value={orden}
+          onChange={onOrdenChange}
+          options={[
+            { value: "relevancia" as Orden, label: sc.ordenRelevancia },
+            { value: "autonomia" as Orden, label: sc.ordenAutonomia },
+            { value: "bateria" as Orden, label: sc.ordenBateria },
+            { value: "carga" as Orden, label: sc.ordenCarga },
+            { value: "consumo" as Orden, label: sc.ordenConsumo },
+          ]}
+        />
 
-        <label className={styles.chip}>
-          <input
-            type="checkbox"
-            checked={soloDc}
-            onChange={(e) => onSoloDcChange(e.target.checked)}
-            aria-describedby={AYUDA_DC_ID}
-          />
-          {sc.soloDc}
-        </label>
+        <Field className={styles.chip}>
+          <Checkbox checked={soloDc} onChange={onSoloDcChange} aria-describedby={AYUDA_DC_ID} />
+          <Label>{sc.soloDc}</Label>
+        </Field>
 
         <span className={["mono-num", styles.count].join(" ")}>{count > 0 ? sc.count(num(count), count) : ""}</span>
       </div>

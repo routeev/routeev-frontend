@@ -174,6 +174,7 @@ export const map = {
     },
     useMyLocation: "Usar mi ubicación como origen",
     locatingYou: "Buscando tu ubicación...",
+    swapPoints: "Invertir origen y destino",
   },
   nextStep: {
     chooseOrigin: "Elegí desde dónde salís: tocá el mapa o escribí una dirección.",
