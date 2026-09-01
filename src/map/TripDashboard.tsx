@@ -233,7 +233,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               sub={summary.arrivalPct !== null ? `${summary.arrivalKwh.toFixed(1)} kWh` : null}
             />
             <TripStatCard label={td.stats.rechargeStops} value={String(summary.rechargeCount)} />
-            <TripStatCard label={td.stats.estimatedCost} value={formatUyu(summary.costUyu)} sub={costoSub} />
+            {summary.costUyu > 0 && (
+              <TripStatCard label={td.stats.estimatedCost} value={formatUyu(summary.costUyu)} sub={costoSub} />
+            )}
             <TripStatCard
               label={td.stats.tolls}
               value={summary.hasTolls ? td.tolls.count(summary.tollCount) : td.tolls.none}

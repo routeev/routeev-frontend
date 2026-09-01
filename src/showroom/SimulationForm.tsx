@@ -6,6 +6,7 @@ import { Banner } from "../shared/Banner";
 import { Checkbox } from "../shared/Checkbox";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { readNumberInput } from "../shared/readNumberInput";
+import { Select } from "../shared/Select";
 import { Spinner } from "../shared/Spinner";
 import { toast } from "../shared/toastStore";
 import { SimulationResult } from "./SimulationResult";
@@ -45,6 +46,9 @@ export function SimulationForm({ model }: SimulationFormProps) {
   const defaultDestinoId = (destinos.find((d) => d.nombre === "Punta del Este") ?? destinos[destinos.length - 1])?.id ?? "";
   const origenId = origenOverride ?? defaultOrigenId;
   const destinoId = destinoOverride ?? defaultDestinoId;
+  // Las dos listas son la misma (se puede salir de y llegar a cualquier
+  // destino), asi que se arma una sola y la comparten los dos Select.
+  const destinoOptions = destinos.map((d) => ({ value: d.id, label: `${d.nombre} (${d.departamento})` }));
 
   const simulate = useMutation({
     mutationFn: () =>
@@ -99,23 +103,11 @@ export function SimulationForm({ model }: SimulationFormProps) {
         <div className={styles.form}>
           <div className="field">
             <label htmlFor="sim-origen">{sf.desde}</label>
-            <select id="sim-origen" value={origenId} onChange={(e) => setOrigenOverride(e.target.value)}>
-              {destinos.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre} ({d.departamento})
-                </option>
-              ))}
-            </select>
+            <Select id="sim-origen" value={origenId} onChange={setOrigenOverride} options={destinoOptions} />
           </div>
           <div className="field">
             <label htmlFor="sim-destino">{sf.hasta}</label>
-            <select id="sim-destino" value={destinoId} onChange={(e) => setDestinoOverride(e.target.value)}>
-              {destinos.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre} ({d.departamento})
-                </option>
-              ))}
-            </select>
+            <Select id="sim-destino" value={destinoId} onChange={setDestinoOverride} options={destinoOptions} />
           </div>
           <div className="field">
             <label htmlFor="sim-bat">{sf.bateriaAlSalir}</label>
