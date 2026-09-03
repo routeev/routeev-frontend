@@ -203,7 +203,15 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
               {num(metricas.autonomia_calculada_km)}
               <small> km</small>
             </dd>
-            <p className={styles.statSub}>{mf.statFabricante(num(model.autonomia_aprox_km))}</p>
+            {model.autonomia_homologada_km ? (
+              // La cifra del fabricante, y SOLO cuando existe. Antes esta línea
+              // mostraba `autonomia_aprox_km`, que es la autonomía real —
+              // repetía el mismo número dos veces, uno de ellos rotulado como
+              // si viniera del fabricante. Un tester lo cazó de una: "ni el
+              // chino ni el real". Donde no hay homologación distinta, no hay
+              // nada que contrastar y la línea no va.
+              <p className={styles.statSub}>{mf.statFabricante(num(model.autonomia_homologada_km))}</p>
+            ) : null}
           </div>
           <div className={styles.stat}>
             <dt>{mf.statConsumo}</dt>

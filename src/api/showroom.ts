@@ -6,6 +6,14 @@ export interface ShowroomModel {
   modelo: string;
   bateria_kwh: number;
   autonomia_aprox_km: number;
+  /**
+   * La autonomía de HOMOLOGACIÓN (WLTP, o CLTC/NEDC en varios chinos), cuando
+   * difiere de la real. No es lo mismo que `autonomia_aprox_km`: esa es la que
+   * usa el motor de ruteo, calculada con el consumo de mundo real. Solo existe
+   * donde las dos cifras no coinciden — ver `data/correcciones_specs.json` en
+   * la API y la sección "Las dos autonomías" de DATOS-Y-LICENCIAS.md.
+   */
+  autonomia_homologada_km?: number | null;
   potencia_carga_kw: number;
   consumo_kwh_km: number;
   fuente?: "catalogo" | "ia";
