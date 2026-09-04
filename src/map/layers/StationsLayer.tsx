@@ -13,6 +13,16 @@ import styles from "./StationPopup.module.css";
 
 const STATION_MARKER_ZOOM = 16;
 
+// Tope de marcadores sin ruta calculada. El comentario de arriba (useStationsInView)
+// ya decía la intención -- "nunca las ~200+ de una: eso satura el mapa apenas
+// se abre" -- pero el filtro por área visible no la cumple solo: alejado del
+// todo (país entero), "lo que entra en pantalla" vuelve a ser "todas". Medido
+// en vivo (1/sep/2026): a zoom país las ~260 estaciones quedan una arriba de
+// otra, un blob ilegible en vez de un mapa -- y son 260 <Marker> de Leaflet
+// reales en el DOM, no solo ruido visual. 80 alcanza para que un vistazo de
+// ciudad (Montevideo) siga viéndose poblado sin pagar el costo de las 260.
+const MAX_STATIONS_SIN_RUTA = 80;
+
 /**
  * Estaciones que caen dentro del area visible del mapa en este momento --
  * recalcula al terminar cualquier pan/zoom (`moveend`, que en Leaflet cubre
@@ -92,7 +102,13 @@ export function StationsLayer() {
       if (selectedStationId != null) ids.add(selectedStationId);
       return ids;
     }
-    const ids = new Set(inViewIds);
+    // Set preserva el orden de inserción (el mismo de query.data, estable
+    // entre renders): recortar con slice da un subconjunto determinístico,
+    // sin parpadeo por reordenarse solo de un render al siguiente.
+    const ids =
+      inViewIds.size > MAX_STATIONS_SIN_RUTA
+        ? new Set([...inViewIds].slice(0, MAX_STATIONS_SIN_RUTA))
+        : new Set(inViewIds);
     if (selectedStationId != null) ids.add(selectedStationId);
     return ids;
   }, [inViewIds, lastResult, selectedStationId]);
