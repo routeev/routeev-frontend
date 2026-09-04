@@ -1,4 +1,25 @@
-.checkbox {
+.row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Escondido de verdad pero sin salir del árbol de accesibilidad/tabulación
+   -- ver el comentario en Checkbox.tsx sobre por qué NUNCA display:none. */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.box {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8,28 +29,30 @@
   border: 1.5px solid var(--border);
   border-radius: calc(var(--radius-sm) / 2);
   background: var(--bg);
-  cursor: pointer;
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease;
 }
 
-.checkbox[data-hover] {
+.row:hover .box {
   border-color: var(--accent-astar);
 }
 
-.checkbox[data-focus] {
+.input:focus-visible + .box {
   outline: 2px solid var(--accent-astar);
   outline-offset: 2px;
 }
 
-.checkbox[data-checked] {
+.input:checked + .box {
   background: var(--accent-astar);
   border-color: var(--accent-astar);
 }
 
-.checkbox[data-disabled] {
+.input:disabled + .box {
   opacity: 0.5;
+}
+
+.row:has(.input:disabled) {
   cursor: not-allowed;
 }
 
@@ -44,6 +67,6 @@
   opacity: 0;
 }
 
-.checkbox[data-checked] .icon {
+.input:checked + .box .icon {
   opacity: 1;
 }

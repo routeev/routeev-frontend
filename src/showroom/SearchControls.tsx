@@ -1,4 +1,3 @@
-import { Field, Label } from "@headlessui/react";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Checkbox } from "../shared/Checkbox";
 import { Select } from "../shared/Select";
@@ -102,10 +101,13 @@ export function SearchControls({
           ]}
         />
 
-        <Field className={styles.chip}>
-          <Checkbox checked={soloDc} onChange={onSoloDcChange} aria-describedby={AYUDA_DC_ID} />
-          <Label>{sc.soloDc}</Label>
-        </Field>
+        <Checkbox
+          className={styles.chip}
+          checked={soloDc}
+          onChange={onSoloDcChange}
+          aria-describedby={AYUDA_DC_ID}
+          label={sc.soloDc}
+        />
 
         <span className={["mono-num", styles.count].join(" ")}>{count > 0 ? sc.count(num(count), count) : ""}</span>
       </div>

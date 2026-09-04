@@ -1,4 +1,3 @@
-import { Field, Label } from "@headlessui/react";
 import { useState } from "react";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Checkbox } from "../shared/Checkbox";
@@ -393,16 +392,15 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 viaje) en vez de en una pantalla de ajustes aparte: es la
                 única preferencia que existe hoy sobre el viaje en vivo, y
                 separarla en su propio panel sería más navegación que ajuste. */}
-            <Field className={styles.radarVibrationToggle}>
-              <Checkbox
-                checked={radarVibrationEnabled}
-                onChange={(checked) => {
-                  setRadarVibrationEnabled(checked);
-                  setRadarVibrationEnabledState(checked);
-                }}
-              />
-              <Label>{td.live.radarVibration}</Label>
-            </Field>
+            <Checkbox
+              className={styles.radarVibrationToggle}
+              checked={radarVibrationEnabled}
+              onChange={(checked) => {
+                setRadarVibrationEnabled(checked);
+                setRadarVibrationEnabledState(checked);
+              }}
+              label={td.live.radarVibration}
+            />
           </div>
 
           {/* "Iniciar viaje" puede rechazarse sin llegar a arrancar el

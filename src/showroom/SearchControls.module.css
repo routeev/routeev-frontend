@@ -92,7 +92,7 @@
   color: var(--text);
 }
 
-.chip:has([data-checked]) {
+.chip:has(:checked) {
   border-color: var(--accent-astar);
   color: var(--accent-astar);
 }

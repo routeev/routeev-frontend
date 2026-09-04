@@ -199,10 +199,10 @@ label {
   margin-bottom: 12px;
 }
 
-/* Fila checkbox + texto -- el checkbox en si es el Checkbox de Headless UI
-   (ver src/shared/Checkbox.tsx), no un <input> nativo, asi que no hace falta
-   estilo propio para él aca; align-items:center alcanza porque ya no hay que
-   compensar el offset vertical del checkbox nativo del navegador. */
+/* Fila checkbox + texto -- el checkbox en si es src/shared/Checkbox.tsx, que
+   ya trae su propio <input> escondido del tamaño exacto de la caja visible
+   (.box en Checkbox.module.css): align-items:center alcanza sin compensar
+   ningun offset porque no hay ningun checkbox nativo VISIBLE en el layout. */
 .check-field {
   display: flex;
   align-items: center;

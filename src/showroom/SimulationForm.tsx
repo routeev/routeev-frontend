@@ -1,4 +1,3 @@
-import { Field, Label } from "@headlessui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { showroomDestinos, showroomSimulate, type ShowroomModel } from "../api/showroom";
@@ -133,10 +132,12 @@ export function SimulationForm({ model }: SimulationFormProps) {
           </div>
         </div>
 
-        <Field className={["check-field", styles.checkField].join(" ")}>
-          <Checkbox checked={idaYVuelta} onChange={setIdaYVuelta} />
-          <Label>{sf.idaYVuelta}</Label>
-        </Field>
+        <Checkbox
+          className={["check-field", styles.checkField].join(" ")}
+          checked={idaYVuelta}
+          onChange={setIdaYVuelta}
+          label={sf.idaYVuelta}
+        />
 
         {/* aria-busy además del disabled: el `disabled` evita el doble
             disparo pero no cuenta que hay algo en curso; el spinner lo cuenta
