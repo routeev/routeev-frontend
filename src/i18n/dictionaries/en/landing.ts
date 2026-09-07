@@ -2,10 +2,10 @@ export const landing = {
   meta: {
     title: "RouteEV — Plan electric car trips across Uruguay",
     description:
-      "Find out if your electric car can make it, and where to stop and charge, on the real road map of Uruguay and its 259 charging stations from UTE and private operators. 631 preloaded models, no account needed.",
+      "Find out if your electric car can make it, and where to stop and charge, on the real road map of Uruguay and its 261 charging stations from UTE and private operators. 632 preloaded models, no account needed.",
     ogTitle: "Will your electric car make it? Check before you go.",
     ogDescription:
-      "Pick one of 631 models, set your origin and destination, and RouteEV tells you if you'll make it, where to charge, and what it costs. On the real map of Uruguay.",
+      "Pick one of 632 models, set your origin and destination, and RouteEV tells you if you'll make it, where to charge, and what it costs. On the real map of Uruguay.",
     jsonLdDescription:
       "Trip planner for electric vehicles in Uruguay: calculates whether your car will make it, where to stop and charge, and how much it costs, on the country's real road map.",
   },
@@ -51,7 +51,7 @@ export const landing = {
     eyebrow: "Showroom · no account needed",
     title: "Before you buy it, check if it'll make it.",
     body1:
-      "Search any of the 631 electric cars in the catalog and see the real numbers: battery, real-world range, consumption, how much every 100 km costs in pesos, and how long it takes to charge at the stations that exist in Uruguay.",
+      "Search any of the 632 electric cars in the catalog and see the real numbers: battery, real-world range, consumption, how much every 100 km costs in pesos, and how long it takes to charge at the stations that exist in Uruguay.",
     body2:
       "And with your car picked, calculate an actual trip just like you would from the map: the same routing engine returns the distance, time, the battery you'll arrive with, tolls, total cost, and which charging station to stop at, with its address and power output.",
     cta: "Enter the showroom",

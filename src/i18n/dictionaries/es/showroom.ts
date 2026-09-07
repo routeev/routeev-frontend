@@ -3,7 +3,7 @@ export const showroom = {
     metaTitle: "Showroom eléctrico — RouteEV",
     metaDescription:
       "Buscá cualquier auto eléctrico y mirá sus datos reales: batería, autonomía, consumo, costo en pesos y tiempo de carga en la red de carga de Uruguay.",
-    ogTitle: "Showroom: 631 autos eléctricos con sus números reales",
+    ogTitle: "Showroom: 632 autos eléctricos con sus números reales",
     ogDescription:
       "Batería, autonomía, consumo, costo cada 100 km en pesos y tiempo de carga en la red de carga. Sin crear cuenta.",
     navHome: "Inicio",
@@ -54,7 +54,7 @@ export const showroom = {
       `Precios de red según pliego ${operador} ${vigencia}${detalle}. En casa: $ ${precioCasa}/kWh.`,
     // Título/descripción propios de cada modelo (en vez de heredar los
     // genéricos de la página del showroom): sin esto, Google veía el mismo
-    // <title> para las 631 fichas y no tenía forma de indexar "Nissan Leaf
+    // <title> para las 632 fichas y no tenía forma de indexar "Nissan Leaf
     // autonomía Uruguay" como un resultado propio.
     metaTitle: (nombre: string) => `${nombre} — autonomía, batería y carga en Uruguay | RouteEV`,
     metaDescription: (nombre: string, autonomiaKm: string, bateriaKwh: string) =>

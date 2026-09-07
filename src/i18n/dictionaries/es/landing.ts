@@ -2,10 +2,10 @@ export const landing = {
   meta: {
     title: "RouteEV — Planificá viajes en auto eléctrico por Uruguay",
     description:
-      "Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 259 estaciones de carga de UTE y de operadores privados. 631 modelos precargados, sin crear cuenta.",
+      "Calculá si tu auto eléctrico llega, y dónde parar a cargar, sobre el mapa vial real de Uruguay y las 261 estaciones de carga de UTE y de operadores privados. 632 modelos precargados, sin crear cuenta.",
     ogTitle: "¿Llega tu auto eléctrico? Fijate antes de salir.",
     ogDescription:
-      "Elegí uno de 631 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay.",
+      "Elegí uno de 632 modelos, marcá origen y destino, y RouteEV te dice si llegás, dónde cargar y cuánto sale. Sobre el mapa real de Uruguay.",
     jsonLdDescription:
       "Planificador de viajes para vehículos eléctricos en Uruguay: calcula si tu auto llega, dónde parar a cargar y cuánto cuesta, sobre el mapa vial real del país.",
   },
@@ -51,7 +51,7 @@ export const landing = {
     eyebrow: "Showroom · sin cuenta",
     title: "Antes de comprarlo, fijate si llega.",
     body1:
-      "Buscá cualquiera de los 631 autos eléctricos del catálogo y mirá sus números de verdad: batería, autonomía real, consumo, cuánto cuesta cada 100 km en pesos y cuánto tarda en cargar en las estaciones que existen en Uruguay.",
+      "Buscá cualquiera de los 632 autos eléctricos del catálogo y mirá sus números de verdad: batería, autonomía real, consumo, cuánto cuesta cada 100 km en pesos y cuánto tarda en cargar en las estaciones que existen en Uruguay.",
     body2:
       "Y con el auto elegido, calculá un viaje concreto como si lo pidieras desde el mapa: el mismo motor de rutas devuelve la distancia, el tiempo, la batería con la que llegás, los peajes, el costo total y en qué estación de carga hay que parar, con su dirección y su potencia.",
     cta: "Entrar al showroom",
