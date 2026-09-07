@@ -2,7 +2,9 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { StationDetailRows } from "./StationDetailRows";
 import { StationReviews } from "./StationReviews";
+import { StationStatusChip } from "./StationStatusChip";
 import { useMapStore } from "./mapStore";
+import { useStationStatus } from "./useStationStatus";
 import styles from "./StationDetailPanel.module.css";
 
 /**
@@ -20,6 +22,7 @@ export function StationDetailPanel() {
   const selectStation = useMapStore((s) => s.selectStation);
   const leafletMap = useMapStore((s) => s.leafletMap);
   const myPosition = useMapStore((s) => s.myPosition);
+  const { datos: estadoEnVivo, estadoDe } = useStationStatus();
 
   const station = stations.find((s) => s.node_id === selectedStationId);
   if (!station) return null;
@@ -46,6 +49,15 @@ export function StationDetailPanel() {
         {t.map.stationsPanel.title}
       </button>
       <h2>{station.nombre}</h2>
+      {/* Arriba de la ficha y no adentro: el estado es lo primero que decide
+          si esta parada sirve, y ademas es lo unico de esta pantalla que
+          puede no estar -- si se mezclara entre las filas, su ausencia
+          quedaria como un hueco raro en el medio de la tabla. */}
+      <StationStatusChip
+        estado={estadoDe(station.node_id)}
+        actualizado={estadoEnVivo?.actualizado ?? null}
+        fuente={estadoEnVivo?.fuente ?? ""}
+      />
       <StationDetailRows station={station} />
       <StationReviews nodeId={String(station.node_id)} />
     </section>

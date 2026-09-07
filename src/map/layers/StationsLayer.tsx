@@ -9,6 +9,8 @@ import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
+import { StationStatusChip } from "../StationStatusChip";
+import { useStationStatus } from "../useStationStatus";
 import styles from "./StationPopup.module.css";
 
 const STATION_MARKER_ZOOM = 16;
@@ -64,6 +66,7 @@ export function StationsLayer() {
   // useMapLoaders.ts (misma key).
   const query = useQuery({ queryKey: ["stations"], queryFn: getStations, staleTime: Infinity });
   const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
+  const { datos: estadoEnVivo, estadoDe } = useStationStatus();
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const selectStation = useMapStore((s) => s.selectStation);
@@ -157,6 +160,11 @@ export function StationsLayer() {
                   <span className="mono-num">{st.potencia_kw} kW</span>
                   <span>{st.operador}</span>
                 </div>
+                <StationStatusChip
+                  estado={estadoDe(st.node_id)}
+                  actualizado={estadoEnVivo?.actualizado ?? null}
+                  fuente={estadoEnVivo?.fuente ?? ""}
+                />
                 <div className={styles.teaserAddress}>{st.direccion}</div>
                 <div className={styles.teaserHint}>{t.map.layers.stationsLayer.detailInMenu}</div>
               </div>
