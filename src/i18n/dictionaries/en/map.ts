@@ -203,6 +203,21 @@ export const map = {
     operator: "Operator",
     coordinates: "Coordinates",
   },
+  // Live status of a charging station. There is no "unknown" label on purpose:
+  // when the source says nothing, or says something we can't translate, the
+  // chip is not rendered at all (see StationStatusChip).
+  stationStatus: {
+    estado: {
+      disponible: "Available",
+      ocupado: "In use",
+      fuera_de_servicio: "Out of order",
+    },
+    // Always shown next to the chip: this is somebody else's reading, from
+    // some moment. Both facts change what you should do with it.
+    origen: (fuente: string, cuando: string) => `per ${fuente}, ${cuando}`,
+    hace: (minutos: number) => `${minutos} min ago`,
+    reciente: "less than 1 min ago",
+  },
   speedAdvisory: {
     pendingRechargeNotNeeded: "At this pace you're using less than expected: you might not need the planned charging stop.",
     arrivingWithMargin: "You'll arrive with battery to spare at this pace.",

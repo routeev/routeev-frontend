@@ -203,6 +203,21 @@ export const map = {
     operator: "Operador",
     coordinates: "Coordenadas",
   },
+  // Estado en vivo de una estación. No hay etiqueta para «desconocido» a
+  // propósito: cuando la fuente no dice nada, o dice algo que no sabemos
+  // traducir, el chip directamente no se dibuja (ver StationStatusChip).
+  stationStatus: {
+    estado: {
+      disponible: "Disponible",
+      ocupado: "En uso",
+      fuera_de_servicio: "Fuera de servicio",
+    },
+    // Va siempre al lado del chip: el dato es de un tercero y de un momento, y
+    // las dos cosas cambian qué conviene hacer con él.
+    origen: (fuente: string, cuando: string) => `según ${fuente}, ${cuando}`,
+    hace: (minutos: number) => `hace ${minutos} min`,
+    reciente: "hace menos de 1 min",
+  },
   speedAdvisory: {
     pendingRechargeNotNeeded: "A este ritmo estás gastando menos de lo previsto: es posible que no necesites la parada de carga planeada.",
     arrivingWithMargin: "Vas a llegar con margen de batería a este ritmo.",

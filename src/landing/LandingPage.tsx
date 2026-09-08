@@ -23,8 +23,8 @@ export function LandingPage() {
       label: t.landing.stats.intersections,
     },
     { value: 19, label: t.landing.stats.departments },
-    { value: 259, label: t.landing.stats.stations },
-    { value: 631, label: t.landing.stats.models },
+    { value: 261, label: t.landing.stats.stations },
+    { value: 632, label: t.landing.stats.models },
   ];
 
   const HOW_IT_WORKS = [

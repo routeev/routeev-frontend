@@ -83,7 +83,7 @@ export function AddVehicleForm({ onCreated }: AddVehicleFormProps) {
   const [modelSearch, setModelSearch] = useState("");
   // El catálogo se pide recién cuando el usuario escribió lo suficiente como
   // para ofrecerle opciones: abrir el perfil (o clickear el campo) ya no
-  // descarga los 631 modelos. Una vez traído no se vuelve a pedir
+  // descarga los 632 modelos. Una vez traído no se vuelve a pedir
   // (staleTime): el catálogo no cambia mientras el backend esté corriendo.
   const modelsQuery = useQuery({
     queryKey: ["evModels"],
