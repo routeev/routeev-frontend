@@ -3,6 +3,7 @@ import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { StationDetailRows } from "./StationDetailRows";
 import { StationReviews } from "./StationReviews";
 import { StationStatusChip } from "./StationStatusChip";
+import { StationStatusReport } from "./StationStatusReport";
 import { useMapStore } from "./mapStore";
 import { useStationStatus } from "./useStationStatus";
 import styles from "./StationDetailPanel.module.css";
@@ -59,6 +60,7 @@ export function StationDetailPanel() {
         fuente={estadoEnVivo?.fuente ?? ""}
       />
       <StationDetailRows station={station} />
+      <StationStatusReport nodeId={String(station.node_id)} />
       <StationReviews nodeId={String(station.node_id)} />
     </section>
   );
