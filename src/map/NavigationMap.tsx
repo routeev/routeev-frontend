@@ -259,10 +259,20 @@ export function NavigationMap({ position, heading, routeCoords, chargeStops, rad
     return () => markers.forEach((m) => m.remove());
   }, [chargeStops, radars]);
 
-  // Sigue la posición/rumbo real en vivo. bearing = heading es lo que rota
-  // el mapa entero para que "arriba" sea siempre hacia dónde se viaja; sin
-  // `zoom` en este easeTo, un acercamiento/alejamiento manual del usuario
-  // durante el viaje no se pisa solo en el próximo fix del GPS.
+  // Sigue la posición real en vivo (fix de GPS, cada varios segundos -- ver
+  // useLiveTrip.ts). Sin `zoom` en este easeTo, un acercamiento/alejamiento
+  // manual del usuario durante el viaje no se pisa solo en el próximo fix.
+  //
+  // El rumbo NO va acá (ver el efecto de abajo): antes bearing/heading
+  // estaba en las deps de ESTE efecto, y heading cambia cada
+  // COMPASS_UPDATE_INTERVAL_MS (200ms, el sensor de orientación del
+  // celular) -- mucho más seguido que un fix real de posición. Con eso, un
+  // easeTo de 500ms se relanzaba cada 200ms durante TODO el viaje: nunca
+  // llegaba a terminar una animación antes de que la siguiente la
+  // interrumpiera, así que MapLibre quedaba renderizando a ~60fps sin
+  // parar mientras el viaje estuviera activo (medido: el reporte real no
+  // fue de esto, pero es exactamente el patrón que agota batería en un
+  // celular navegando con la pantalla prendida durante horas).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !position) return;
@@ -271,13 +281,22 @@ export function NavigationMap({ position, heading, routeCoords, chargeStops, rad
       markerRef.current.setLngLat(lngLat);
       if (!markerRef.current.getElement().isConnected) markerRef.current.addTo(map);
     }
-    map.easeTo({
-      center: lngLat,
-      bearing: heading ?? map.getBearing(),
-      pitch: NAV_PITCH,
-      duration: EASE_DURATION_MS,
-    });
-  }, [position, heading]);
+    map.easeTo({ center: lngLat, pitch: NAV_PITCH, duration: EASE_DURATION_MS });
+  }, [position]);
+
+  // Rumbo de brújula: aparte de la posición y sin animación propia
+  // (setBearing, no easeTo). Ya llega alisado angularmente desde
+  // useLiveTrip.ts (smoothBearingDeg) a un ritmo fijo de 5/s -- aplicarlo
+  // directo ya se ve suave (son pasos chicos), y evita que este tick,
+  // mucho más frecuente que un fix de GPS, dispare su propia animación de
+  // 500ms encima de la de posición. Costo real: un solo repintado por tick
+  // en vez de mantener viva una animación completa (~30 frames) que nunca
+  // llega a asentarse.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || heading == null) return;
+    map.setBearing(heading);
+  }, [heading]);
 
   // El recorrido no cambia durante un viaje ya arrancado (ver useLiveTrip.ts:
   // trip.coords se fija una vez en start()), pero si el efecto de montaje
