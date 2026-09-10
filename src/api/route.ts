@@ -58,6 +58,25 @@ export interface RouteBreakdown {
   // Alineado 1 a 1 con `recharges` (mismo orden); trae node_id por si los
   // largos no coinciden y hay que caer a matchear por estación.
   recargas_costos?: ({ node_id: string } & TarifaRecarga)[];
+  // Idem, 1 a 1 con `recharges`: comercios a pie desde cada parada, para
+  // aprovechar el rato de carga. Lista vacía si no hay dato para esa
+  // estación; el campo entero puede faltar en un backend viejo o un replay.
+  recargas_pois?: EstacionPoi[][];
+}
+
+export interface EstacionPoi {
+  nombre: string;
+  categoria: "cafe_kiosco" | "bano" | "farmacia" | "comida_rapida" | "comida" | "compras";
+  // Minutos de parada a partir de los cuales tiene sentido (un café siempre;
+  // un restaurante recién pasados ~35 min).
+  util_desde_min: number;
+  // true si `util_desde_min` entra en la duración de ESTA parada. El backend
+  // no filtra por esto -- saber que a la vuelta hay dónde almorzar sirve
+  // aunque esta parada sea corta.
+  entra_en_la_parada: boolean;
+  lat: number;
+  lon: number;
+  dist_m: number;
 }
 
 export interface Recharge {

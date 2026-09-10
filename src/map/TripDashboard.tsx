@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { EstacionPoi } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
@@ -125,6 +126,16 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
         ? respaldos[i]
         : respaldos?.find((p) => p.node_id === String(nodeId));
     return fila?.respaldo ?? null;
+  };
+
+  // Comercios a pie desde cada parada. Alineado 1 a 1 con recharges igual que
+  // los costos; sin node_id propio, así que si los largos no coinciden (no
+  // debería) se cae a lista vacía. Los que no entran en el rato de ESTA
+  // parada van al final y atenuados: saberlos igual sirve.
+  const poisDe = (i: number): EstacionPoi[] => {
+    const listas = primary.breakdown.recargas_pois;
+    if (!listas || listas.length !== primary.recharges.length) return [];
+    return [...listas[i]!].sort((a, b) => Number(b.entra_en_la_parada) - Number(a.entra_en_la_parada));
   };
 
   // Desglose del costo. El texto de peajes es el mismo de siempre (con o sin
@@ -336,6 +347,26 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                               respaldoDe(i, rc.node_id)!.demasiado_lejos
                             )}
                           </b>
+                        </div>
+                      )}
+                      {/* Qué hacer con el rato de carga: comercios a pie desde
+                          la parada. Los que no entran en la duración de ESTA
+                          parada (un restaurante en una carga de 12 min) van
+                          igual, al final y atenuados. */}
+                      {poisDe(i).length > 0 && (
+                        <div className={styles.stopPois}>
+                          <span className={styles.stopPoisLabel}>{td.stopCard.nearby}</span>
+                          <ul>
+                            {poisDe(i).map((p, j) => (
+                              <li key={j} className={p.entra_en_la_parada ? undefined : styles.poiLejano}>
+                                <b>{p.nombre}</b>
+                                <span>
+                                  {td.stopCard.poiCategoria[p.categoria]} · {td.stopCard.poiDist(p.dist_m)}
+                                  {!p.entra_en_la_parada && ` · ${td.stopCard.poiParadaLarga}`}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>

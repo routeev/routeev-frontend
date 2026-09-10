@@ -68,6 +68,17 @@ export const map = {
       backup: "Si no funciona",
       backupValue: (name: string, km: number, tooFar: boolean) =>
         `${name} a ${km} km${tooFar ? " — sin respaldo cerca" : ""}`,
+      nearby: "Cerca, a pie",
+      poiParadaLarga: "para una parada más larga",
+      poiDist: (m: number) => `a ${m} m`,
+      poiCategoria: {
+        cafe_kiosco: "Café / kiosco",
+        bano: "Baño",
+        farmacia: "Farmacia",
+        comida_rapida: "Comida rápida",
+        comida: "Para comer",
+        compras: "Supermercado",
+      },
     },
     startTrip: "Iniciar viaje",
     startTripAgain: "Iniciar viaje de nuevo",

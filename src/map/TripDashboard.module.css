@@ -163,6 +163,54 @@
   color: var(--text);
 }
 
+/* Comercios a pie desde la parada -- una lista, no un par etiqueta:valor,
+   por eso no reusa .stopRow. */
+.stopPois {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.stopPoisLabel {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  margin-bottom: 5px;
+}
+
+.stopPois ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stopPois li {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.stopPois li b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.stopPois li span {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+/* Los que no entran en el rato de esta parada: quedan de referencia, no de
+   sugerencia. */
+.poiLejano {
+  opacity: 0.55;
+}
+
 .control {
   margin-bottom: 18px;
   padding-bottom: 16px;
