@@ -6,6 +6,7 @@ import { CarSilhouette } from "../shared/CarSilhouette";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDuration, formatUyu } from "../shared/format";
+import { formatPriceDate } from "./formatPriceDate";
 import { modelAliases } from "./modelAlias";
 import { groupFamilies, versionLabel } from "./modelFamily";
 import { num } from "./num";
@@ -187,6 +188,20 @@ export function ModelFicha({ modelId, onClose, versiones, onSelectVersion }: Mod
           <p className={[styles.nota, model.fuente === "ia" ? styles.notaIa : ""].join(" ")}>
             {model.nota}
           </p>
+        )}
+
+        {/* Franja de IMESI 2027: solo aparece para el subconjunto chico de
+            modelos con precio de lista verificado (model.precio_uy) -- para
+            el resto del catálogo no se estima nada, ver la API. */}
+        {model.precio_uy && (
+          <div className={styles.imesi}>
+            <p className={styles.imesiLinea}>
+              {model.precio_uy.imesi_2027.tramo === "exento"
+                ? mf.imesiExento(num(model.precio_uy.precio_usd))
+                : mf.imesiTramo(model.precio_uy.imesi_2027.porcentaje_2027, num(model.precio_uy.precio_usd))}
+            </p>
+            <p className={styles.imesiFuente}>{mf.imesiFuente(formatPriceDate(model.precio_uy.verificado_el, lang))}</p>
+          </div>
         )}
 
         <dl className={styles.stats}>

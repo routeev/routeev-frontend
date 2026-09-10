@@ -52,6 +52,14 @@ export const showroom = {
     precioRedDc: (precioKwh: string, cargoBase: string) => `DC $ ${precioKwh}/kWh + ${cargoBase} de conexión`,
     notaTarifas: (operador: string, vigencia: string, detalle: string, precioCasa: string) =>
       `Precios de red según pliego ${operador} ${vigencia}${detalle}. En casa: $ ${precioCasa}/kWh.`,
+    // Franja de IMESI 2027, solo cuando el modelo tiene precio de lista
+    // verificado (ver ShowroomModel.precio_uy en api/showroom.ts).
+    imesiExento: (precio: string) =>
+      `Hoy: exento de IMESI. Desde el 1° de enero de 2027 sigue exento (precio de lista: USD ${precio}, por debajo de USD 19.000).`,
+    imesiTramo: (pct: number, precio: string) =>
+      `Hoy: exento de IMESI. Desde el 1° de enero de 2027 pasa a pagar ${pct}% (precio de lista: USD ${precio}).`,
+    imesiFuente: (fecha: string) =>
+      `Precio de lista verificado el ${fecha}. Es una referencia, no el valor de aduana que usa el impuesto — lo real, si acaso, es igual o menor.`,
     // Título/descripción propios de cada modelo (en vez de heredar los
     // genéricos de la página del showroom): sin esto, Google veía el mismo
     // <title> para las 632 fichas y no tenía forma de indexar "Nissan Leaf

@@ -38,6 +38,30 @@ export interface ShowroomModel {
    */
   linea?: string;
   version?: string;
+  /**
+   * Precio de lista en Uruguay (USD), solo para el subconjunto chico de
+   * modelos que lo tiene (ver la nota de `data/precios_uy.json` en la API) —
+   * null para el resto del catálogo, nunca una estimación. Sirve para una
+   * sola cosa: la franja del IMESI a eléctricos que empieza a regir el
+   * 1/enero/2027.
+   */
+  precio_uy?: PrecioUy | null;
+}
+
+export interface FranjaImesi2027 {
+  tramo: "exento" | "tramo_5" | "tramo_9";
+  porcentaje_2027: number;
+  vigente_desde: string;
+  // Siempre true: se calcula sobre precio de lista, no sobre el valor de
+  // importación real (no es público por modelo) — ver app/imesi.py.
+  aproximado: boolean;
+}
+
+export interface PrecioUy {
+  precio_usd: number;
+  fuente: string;
+  verificado_el: string;
+  imesi_2027: FranjaImesi2027;
 }
 
 export interface ShowroomCatalog {

@@ -52,6 +52,14 @@ export const showroom = {
     precioRedDc: (precioKwh: string, cargoBase: string) => `DC $ ${precioKwh}/kWh + ${cargoBase} connection fee`,
     notaTarifas: (operador: string, vigencia: string, detalle: string, precioCasa: string) =>
       `Network rates per the ${operador} rate sheet ${vigencia}${detalle}. At home: $ ${precioCasa}/kWh.`,
+    // 2027 import tax bracket, only when the model has a verified list
+    // price (see ShowroomModel.precio_uy in api/showroom.ts).
+    imesiExento: (precio: string) =>
+      `Today: exempt from import tax. Starting January 1, 2027 it stays exempt (list price: USD ${precio}, under USD 19,000).`,
+    imesiTramo: (pct: number, precio: string) =>
+      `Today: exempt from import tax. Starting January 1, 2027 it starts paying ${pct}% (list price: USD ${precio}).`,
+    imesiFuente: (fecha: string) =>
+      `List price verified on ${fecha}. This is a reference, not the customs value the tax actually uses — the real number, if anything, is equal or lower.`,
     // Per-model title/description (instead of inheriting the showroom
     // page's generic ones): without this, Google saw the same <title> for
     // all 632 sheets and had no way to index "Nissan Leaf range Uruguay"

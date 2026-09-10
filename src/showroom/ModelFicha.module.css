@@ -165,6 +165,33 @@
   color: var(--accent-dijkstra);
 }
 
+/* Franja de IMESI 2027: mismo tratamiento visual que .notaIa (caja con
+   borde de acento) pero en el mint de la marca -- no es una advertencia de
+   calidad de dato como esa, es informacion de oportunidad ("todavia estas a
+   tiempo"). */
+.imesi {
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent-astar);
+  background: rgba(52, 227, 168, 0.08);
+  border-radius: 0 8px 8px 0;
+  margin: 0 0 20px;
+  max-width: 62ch;
+}
+
+.imesiLinea {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.imesiFuente {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
