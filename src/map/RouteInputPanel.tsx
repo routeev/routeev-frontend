@@ -41,6 +41,7 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   const modoOpciones = [
     { id: "eficiente", label: ri.routeMode.eficiente, valor: "eficiente" as const },
     { id: "rapido", label: ri.routeMode.rapido, valor: "rapido" as const },
+    { id: "economico", label: ri.routeMode.economico, valor: "economico" as const },
   ];
 
   return (

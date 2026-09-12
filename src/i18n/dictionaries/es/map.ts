@@ -199,9 +199,10 @@ export const map = {
     },
     routeMode: {
       legend: "¿Cómo priorizamos el viaje?",
-      hint: "\"Lo antes posible\" puede elegir un cargador más rápido aunque quede más lejos, o gastar más batería si eso te hace llegar antes.",
+      hint: "\"Lo antes posible\" puede elegir un cargador más rápido aunque quede más lejos, o gastar más batería si eso te hace llegar antes. \"Económico\" prioriza gastar menos plata en las recargas, no solo menos batería.",
       eficiente: "Más eficiente",
       rapido: "Lo antes posible",
+      economico: "Económico",
     },
     useMyLocation: "Usar mi ubicación como origen",
     locatingYou: "Buscando tu ubicación...",

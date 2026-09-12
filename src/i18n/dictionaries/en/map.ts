@@ -199,9 +199,10 @@ export const map = {
     },
     routeMode: {
       legend: "How should we prioritize the trip?",
-      hint: "\"As fast as possible\" may pick a faster charger even if it's farther, or use more battery if that gets you there sooner.",
+      hint: "\"As fast as possible\" may pick a faster charger even if it's farther, or use more battery if that gets you there sooner. \"Economical\" prioritizes spending less money on recharges, not just less battery.",
       eficiente: "Most efficient",
       rapido: "As fast as possible",
+      economico: "Economical",
     },
     useMyLocation: "Use my location as origin",
     locatingYou: "Finding your location...",

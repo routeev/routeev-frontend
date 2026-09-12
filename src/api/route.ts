@@ -207,8 +207,13 @@ export interface CompareRoutesResult {
 // solo el tiempo -- puede preferir una estacion mas lenta si queda mas
 // cerca. "rapido": ese peso pasa a 0, dispuesto a gastar mas bateria (nunca
 // por debajo del margen pedido) con tal de llegar antes -- por ejemplo,
-// desviarse a un cargador mas potente aunque quede mas lejos.
-export type RouteModo = "eficiente" | "rapido";
+// desviarse a un cargador mas potente aunque quede mas lejos -- y ademas
+// evita (sin bloquear) las estaciones con un reporte reciente de la
+// comunidad de "no funciona". "economico": mismo peso que "eficiente" en
+// el manejo, mas un desincentivo por el costo REAL en pesos de cada
+// recarga (no solo los kWh) -- ahorrar bateria no es lo mismo que ahorrar
+// plata.
+export type RouteModo = "eficiente" | "rapido" | "economico";
 
 export interface RoutePlanPayload {
   origen: { lat: number; lon: number };

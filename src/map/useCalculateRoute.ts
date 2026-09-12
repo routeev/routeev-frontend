@@ -34,7 +34,7 @@ export function useCalculateRoute() {
         vehicle_id: state.selectedVehicleId!,
         start_battery_kwh: startBatteryKwh,
         ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
-        ...(state.routeMode === "rapido" ? { modo: "rapido" as const } : {}),
+        ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
       };
       const v2Result = await planRoute(v2Payload);
       const result = toCompareRoutesResult(v2Result, origin.name, destination.name);
