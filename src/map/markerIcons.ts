@@ -1,6 +1,4 @@
 import L from "leaflet";
-import { esPrivada } from "./esPrivada";
-import { operatorBadge } from "./operatorBadge";
 import styles from "./markers.module.css";
 
 const BOLT_SVG =
@@ -67,20 +65,12 @@ export function myLocationIcon(): L.DivIcon {
  * es de una sola red, y de quien es el cargador cambia cosas concretas para
  * el que maneja (con que app se paga, y cuanto sale -- el pliego de UTE es
  * mas barato que las tarifas relevadas de los privados).
- *
- * Dentro de los privados, el operador reconocible (eONE, DISA/EVE Move,
- * Evergo, DMC Mobility, Mobility Recharge, UMT) se distingue ademas por sus
- * propias iniciales y color (ver operatorBadge.ts) -- UTE y cualquier
- * privado sin marca identificada se quedan con el rayo generico de siempre.
  */
-export function stationIcon(operador?: string | null): L.DivIcon {
-  const privada = esPrivada(operador);
-  const badge = privada ? operatorBadge(operador) : null;
-  const clase = !privada ? styles.station : `${styles.station} ${badge ? styles[badge.clase] : styles.stationPrivada}`;
-  const contenido = badge ? `<span class="${styles.stationBadge}">${badge.iniciales}</span>` : BOLT_SVG;
+export function stationIcon(privada = false): L.DivIcon {
+  const clase = privada ? `${styles.station} ${styles.stationPrivada}` : styles.station;
   return L.divIcon({
     className: "",
-    html: `<div class="${styles.stationHit}"><div class="${clase}">${contenido}</div></div>`,
+    html: `<div class="${styles.stationHit}"><div class="${clase}">${BOLT_SVG}</div></div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
   });

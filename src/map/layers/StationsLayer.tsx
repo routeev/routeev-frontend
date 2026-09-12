@@ -4,6 +4,7 @@ import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type NodeId, type Station } from "../../api/graph";
 import { listStationReviewSummaries } from "../../api/stationReviews";
 import { useTranslation } from "../../i18n/LanguageProvider";
+import { esPrivada } from "../esPrivada";
 import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
 import { stationIcon } from "../markerIcons";
@@ -131,7 +132,7 @@ export function StationsLayer() {
             // comiéndose el toque destinado al mapa.
             key={`${st.node_id}-${picking ? "picking" : "idle"}`}
             position={[st.lat, st.lon]}
-            icon={stationIcon(st.operador)}
+            icon={stationIcon(esPrivada(st.operador))}
             // Mientras se está marcando origen/destino, las ~200 chinchetas de
             // carga son estorbo puro: tapan la calle que la persona quiere
             // tocar y se llevan el click. Se atenúan (no se ocultan: siguen
