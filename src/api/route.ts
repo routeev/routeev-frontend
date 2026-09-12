@@ -203,12 +203,20 @@ export interface CompareRoutesResult {
 // forma que ya consume toda la interfaz (StationsLayer, TripDashboard,
 // tripStats, useLiveTrip), para no tener que tocar ninguno de esos archivos.
 
+// "eficiente" (default): el algoritmo tambien pesa el ahorro de bateria, no
+// solo el tiempo -- puede preferir una estacion mas lenta si queda mas
+// cerca. "rapido": ese peso pasa a 0, dispuesto a gastar mas bateria (nunca
+// por debajo del margen pedido) con tal de llegar antes -- por ejemplo,
+// desviarse a un cargador mas potente aunque quede mas lejos.
+export type RouteModo = "eficiente" | "rapido";
+
 export interface RoutePlanPayload {
   origen: { lat: number; lon: number };
   destino: { lat: number; lon: number };
   vehicle_id: number;
   start_battery_kwh?: number;
   cargador_en_destino?: boolean;
+  modo?: RouteModo;
   comparar?: boolean;
 }
 
@@ -250,6 +258,7 @@ export interface CompareRoutesResultV2 {
    * guardar.
    */
   plan_id: string | null;
+  modo?: RouteModo;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };

@@ -24,6 +24,8 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   const hasDestination = useMapStore((s) => s.destinationNode != null);
   const cargadorEnDestino = useMapStore((s) => s.cargadorEnDestino);
   const setCargadorEnDestino = useMapStore((s) => s.setCargadorEnDestino);
+  const routeMode = useMapStore((s) => s.routeMode);
+  const setRouteMode = useMapStore((s) => s.setRouteMode);
   const geolocation = useGeolocation();
 
   // El botón de chincheta alterna: si ya se está marcando ese rol, se cancela.
@@ -34,6 +36,11 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
   const cargadorOpciones = [
     { id: "yes", label: ri.chargerAtDestination.yes, valor: true },
     { id: "no", label: ri.chargerAtDestination.no, valor: false },
+  ];
+
+  const modoOpciones = [
+    { id: "eficiente", label: ri.routeMode.eficiente, valor: "eficiente" as const },
+    { id: "rapido", label: ri.routeMode.rapido, valor: "rapido" as const },
   ];
 
   return (
@@ -108,6 +115,29 @@ export function RouteInputPanel({ banner, step }: RouteInputPanelProps) {
                   name="cargador-en-destino"
                   checked={cargadorEnDestino === opcion.valor}
                   onChange={() => setCargadorEnDestino(opcion.valor)}
+                />
+                {opcion.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {hasDestination && (
+        <fieldset className={styles.cargador}>
+          <legend className={styles.cargadorLegend}>{ri.routeMode.legend}</legend>
+          <p className={styles.cargadorHint}>{ri.routeMode.hint}</p>
+          <div className={styles.cargadorOpciones}>
+            {modoOpciones.map((opcion) => (
+              <label
+                key={opcion.id}
+                className={[styles.cargadorOpcion, routeMode === opcion.valor ? styles.cargadorOpcionActiva : ""].join(" ")}
+              >
+                <input
+                  type="radio"
+                  name="modo-de-ruta"
+                  checked={routeMode === opcion.valor}
+                  onChange={() => setRouteMode(opcion.valor)}
                 />
                 {opcion.label}
               </label>

@@ -197,6 +197,12 @@ export const map = {
       yes: "Sí, tengo",
       no: "No tengo",
     },
+    routeMode: {
+      legend: "¿Cómo priorizamos el viaje?",
+      hint: "\"Lo antes posible\" puede elegir un cargador más rápido aunque quede más lejos, o gastar más batería si eso te hace llegar antes.",
+      eficiente: "Más eficiente",
+      rapido: "Lo antes posible",
+    },
     useMyLocation: "Usar mi ubicación como origen",
     locatingYou: "Buscando tu ubicación...",
     swapPoints: "Invertir origen y destino",

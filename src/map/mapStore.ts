@@ -1,7 +1,7 @@
 import type L from "leaflet";
 import { create } from "zustand";
 import type { GraphNode, NodeId, Station } from "../api/graph";
-import type { CompareRoutesResult } from "../api/route";
+import type { CompareRoutesResult, RouteModo } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
 import { haversineKm, normalizeForSearch } from "../shared/geo";
 import { pointKey, SAME_POINT_KM, SAME_SPOT_KM, type RoutePoint, type TripLogSeed } from "./routePoint";
@@ -65,6 +65,14 @@ interface MapState {
    */
   cargadorEnDestino: boolean;
 
+  /**
+   * "eficiente" (default): el algoritmo también pesa el ahorro de batería,
+   * no solo el tiempo -- puede preferir una estación más lenta si queda más
+   * cerca. "rapido": ese peso pasa a 0, dispuesto a gastar más batería
+   * (nunca por debajo del margen pedido) con tal de llegar antes.
+   */
+  routeMode: RouteModo;
+
   // Origen y destino son RoutePoint, no GraphNode: un punto puede ser una
   // coordenada cruda de un toque en el mapa y no corresponder a ningún nodo
   // del grafo (ver routePoint.ts). Los campos originId/destinationId que
@@ -120,6 +128,7 @@ interface MapState {
   selectVehicle: (id: number | null) => void;
   setStartBatteryPct: (pct: number) => void;
   setCargadorEnDestino: (tiene: boolean) => void;
+  setRouteMode: (modo: RouteModo) => void;
 
   setOrigin: (p: RoutePoint) => void;
   setDestination: (p: RoutePoint) => void;
@@ -174,6 +183,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectedVehicleId: null,
   startBatteryPct: 100,
   cargadorEnDestino: true,
+  routeMode: "eficiente",
 
   originNode: null,
   destinationNode: null,
@@ -223,6 +233,15 @@ export const useMapStore = create<MapState>((set, get) => ({
       s.cargadorEnDestino === tiene
         ? { cargadorEnDestino: tiene }
         : { cargadorEnDestino: tiene, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
+    ),
+  // Mismo criterio que setCargadorEnDestino: cambiar el modo invalida la
+  // ruta ya calculada, porque el algoritmo puede haber elegido otras
+  // paradas con el modo anterior.
+  setRouteMode: (modo) =>
+    set((s) =>
+      s.routeMode === modo
+        ? { routeMode: modo }
+        : { routeMode: modo, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
     ),
 
   setOrigin: (p) =>
