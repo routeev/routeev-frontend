@@ -98,8 +98,9 @@
   height: 20px;
 }
 
-/* Operador privado (eONE, DISA/EVE Move, Evergo...): mismo rayo, otro color,
-   para que se lea de un vistazo que ese cargador no es de la red de UTE. */
+/* Operador privado sin marca reconocible ("Privado", o uno nuevo relevado
+   que todavia no tiene su propio color abajo): mismo rayo, otro color, para
+   que se lea de un vistazo que ese cargador no es de la red de UTE. */
 .stationPrivada {
   background: var(--accent-astar);
   box-shadow: 0 0 8px rgba(52, 227, 168, 0.55);
@@ -113,6 +114,63 @@
 
 .stationPrivada svg {
   fill: #06231d;
+}
+
+/* Operadores privados CON marca reconocible: en vez del rayo generico, las
+   iniciales de la red (ver operatorBadge.ts) -- mismo criterio que el mapa
+   de la competencia (Uruguay Electrico), pero con texto propio en vez de
+   reproducir el isologo de cada operador, que no es nuestro para usar. */
+.stationBadge {
+  font: 700 8.5px/1 var(--font-mono, monospace);
+  letter-spacing: 0.02em;
+}
+
+.opEone {
+  background: #22c1d6;
+  box-shadow: 0 0 8px rgba(34, 193, 214, 0.55);
+}
+.opEone .stationBadge {
+  color: #062024;
+}
+
+.opEve {
+  background: #a374f2;
+  box-shadow: 0 0 8px rgba(163, 116, 242, 0.55);
+}
+.opEve .stationBadge {
+  color: #fff;
+}
+
+.opEvergo {
+  background: var(--accent-astar);
+  box-shadow: 0 0 8px rgba(52, 227, 168, 0.55);
+}
+.opEvergo .stationBadge {
+  color: #06231d;
+}
+
+.opDmc {
+  background: #6d7cf7;
+  box-shadow: 0 0 8px rgba(109, 124, 247, 0.55);
+}
+.opDmc .stationBadge {
+  color: #fff;
+}
+
+.opRecharge {
+  background: #f2668f;
+  box-shadow: 0 0 8px rgba(242, 102, 143, 0.55);
+}
+.opRecharge .stationBadge {
+  color: #3d0016;
+}
+
+.opUmt {
+  background: #4db8f0;
+  box-shadow: 0 0 8px rgba(77, 184, 240, 0.55);
+}
+.opUmt .stationBadge {
+  color: #062024;
 }
 
 .toll {
