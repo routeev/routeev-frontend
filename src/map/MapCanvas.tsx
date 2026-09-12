@@ -99,6 +99,20 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
     // ese paso a revisar.
     if (!navigator.geolocation) return;
     let cancelled = false;
+
+    const guardarPosicion = (pos: GeolocationPosition) => {
+      if (cancelled) return;
+      const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+      setMyPosition(coords);
+      // Tambien al store, no solo al estado local: es lo que le permite a
+      // StationDetailPanel volver a centrar aca al salir del detalle de
+      // una estacion, sin que ese componente tenga que ser descendiente
+      // de CaptureMap.
+      useMapStore.getState().setMyPosition(coords);
+    };
+
+    // Primer fix: el mismo camino de siempre (con su fallback sin GPS) y
+    // ademas centra la camara -- una sola vez, al abrir /app.
     getCurrentPositionWithFallback(
       (pos) => {
         if (cancelled) return;
@@ -106,19 +120,12 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
         // El GPS puede tardar bastante en resolver (varios segundos no es
         // raro) -- si para cuando esto llega la persona ya fijó un origen/
         // destino o ya calculó una ruta, mover la cámara acá se la pisa de
-        // golpe. myPosition SI se guarda igual (lo sigue necesitando, p. ej.,
-        // el botón "volver" de StationDetailPanel), solo la vista de la
-        // cámara se salta.
+        // golpe.
         const state = useMapStore.getState();
         if (!state.lastResult && state.originNode == null && state.destinationNode == null) {
           map.setView(coords, AUTO_LOCATE_ZOOM);
         }
-        setMyPosition(coords);
-        // Tambien al store, no solo al estado local: es lo que le permite a
-        // StationDetailPanel volver a centrar aca al salir del detalle de
-        // una estacion, sin que ese componente tenga que ser descendiente
-        // de CaptureMap.
-        state.setMyPosition(coords);
+        guardarPosicion(pos);
       },
       (err) => {
         if (cancelled) return;
@@ -134,8 +141,30 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
         onLocateFailRef.current(mc.locateFailed(reason));
       }
     );
+
+    // Del segundo fix en adelante: un watch en segundo plano, solo para que
+    // el punto "estás acá" se siga moviendo solo mientras se mira el mapa
+    // sin un viaje en curso (eso ya lo cubre watchPosition en
+    // useLiveTrip.ts, con su propia config de alta precisión). Antes esto
+    // no existía -- el punto quedaba clavado donde estaba al abrir /app
+    // hasta recargar la página, que es exactamente el reporte real.
+    //
+    // enableHighAccuracy en false a propósito, distinto del primer fix: es
+    // un punto de referencia en el mapa de planificación, no una guía de
+    // manejo -- no hace falta gastar el chip GPS a pleno todo el rato que
+    // la pantalla esté abierta. Nunca toca la cámara (sería sacarle el
+    // control del mapa a quien lo está mirando) ni el banner de error del
+    // primer intento: si el watch falla, el punto simplemente se queda
+    // donde estaba la última vez que se supo, en silencio.
+    const watchId = navigator.geolocation.watchPosition(guardarPosicion, () => {}, {
+      enableHighAccuracy: false,
+      maximumAge: 15000,
+      timeout: 20000,
+    });
+
     return () => {
       cancelled = true;
+      navigator.geolocation.clearWatch(watchId);
     };
     // Solo [map]: ver el comentario de onLocateFailRef arriba.
   }, [map]);
