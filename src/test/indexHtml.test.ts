@@ -1,6 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+// ?raw y no node:fs a proposito: `npm run build` corre `tsc -b` sobre los tests
+// tambien, y este proyecto no tiene @types/node (ni hace falta) -- importar
+// node:fs/node:path o usar __dirname rompe el BUILD DE PRODUCCION, no solo el
+// test. Asi lo carga Vite, que es quien lo resuelve igual en test y en build.
+import html from "../../index.html?raw";
 
 // El index.html no lo revisa nadie: no pasa por TypeScript, ni por ESLint, y
 // Vite lo sirve tal cual esté (un comentario mal cerrado no es un error de
@@ -26,7 +29,6 @@ import { describe, expect, it } from "vitest";
 // archivo con una expresión regular no serviría: el bug original es justamente
 // que el texto SE VE bien y el parser lo interpreta distinto.
 
-const html = readFileSync(resolve(__dirname, "../../index.html"), "utf-8");
 const doc = new DOMParser().parseFromString(html, "text/html");
 
 describe("index.html", () => {
