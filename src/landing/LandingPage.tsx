@@ -102,6 +102,16 @@ export function LandingPage() {
 
       <main>
         <section className={styles.heroWrap}>
+          {/* detail explicito aunque "medium" sea el default: este fondo es
+              la primera pantalla del sitio, la que abre cualquiera desde un
+              celular o una notebook con grafica integrada, y el nivel de
+              detalle es lo que decide cuanto le cuesta. "medium" son 70
+              pasos de raymarching por pixel y por frame; "low" son 40, y en
+              una ola desenfocada y lenta como esta no se distingue.
+              El grano y el seguimiento del mouse se dejan como estaban: no
+              multiplican el raymarching (son unas pocas operaciones por
+              pixel), asi que sacarlos cambiaba el aspecto sin ahorrar casi
+              nada. */}
           <GradientWaves
             horizonColor="#0a0e13"
             waveColor="#1a212c"
@@ -110,6 +120,7 @@ export function LandingPage() {
             amplitude={2}
             opacity={0.85}
             brightness={0.9}
+            detail="low"
             grainIntensity={0.035}
           />
           <div className={[styles.section, styles.hero].join(" ")}>

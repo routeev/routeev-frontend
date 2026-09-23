@@ -41,6 +41,11 @@ const hexToRgb = (hex: string): [number, number, number] => {
   return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
 };
 
+// El fondo se redibuja como mucho 30 veces por segundo (ver el bucle mas
+// abajo). No es una animacion que alguien siga con la vista: es una ola de
+// fondo, lenta y desenfocada.
+const MS_MINIMOS_ENTRE_FRAMES = 1000 / 30;
+
 const detailToSteps = (detail: GradientWavesDetail): number => {
   if (detail === "low") return 40.0;
   if (detail === "high") return 110.0;
@@ -205,7 +210,13 @@ export function GradientWaves({
         alpha: true,
         premultipliedAlpha: true,
         antialias: false,
-        dpr: Math.min(window.devicePixelRatio || 1, 2),
+        // dpr fijo en 1, no el del dispositivo. En una pantalla HiDPI
+        // (devicePixelRatio 2) el canvas pasa a tener CUATRO veces los
+        // pixeles, y cada pixel de mas cuesta una pasada entera de
+        // raymarching -- el gasto mas caro de todo este componente. En un
+        // fondo desenfocado y sin bordes duros la diferencia visual a 2x es
+        // practicamente nula; la de rendimiento no.
+        dpr: 1,
       });
       if (!renderer.gl) throw new Error("no webgl context");
     } catch {
@@ -289,8 +300,20 @@ export function GradientWaves({
     let isVisible = true;
     let isPageVisible = !document.hidden;
     const t0 = performance.now();
+    let ultimoRender = 0;
 
     const loop = (t: number) => {
+      // Se pide el frame siguiente ANTES de decidir si se dibuja: el bucle
+      // sigue vivo aunque este frame se saltee.
+      raf = requestAnimationFrame(loop);
+      // Tope de 30 fps: a 60 este shader dibuja el doble de veces por
+      // segundo para un fondo que se mueve despacio a proposito (speed 0.3),
+      // donde la diferencia no se ve. iTime sigue saliendo del reloj real,
+      // asi que la ola avanza a la misma velocidad de siempre -- lo unico
+      // que baja es cuantas veces por segundo se recalcula.
+      if (t - ultimoRender < MS_MINIMOS_ENTRE_FRAMES) return;
+      ultimoRender = t;
+
       (program.uniforms.iTime as { value: number }).value = (t - t0) * 0.001;
       const tx = enableMouseRef.current ? targetMouse[0] : 0.5;
       const ty = enableMouseRef.current ? targetMouse[1] : 0.5;
@@ -300,7 +323,6 @@ export function GradientWaves({
       m[0] = currentMouse[0];
       m[1] = currentMouse[1];
       renderer.render({ scene: mesh });
-      raf = requestAnimationFrame(loop);
     };
 
     const tryStart = () => {
