@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Mesh, Program, Renderer, Triangle } from "ogl";
+import { esRenderizadoPorSoftware } from "./gpu";
 import styles from "./GradientWaves.module.css";
 
 // Portado de react-bits (https://reactbits.dev/backgrounds/gradient-waves,
@@ -225,6 +226,15 @@ export function GradientWaves({
       return;
     }
 
+    if (esRenderizadoPorSoftware(renderer.gl)) {
+      // El canvas todavia no se agrego al DOM, asi que no queda nada que
+      // limpiar mas que el contexto: se lo pierde a proposito para devolver
+      // los recursos ya mismo en vez de esperar al recolector. Queda visible
+      // el degradado CSS del contenedor (ver el style de mas abajo).
+      renderer.gl.getExtension("WEBGL_lose_context")?.loseContext();
+      return;
+    }
+
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     const canvas = gl.canvas as HTMLCanvasElement;
@@ -441,5 +451,29 @@ export function GradientWaves({
     parallaxStrength,
   ]);
 
-  return <div ref={containerRef} className={[styles.container, className].filter(Boolean).join(" ")} />;
+  // El degradado va SIEMPRE en el contenedor, no solo cuando falta la placa:
+  // cuando el shader se monta, su canvas lo tapa por completo, y cuando no
+  // (sin WebGL, o emulado por software) queda esto en su lugar. Hacerlo al
+  // reves -- pintarlo solo en el caso de fallback -- obligaria a re-renderizar
+  // el componente desde dentro del efecto para avisar cual de los dos caminos
+  // se tomo, y ademas dejaria un parpadeo negro entre el primer render y el
+  // momento en que el shader dibuja su primer frame.
+  //
+  // Los colores salen de las mismas props que el shader, asi que cambiarle la
+  // paleta a la ola arrastra al degradado sin tener que acordarse de tocar el
+  // CSS. Los porcentajes imitan como reparte el shader la escena: el horizonte
+  // ocupa la mayor parte y la cresta apenas asoma abajo.
+  const [cr, cg, cb] = hexToRgb(crestColor);
+  const fondoDeReserva = [
+    `radial-gradient(120% 80% at 50% 100%, rgba(${Math.round(cr * 255)}, ${Math.round(cg * 255)}, ${Math.round(cb * 255)}, ${0.18 * opacity}) 0%, transparent 70%)`,
+    `linear-gradient(to bottom, ${horizonColor} 0%, ${horizonColor} 45%, ${waveColor} 100%)`,
+  ].join(", ");
+
+  return (
+    <div
+      ref={containerRef}
+      className={[styles.container, className].filter(Boolean).join(" ")}
+      style={{ background: fondoDeReserva }}
+    />
+  );
 }
