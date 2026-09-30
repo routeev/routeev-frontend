@@ -87,6 +87,26 @@
   border-radius: var(--radius-sm);
 }
 
+/* Aviso de "esta tardando" bajo "Calcular ruta". Se monta apenas arranca el
+   calculo pero queda invisible los primeros 6 s (animation-delay + fill-mode
+   both): si la ruta sale antes, se desmonta sin haberse visto nunca. Asi no
+   hace falta ningun timer ni estado en React, y no hay que sacarlo cuando el
+   servidor sea rapido -- simplemente deja de aparecer.
+   Con prefers-reduced-motion la regla global de base.css anula la DURACION
+   pero no el RETARDO: aparece igual a los 6 s, solo que sin el fundido. */
+.demoraLarga {
+  animation: demoraLargaAparece 0.4s ease 6s both;
+}
+
+@keyframes demoraLargaAparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .sidebarCta .hint {
   margin: 8px 0 0;
   text-align: center;

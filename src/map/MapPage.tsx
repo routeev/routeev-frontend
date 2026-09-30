@@ -440,7 +440,16 @@ export function MapPage() {
               >
                 {calc.isPending ? mp.calculating : mp.calculateRoute}
               </button>
-              <p className="hint hint-ok">{mp.readyToCalculate}</p>
+              {/* Mientras calcula, el "listo para calcular" no tiene sentido y en
+                  su lugar va el aviso de demora. Se monta al arrancar, pero el
+                  CSS lo deja invisible los primeros segundos: un calculo normal
+                  termina antes y el aviso se desmonta sin haberse visto; solo
+                  aparece cuando de verdad tarda (ver .demoraLarga). */}
+              {calc.isPending ? (
+                <p className={`hint ${styles.demoraLarga}`}>{mp.calculatingSlow}</p>
+              ) : (
+                <p className="hint hint-ok">{mp.readyToCalculate}</p>
+              )}
             </div>
           )}
         </aside>

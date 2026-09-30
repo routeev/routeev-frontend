@@ -108,6 +108,7 @@ export const map = {
       `Tap the map to mark ${role === "origin" ? "the origin" : "the destination"}`,
     cancel: "Cancel",
     calculating: "Calculating...",
+    calculatingSlow: "This is taking longer than usual: a long route can take up to a minute. Please keep this screen open.",
     calculateRoute: "Calculate route",
     readyToCalculate: "Ready to calculate.",
   },
