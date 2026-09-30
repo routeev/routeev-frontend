@@ -11,7 +11,7 @@ describe("cloudinaryResize", () => {
   });
 
   it("leaves non-Cloudinary URLs untouched", () => {
-    const url = "https://routeev-api-production.up.railway.app/api/showroom/imagen/abc123.jpg";
+    const url = "https://api.routeev.uy/api/showroom/imagen/abc123.jpg";
     expect(cloudinaryResize(url, 400)).toBe(url);
   });
 

@@ -5,13 +5,13 @@ import react from "@vitejs/plugin-react";
 // pasa a ser redundante y eslint la marca).
 import { configDefaults, defineConfig } from "vitest/config";
 
-const ROUTEEV_API_PRODUCCION = "https://routeev-api-production.up.railway.app";
+const ROUTEEV_API_PRODUCCION = "https://api.routeev.uy";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    // La API en Railway no tiene http://localhost:5173 en su
+    // La API de produccion no tiene http://localhost:5173 en su
     // CORS_ALLOW_ORIGINS (routeev-api es otro repo, no se toca desde acá).
     // El proxy evita el problema del todo en dev: el navegador le habla a
     // este mismo origen (sin CORS de por medio) y Vite reenvia por detras.

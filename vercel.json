@@ -1,7 +1,7 @@
 {
   "framework": "vite",
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://routeev-api-production.up.railway.app/sitemap.xml" },
+    { "source": "/sitemap.xml", "destination": "https://api.routeev.uy/sitemap.xml" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
