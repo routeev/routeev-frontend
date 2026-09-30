@@ -191,6 +191,10 @@ export interface CompareRoutesResult {
     cubierto: boolean;
     paradas: RespaldoParada[];
   };
+  // Con qué prioridad se calculó ESTA ruta (la que devolvió la API, no la que
+  // esté elegida ahora en el formulario). Ausente en un replay del historial:
+  // el plan guardado no la trae, y ahí no se muestra.
+  modo?: RouteModo;
   dijkstra: RouteResult | null;
   astar: RouteResult;
 }
@@ -317,6 +321,7 @@ export function toCompareRoutesResult(
     bateria: v2.bateria,
     cargador_destino: v2.cargador_destino,
     respaldo_paradas: v2.respaldo_paradas,
+    modo: v2.modo,
     astar: toRouteResult(v2.astar, true),
     dijkstra: v2.dijkstra ? toRouteResult(v2.dijkstra, false) : null,
   };

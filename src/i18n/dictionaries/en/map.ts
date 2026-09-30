@@ -5,6 +5,14 @@ export const map = {
   tripDashboard: {
     title: "Trip details",
     noRouteFound: "No viable route was found with this battery.",
+    // The mode's name comes from routeInput.routeMode (the one that was
+    // chosen); this only says what it meant for THIS route.
+    tripMode: {
+      label: "Trip type",
+      eficiente: "Balances travel time against battery use.",
+      rapido: "Prioritizes arriving sooner, even if it uses more battery.",
+      economico: "Prioritizes spending less money on recharges.",
+    },
     margin: {
       critical: (pct: string) =>
         `🔴 Critical margin: you'd arrive with ~${pct}% battery left. Any detour or extra energy use could leave you stranded.`,

@@ -5,6 +5,14 @@ export const map = {
   tripDashboard: {
     title: "Datos del viaje",
     noRouteFound: "No se encontró una ruta viable con esta batería.",
+    // El nombre del modo sale de routeInput.routeMode (el mismo que se eligió);
+    // acá va solo qué significó para ESTA ruta.
+    tripMode: {
+      label: "Tipo de viaje",
+      eficiente: "Equilibra el tiempo con el gasto de batería.",
+      rapido: "Prioriza llegar antes, aunque gaste más batería.",
+      economico: "Prioriza gastar menos plata en las recargas.",
+    },
     margin: {
       critical: (pct: string) =>
         `🔴 Margen crítico: llegarías con ~${pct}% de batería. Cualquier desvío o consumo extra te puede dejar sin carga.`,

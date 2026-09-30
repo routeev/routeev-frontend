@@ -180,6 +180,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
         <div>
           <h2>{td.title}</h2>
           <div className={styles.routeLabel}>{routeLabel}</div>
+          {result.modo && (
+            <div className={styles.tripMode}>
+              <span className="sr-only">{td.tripMode.label}: </span>
+              <span className={styles.tripModeChip}>{t.map.routeInput.routeMode[result.modo]}</span>
+              <span className={styles.tripModeText}>{td.tripMode[result.modo]}</span>
+            </div>
+          )}
         </div>
       </div>
 
