@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 // solo lugar, compartido con los mapas de Leaflet: con importar algo de ese
 // modulo el worker ya queda registrado (ver basemap.ts).
 import { useActiveTheme } from "../theme/useActiveTheme";
-import { basemapStyleForTheme } from "./basemap";
+import { basemapStyleForTheme, completarImagenesFaltantes } from "./basemap";
 import styles from "./NavigationMap.module.css";
 
 // Mismo par que RouteLayers.tsx (COLOR_ASTAR): ninguna de las dos librerías
@@ -152,18 +152,9 @@ export function NavigationMap({ position, heading, routeCoords, chargeStops, rad
     });
     mapRef.current = map;
 
-    // El estilo "dark" de OpenFreeMap referencia sprites (p. ej.
-    // "wood-pattern") que a veces no vienen en el atlas que sirve su CDN.
-    // MapLibre solo evita el warning si la imagen llega ANTES de resolver
-    // la falta: setMissingStyleImageResolver corre primero y se espera su
-    // resultado, así que llega a tiempo -- el evento "styleimagemissing"
-    // (probado antes) dispara demasiado tarde, cuando el warning ya está
-    // decidido. Un pixel transparente 1x1 alcanza: no hay sprite propio que
-    // mantener, y en un estilo oscuro un relleno vacío no se nota donde
-    // iría el patrón.
-    map.setMissingStyleImageResolver((id) => {
-      if (!map.hasImage(id)) map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
-    });
+    // "wood-pattern" y cualquier otra imagen que al estilo le falte: ver
+    // completarImagenesFaltantes en basemap.ts (compartido con BasemapLayer).
+    completarImagenesFaltantes(map);
 
     // Flecha propia (no el pin por defecto de MapLibre) con
     // rotationAlignment "viewport": queda SIEMPRE apuntando para arriba en

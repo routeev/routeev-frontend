@@ -41,6 +41,26 @@ maplibregl.setWorkerUrl(workerUrl);
 export const DARK_BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 export const LIGHT_BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 
+/**
+ * El estilo oscuro de OpenFreeMap pide una imagen "wood-pattern" (textura de
+ * bosque) que su propio sprite no trae -- verificado el 30/9/2026 contra
+ * sprites/ofm_f384/ofm.json. MapLibre avisa en la consola en cada carga, y sin
+ * la imagen los bosques quedan con relleno liso, que es lo que se ve igual.
+ * Responder al pedido con una imagen transparente de 1x1 deja exactamente eso
+ * y saca el aviso. Vale para cualquier otra imagen que al estilo le falte.
+ *
+ * setMissingStyleImageResolver y no el evento "styleimagemissing": el
+ * resolver corre ANTES de decidir el aviso y MapLibre espera su resultado; el
+ * evento llega cuando el aviso ya salió (probado en NavigationMap, que fue el
+ * primero en resolverlo). Lo usan los dos mapas: el de navegación y el
+ * basemap de Leaflet (BasemapLayer), que hasta ahora seguía avisando.
+ */
+export function completarImagenesFaltantes(map: maplibregl.Map): void {
+  map.setMissingStyleImageResolver((id) => {
+    if (!map.hasImage(id)) map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+  });
+}
+
 export function basemapStyleForTheme(theme: Theme): string {
   return theme === "light" ? LIGHT_BASEMAP_STYLE_URL : DARK_BASEMAP_STYLE_URL;
 }
