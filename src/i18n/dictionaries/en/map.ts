@@ -228,6 +228,10 @@ export const map = {
     chooseVehicleFirst: "Choose or create a vehicle first.",
     addVehicle: "Add vehicle",
   },
+  stationDetail: {
+    goHere: "Get here from my location",
+    locatingYou: "Finding your location...",
+  },
   stationDetailRows: {
     address: "Address",
     department: "Department",

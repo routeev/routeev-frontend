@@ -5,6 +5,7 @@ import { StationReviews } from "./StationReviews";
 import { StationStatusChip } from "./StationStatusChip";
 import { StationStatusReport } from "./StationStatusReport";
 import { useMapStore } from "./mapStore";
+import { useGoToStation } from "./useGoToStation";
 import { useStationStatus } from "./useStationStatus";
 import styles from "./StationDetailPanel.module.css";
 
@@ -15,9 +16,13 @@ import styles from "./StationDetailPanel.module.css";
  * (empujando el resto de las 200+ hacia abajo); esta es una sección propia,
  * a pantalla completa del sidebar, para que el formulario de reseña y las
  * fotos tengan lugar de verdad.
+ *
+ * `onCalculate` es el "Calcular ruta" de MapPage: lo usa "Ir hasta acá desde
+ * mi ubicación" (ver useGoToStation) para calcular apenas fija los puntos.
  */
-export function StationDetailPanel() {
+export function StationDetailPanel({ onCalculate }: { onCalculate: () => void }) {
   const { t } = useTranslation();
+  const goToStation = useGoToStation(onCalculate);
   const stations = useMapStore((s) => s.stations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);
   const selectStation = useMapStore((s) => s.selectStation);
@@ -59,6 +64,22 @@ export function StationDetailPanel() {
         actualizado={estadoEnVivo?.actualizado ?? null}
         fuente={estadoEnVivo?.fuente ?? ""}
       />
+      <button
+        type="button"
+        className="primary small full-width"
+        onClick={() => goToStation.goTo(station)}
+        disabled={goToStation.busy}
+      >
+        <svg className="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11 21 3l-8 18-2-8-8-2Z" />
+        </svg>
+        {goToStation.busy ? t.map.stationDetail.locatingYou : t.map.stationDetail.goHere}
+      </button>
+      {goToStation.error && (
+        <div className="address-result" role="alert">
+          <span className="error">{goToStation.error}</span>
+        </div>
+      )}
       <StationDetailRows station={station} />
       <StationStatusReport nodeId={String(station.node_id)} />
       <StationReviews nodeId={String(station.node_id)} />

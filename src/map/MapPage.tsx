@@ -398,7 +398,12 @@ export function MapPage() {
               // espacio con ellas, para que el detalle + reseñas tengan
               // lugar de sobra. El boton "volver" de StationDetailPanel
               // (selectStation(null)) es lo unico que las trae de vuelta.
-              <StationDetailPanel />
+              <StationDetailPanel
+                onCalculate={() => {
+                  setMapBanner(null);
+                  calc.calculate();
+                }}
+              />
             ) : hasResult ? (
               // Mismo reemplazo que en pantalla angosta (.sidebarReplaced +
               // .dashboardWrap, ver el CSS), pero adentro del panel fijo de
