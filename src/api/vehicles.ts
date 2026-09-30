@@ -10,6 +10,13 @@ export interface Vehicle {
   consumption_kwh_per_km: number;
   charging_power_kw: number;
   has_photo?: boolean;
+  /**
+   * Foto de catálogo del modelo, para mostrar mientras no haya una propia.
+   * Solo viene cuando el nombre coincide exacto con un modelo del catálogo.
+   * Opcional: una API anterior a este campo no lo manda.
+   */
+  foto_modelo_url?: string | null;
+  foto_modelo_credito?: PhotoCredit | null;
 }
 
 export interface EvModel {

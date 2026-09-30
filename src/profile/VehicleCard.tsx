@@ -1,5 +1,6 @@
 import type { Vehicle } from "../api/vehicles";
 import { CarSilhouette } from "../shared/CarSilhouette";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { useVehiclePhoto } from "./useVehiclePhoto";
 import styles from "./ProfilePage.module.css";
@@ -22,8 +23,35 @@ export function VehicleCard({ vehicle, busy, onUploadPhoto, onRemovePhoto, onDel
   return (
     <article className={styles.vehicleCard}>
       <div className={styles.artWrap}>
+        {/* Tu foto primero; si no hay, la del modelo del catálogo (con su
+            crédito: son CC BY-SA, no se pueden mostrar sin atribuir); y la
+            silueta solo cuando el nombre no es de ningún modelo conocido.
+            Con foto propia todavía cargando NO se muestra la del modelo: se
+            vería un instante y después se cambiaría por la otra. */}
         {photoUrl ? (
           <img className={styles.vehiclePhoto} src={photoUrl} alt="" />
+        ) : !vehicle.has_photo && vehicle.foto_modelo_url ? (
+          <figure className={styles.stockPhoto}>
+            <img
+              className={styles.vehiclePhoto}
+              src={cloudinaryResize(vehicle.foto_modelo_url, 400)}
+              alt=""
+              loading="lazy"
+            />
+            <figcaption className={styles.stockCredit}>
+              {vehicle.foto_modelo_credito?.archivo_url ? (
+                <a
+                  href={vehicle.foto_modelo_credito.archivo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t.profile.vehicleCard.stockPhotoCredit(vehicle.foto_modelo_credito)}
+                </a>
+              ) : (
+                t.profile.vehicleCard.stockPhotoCredit(vehicle.foto_modelo_credito ?? undefined)
+              )}
+            </figcaption>
+          </figure>
         ) : (
           <CarSilhouette name={vehicle.name} className={styles.art} />
         )}

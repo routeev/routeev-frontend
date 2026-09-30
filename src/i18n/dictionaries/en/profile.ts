@@ -99,6 +99,9 @@ export const profile = {
     removePhoto: "Remove photo",
     delete: "Delete",
     deleteTitle: "Delete vehicle",
+    // The model's photo (not your car's) until you upload your own.
+    stockPhotoCredit: (c?: { autor?: string; licencia?: string }) =>
+      ["Reference photo", c?.autor, c?.licencia].filter(Boolean).join(" · "),
   },
 
   // HistoryPanel.tsx
