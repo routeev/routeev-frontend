@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ShowroomModel } from "../api/showroom";
-import { groupFamilies, versionLabel } from "./modelFamily";
+import { fotoPrecargada, groupFamilies, versionLabel } from "./modelFamily";
 
 function mk(id: string, marca: string, modelo: string, bateria = 50, autonomia = 300): ShowroomModel {
   return {
@@ -169,5 +169,35 @@ describe("groupFamilies con `linea` del backend", () => {
 
     expect(familias).toHaveLength(1);
     expect(familias[0]!.nombre).toBe("ORA 03");
+  });
+});
+
+describe("fotoPrecargada", () => {
+  const conFoto = (m: ShowroomModel, url: string): ShowroomModel => ({
+    ...m,
+    foto_url: url,
+    foto_credito: { autor: `autor de ${m.id}` },
+  });
+
+  it("usa la foto del representante cuando la tiene", () => {
+    const [familia] = groupFamilies([
+      conFoto(mk("a", "GWM", "ORA 03 (48 kWh)", 45.4, 400), "/foto-a"),
+      conFoto(mk("b", "GWM", "ORA 03 (63 kWh)", 59.3, 300), "/foto-b"),
+    ]);
+    expect(fotoPrecargada(familia!)).toEqual({ url: "/foto-a", credito: { autor: "autor de a" } });
+  });
+
+  it("si el representante no trae foto pero una versión hermana sí, usa esa (no la pide en frío)", () => {
+    const [familia] = groupFamilies([
+      mk("a", "GWM", "ORA 03 (48 kWh)", 45.4, 400),
+      conFoto(mk("b", "GWM", "ORA 03 (63 kWh)", 59.3, 300), "/foto-b"),
+    ]);
+    expect(familia!.representante.id).toBe("a");
+    expect(fotoPrecargada(familia!)).toEqual({ url: "/foto-b", credito: { autor: "autor de b" } });
+  });
+
+  it("si ninguna versión trae foto, no inventa una: la tarjeta tiene que pedirla por nombre", () => {
+    const [familia] = groupFamilies([mk("a", "GWM", "ORA 03 (48 kWh)"), mk("b", "GWM", "ORA 03 (63 kWh)")]);
+    expect(fotoPrecargada(familia!)).toBeUndefined();
   });
 });

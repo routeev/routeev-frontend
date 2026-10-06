@@ -12,6 +12,16 @@
   border-bottom: 1px solid var(--border-soft);
 }
 
+/* Lugar del mapa mientras baja su chunk (ver simulationMapLoader.ts). Mide lo
+   mismo que SimulationMap.module.css .wrap -- 280px de .map + 2px de borde --
+   para que cuando llegue el mapa no empuje el resultado hacia abajo. */
+.mapaCargando {
+  height: 282px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
 .veredicto {
   font-family: var(--font-display);
   font-size: 20px;

@@ -8,6 +8,7 @@ import { readNumberInput } from "../shared/readNumberInput";
 import { Select } from "../shared/Select";
 import { Spinner } from "../shared/Spinner";
 import { toast } from "../shared/toastStore";
+import { cargarSimulationMap } from "./simulationMapLoader";
 import { SimulationResult } from "./SimulationResult";
 import styles from "./SimulationForm.module.css";
 
@@ -87,6 +88,11 @@ export function SimulationForm({ model }: SimulationFormProps) {
       setFormError(sf.formError);
       return;
     }
+    // El mapa baja mientras el servidor calcula la ruta (de ~1 a ~3 s): así su
+    // descarga no se suma a la espera. El catch es para que un chunk que no
+    // llegó (sin red, deploy nuevo) no sea una promesa rechazada sin dueño --
+    // React.lazy vuelve a intentar el import cuando lo necesite.
+    void cargarSimulationMap().catch(() => undefined);
     simulate.mutate();
   }
 

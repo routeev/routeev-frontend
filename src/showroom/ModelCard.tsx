@@ -3,7 +3,7 @@ import { CarSilhouette } from "../shared/CarSilhouette";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { familyAliases } from "./modelAlias";
-import type { ModelFamily } from "./modelFamily";
+import { fotoPrecargada, type ModelFamily } from "./modelFamily";
 import { num } from "./num";
 import { useModelPhoto } from "./useModelPhoto";
 import styles from "./ModelCard.module.css";
@@ -37,11 +37,8 @@ function ModelCardComponent({ familia, eager, onSelect }: ModelCardProps) {
   // auto se vende con distinto nombre según el mercado, y la tarjeta tiene
   // que dejar claro que "este es el que vos buscabas" (QA MEDIO 9).
   const alias = useMemo(() => familyAliases(familia.versiones), [familia.versiones]);
-  const { ref, photo } = useModelPhoto(
-    nombre,
-    eager,
-    model.foto_url ? { url: model.foto_url, credito: model.foto_credito } : undefined
-  );
+  const precargada = useMemo(() => fotoPrecargada(familia), [familia]);
+  const { ref, photo } = useModelPhoto(nombre, eager, precargada);
 
   return (
     <article
@@ -65,7 +62,12 @@ function ModelCardComponent({ familia, eager, onSelect }: ModelCardProps) {
             className={styles.foto}
             src={cloudinaryResize(photo.url, 400)}
             alt=""
-            loading="lazy"
+            // Las de la primera pantalla se bajan YA (y con prioridad): con
+            // loading="lazy" el navegador las dejaba esperando al layout. El
+            // resto sigue difiriéndose hasta acercarse al viewport.
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : undefined}
+            decoding="async"
           />
         )}
         {model.fuente === "ia" && <span className={styles.badge}>{mc.badgeIa}</span>}
