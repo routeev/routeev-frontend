@@ -1,12 +1,18 @@
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import type { ShowroomModel, SimulateResult } from "../api/showroom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration, formatUyu } from "../shared/format";
 import { num } from "./num";
-import { SimulationMap } from "./SimulationMap";
+import { cargarSimulationMap } from "./simulationMapLoader";
 import { armarTramos } from "./simulationTimeline";
 import { tarifaLinea } from "./tarifaTexto";
 import styles from "./SimulationResult.module.css";
+
+// Ver simulationMapLoader.ts: el mapa (leaflet + maplibre) baja recién acá, no
+// con la página del showroom. SimulationForm arranca esa descarga al apretar
+// "Simular", en paralelo al cálculo del servidor, así que cuando llega el
+// resultado el chunk casi siempre ya está.
+const SimulationMap = lazy(() => cargarSimulationMap().then((m) => ({ default: m.SimulationMap })));
 
 interface SimulationResultProps {
   resultado: SimulateResult;
@@ -50,12 +56,14 @@ export function SimulationResult({ resultado, model, desde, hasta, bateria, marg
     <div className={styles.out}>
       {tieneMapa && (
         <div className={styles.anim}>
-          <SimulationMap
-            tramosInfo={tramosInfo}
-            capacidadKwh={model.bateria_kwh}
-            bateriaInicialPct={bateria}
-            tiempoTotalMin={resultado.tiempo_total_min}
-          />
+          <Suspense fallback={<div className={styles.mapaCargando} aria-hidden="true" />}>
+            <SimulationMap
+              tramosInfo={tramosInfo}
+              capacidadKwh={model.bateria_kwh}
+              bateriaInicialPct={bateria}
+              tiempoTotalMin={resultado.tiempo_total_min}
+            />
+          </Suspense>
         </div>
       )}
 

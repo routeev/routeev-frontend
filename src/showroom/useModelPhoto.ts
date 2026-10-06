@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { PhotoCredit, PhotoLookup } from "../api/showroom";
-import { getPhoto, observePhoto } from "./photoQueue";
+import { observePhoto, solicitarFoto } from "./photoQueue";
 
 /**
  * Resuelve la foto de un modelo: si ya vino precargada del catálogo
@@ -27,15 +27,8 @@ export function useModelPhoto(
 
   useEffect(() => {
     if (precached || !nombre) return;
-    if (eager) {
-      let cancelled = false;
-      getPhoto(nombre).then((meta) => {
-        if (!cancelled) setFetchedPhoto(meta);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
+    // El que devuelve solicitarFoto cancela el pedido si todavía no salió.
+    if (eager) return solicitarFoto(nombre, setFetchedPhoto);
     const el = ref.current;
     if (!el) return;
     return observePhoto(el, nombre, setFetchedPhoto);
