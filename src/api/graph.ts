@@ -108,6 +108,21 @@ export function getNearestNode(lat: number, lon: number): Promise<GraphNode> {
   return apiFetch<GraphNode>("/api/graph/nearest", { method: "POST", body: { lat, lon } });
 }
 
+/** Una ciudad, pueblo o balneario que el buscador de "Tu viaje" reconoce por nombre. */
+export interface Localidad {
+  nombre: string;
+  departamento: string;
+  /** La que representa al departamento cuando se lo elige como origen o destino. */
+  es_capital?: boolean;
+  alias: string[];
+  lat: number;
+  lon: number;
+}
+
+export function getLocalidades(): Promise<{ localidades: Localidad[] }> {
+  return apiFetch<{ localidades: Localidad[] }>("/api/graph/localidades");
+}
+
 export function geocode(address: string): Promise<GeocodeResult> {
   return apiFetch<GeocodeResult>(`/api/graph/geocode?q=${encodeURIComponent(address)}`);
 }

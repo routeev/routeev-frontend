@@ -176,6 +176,17 @@ export const map = {
     destinationLabel: "Destino",
     roleLabel: (role: "origin" | "destination"): string => (role === "origin" ? "origen" : "destino"),
     searching: "Buscando...",
+    // Qué es cada sugerencia (ver map/lugares.ts).
+    kindDepartment: "Departamento",
+    kindCity: "Ciudad",
+    kindStreet: "Calle",
+    departmentHint: (capital: string) => `Vas a ${capital}, la capital`,
+    capitalOf: (departamento: string) => `Capital de ${departamento}`,
+    streetHint: "Cruce de calles",
+    departmentValue: (departamento: string) => `Departamento de ${departamento}`,
+    cityValue: (nombre: string, departamento: string) =>
+      nombre === departamento ? `${nombre} (ciudad)` : `${nombre}, ${departamento}`,
+    departmentChosen: (capital: string) => `Se usa el centro de ${capital}, la capital del departamento.`,
     addressFound: (address: string) => `Encontrado: ${address}`,
     addressImprecise: (km: string) => ` (a ${km} km de la calle más cercana del grafo cubierto -- puede no ser precisa)`,
     addressSearchError: "No se pudo buscar esa dirección.",

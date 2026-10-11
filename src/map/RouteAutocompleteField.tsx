@@ -1,14 +1,20 @@
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
-import { geocode } from "../api/graph";
+import { geocode, getLocalidades } from "../api/graph";
 import type { GraphNode } from "../api/graph";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
+import { sugerirLugares, type SugerenciaLugar } from "./lugares";
 import { useMapStore, type SearchableNode } from "./mapStore";
 import { fromNode } from "./routePoint";
 import styles from "./RouteAutocompleteField.module.css";
 
-type Item = { type: "node"; node: SearchableNode } | { type: "geocode"; label: string };
+type Item = SugerenciaLugar | { type: "node"; node: SearchableNode } | { type: "geocode"; label: string };
+
+// Total de sugerencias, sin contar "buscar como dirección": los lugares
+// (departamentos y ciudades) van primero y las calles completan el resto.
+const MAX_SUGERENCIAS = 8;
 
 function localMatches(query: string, nodes: SearchableNode[]): SearchableNode[] {
   const q = normalizeForSearch(query);
@@ -103,15 +109,21 @@ export function RouteAutocompleteField({
   // que la persona deje de tipear un instante, mismo patron que ya usa
   // useShowroomCatalog con useDebouncedValue.
   const debouncedEditingText = useDebouncedValue(editingText, 120);
+  // Misma queryKey en los dos campos (origen y destino): se pide una sola vez.
+  // No cambia mientras la API corre, de ahí staleTime: Infinity.
+  const localidadesQ = useQuery({ queryKey: ["localidades"], queryFn: getLocalidades, staleTime: Infinity });
+  const localidades = localidadesQ.data?.localidades;
   const items = useMemo<Item[]>(() => {
     const q = (debouncedEditingText ?? "").trim();
     if (!q) return [];
-    const matches = localMatches(debouncedEditingText ?? "", searchableNodes).map(
-      (n): Item => ({ type: "node", node: n })
-    );
+    const lugares: Item[] = sugerirLugares(q, localidades ?? []);
+    const calles = localMatches(q, searchableNodes)
+      .slice(0, Math.max(0, MAX_SUGERENCIAS - lugares.length))
+      .map((n): Item => ({ type: "node", node: n }));
+    const matches = [...lugares, ...calles];
     if (q.length >= 3) matches.push({ type: "geocode", label: q });
     return matches;
-  }, [debouncedEditingText, searchableNodes]);
+  }, [debouncedEditingText, searchableNodes, localidades]);
 
   function chooseNode(n: GraphNode) {
     // Un punto del autocompletado o de la geocodificación ya viene con su
@@ -147,7 +159,52 @@ export function RouteAutocompleteField({
   function chooseItem(item: Item | undefined) {
     if (!item) return;
     if (item.type === "node") chooseNode(item.node);
-    else void chooseGeocode(item.label);
+    else if (item.type === "geocode") void chooseGeocode(item.label);
+    else if (item.type === "departamento") {
+      // Un departamento no es un punto: se usa su capital, y se avisa.
+      const { capital } = item;
+      chooseNode({ id: `depto-${item.departamento}`, name: ra.departmentValue(item.departamento), lat: capital.lat, lon: capital.lon });
+      setResult({ text: ra.departmentChosen(capital.nombre), kind: "" });
+    } else {
+      const { localidad } = item;
+      chooseNode({
+        id: `localidad-${localidad.nombre}-${localidad.departamento}`,
+        name: ra.cityValue(localidad.nombre, localidad.departamento),
+        lat: localidad.lat,
+        lon: localidad.lon,
+      });
+    }
+  }
+
+  function itemKey(item: Item): string {
+    if (item.type === "node") return item.node.id;
+    if (item.type === "geocode") return `geocode-${item.label}`;
+    if (item.type === "departamento") return `depto-${item.departamento}`;
+    return `localidad-${item.localidad.nombre}-${item.localidad.departamento}`;
+  }
+
+  function itemContent(item: Item) {
+    if (item.type === "geocode") return ra.searchAsAddress(item.label);
+    const [titulo, tipo, detalle, clase] =
+      item.type === "departamento"
+        ? [item.departamento, ra.kindDepartment, ra.departmentHint(item.capital.nombre), styles.kindDepartment]
+        : item.type === "localidad"
+          ? [
+              item.localidad.nombre,
+              ra.kindCity,
+              item.localidad.es_capital ? ra.capitalOf(item.localidad.departamento) : item.localidad.departamento,
+              styles.kindCity,
+            ]
+          : [item.node.name, ra.kindStreet, ra.streetHint, styles.kindStreet];
+    return (
+      <span className={styles.itemBody}>
+        <span className={styles.itemMain}>
+          <span className={styles.itemTitle}>{titulo}</span>
+          <span className={[styles.kind, clase].join(" ")}>{tipo}</span>
+        </span>
+        <span className={styles.itemDetail}>{detalle}</span>
+      </span>
+    );
   }
 
   const etiqueta = ra.roleLabel(role);
@@ -207,7 +264,7 @@ export function RouteAutocompleteField({
               ) : (
                 items.map((item, i) => (
                   <li
-                    key={item.type === "node" ? item.node.id : `geocode-${item.label}`}
+                    key={itemKey(item)}
                     className={[styles.item, item.type === "geocode" ? styles.itemGeocode : "", i === activeIndex ? styles.itemActive : ""].join(" ")}
                     onMouseDown={(e) => {
                       e.preventDefault();
@@ -215,7 +272,7 @@ export function RouteAutocompleteField({
                       chooseItem(item);
                     }}
                   >
-                    {item.type === "geocode" ? ra.searchAsAddress(item.label) : item.node.name}
+                    {itemContent(item)}
                   </li>
                 ))
               )}
