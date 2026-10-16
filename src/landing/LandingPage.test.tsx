@@ -28,8 +28,9 @@ function renderLanding(entries = ["/"]) {
 describe("LandingPage", () => {
   beforeEach(() => {
     localStorage.clear();
-    // La bienvenida de la primera visita tiene sus propios tests, abajo.
-    localStorage.setItem("routeev_welcome_seen", "1");
+    sessionStorage.clear();
+    // La bienvenida tiene sus propios tests, abajo.
+    sessionStorage.setItem("routeev_welcome_seen", "1");
     document.body.style.overflow = "";
   });
 
@@ -174,9 +175,10 @@ describe("LandingPage", () => {
   });
 });
 
-describe("LandingPage: la bienvenida de la primera visita", () => {
+describe("LandingPage: la bienvenida al entrar al sitio", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.body.style.overflow = "";
   });
 
@@ -195,7 +197,7 @@ describe("LandingPage: la bienvenida de la primera visita", () => {
     expect(screen.getByRole("link", { name: /probar con mi auto/i }).closest("[inert]")).toBeNull();
   };
 
-  it("tapa la home hasta que se sigue en la web, y no vuelve a salir", async () => {
+  it("tapa la home hasta que se sigue en la web, y no vuelve a salir en esa visita", async () => {
     const { unmount } = renderLanding();
     const dialog = await welcome();
     const home = screen.getByRole("link", { name: /probar con mi auto/i });
@@ -207,11 +209,19 @@ describe("LandingPage: la bienvenida de la primera visita", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(home.closest("[inert]")).toBeNull();
     expect(document.body.style.overflow).toBe("");
-    expect(localStorage.getItem("routeev_welcome_seen")).toBe("1");
+    expect(sessionStorage.getItem("routeev_welcome_seen")).toBe("1");
 
     unmount();
     renderLanding();
     expectHomeOpen();
+  });
+
+  it("en una visita nueva vuelve a salir, aunque ya la hayan cerrado antes", async () => {
+    // Lo que quedaba de la version anterior (cerrada "para siempre" en este
+    // navegador) ya no la esconde: sale en cada visita.
+    localStorage.setItem("routeev_welcome_seen", "1");
+    renderLanding();
+    expect(await welcome()).toBeInTheDocument();
   });
 
   it("Escape también la cierra", async () => {
