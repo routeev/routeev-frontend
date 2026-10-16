@@ -7,7 +7,7 @@ import { observePhoto, solicitarFoto } from "./photoQueue";
  * (`model.foto_url`, ver GET /api/showroom/models) se usa directo -- se
  * deriva en cada render, no vía efecto+estado, porque es un dato que ya
  * tenemos completo (no algo que sincronizar con un sistema externo). Sin
- * eso, ModelFicha (que recibe el modelo de su propio useQuery, no como prop
+ * eso, la ficha (que recibe el modelo de su propio useQuery, no como prop
  * ya lista como ModelCard) mostraba "sin foto" para siempre: en el primer
  * render `precached` todavía es undefined, y un estado inicializado una
  * sola vez en el montaje no se vuelve a sincronizar solo cuando el fetch

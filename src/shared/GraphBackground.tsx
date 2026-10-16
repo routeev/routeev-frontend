@@ -1,6 +1,6 @@
 import styles from "./GraphBackground.module.css";
 
-/** Grafo/ruta decorativos animados, portados de login.html. Reusado en login y en el hero de landing. */
+/** Grafo/ruta decorativos animados, portados de login.html. Fondo del login: el dibujo no se toca. */
 export function GraphBackground() {
   return (
     <svg className={styles.bg} preserveAspectRatio="xMidYMid slice" viewBox="0 0 800 600" aria-hidden="true">

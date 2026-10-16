@@ -21,7 +21,7 @@ import { getCurrentPositionWithFallback } from "./useGeolocation";
  * no se puede calcular (sin vehículo, o parada encima de la estación), los
  * puntos quedan puestos igual y el paso a seguir de "Tu viaje" dice qué falta.
  */
-export function useGoToStation(calculate: () => void) {
+export function useGoToStation(calculate: () => void, onPointsSet?: () => void) {
   const { t } = useTranslation();
   const geo = t.map.geolocation;
   const [busy, setBusy] = useState(false);
@@ -48,11 +48,16 @@ export function useGoToStation(calculate: () => void) {
         const store = useMapStore.getState();
         store.setOrigin(fromCoords(latitude, longitude));
         store.setDestination({ name: station.nombre, lat: station.lat, lon: station.lon });
+        // El destino ES un cargador: la pregunta de "¿tenés dónde cargar en
+        // el destino?" ya está contestada, y preguntarla frenaría el cálculo
+        // directo que promete este botón.
+        store.setCargadorEnDestino(true);
         store.stopPicking();
         // Cierra el detalle (y el popup, si se llegó por el marcador): con
         // origen y destino puestos, lo que la persona quiere ver es su viaje.
         store.selectStation(null);
         store.leafletMap?.closePopup();
+        onPointsSet?.();
         setBusy(false);
         void nameInBackground("origin", latitude, longitude);
 
@@ -62,6 +67,7 @@ export function useGoToStation(calculate: () => void) {
           hasSelectedVehicle: selectedVehicle(s) != null,
           origin: s.originNode,
           destination: s.destinationNode,
+          chargerAnswered: s.cargadorEnDestino != null,
         });
         if (missing.length === 0) calculate();
       },

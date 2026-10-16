@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import type { EstadoDeEstacion, EstadoEstacion } from "../api/graph";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { IconBoltFilled, IconClock, IconMinus } from "./panelIcons";
 import styles from "./StationStatusChip.module.css";
 
 /**
@@ -37,10 +39,19 @@ export function StationStatusChip({
     fuera_de_servicio: styles.fueraDeServicio,
   };
 
+  // El ícono repite el estado en forma, no solo en color: rayo, reloj, raya.
+  const icono: Record<Exclude<EstadoEstacion, "desconocido">, ReactNode> = {
+    disponible: <IconBoltFilled />,
+    ocupado: <IconClock size={13} />,
+    fuera_de_servicio: <IconMinus size={12} />,
+  };
+
   return (
     <div className={styles.wrap}>
       <span className={`${styles.chip} ${clase[estado.estado]}`}>
-        <span className={styles.dot} aria-hidden="true" />
+        <span className={styles.icon} aria-hidden="true">
+          {icono[estado.estado]}
+        </span>
         {sc.estado[estado.estado]}
       </span>
       <span className={styles.origen}>{sc.origen(fuente, antiguedad(actualizado, sc))}</span>

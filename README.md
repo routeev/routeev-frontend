@@ -40,10 +40,13 @@ No hace falta `.env` para desarrollo normal (ver `.env.example` solo si necesit�
 |---|---|
 | `/` | Landing |
 | `/login` | Login / registro |
-| `/showroom` | Catálogo de modelos + simulador de viaje |
+| `/showroom` | Showroom: índice de marcas y buscador |
+| `/showroom/:marca` | Los modelos de una marca (`/showroom/byd`) |
+| `/showroom/:marca/:modelo` | Ficha + simulador de viaje (`/showroom/byd/dolphin`, `?v=<id>` elige la versión). Los links viejos `/showroom?modelo=<id>` redirigen acá |
 | `/app` | Mapa, ruteo y seguimiento de viaje en vivo |
 | `/profile` | Cuenta, vehículos e historial |
 | `/privacidad`, `/terminos` | Legales |
+| `/bienvenida` | Pantalla de paso: descargar la app o seguir en la web |
 
 ## Deploy
 
@@ -74,4 +77,4 @@ npx vercel deploy --prebuilt --prod --yes
 - Cliente de API tipado en `src/api/`.
 - `RouteErrorBoundary` (`src/shared/`) atrapa errores de carga de los chunks lazy por ruta (`routes.tsx`) y ofrece recargar — cubre el caso de un deploy nuevo mientras alguien tiene la app vieja abierta.
 - Meta tags OG/Twitter estáticos en `index.html` (no via `react-helmet`): los crawlers de WhatsApp/Twitter/Instagram no ejecutan JS, así que necesitan las tags ya presentes en el HTML servido para armar la preview del link.
-- `StationsLayer` (`src/map/layers/`) no dibuja las ~261 estaciones de carga de una: sin ruta calculada solo muestra la elegida a mano en `StationsPanel`, y con ruta calculada solo las paradas que esa ruta realmente usa — dibujarlas todas saturaba el mapa apenas se abría `/app`.
+- `StationsLayer` (`src/map/layers/`) no dibuja las ~261 estaciones de carga de una: sin ruta calculada muestra las que caen en el área visible (hasta 80) más la elegida en `StationsList`, y con ruta calculada solo las paradas que esa ruta realmente usa — dibujarlas todas saturaba el mapa apenas se abría `/app`.

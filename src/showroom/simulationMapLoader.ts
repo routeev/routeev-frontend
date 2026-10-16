@@ -10,7 +10,7 @@
  * del showroom ya no paga por eso.
  *
  * Vive en su propio módulo para que lo compartan SimulationResult (React.lazy)
- * y SimulationForm (precarga): los dos llaman al mismo import(), y el
+ * y TripSimulator (precarga): los dos llaman al mismo import(), y el
  * navegador lo resuelve una sola vez.
  */
 export const cargarSimulationMap = () => import("./SimulationMap");

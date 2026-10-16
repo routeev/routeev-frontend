@@ -1,0 +1,549 @@
+/* Header de todo el sitio. Escritorio >= 900px: 64px con nav, idioma y
+   cuenta. Celular: 56px con logo y botón de menú; el resto vive en .menu. */
+
+.header {
+  position: sticky;
+  top: 0;
+  /* Por encima del panel de /app (500), de los controles de Leaflet (1000) y
+     de la píldora "Tocá el mapa" (1100): el menú de la cuenta cuelga del
+     header y se abre sobre ellos. */
+  z-index: 1200;
+  height: 64px;
+  background: rgba(var(--bg-rgb), 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: var(--content-w);
+  height: 100%;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font: 700 21px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.accent {
+  color: var(--accent-text);
+}
+
+/* ---- Escritorio ---- */
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.navLink,
+.textLink {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.navLink {
+  color: var(--text-muted);
+}
+
+.navLink:hover {
+  color: var(--text);
+}
+
+/* La página en la que estás: blanco, más peso y una línea menta pegada al
+   borde inferior del header (64px de barra, 44px de link: 10px abajo). */
+.navLinkCurrent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.navLinkCurrent::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -10px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-astar);
+}
+
+.textLink {
+  color: var(--text);
+}
+
+.textLink:hover {
+  color: var(--accent-text);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.langSeg {
+  display: flex;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.langSeg button {
+  min-width: 44px;
+  height: 42px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 13px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.langSeg button[aria-pressed="true"] {
+  background: var(--bg-track);
+  color: var(--text);
+}
+
+.langSeg button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* El tema va con íconos en vez de texto. */
+.langSeg svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.outline,
+.primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.outline {
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.outline:hover {
+  border-color: var(--accent-astar);
+  color: var(--accent-text);
+}
+
+.primary {
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+}
+
+.primary:hover {
+  background: var(--button-primary-hover);
+}
+
+.menuToggle {
+  display: none;
+}
+
+/* ---- La cuenta, en /app y /profile ---- */
+
+.account {
+  position: relative;
+}
+
+.accountBtn,
+.accountBtnCurrent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.accountBtn:hover,
+.accountBtnCurrent:hover {
+  border-color: var(--border-strong);
+  background: var(--overlay-hover);
+}
+
+.accountBtn > svg,
+.accountBtnCurrent > svg {
+  flex: none;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+
+.accountBtn[aria-expanded="true"] > svg,
+.accountBtnCurrent[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+
+/* En /profile: la misma línea menta que un link del nav actual, pegada al
+   borde inferior del header (11px y no 10 por el borde de 1px del botón). */
+.accountBtnCurrent::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -11px;
+  left: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-astar);
+}
+
+.accountName {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-track);
+  color: var(--text);
+  font: 600 13px/1 var(--font-display);
+}
+
+.accountPanel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 260px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-panel-raised);
+  box-shadow: var(--shadow-float);
+}
+
+.accountHead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.accountHeadName,
+.accountHeadEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountHeadName {
+  font: 600 15px/1.25 var(--font-display);
+  color: var(--text);
+}
+
+.accountHeadEmail {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: 500 14px/1 var(--font-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.accountItem:hover {
+  background: var(--overlay-hover);
+}
+
+.accountItem svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.accountItem[aria-current="page"],
+.accountItem[aria-current="page"] svg {
+  color: var(--accent-text);
+}
+
+/* ---- Celular ---- */
+
+@media (max-width: 899.98px) {
+  .header {
+    height: 56px;
+    background: rgba(var(--bg-rgb), 0.92);
+  }
+
+  .inner {
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .logo {
+    gap: 9px;
+    font-size: 20px;
+  }
+
+  .logo img {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+
+  .nav,
+  .actions {
+    display: none;
+  }
+
+  .menuToggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-panel);
+    color: var(--text);
+    cursor: pointer;
+  }
+}
+
+/* El menú tapa la página entera debajo del header, que sigue a la vista con
+   el botón de cerrar. */
+.menu {
+  position: fixed;
+  z-index: 1200;
+  top: 56px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  overflow-y: auto;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  background: var(--bg);
+}
+
+.menuNav {
+  display: flex;
+  flex-direction: column;
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  border-bottom: 1px solid var(--border-soft);
+  font: 500 20px/1.2 var(--font-display);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.menuLink svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.menuLinkCurrent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  border-bottom: 1px solid var(--border-soft);
+  font: 600 20px/1.2 var(--font-display);
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+.menuCurrentName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuCurrentDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+}
+
+.menuHere {
+  font: 500 13px/1 var(--font-body);
+  color: var(--text-muted);
+}
+
+.menuLang {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menuLangLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.menuLangSeg {
+  display: flex;
+  height: 48px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-sunken);
+}
+
+.menuLangSeg button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 0;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 15px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.menuLangSeg button[aria-pressed="true"] {
+  background: var(--bg-track);
+  box-shadow: 0 0 0 1px var(--border-strong);
+  color: var(--text);
+}
+
+.menuActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.menuOutline,
+.menuGhost,
+.menuPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.menuOutline {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.menuOutline:hover {
+  border-color: var(--accent-astar);
+}
+
+/* Quién tiene la sesión abierta, arriba de "Cerrar sesión". */
+.menuAccount {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 8px;
+}
+
+.menuAccount .avatar {
+  font-size: 16px;
+}
+
+.menuAccountText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menuGhost {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.menuPrimary {
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+  font-weight: 600;
+}

@@ -1,8 +1,8 @@
 // Sin contexto de React a propósito: a diferencia del idioma (donde el
 // diccionario entero tiene que estar disponible reactivamente en cada
 // componente), acá el CSS ya hace todo el trabajo visual solo con el
-// atributo data-theme -- el único lugar que necesita saber "cuál está
-// activo ahora" es el propio ThemeSwitcher, que lo lee una vez al montar.
+// atributo data-theme -- lo poco que necesita saber "cuál está activo
+// ahora" (el selector del header, los mapas) lo lee con useActiveTheme.
 
 export type Theme = "dark" | "light";
 

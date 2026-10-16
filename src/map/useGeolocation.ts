@@ -4,7 +4,7 @@ import { useMapStore } from "./mapStore";
 import { fromCoords } from "./routePoint";
 import { nameInBackground } from "./pointName";
 
-type ResultKind = "" | "warn" | "error";
+type ResultKind = "" | "ok" | "warn" | "error";
 
 /**
  * navigator.geolocation.getCurrentPosition con el mismo fallback que usa
@@ -74,7 +74,7 @@ export function useGeolocation() {
       setPickMode("destination");
       const map = useMapStore.getState().leafletMap;
       map?.setView([latitude, longitude], Math.max(map.getZoom(), 15));
-      setResult({ text: geo.originSet(p.name), kind: "" });
+      setResult({ text: geo.found(Math.round(pos.coords.accuracy)), kind: "ok" });
       setBusy(false);
       // El nombre de la calle llega después, sin bloquear (ver pointName.ts).
       void nameInBackground("origin", latitude, longitude);

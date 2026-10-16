@@ -28,6 +28,11 @@ export interface TripStep {
   text: string;
   /** true solo cuando ya no falta nada y se puede calcular. */
   done: boolean;
+  /**
+   * En qué número de paso está, para el círculo que acompaña al texto:
+   * 1 origen, 2 destino, 3 vehículo o la pregunta del cargador, 4 listo.
+   */
+  num: number;
 }
 
 export function nextTripStep(
@@ -36,28 +41,36 @@ export function nextTripStep(
     hasSelectedVehicle: boolean;
     origin: { lat: number; lon: number } | null;
     destination: { lat: number; lon: number } | null;
+    /** cargadorEnDestino ya tiene respuesta (no es null). */
+    chargerAnswered: boolean;
   },
   t: (typeof enMap)["nextStep"]
 ): TripStep {
-  const { vehiclesLoaded, hasSelectedVehicle, origin, destination } = params;
+  const { vehiclesLoaded, hasSelectedVehicle, origin, destination, chargerAnswered } = params;
 
   if (origin == null) {
-    return { text: t.chooseOrigin, done: false };
+    return { text: t.chooseOrigin, done: false, num: 1 };
   }
   if (destination == null) {
-    return { text: t.chooseDestination, done: false };
+    return { text: t.chooseDestination, done: false, num: 2 };
   }
   // Antes era `originId === destinationId`: con coordenadas crudas dos toques
   // nunca dan el mismo valor exacto, así que la regla pasa a ser por distancia
   // (ver SAME_POINT_KM en routePoint.ts).
   if (haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
-    return { text: t.samePoint, done: false };
+    return { text: t.samePoint, done: false, num: 2 };
   }
   if (!vehiclesLoaded) {
-    return { text: t.loadingVehicles, done: false };
+    return { text: t.loadingVehicles, done: false, num: 3 };
   }
   if (!hasSelectedVehicle) {
-    return { text: t.addVehicle, done: false };
+    return { text: t.addVehicle, done: false, num: 3 };
   }
-  return { text: t.readyToCalculate, done: true };
+  // Después del vehículo y no antes, aunque la pregunta esté más arriba en el
+  // panel: recién aparece cuando hay destino, y para entonces lo que la
+  // persona tiene a la vista es la pregunta misma.
+  if (!chargerAnswered) {
+    return { text: t.answerCharger, done: false, num: 3 };
+  }
+  return { text: t.readyToCalculate, done: true, num: 4 };
 }

@@ -7,6 +7,7 @@ import { nav } from "./nav";
 import { profile } from "./profile";
 import { shared } from "./shared";
 import { showroom } from "./showroom";
+import { welcome } from "./welcome";
 
 // Diccionario canónico: la forma de este objeto (incluyendo qué claves son
 // strings simples y cuáles son funciones con qué parámetros) es la que
@@ -14,6 +15,6 @@ import { showroom } from "./showroom";
 // equivalente en es/*.ts (o viceversa) no compila. Es inglés y no español
 // por historia del proyecto (todo arrancó hardcodeado en español), no por
 // ninguna razón técnica.
-export const en = { common, nav, map, profile, auth, shared, landing, legal, showroom };
+export const en = { common, nav, map, profile, auth, shared, landing, legal, showroom, welcome };
 
 export type Dictionary = typeof en;

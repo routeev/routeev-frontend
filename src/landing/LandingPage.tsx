@@ -1,51 +1,70 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getToken } from "../api/session";
 import { useTranslation } from "../i18n/LanguageProvider";
-import buttons from "../shared/buttons.module.css";
-import { GradientWaves } from "../shared/GradientWaves";
-import { Reveal } from "../shared/Reveal";
-import { SiteFooter } from "../shared/SiteFooter";
-import { SiteHeader } from "../shared/SiteHeader";
-import { UruguayGraph } from "../shared/UruguayGraph";
-import { StatCard } from "./StatCard";
+import { WelcomePage } from "../lazyPages";
+import { IconCheck } from "../map/panelIcons";
+import { markWelcomeSeen, shouldShowWelcome } from "../welcome/welcomeGate";
+import { BatteryDemo } from "./BatteryDemo";
+import { HeroMap } from "./HeroMap";
+import { HowItWorks } from "./HowItWorks";
+import { CONTACT_EMAIL, LandingFooter } from "./LandingFooter";
+import { LandingHeader } from "./LandingHeader";
+import { IconArrowRight, IconMonitor, IconPhone } from "./landingIcons";
+import { StoreRow } from "./StoreRow";
 import styles from "./LandingPage.module.css";
 
+/**
+ * La home. Una idea por sección y el producto a la vista: el resultado de un
+ * viaje se muestra con los mismos componentes de /app. Dos entradas, en este
+ * orden: probar ya en el showroom (sin cuenta, en el hero) y bajar la app (en
+ * el cierre). Siempre oscura, y sin animaciones que dependan del scroll ni
+ * WebGL: es la página a la que más se llega desde celulares de gama media.
+ *
+ * Quien entra al sitio por acá por primera vez ve antes la bienvenida, encima
+ * y a pantalla completa, y la tiene que cerrar para usar la home.
+ */
 export function LandingPage() {
   const loggedIn = Boolean(getToken());
   const { t, lang } = useTranslation();
+  const l = t.landing;
+  const numberFormat = new Intl.NumberFormat(lang === "es" ? "es-UY" : "en-US");
+  const { hash, key } = useLocation();
+  // "default" es la primera página de la visita: llegando desde otra del
+  // sitio (Inicio en el showroom) ya entró, y no sale.
+  const [welcome, setWelcome] = useState(() => shouldShowWelcome(loggedIn, key === "default"));
 
-  const STATS = [
-    {
-      value: 63800,
-      places: [10000, 1000, ".", 100, 10, 1] as const,
-      suffix: "+",
-      label: t.landing.stats.intersections,
-    },
-    { value: 19, label: t.landing.stats.departments },
-    { value: 261, label: t.landing.stats.stations },
-    { value: 632, label: t.landing.stats.models },
-  ];
+  // Entrando desde otra página a una sección (/#app desde el menú del
+  // showroom), ScrollRestoration busca el ancla mientras esta página todavía
+  // se está bajando (es un chunk aparte), no la encuentra y deja el scroll
+  // arriba. Dentro de la landing los links a secciones los resuelve él solo.
+  useEffect(() => {
+    if (hash) document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+    // Solo al montar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const HOW_IT_WORKS = [
-    t.landing.howItWorks.steps.loadVehicle,
-    t.landing.howItWorks.steps.markOriginDestination,
-    t.landing.howItWorks.steps.calculateRoute,
-    t.landing.howItWorks.steps.viewTripData,
+  const stats = [
+    { value: numberFormat.format(63800), plus: true, label: l.data.intersections },
+    { value: "19", plus: false, label: l.data.departments },
+    { value: "261", plus: false, label: l.data.stations },
+    { value: "328", plus: false, label: l.data.models },
   ];
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} inert={welcome}>
       <Helmet>
-        <title>{t.landing.meta.title}</title>
-        <meta name="description" content={t.landing.meta.description} />
+        <title>{l.meta.title}</title>
+        <meta name="description" content={l.meta.description} />
         <link rel="canonical" href="https://routeev.uy/" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content={lang === "es" ? "es_UY" : "en_US"} />
         <meta property="og:site_name" content="RouteEV" />
         <meta property="og:url" content="https://routeev.uy/" />
-        <meta property="og:title" content={t.landing.meta.ogTitle} />
-        <meta property="og:description" content={t.landing.meta.ogDescription} />
+        <meta property="og:title" content={l.meta.ogTitle} />
+        <meta property="og:description" content={l.meta.ogDescription} />
         <meta property="og:image" content="https://routeev.uy/img/og-cover.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -54,12 +73,12 @@ export function LandingPage() {
             "@type": "WebApplication",
             name: "RouteEV",
             url: "https://routeev.uy/",
-            description: t.landing.meta.jsonLdDescription,
+            description: l.meta.jsonLdDescription,
             applicationCategory: "TravelApplication",
             operatingSystem: "Any (web)",
             offers: { "@type": "Offer", price: "0", priceCurrency: "UYU" },
             areaServed: { "@type": "Country", name: "Uruguay" },
-            author: { "@type": "Organization", name: "RouteEV", email: "routemindtbo@gmail.com" },
+            author: { "@type": "Organization", name: "RouteEV", email: CONTACT_EMAIL },
           })}
         </script>
         {/* Aparte del WebApplication de arriba: es el tipo WebSite +
@@ -77,197 +96,135 @@ export function LandingPage() {
         </script>
       </Helmet>
 
-      <SiteHeader
-        navLinks={[
-          { href: "/showroom", label: t.landing.nav.showroom },
-          { href: "#como-funciona", label: t.landing.nav.howItWorks },
-          { href: "#datos-reales", label: t.landing.nav.realData },
-        ]}
-      >
-        {loggedIn ? (
-          <Link to="/app" className={buttons.primary}>
-            {t.landing.header.goToApp}
-          </Link>
-        ) : (
-          <>
-            <Link to="/login" className={buttons.navLink}>
-              {t.landing.header.login}
-            </Link>
-            <Link to="/login?crear=1" className={buttons.primary}>
-              {t.landing.header.createAccount}
-            </Link>
-          </>
-        )}
-      </SiteHeader>
+      <LandingHeader loggedIn={loggedIn} />
 
       <main>
-        <section className={styles.heroWrap}>
-          {/* detail explicito aunque "medium" sea el default: este fondo es
-              la primera pantalla del sitio, la que abre cualquiera desde un
-              celular o una notebook con grafica integrada, y el nivel de
-              detalle es lo que decide cuanto le cuesta. "medium" son 70
-              pasos de raymarching por pixel y por frame; "low" son 40, y en
-              una ola desenfocada y lenta como esta no se distingue.
-              El grano y el seguimiento del mouse se dejan como estaban: no
-              multiplican el raymarching (son unas pocas operaciones por
-              pixel), asi que sacarlos cambiaba el aspecto sin ahorrar casi
-              nada. */}
-          <GradientWaves
-            horizonColor="#0a0e13"
-            waveColor="#1a212c"
-            crestColor="#34e3a8"
-            speed={0.3}
-            amplitude={2}
-            opacity={0.85}
-            brightness={0.9}
-            detail="low"
-            grainIntensity={0.035}
-          />
-          <div className={[styles.section, styles.hero].join(" ")}>
-            <div>
-              <p className={styles.eyebrow}>{t.landing.hero.eyebrow}</p>
-              <h1>
-                {t.landing.hero.titleLine1}
-                <br />
-                {t.landing.hero.titleLine2}
+        <section aria-labelledby="hero-titulo" className={styles.hero}>
+          <div className={styles.heroGlow} aria-hidden="true" />
+          <div className={styles.heroInner}>
+            <div className={styles.heroText}>
+              <span className={styles.eyebrow}>
+                <span className={styles.eyebrowDot} aria-hidden="true" />
+                {l.hero.eyebrow}
+              </span>
+              <h1 id="hero-titulo" className={styles.heroTitle}>
+                {l.hero.titleLead} <span className={styles.accent}>{l.hero.titleAccent}</span>
               </h1>
-              <p className={styles.heroSub}>{t.landing.hero.subtitle}</p>
-              <div className={styles.heroActions}>
-                <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-                  {t.landing.hero.ctaPrimary}
-                </Link>
-                <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-                  {t.landing.hero.ctaSecondary}
-                </Link>
+              <p className={styles.heroSub}>{l.hero.subtitle}</p>
+              <div className={styles.heroCtas}>
+                <div className={styles.ctaRow}>
+                  <Link to="/showroom" className={styles.ctaPrimary}>
+                    {l.hero.cta}
+                    <IconArrowRight />
+                  </Link>
+                  <Link
+                    to={loggedIn ? "/app" : "/login?crear=1"}
+                    className={[styles.underlineLink, styles.heroSecondary].join(" ")}
+                  >
+                    {loggedIn ? l.hero.ctaApp : l.hero.ctaSignup}
+                  </Link>
+                </div>
+                <span className={styles.heroNote}>
+                  <IconCheck size={16} />
+                  {l.hero.note}
+                </span>
               </div>
-              <p className={styles.heroNote}>{t.landing.hero.note}</p>
+              {/* La app tiene su lugar entero (badges + QR) en el cierre; acá
+                  solo un link discreto que baja hasta ahí. <Link> y no
+                  <a href="#app">: ver la nota en LandingHeader. */}
+              <Link to="#app" className={styles.appLink}>
+                <IconPhone size={16} />
+                {l.hero.appLink}
+              </Link>
             </div>
 
-            <div className={styles.heroVisual}>
-              <UruguayGraph />
-              <p className={styles.heroVisualCaption}>{t.landing.hero.visualCaption}</p>
-            </div>
+            <HeroMap />
           </div>
         </section>
 
-        {/* Cada sección de acá para abajo vive dentro de su propia "franja"
-            (.band, a todo el ancho -- mismo patrón que .heroWrap/.hero:
-            wrapper de fondo suelto por fuera, columna de 1180px centrada
-            adentro) con una línea divisoria arriba. Antes todas compartían
-            el mismo fondo de la página sin ningún límite entre una y otra
-            más que el padding vertical -- en un scroll largo y todo oscuro,
-            esa falta de límite se leía como una sola sección corrida.
-            Se probó también con fondo alternado entre franjas (tipo cebra):
-            no convenció, así que quedó solo la línea. */}
-        <section className={styles.band}>
-          <Reveal id="datos-reales" className={[styles.section, styles.stats].join(" ")}>
-            {STATS.map((stat, i) => (
-              <StatCard
-                key={stat.label}
-                index={i}
-                value={stat.value}
-                places={stat.places ? [...stat.places] : undefined}
-                suffix={stat.suffix}
-                label={stat.label}
-              />
-            ))}
-          </Reveal>
-        </section>
-
-        <section className={styles.band}>
-          <Reveal className={[styles.section, styles.split].join(" ")}>
-            <div>
-              <p className={styles.eyebrow}>{t.landing.problem.eyebrow}</p>
-              <h2>{t.landing.problem.title}</h2>
-              <p>{t.landing.problem.body}</p>
+        <section id="datos" aria-labelledby="datos-titulo" className={styles.data}>
+          <div className={styles.dataInner}>
+            <div className={styles.dataIntro}>
+              <h2 id="datos-titulo" className={styles.dataTitle}>
+                {l.data.title}
+              </h2>
+              <p className={styles.dataBody}>{l.data.body}</p>
             </div>
-            <div>
-              <p className={styles.eyebrow}>{t.landing.solution.eyebrow}</p>
-              <h2>{t.landing.solution.title}</h2>
-              <p>{t.landing.solution.body}</p>
-            </div>
-          </Reveal>
-        </section>
-
-        <section className={styles.band}>
-          <Reveal className={[styles.section, styles.showroom].join(" ")}>
-            <div>
-              <p className={styles.eyebrow}>{t.landing.showroomSection.eyebrow}</p>
-              <h2>{t.landing.showroomSection.title}</h2>
-              <p>{t.landing.showroomSection.body1}</p>
-              <p>{t.landing.showroomSection.body2}</p>
-              <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-                {t.landing.showroomSection.cta}
-              </Link>
-            </div>
-            {/* Check, no "01-04": la lista de pasos numerados de verdad es
-                "Cómo funciona" un poco más abajo en esta misma página -- con
-                el mismo estilo de número acá, las dos se leían como la misma
-                lista repetida en el scroll. Este es un resumen de lo que
-                ofrece el showroom, no una instrucción a seguir en orden. */}
-            <ul className={styles.showroomSteps}>
-              {[
-                t.landing.showroomSection.steps.search,
-                t.landing.showroomSection.steps.view,
-                t.landing.showroomSection.steps.choose,
-                t.landing.showroomSection.steps.result,
-              ].map((step) => (
-                <li key={step}>
-                  <svg
-                    className={styles.showroomStepIcon}
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M8 12.5l2.5 2.5L16 9.5" />
-                  </svg>
-                  {step}
-                </li>
+            <dl className={styles.stats}>
+              {stats.map((stat) => (
+                <div key={stat.label} className={styles.stat}>
+                  <dt className={styles.statLabel}>{stat.label}</dt>
+                  <dd className={styles.statValue}>
+                    {stat.value}
+                    {stat.plus && <span className={styles.statPlus}>+</span>}
+                  </dd>
+                </div>
               ))}
-            </ul>
-          </Reveal>
+            </dl>
+          </div>
         </section>
 
-        <section className={styles.band}>
-          <Reveal id="como-funciona" className={[styles.section, styles.steps].join(" ")}>
-            <p className={[styles.eyebrow, styles.eyebrowCenter].join(" ")}>{t.landing.howItWorks.eyebrow}</p>
-            <h2 className={styles.stepsTitle}>{t.landing.howItWorks.title}</h2>
-            <ol className={styles.stepsList}>
-              {HOW_IT_WORKS.map((step, i) => (
-                <li key={step.title}>
-                  <span className={styles.stepNum}>{String(i + 1).padStart(2, "0")}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.body}</p>
-                </li>
-              ))}
-            </ol>
-          </Reveal>
-        </section>
+        <BatteryDemo />
 
-        <section className={styles.band}>
-          <Reveal className={[styles.section, styles.finalCta].join(" ")}>
-            <h2>{t.landing.finalCta.title}</h2>
-            <p>{t.landing.finalCta.body}</p>
-            <div className={[styles.heroActions, styles.heroActionsCenter].join(" ")}>
-              <Link to="/showroom" className={[buttons.primary, buttons.large].join(" ")}>
-                {t.landing.finalCta.ctaPrimary}
-              </Link>
-              <Link to="/login?crear=1" className={[buttons.ghost, buttons.large].join(" ")}>
-                {t.landing.finalCta.ctaSecondary}
-              </Link>
+        <HowItWorks />
+
+        <section id="app" aria-labelledby="cierre-titulo" className={styles.closing}>
+          <div className={styles.closingGlow} aria-hidden="true" />
+          <div className={styles.closingInner}>
+            <h2 id="cierre-titulo" className={styles.closingTitle}>
+              {l.closing.title}
+            </h2>
+            <div className={styles.closingCards}>
+              <div className={styles.closingCard}>
+                <span className={styles.closingLabel}>
+                  <span className={styles.closingIcon}>
+                    <IconMonitor />
+                  </span>
+                  {l.closing.webLabel}
+                </span>
+                <p className={styles.closingBody}>{l.closing.webBody}</p>
+                <div className={styles.closingActions}>
+                  <Link to="/showroom" className={styles.ctaPrimary}>
+                    {l.closing.webCta}
+                    <IconArrowRight />
+                  </Link>
+                  <Link to={loggedIn ? "/app" : "/login?crear=1"} className={styles.underlineLink}>
+                    {loggedIn ? l.header.goToApp : l.header.createFreeAccount}
+                  </Link>
+                </div>
+              </div>
+              <div className={styles.closingCard}>
+                <span className={styles.closingLabel}>
+                  <span className={styles.closingIcon}>
+                    <IconPhone />
+                  </span>
+                  {l.closing.phoneLabel}
+                </span>
+                <p className={styles.closingBody}>{l.closing.phoneBody}</p>
+                <div className={styles.closingActions}>
+                  <StoreRow />
+                </div>
+              </div>
             </div>
-          </Reveal>
+          </div>
         </section>
       </main>
 
-      <SiteFooter />
+      <LandingFooter />
+
+      {/* Directo en el <body> para que el inert de la home no la alcance. Sin
+          un Suspense propio: la home espera a que esté lista y no se ve un
+          instante antes de quedar tapada. */}
+      {welcome &&
+        createPortal(
+          <WelcomePage
+            onContinue={() => {
+              markWelcomeSeen();
+              setWelcome(false);
+            }}
+          />,
+          document.body
+        )}
     </div>
   );
 }

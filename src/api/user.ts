@@ -60,10 +60,11 @@ export interface PasswordChangeSession {
 
 /**
  * Cambia la contraseña. El backend valida `currentPassword` contra la que ya
- * tiene guardada (401 la rechaza) y devuelve un token nuevo -- el cambio
- * invalida todos los tokens ya emitidos (por si alguien más los tenía), así
- * que sin este token nuevo la sesión actual quedaría cortada de inmediato.
- * Guardarlo (`setSession`, ver AccountPanel.tsx) es responsabilidad de quien
+ * tiene guardada (si no coincide responde 400, no 401: el cliente leería un
+ * 401 como sesión vencida) y devuelve un token nuevo -- el cambio invalida
+ * todos los tokens ya emitidos (por si alguien más los tenía), así que sin
+ * este token nuevo la sesión actual quedaría cortada de inmediato.
+ * Guardarlo (`setSession`, ver AccountSection.tsx) es responsabilidad de quien
  * llama, no de esta función.
  */
 export function changeMyPassword(currentPassword: string, newPassword: string): Promise<PasswordChangeSession> {

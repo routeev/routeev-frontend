@@ -48,6 +48,33 @@
   --button-primary-hover: #63e9cb;
   --error-text: #ffd7d7;
 
+  /* Panel de /app (rediseño del panel lateral del mapa). Cada color sigue
+     significando lo mismo que arriba -- esto suma las variantes que hacen
+     falta para usarlo como texto, como fondo suave o como borde de un aviso,
+     que con un solo valor por color no alcanzaba para llegar a AA en los dos
+     temas. */
+  --bg-sunken: #0e131a;
+  --bg-track: #1a212c;
+  --border-strong: #334050;
+  --accent-text: #34e3a8;
+  --accent-soft: rgba(52, 227, 168, 0.12);
+  --warn: #f2a154;
+  --warn-text: #f2a154;
+  --warn-soft: rgba(242, 161, 84, 0.13);
+  --on-warn: #1f1205;
+  --danger-text: #ff8a8a;
+  --danger-soft: rgba(239, 91, 91, 0.12);
+  --danger-line: rgba(239, 91, 91, 0.4);
+  /* Botón "Eliminar" lleno: con texto blanco da 4,6:1 (--danger con blanco no llega a AA). */
+  --danger-fill: #d84545;
+  /* Fondo detrás de los diálogos. */
+  --overlay: rgba(4, 7, 10, 0.66);
+  --live-text: #6cb8ff;
+  --live-soft: rgba(58, 160, 255, 0.1);
+  --live-line: rgba(58, 160, 255, 0.35);
+  --dest-text: #c6a8f6;
+  --dest-soft: rgba(177, 140, 242, 0.14);
+
   --font-display: "Space Grotesk", "Inter", system-ui, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
   --font-body: "Inter", system-ui, "Segoe UI", sans-serif;
@@ -138,4 +165,26 @@
   --overlay-shimmer: rgba(10, 14, 19, 0.06);
   --button-primary-hover: #17b385;
   --error-text: #7a1f1f;
+
+  --bg-sunken: #f5f7f9;
+  --bg-track: #e6eaee;
+  --border-strong: #c3ccd6;
+  --accent-text: #0b7a58;
+  --accent-soft: #e3f6ef;
+  --warn: #e08a2e;
+  --warn-text: #9a5410;
+  --warn-soft: #fbeedd;
+  --danger-text: #b42f2f;
+  --danger-soft: #fbe0e0;
+  --danger-line: #efb4b4;
+  --danger-fill: #d13f3f;
+  --overlay: rgba(24, 32, 41, 0.42);
+  --live-text: #1a6dba;
+  --live-soft: #e6f1fc;
+  --live-line: #b5d4f3;
+  --dest-text: #6a3fc4;
+  --dest-soft: #efe8fb;
+  /* La sombra negra del oscuro sobre un fondo casi blanco se lee como una
+     mancha, no como algo que flota. */
+  --shadow-float: 0 4px 12px rgba(24, 32, 41, 0.08), 0 16px 48px rgba(24, 32, 41, 0.14);
 }

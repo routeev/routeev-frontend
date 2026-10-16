@@ -18,12 +18,12 @@ export function setSession(token: string, username: string): void {
   localStorage.setItem(USERNAME_KEY, username);
 }
 
-// Solo el nombre, sin tocar el token: usado al renombrarse (AccountPanel),
+// Solo el nombre, sin tocar el token: usado al renombrarse (AccountSection),
 // donde el token sigue siendo valido (get_current_user en el backend
 // resuelve el usuario de nuevo desde la base, no confia en el "username" que
 // el JWT tenia grabado al emitirse) -- lo que queda desactualizado es esta
-// copia en localStorage, que AppTopbar usa como respaldo en /app (ver
-// AppTopbar.tsx: `username ?? getUsername()`).
+// copia en localStorage, que el header usa como respaldo mientras no llega
+// /api/users/me (ver landing/HeaderAccount.tsx).
 export function setUsername(username: string): void {
   localStorage.setItem(USERNAME_KEY, username);
 }

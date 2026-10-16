@@ -1,18 +1,43 @@
 /* Porta css/legal.css: columna angosta de lectura, la gente escanea buscando una respuesta concreta. */
 
-.legal {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 56px 22px 90px;
+.page {
+  /* Lo leen el header y el pie compartidos con la landing y el showroom. */
+  --content-w: min(1200px, calc(100% - 2 * clamp(20px, 4vw, 56px)));
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  overflow-x: clip;
+  background: var(--bg);
 }
 
+.legal {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  /* 20px a los costados: el mismo margen que el header en el celular. */
+  padding: 56px 20px 90px;
+}
+
+/* Mismo eyebrow que la landing y el showroom: punto menta + texto. */
 .eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.eyebrowDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.18);
 }
 
 .legal h1 {

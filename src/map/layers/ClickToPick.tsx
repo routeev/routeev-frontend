@@ -106,8 +106,8 @@ export function ClickToPick({ onError }: ClickToPickProps) {
 
   useMapEvents({
     click(e) {
-      // Con un viaje ya calculado, RouteInputPanel (donde viven los botones de
-      // "marcar tocando el mapa") ni se muestra -- lo reemplazó TripDashboard.
+      // Con un viaje ya calculado, Planificar (PlanView, donde viven los botones de
+      // "marcar tocando el mapa") ni se muestra -- la reemplaza TripDashboard.
       // Sin este corte, un toque cualquiera en el mapa (por ejemplo para mirar
       // el recorrido de cerca) igual fijaba un origen/destino nuevo y con eso
       // borraba el resultado (setOrigin/setDestination limpian lastResult al

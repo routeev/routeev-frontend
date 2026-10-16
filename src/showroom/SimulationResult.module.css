@@ -1,276 +1,509 @@
-.out {
-  margin-top: 20px;
-  padding: 18px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.anim {
-  margin: 0 0 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-soft);
-}
-
-/* Lugar del mapa mientras baja su chunk (ver simulationMapLoader.ts). Mide lo
-   mismo que SimulationMap.module.css .wrap -- 280px de .map + 2px de borde --
-   para que cuando llegue el mapa no empuje el resultado hacia abajo. */
-.mapaCargando {
-  height: 282px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.veredicto {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 4px;
-}
-
-.si {
-  color: var(--ok);
-}
-
-.no {
-  color: var(--danger);
-}
-
-.detalle {
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0 0 16px;
-}
-
-/* Semaforo del margen de bateria (bajo el veredicto "Llega"). */
-.margenAviso {
-  font-size: 13px;
-  line-height: 1.6;
-  margin: -8px 0 16px;
-}
-
-.margenOk {
-  color: var(--ok);
-}
-
-.margenBajo {
-  color: var(--accent-dijkstra);
-}
-
-.margenCritico {
-  color: var(--danger);
-}
-
-.cifras {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 14px;
-  margin: 0 0 18px;
-}
-
-.cifras dt {
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.cifras dd {
-  margin: 4px 0 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.bat {
-  color: var(--ok);
-}
-
-.costo {
-  color: var(--accent-dijkstra);
-}
-
-.desglose {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-soft);
-}
-
-.desglose h5,
-.paradasTitulo {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin: 0 0 8px;
-  font-weight: 600;
-}
-
-.desglose ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.desglose li {
+.result {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 5px 0;
-  font-size: 12.5px;
-  color: var(--text-muted);
+  flex-direction: column;
+  gap: 16px;
 }
 
-.desglose li span:last-child {
-  color: var(--text);
-}
-
-.desgloseTotal {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-soft);
-  font-weight: 600;
-  color: var(--text);
-}
-
-/* Aviso de recargas en operador sin tarifario: es una nota, no un monto --
-   display block (sin flex) para que el texto largo wrappee normal, y el
-   selector compuesto para ganarle en especificidad a ".desglose li". */
-.desglose li.desgloseNota {
-  display: block;
-  padding-top: 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.tramos {
-  list-style: none;
-  margin: 16px 0 0;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--border-soft);
-}
-
-.tramos li {
+/* Mapa y veredicto: lado a lado con lugar (>= 1200), si no, uno arriba del otro. */
+.top {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 14px;
-  padding: 5px 0;
-  font-size: 12.5px;
-  color: var(--text-muted);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
 }
 
-.tramoNombre {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.paradasTitulo {
-  margin: 20px 0 10px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-soft);
-}
-
-.paradas {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-  counter-reset: parada;
-}
-
-.paradas li {
-  counter-increment: parada;
-  position: relative;
-  padding: 10px 12px 10px 38px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-soft);
-  border-left: 2px solid var(--accent-dijkstra);
-  border-radius: var(--radius-sm);
-}
-
-.paradas li::before {
-  content: counter(parada);
-  position: absolute;
-  left: 12px;
-  top: 11px;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #2a1a08;
-  background: var(--accent-dijkstra);
-  border-radius: 50%;
-}
-
-.paradaHead {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.paradaNombre {
-  font-weight: 600;
-  font-size: 13.5px;
-}
-
-.paradaTramo {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 1px 6px;
-}
-
-.paradaDir,
-.paradaDatos {
-  margin: 3px 0 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.paradaDatos {
-  color: var(--accent-dijkstra);
-}
-
-/* Tarifa del operador bajo los datos de la parada: contexto del costo, no
-   dato principal -- por eso va muted y un punto mas chica. */
-.paradaTarifa {
-  margin: 3px 0 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
-.sinParadas {
-  margin: 16px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-soft);
-  font-size: 12.5px;
-  color: var(--ok);
-}
-
-@media (max-width: 900px) {
-  .desglose {
-    grid-template-columns: 1fr;
+@media (min-width: 1200px) {
+  .top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
-@media (max-width: 560px) {
-  .tramos li {
-    grid-template-columns: 1fr auto;
+.map {
+  margin: 0;
+}
+
+.mapLoading {
+  aspect-ratio: 760 / 640;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #0b0e12;
+}
+
+/* ---- Veredicto: la tarjeta "Llegás con…" de la landing ---- */
+
+.verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.verdictHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.verdictLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tone,
+.toneNo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tone[data-tone="ok"] {
+  color: var(--accent-text);
+}
+
+.tone[data-tone="low"] {
+  color: var(--warn-text);
+}
+
+.tone[data-tone="crit"],
+.toneNo {
+  color: var(--danger-text);
+}
+
+.pct {
+  font: 600 64px/0.95 var(--font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pctUnit {
+  margin-left: 2px;
+  font-size: 0.42em;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-track);
+}
+
+.fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.fill[data-tone="ok"] {
+  background: var(--accent-astar);
+}
+
+.fill[data-tone="low"] {
+  background: var(--warn);
+}
+
+.fill[data-tone="crit"] {
+  background: var(--danger);
+}
+
+.message {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font: 500 14px/1.45 var(--font-body);
+  text-wrap: pretty;
+}
+
+.message[data-tone="ok"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.message[data-tone="low"] {
+  background: var(--warn-soft);
+  color: var(--warn-text);
+}
+
+.message[data-tone="crit"] {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.noTitle {
+  font: 600 48px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  color: var(--danger-text);
+}
+
+.noBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.noWhy {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--error-text);
+  text-wrap: pretty;
+}
+
+/* ---- Tira de ruta: origen — paradas — destino ---- */
+
+.strip {
+  position: relative;
+  height: 56px;
+  margin-top: 4px;
+}
+
+.stripLine {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: 10px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-astar);
+}
+
+.stripOrigin {
+  position: absolute;
+  top: 4px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border: 3.5px solid var(--point-origin);
+  border-radius: 50%;
+  background: var(--bg-panel);
+}
+
+.stripDest {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--point-dest);
+  transform: rotate(45deg);
+}
+
+.stripStop {
+  position: absolute;
+  top: 0;
+  left: calc(10px + (100% - 20px) * var(--at));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translateX(-50%);
+}
+
+.stopSquare,
+.stopSquareBig {
+  display: grid;
+  flex: none;
+  place-items: center;
+  background: var(--warn);
+  color: var(--on-warn);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.stopSquare {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 0 0 3px var(--bg-panel);
+}
+
+.stripStopName {
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.stripFrom,
+.stripTo {
+  position: absolute;
+  bottom: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.stripFrom {
+  left: 0;
+}
+
+.stripTo {
+  right: 0;
+}
+
+/* ---- Cuatro cifras ---- */
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.figure {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+}
+
+.figure dt {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.figure dd {
+  margin: 0;
+  font: 600 26px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unitMid {
+  margin: 0 4px 0 2px;
+  font-size: 0.5em;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---- El tiempo y la plata ---- */
+
+.breaks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.breakdownTitle {
+  margin: 0 0 6px;
+  font: 600 15px/1.2 var(--font-display);
+}
+
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.breakdownRow,
+.breakdownTotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 14px;
+}
+
+.breakdownRow {
+  border-top: 1px solid var(--border-soft);
+}
+
+.breakdownTotal {
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.breakdownRow dt {
+  color: var(--text-muted);
+}
+
+.breakdownList dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.breakdownNote {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* ---- Tramos y paradas ---- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.h3 {
+  margin: 0;
+  font: 600 15px/1.2 var(--font-display);
+}
+
+.legs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+}
+
+.legTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.legDetail {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.stops {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  list-style: none;
+}
+
+.stop {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-panel);
+}
+
+.stop:last-child {
+  border-bottom: 0;
+}
+
+.stopSquareBig {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.stopBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stopHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.stopName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stopCost {
+  font: 600 17px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.stopAddress {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--bg-track);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stopTariff {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.noStops {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 899.98px) {
+  .figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .breaks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .verdict {
+    padding: 16px;
+  }
+
+  .stop {
+    padding: 14px 16px;
   }
 }

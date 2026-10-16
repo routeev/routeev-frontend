@@ -5,13 +5,6 @@ export const common = {
   cancel: "Cancelar",
   save: "Guardar",
   saving: "Guardando...",
-  languageSwitcherLabel: "Idioma",
-  // Nombre nativo de cada idioma, invariante -- "Español"/"English" no
-  // cambian según el idioma activo de la interfaz (mismo criterio que el
-  // "ES"/"EN" que ya se mostraba antes), por eso el mismo valor va también
-  // en el diccionario en.
-  languageNameEs: "Español",
-  languageNameEn: "English",
   themeSwitcherLabel: "Tema",
   lightMode: "Modo claro",
   darkMode: "Modo oscuro",

@@ -1,4 +1,4 @@
-import type { PhotoCredit, ShowroomModel } from "../api/showroom";
+import type { ShowroomModel } from "../api/showroom";
 
 /**
  * Agrupa el catálogo por "auto" (marca + nombre base del modelo) para que la
@@ -145,37 +145,4 @@ export function groupFamilies(models: ShowroomModel[]): ModelFamily[] {
     }
   }
   return [...byKey.values()];
-}
-
-/**
- * Lo que distingue a esta versión dentro de su familia: "Dolphin" y
- * "DOLPHIN (60.4 kWh)" → "" y "60.4 kWh". Vacío cuando el nombre no agrega
- * nada (la versión "a secas"); el componente muestra la batería en ese caso.
- */
-export function versionLabel(family: ModelFamily, model: ShowroomModel): string {
-  const nombreNorm = normalize(family.nombre);
-  let label = normalize(model.modelo) === nombreNorm ? "" : model.modelo;
-  if (label) {
-    const idx = normalize(label).indexOf(nombreNorm);
-    if (idx >= 0) {
-      label = (label.slice(0, idx) + label.slice(idx + nombreNorm.length)).trim();
-    }
-    label = label.replace(/^[(\s·-]+|[)\s·-]+$/g, "").trim();
-  }
-  return label;
-}
-
-/**
- * La foto que el catálogo ya trae para esta tarjeta, si alguna versión la tiene.
- *
- * Antes la tarjeta miraba solo al representante, y si ese no traía `foto_url`
- * pedía la foto por nombre a /api/showroom/imagen -- una búsqueda en frío que
- * tarda ~3 s en el servidor -- aunque OTRA versión del mismo auto la trajera
- * ya resuelta (hoy son 11 de las 328 tarjetas). Las versiones de una familia
- * son el mismo auto, así que sirve la foto de cualquiera; el representante
- * sigue teniendo prioridad.
- */
-export function fotoPrecargada(familia: ModelFamily): { url: string; credito?: PhotoCredit } | undefined {
-  const modelo = familia.representante.foto_url ? familia.representante : familia.versiones.find((v) => v.foto_url);
-  return modelo?.foto_url ? { url: modelo.foto_url, credito: modelo.foto_credito } : undefined;
 }

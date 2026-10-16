@@ -10,6 +10,7 @@ import {
   ProfilePage,
   ShowroomPage,
   TermsPage,
+  WelcomePage,
 } from "./lazyPages";
 import { RouteErrorBoundary } from "./shared/RouteErrorBoundary";
 import { RouteFallback } from "./shared/RouteFallback";
@@ -54,9 +55,12 @@ export const router = createBrowserRouter([
         path: "/profile",
         element: <ProtectedRoute>{withFallback(<ProfilePage />)}</ProtectedRoute>,
       },
-      { path: "/showroom", element: withFallback(<ShowroomPage />) },
+      // Una sola ruta para el índice, la marca y la ficha: así la página no
+      // se desmonta al ir de una a otra (el catálogo y la búsqueda siguen ahí).
+      { path: "/showroom/:marca?/:linea?", element: withFallback(<ShowroomPage />) },
       { path: "/privacidad", element: withFallback(<PrivacyPage />) },
       { path: "/terminos", element: withFallback(<TermsPage />) },
+      { path: "/bienvenida", element: withFallback(<WelcomePage />) },
     ],
   },
 ]);

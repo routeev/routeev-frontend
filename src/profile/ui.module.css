@@ -1,0 +1,404 @@
+/* Piezas que comparten las secciones del perfil. Cada botón declara su propio
+   :hover y su fondo: base.css le pone a todo <button> un fondo, un borde y un
+   :hover (0,1,1) que si no ganarían. */
+
+/* ---- Botones ---- */
+
+.primary,
+.outline,
+.dangerOutline,
+.dangerFill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: var(--radius-button);
+  font: 600 15px/1.2 var(--font-body);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.primary {
+  border: 0;
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+}
+
+.primary:hover {
+  background: var(--button-primary-hover);
+}
+
+.primary:disabled {
+  cursor: progress;
+}
+
+.outline {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.outline:hover {
+  border-color: var(--accent-astar);
+  color: var(--accent-text);
+}
+
+.dangerOutline {
+  border: 1px solid var(--danger-line);
+  background: transparent;
+  color: var(--danger-text);
+}
+
+.dangerOutline:hover {
+  border-color: var(--danger-line);
+  background: var(--danger-soft);
+}
+
+.dangerFill {
+  border: 0;
+  background: var(--danger-fill);
+  color: #fff;
+}
+
+.dangerFill:hover {
+  background: var(--danger);
+}
+
+.dangerFill:disabled {
+  cursor: progress;
+}
+
+/* Botones chicos de las filas (Cambiar, Reintentar, Ver en el mapa). */
+.small {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+/* Acción terciaria en menta, sin caja (Reenviar código, Completar a mano). */
+.textAction {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: 600 14px/1.2 var(--font-body);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.textAction:hover {
+  border-color: transparent;
+  text-decoration: underline;
+}
+
+.iconButton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  border-color: var(--border-strong);
+}
+
+/* ---- Spinner: aro de 16px, 0,8 s ---- */
+
+.spinner,
+.spinnerOnAccent {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent-astar);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinnerOnAccent {
+  border-color: rgba(127, 127, 127, 0.35);
+  border-top-color: var(--button-primary-text);
+}
+
+/* Sobre el botón rojo lleno. */
+.spinnerOnDanger {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Avisos: siempre ícono + texto ---- */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notice > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.noticeError {
+  border: 1px solid var(--danger-line);
+  background: var(--danger-soft);
+  color: var(--error-text);
+}
+
+.noticeError > svg {
+  color: var(--danger-text);
+}
+
+.noticeOk {
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.noticeOk > svg {
+  color: var(--accent-text);
+}
+
+/* Error de carga de una sección, con "Reintentar". */
+.loadError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--danger-line);
+  border-radius: var(--radius-card);
+  background: var(--danger-soft);
+}
+
+.loadErrorText {
+  display: flex;
+  flex: 1 1 280px;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--error-text);
+}
+
+.loadErrorText > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--danger-text);
+}
+
+.loadErrorText strong {
+  font-weight: 600;
+}
+
+.retry {
+  background: var(--bg-panel);
+}
+
+/* Bloque de carga del tamaño final, con pulso. */
+.skeleton {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-panel);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.loadingText {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ---- Campos ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.inputWrap {
+  position: relative;
+}
+
+/* 16px: menos hace que iOS haga zoom al enfocar. */
+.input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: 400 16px/1.2 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s;
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.input[aria-invalid="true"],
+.input[aria-invalid="true"]:hover {
+  border-color: var(--danger);
+}
+
+.inputCode {
+  max-width: 260px;
+  height: 56px;
+  font: 500 24px/1 var(--font-mono);
+  letter-spacing: 0.42em;
+}
+
+/* La unidad dentro del campo, a la derecha. */
+.inputWithUnit {
+  padding-right: 70px;
+}
+
+.unit {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.msg > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.msgError {
+  color: var(--danger-text);
+}
+
+/* ---- Eyebrow: punto menta + texto ---- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.eyebrowDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Cifra grande con la unidad más chica y en gris. */
+.unitSmall {
+  margin-left: 3px;
+  font-size: 0.47em;
+  color: var(--text-muted);
+}
+
+.unitBefore {
+  margin-right: 3px;
+  font-size: 0.47em;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerOnAccent,
+  .spinnerOnDanger,
+  .skeleton {
+    animation: none;
+  }
+
+  .primary,
+  .outline,
+  .dangerOutline,
+  .dangerFill,
+  .input {
+    transition: none;
+  }
+}

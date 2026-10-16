@@ -7,6 +7,7 @@ import { normalizeForSearch } from "../shared/geo";
 import { useDebouncedValue } from "../shared/useDebouncedValue";
 import { sugerirLugares, type SugerenciaLugar } from "./lugares";
 import { useMapStore, type SearchableNode } from "./mapStore";
+import { IconClose, IconCrosshair, IconPin, IconSearch } from "./panelIcons";
 import { fromNode } from "./routePoint";
 import styles from "./RouteAutocompleteField.module.css";
 
@@ -28,39 +29,25 @@ function localMatches(query: string, nodes: SearchableNode[]): SearchableNode[] 
   return scored.slice(0, 8).map((s) => s.node);
 }
 
-// Mira/cruz para el estado "apretado" de la chincheta. El icono cambia de
-// FORMA, no solo de color: el estado activo tiene que leerse igual con
-// daltonismo, con el brillo al mínimo o en una pantalla lavada por el sol.
-const PIN_SVG = (
-  <>
-    <path d="M12 21s7-6.03 7-11a7 7 0 1 0-14 0c0 4.97 7 11 7 11Z" />
-    <circle cx="12" cy="10" r="2.6" />
-  </>
-);
-const CROSSHAIR_SVG = (
-  <>
-    <path d="M11 2h2v4h-2zM11 18h2v4h-2zM2 11h4v2H2zM18 11h4v2h-4z" />
-    <path d="M12 6.6a5.4 5.4 0 1 0 0 10.8 5.4 5.4 0 0 0 0-10.8Zm0 2a3.4 3.4 0 1 1 0 6.8 3.4 3.4 0 0 1 0-6.8Z" />
-  </>
-);
-
 interface RouteAutocompleteFieldProps {
   role: "origin" | "destination";
   placeholder: string;
   /** Este rol se está marcando AHORA: el mapa está esperando un toque. */
   isPicking: boolean;
-  /** Sin nadie marcando, a este rol le toca el próximo toque del mapa. */
-  isNextTarget: boolean;
   onPickTarget: () => void;
 }
 
-export function RouteAutocompleteField({
-  role,
-  placeholder,
-  isPicking,
-  isNextTarget,
-  onPickTarget,
-}: RouteAutocompleteFieldProps) {
+/**
+ * Una fila del bloque origen/destino de "Planificar" (ver PlanView): el campo
+ * con autocompletado, borrar y la chincheta para marcar en el mapa.
+ *
+ * Devuelve dos piezas sueltas (la fila y, si hay, el mensaje de resultado)
+ * para que la tarjeta que las contiene las ubique en su grilla: la viñeta de
+ * la izquierda y el botón de invertir son de la tarjeta, no de cada campo.
+ * La lista de sugerencias se posiciona contra esa tarjeta, así cae debajo
+ * del bloque entero y ocupa todo su ancho.
+ */
+export function RouteAutocompleteField({ role, placeholder, isPicking, onPickTarget }: RouteAutocompleteFieldProps) {
   const { t } = useTranslation();
   const ra = t.map.routeAutocomplete;
   const searchableNodes = useMapStore((s) => s.searchableNodes);
@@ -184,7 +171,16 @@ export function RouteAutocompleteField({
   }
 
   function itemContent(item: Item) {
-    if (item.type === "geocode") return ra.searchAsAddress(item.label);
+    if (item.type === "geocode") {
+      return (
+        <>
+          <span className={styles.itemIcon}>
+            <IconSearch />
+          </span>
+          {ra.searchAsAddress(item.label)}
+        </>
+      );
+    }
     const [titulo, tipo, detalle, clase] =
       item.type === "departamento"
         ? [item.departamento, ra.kindDepartment, ra.departmentHint(item.capital.nombre), styles.kindDepartment]
@@ -197,129 +193,131 @@ export function RouteAutocompleteField({
             ]
           : [item.node.name, ra.kindStreet, ra.streetHint, styles.kindStreet];
     return (
-      <span className={styles.itemBody}>
-        <span className={styles.itemMain}>
-          <span className={styles.itemTitle}>{titulo}</span>
-          <span className={[styles.kind, clase].join(" ")}>{tipo}</span>
+      <>
+        <span className={styles.itemIcon}>
+          <IconPin />
         </span>
-        <span className={styles.itemDetail}>{detalle}</span>
-      </span>
+        <span className={styles.itemBody}>
+          <span className={styles.itemMain}>
+            <span className={styles.itemTitle}>{titulo}</span>
+            <span className={[styles.kind, clase].join(" ")}>{tipo}</span>
+          </span>
+          <span className={styles.itemDetail}>{detalle}</span>
+        </span>
+      </>
     );
   }
 
   const etiqueta = ra.roleLabel(role);
+  const listId = `${role}-suggestions`;
 
   return (
-    <div>
-      <div className={styles.slot}>
-        <span
-          className={[styles.marker, role === "origin" ? styles.markerOrigin : styles.markerDest].join(" ")}
-          aria-hidden="true"
-        />
+    <>
+      <div className={[styles.row, role === "origin" ? styles.rowOrigin : styles.rowDest].join(" ")}>
         <label className="sr-only" htmlFor={`${role}-input`}>
           {role === "origin" ? ra.originLabel : ra.destinationLabel}
         </label>
-        <div className={styles.autocomplete}>
-          <input
-            id={`${role}-input`}
-            type="text"
-            autoComplete="off"
-            placeholder={placeholder}
-            value={value}
-            disabled={busy}
-            onChange={(e) => {
-              setResult(null);
-              setEditingText(e.target.value);
-              setOpen(Boolean(e.target.value.trim()));
-              setActiveIndex(-1);
-            }}
-            onFocus={() => {
-              if (value.trim()) setOpen(true);
-            }}
-            onBlur={() => {
-              // Delay corto: si el blur vino de tocar un item de la lista, el
-              // click ya alcanzo a procesar la eleccion antes de que esto cierre.
-              blurTimeout.current = window.setTimeout(() => setOpen(false), 120);
-            }}
-            onKeyDown={(e) => {
-              if (!open || items.length === 0) return;
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setActiveIndex((i) => Math.min(items.length - 1, i + 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setActiveIndex((i) => Math.max(0, i - 1));
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                chooseItem(items[activeIndex >= 0 ? activeIndex : 0]);
-              } else if (e.key === "Escape") {
-                setOpen(false);
-              }
-            }}
-          />
-          {open && (
-            <ul className={styles.list}>
-              {items.length === 0 ? (
-                <li className={[styles.item, styles.itemEmpty].join(" ")}>{ra.keepTyping}</li>
-              ) : (
-                items.map((item, i) => (
-                  <li
-                    key={itemKey(item)}
-                    className={[styles.item, item.type === "geocode" ? styles.itemGeocode : "", i === activeIndex ? styles.itemActive : ""].join(" ")}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (blurTimeout.current) window.clearTimeout(blurTimeout.current);
-                      chooseItem(item);
-                    }}
-                  >
-                    {itemContent(item)}
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </div>
+        <input
+          id={`${role}-input`}
+          className={styles.input}
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          autoComplete="off"
+          placeholder={placeholder}
+          value={value}
+          disabled={busy}
+          onChange={(e) => {
+            setResult(null);
+            setEditingText(e.target.value);
+            setOpen(Boolean(e.target.value.trim()));
+            setActiveIndex(-1);
+          }}
+          onFocus={() => {
+            if (value.trim()) setOpen(true);
+          }}
+          onBlur={() => {
+            // Delay corto: si el blur vino de tocar un item de la lista, el
+            // click ya alcanzo a procesar la eleccion antes de que esto cierre.
+            blurTimeout.current = window.setTimeout(() => setOpen(false), 120);
+          }}
+          onKeyDown={(e) => {
+            if (!open || items.length === 0) return;
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setActiveIndex((i) => Math.min(items.length - 1, i + 1));
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setActiveIndex((i) => Math.max(0, i - 1));
+            } else if (e.key === "Enter") {
+              e.preventDefault();
+              chooseItem(items[activeIndex >= 0 ? activeIndex : 0]);
+            } else if (e.key === "Escape") {
+              setOpen(false);
+            }
+          }}
+        />
+        {open && (
+          <ul className={styles.list} id={listId} role="listbox">
+            {items.length === 0 ? (
+              <li className={[styles.item, styles.itemEmpty].join(" ")}>{ra.keepTyping}</li>
+            ) : (
+              items.map((item, i) => (
+                <li
+                  key={itemKey(item)}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  className={[
+                    styles.item,
+                    item.type === "geocode" ? styles.itemGeocode : "",
+                    i === activeIndex ? styles.itemActive : "",
+                  ].join(" ")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (blurTimeout.current) window.clearTimeout(blurTimeout.current);
+                    chooseItem(item);
+                  }}
+                >
+                  {itemContent(item)}
+                </li>
+              ))
+            )}
+          </ul>
+        )}
         {node && (
-          <button
-            type="button"
-            className={styles.clear}
-            title={ra.clearRole(etiqueta)}
-            onClick={() => clearNode()}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
+          <button type="button" className={styles.iconBtn} title={ra.clearRole(etiqueta)} onClick={() => clearNode()}>
+            <IconClose size={16} />
             <span className="sr-only">{ra.clearRole(etiqueta)}</span>
           </button>
         )}
-        {/* Cada chincheta lleva el color de SU rol (el mismo blanco/violeta de
-            la viñeta a la izquierda del campo y de las chinchetas del mapa):
-            antes las dos eran del mismo gris apagado, así que ni se leían como
-            botones ni se sabía cuál era cuál. El estado apretado cambia además
-            de forma (chincheta -> mira) y de texto, no solo de color. */}
+        {/* El estado apretado cambia de forma (chincheta -> mira) y de texto,
+            no solo de color: tiene que leerse igual con daltonismo o con el
+            brillo al mínimo. */}
         <button
           type="button"
-          className={[
-            styles.pin,
-            role === "destination" ? styles.pinDest : "",
-            isPicking ? styles.pinActive : "",
-            isNextTarget ? styles.pinNext : "",
-          ].join(" ")}
+          className={[styles.iconBtn, isPicking ? styles.pinActive : ""].join(" ")}
           aria-pressed={isPicking}
           title={isPicking ? ra.pickOnMapActive(etiqueta) : ra.pickOnMap(etiqueta)}
           onClick={onPickTarget}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            {isPicking ? CROSSHAIR_SVG : PIN_SVG}
-          </svg>
+          {isPicking ? <IconCrosshair /> : <IconPin />}
           <span className="sr-only">{isPicking ? ra.pickOnMapActiveSr(etiqueta) : ra.pickOnMap(etiqueta)}</span>
         </button>
       </div>
       {result && (
-        <div className={[styles.result, result.kind === "warn" ? styles.resultWarn : "", result.kind === "error" ? styles.resultError : ""].join(" ")}>
+        <p
+          className={[
+            styles.result,
+            role === "origin" ? styles.resultOrigin : styles.resultDest,
+            result.kind === "warn" ? styles.resultWarn : "",
+            result.kind === "error" ? styles.resultError : "",
+          ].join(" ")}
+        >
           {result.text}
-        </div>
+        </p>
       )}
-    </div>
+    </>
   );
 }

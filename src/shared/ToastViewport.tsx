@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { IconAlert, IconCheck } from "../map/panelIcons";
 import { useToastStore, type Toast } from "./toastStore";
 import styles from "./ToastViewport.module.css";
 
@@ -46,7 +47,7 @@ function ToastRow({ toast }: { toast: Toast }) {
           que distinga "salió bien" de "salió mal" (daltonismo, monitores
           malos, y el propio dark mode que aplana los contrastes). */}
       <span className={styles.icon} aria-hidden="true">
-        {esError ? "!" : "✓"}
+        {esError ? <IconAlert size={18} /> : <IconCheck size={18} />}
       </span>
       <p className={styles.message}>{toast.message}</p>
       <button type="button" className={styles.close} onClick={() => dismiss(toast.id)}>

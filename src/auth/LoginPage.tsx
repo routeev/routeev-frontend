@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
-import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   confirmEmail,
@@ -14,532 +13,664 @@ import {
 } from "../api/auth";
 import { ApiError } from "../api/client";
 import { setSession } from "../api/session";
-import { Banner } from "../shared/Banner";
-import { Brand } from "../shared/Brand";
+import { useTranslation, type Lang } from "../i18n/LanguageProvider";
+import { IconInstagram } from "../landing/landingIcons";
 import { GraphBackground } from "../shared/GraphBackground";
-import { Spinner } from "../shared/Spinner";
-import { useTranslation } from "../i18n/LanguageProvider";
+import {
+  IconAlert,
+  IconArrowLeft,
+  IconCheck,
+  IconChevronLeft,
+  IconCircle,
+  IconClock,
+  IconEye,
+  IconEyeOff,
+  IconInfo,
+  IconMail,
+  IconResend,
+} from "./authIcons";
 import { GoogleSignIn } from "./GoogleSignIn";
 import styles from "./LoginPage.module.css";
 
-type Mode = "login" | "register";
-type View =
-  | { name: "form" }
-  | { name: "confirm"; email: string; notice?: string }
-  | { name: "forgot" }
-  // Codigo mandado, todavia sin validar contra el backend.
-  | { name: "reset-code"; email: string }
-  // Codigo ya validado (ver onVerifyCodeSubmit): recien acá se pide la
-  // contraseña nueva, para no hacer escribirla dos veces solo para
-  // enterarse al final de que el código estaba mal tipeado.
-  | { name: "reset-password"; email: string; code: string };
+/**
+ * Los dos primeros pasos salen de la URL (`/login` y `/login?crear=1`, que ya
+ * están linkeados en todo el sitio); los intermedios no la cambian y al
+ * recargar se vuelve al login.
+ */
+type Flow =
+  | null
+  | { step: "confirm"; email: string }
+  | { step: "forgot" }
+  // Código mandado, todavía sin validar contra el backend.
+  | { step: "code"; email: string }
+  // Código ya validado: recién acá se pide la contraseña nueva, para no
+  // hacerla escribir dos veces solo para enterarse al final de que el código
+  // estaba mal tipeado.
+  | { step: "newpass"; email: string; code: string };
+
+type Step = "login" | "signup" | "confirm" | "forgot" | "code" | "newpass";
+type FieldKey = "email" | "name" | "pass" | "pass2" | "code";
+type Values = Record<FieldKey, string>;
+type Errors = Partial<Record<FieldKey, string>>;
+type Notice = { tone: "error" | "info" | "ok"; text: string } | null;
+
+const FIELDS: Record<Step, FieldKey[]> = {
+  login: ["email", "pass"],
+  // Nombre antes que la contraseña: así el requisito de los 10 caracteres
+  // queda pegado al botón.
+  signup: ["email", "name", "pass"],
+  confirm: ["code"],
+  forgot: ["email"],
+  code: ["code"],
+  newpass: ["pass", "pass2"],
+};
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD = 10;
+// La API a veces tarda cerca de un minuto en despertar: pasado esto, se avisa.
+const SLOW_AFTER_MS = 6000;
 
-interface FormValues {
-  email: string;
-  password: string;
-  /** Solo en "crear cuenta", y siempre opcional (ver onSubmit). */
-  displayName: string;
-}
+const LANGS: { code: Lang; short: string; name: string }[] = [
+  { code: "es", short: "ES", name: "Español" },
+  { code: "en", short: "EN", name: "English" },
+];
 
-interface ConfirmValues {
-  code: string;
-}
-
-interface ForgotValues {
-  email: string;
-}
-
-interface ResetCodeValues {
-  code: string;
-}
-
-interface ResetPasswordValues {
-  newPassword: string;
-  confirmPassword: string;
-}
+const EMPTY: Values = { email: "", name: "", pass: "", pass2: "", code: "" };
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<Mode>(searchParams.get("crear") === "1" ? "register" : "login");
-  const [view, setView] = useState<View>({ name: "form" });
-  const [banner, setBanner] = useState<{ variant: "error" | "info"; message: string } | null>(null);
-  const [resending, setResending] = useState(false);
+  const { t, lang, setLang } = useTranslation();
+  const a = t.auth;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const signupUrl = searchParams.get("crear") === "1";
+  const [flow, setFlow] = useState<Flow>(null);
+  const step: Step = flow?.step ?? (signupUrl ? "signup" : "login");
 
-  const form = useForm<FormValues>({ defaultValues: { email: "", password: "", displayName: "" } });
-  const confirmForm = useForm<ConfirmValues>({ defaultValues: { code: "" } });
-  const forgotForm = useForm<ForgotValues>({ defaultValues: { email: "" } });
-  const resetCodeForm = useForm<ResetCodeValues>({ defaultValues: { code: "" } });
-  const resetPasswordForm = useForm<ResetPasswordValues>({ defaultValues: { newPassword: "", confirmPassword: "" } });
+  const [vals, setVals] = useState<Values>(EMPTY);
+  const [errors, setErrors] = useState<Errors>({});
+  const [shown, setShown] = useState<Partial<Record<FieldKey, boolean>>>({});
+  const [notice, setNotice] = useState<Notice>(null);
+  const [run, setRun] = useState({ id: 0, sending: false, slow: false });
+  const [resending, setResending] = useState(false);
+  const runCounter = useRef(0);
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const focusHead = useRef(false);
+  const uid = useId();
+  const fieldId = (k: FieldKey) => `${uid}-${k}`;
+
+  // Cada cambio de paso lleva el foco al título: el lector de pantalla
+  // anuncia dónde está, y el teclado sigue desde arriba de la tarjeta.
+  useEffect(() => {
+    if (!focusHead.current) return;
+    focusHead.current = false;
+    headRef.current?.focus({ preventScroll: true });
+  }, [step]);
+
+  // Con el teclado del celular abierto, que el contenido se achique en vez
+  // de quedar tapado: el botón principal tiene que poder verse. Solo en esta
+  // pantalla, para no cambiar cómo se comporta el mapa de /app.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    const previous = meta?.getAttribute("content");
+    if (!meta || previous == null || previous.includes("interactive-widget")) return;
+    meta.setAttribute("content", `${previous}, interactive-widget=resizes-content`);
+    return () => meta.setAttribute("content", previous);
+  }, []);
+
+  function go(next: Flow) {
+    focusHead.current = true;
+    setFlow(next);
+    setErrors({});
+    setNotice(null);
+    setShown({});
+    setVals((v) => ({ ...v, code: "", pass: next?.step === "newpass" ? "" : v.pass, pass2: "" }));
+  }
+
+  function backToLogin() {
+    if (signupUrl) setSearchParams({}, { replace: true });
+    go(null);
+  }
 
   function goToApp(session: { access_token: string; username: string }) {
     setSession(session.access_token, session.username);
     navigate("/app", { replace: true });
   }
 
-  async function onSubmit(values: FormValues) {
-    setBanner(null);
-    const email = values.email.trim();
+  function setValue(k: FieldKey, value: string) {
+    // El código queda solo con dígitos: pegar "482 913" o "Código: 482913"
+    // deja "482913".
+    const v = k === "code" ? value.replace(/\D/g, "").slice(0, 6) : value;
+    setVals((prev) => ({ ...prev, [k]: v }));
+    // Escribir en un campo borra su error: el aviso se va al corregirlo.
+    setErrors((prev) => (prev[k] ? { ...prev, [k]: undefined } : prev));
+  }
+
+  function validate(): Errors {
+    const e: Errors = {};
+    const fields = FIELDS[step];
+    if (fields.includes("email") && !EMAIL_RE.test(vals.email.trim())) e.email = a.errors.email;
+    if (fields.includes("pass")) {
+      if (step === "login") {
+        if (!vals.pass) e.pass = a.errors.passwordEmpty;
+      } else if (vals.pass.length < MIN_PASSWORD) {
+        e.pass = a.errors.passwordShort;
+      }
+    }
+    if (fields.includes("pass2") && !e.pass && vals.pass2 !== vals.pass)
+      e.pass2 = a.errors.mismatch;
+    if (fields.includes("code") && !/^\d{6}$/.test(vals.code)) e.code = a.errors.code;
+    return e;
+  }
+
+  /** Corre un envío con el botón en "enviando" y, si tarda, el aviso de la API despertando. */
+  async function track(task: () => Promise<void>) {
+    const id = ++runCounter.current;
+    setRun({ id, sending: true, slow: false });
+    const timer = window.setTimeout(
+      () => setRun((r) => (r.id === id && r.sending ? { ...r, slow: true } : r)),
+      SLOW_AFTER_MS
+    );
     try {
-      // QA BAJO 25: el nombre visible salía derivado del correo ("pucho1394").
-      // Ahora se puede elegir al crear la cuenta, sin dejar de ser opcional:
-      // vacío se manda como si el campo no existiera, y register() ya se
-      // encarga de que una API que todavía no lo acepta no rompa el alta.
-      const result =
-        mode === "login"
-          ? await login(email, values.password)
-          : await register(email, values.password, values.displayName);
-      if (result.confirmation_required) {
-        // Cuenta creada pero todavía sin token: falta el código que se
-        // acaba de mandar por mail (ver RegisterResponse en backend/app/schemas.py).
-        setView({
-          name: "confirm",
-          email: result.email,
-          notice: t.auth.verifyEmail.notice(result.email),
-        });
-        return;
-      }
-      goToApp(result);
-    } catch (err) {
-      if (mode === "login" && err instanceof ApiError && err.status === 403) {
-        // Credenciales correctas pero el correo todavía no fue confirmado:
-        // en vez de dejar sin salida, se manda directo al paso de
-        // confirmación, con la opción de reenviar el código.
-        setView({ name: "confirm", email });
-        setBanner({
-          variant: "info",
-          message: t.auth.login.unconfirmedNotice,
-        });
-      } else {
-        setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.login.genericError });
-      }
+      await task();
+    } finally {
+      window.clearTimeout(timer);
+      setRun((r) => (r.id === id ? { ...r, sending: false, slow: false } : r));
     }
   }
 
-  async function onConfirmSubmit(values: ConfirmValues) {
-    if (view.name !== "confirm") return;
-    setBanner(null);
-    try {
-      goToApp(await confirmEmail(view.email, values.code.trim()));
-    } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.verifyEmail.error });
+  const failWith = (err: unknown, fallback: string) =>
+    setNotice({ tone: "error", text: err instanceof Error ? err.message : fallback });
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (run.sending) return;
+    const found = validate();
+    setErrors(found);
+    setNotice(null);
+    const first = FIELDS[step].find((k) => found[k]);
+    if (first) {
+      document.getElementById(fieldId(first))?.focus();
+      return;
     }
+    const email = vals.email.trim();
+
+    await track(async () => {
+      switch (step) {
+        case "login":
+          try {
+            const result = await login(email, vals.pass);
+            if (result.confirmation_required) go({ step: "confirm", email: result.email });
+            else goToApp(result);
+          } catch (err) {
+            if (err instanceof ApiError && err.status === 403) {
+              // Credenciales correctas pero el correo sin confirmar: en vez de
+              // dejarlo sin salida, al paso de confirmación con la opción de
+              // reenviar el código.
+              go({ step: "confirm", email });
+              setNotice({ tone: "info", text: a.notices.unconfirmed });
+            } else {
+              failWith(err, a.errors.generic);
+            }
+          }
+          break;
+        case "signup":
+          try {
+            // El nombre vacío se manda como si el campo no existiera (ver
+            // register()): nunca frena el alta.
+            const result = await register(email, vals.pass, vals.name);
+            if (result.confirmation_required) go({ step: "confirm", email: result.email });
+            else goToApp(result);
+          } catch (err) {
+            failWith(err, a.errors.generic);
+          }
+          break;
+        case "confirm":
+          if (flow?.step !== "confirm") return;
+          try {
+            goToApp(await confirmEmail(flow.email, vals.code));
+          } catch (err) {
+            failWith(err, a.errors.confirm);
+          }
+          break;
+        case "forgot":
+          try {
+            // Avanza exista o no la cuenta: el backend responde igual en los
+            // dos casos a propósito (anti-enumeración). El error real (red
+            // caída, límite de pedidos) sí se muestra y no avanza.
+            await requestPasswordReset(email);
+            go({ step: "code", email });
+          } catch (err) {
+            failWith(err, a.errors.forgot);
+          }
+          break;
+        case "code":
+          if (flow?.step !== "code") return;
+          try {
+            // Solo lectura: confirma que vale la pena pedir la contraseña
+            // nueva, sin consumir el código.
+            await verifyPasswordResetCode(flow.email, vals.code);
+            go({ step: "newpass", email: flow.email, code: vals.code });
+          } catch (err) {
+            failWith(err, a.errors.verify);
+          }
+          break;
+        case "newpass":
+          if (flow?.step !== "newpass") return;
+          try {
+            // El backend revalida el código igual, por si venció justo en el medio.
+            goToApp(await resetPassword(flow.email, flow.code, vals.pass));
+          } catch (err) {
+            failWith(err, a.errors.reset);
+          }
+          break;
+      }
+    });
   }
 
   async function onResend() {
-    if (view.name !== "confirm") return;
-    setBanner(null);
+    if (!flow || flow.step === "forgot") return;
     setResending(true);
+    setNotice(null);
     try {
-      await resendConfirmation(view.email);
-      setBanner({ variant: "info", message: t.auth.resendCode.success });
+      if (flow.step === "confirm") {
+        await resendConfirmation(flow.email);
+      } else {
+        await requestPasswordReset(flow.email);
+        // Un código nuevo anula el anterior, aunque ya estuviera validado:
+        // hay que volver a pedirlo.
+        if (flow.step === "newpass") go({ step: "code", email: flow.email });
+      }
+      setVals((v) => ({ ...v, code: "" }));
+      setNotice({ tone: "ok", text: a.notices.resent });
     } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resendCode.error });
-    } finally {
-      setResending(false);
-    }
-  }
-
-  async function onForgotSubmit(values: ForgotValues) {
-    setBanner(null);
-    const email = values.email.trim();
-    try {
-      // Siempre avanza al paso siguiente, exista o no la cuenta: el backend
-      // responde 204 en los dos casos a propósito (anti-enumeración, ver
-      // request_password_reset en backend/app/routes/auth_routes.py) -- si
-      // acá se distinguiera, esta pantalla delataría por sí sola qué correos
-      // están registrados. El error real (red caída, límite de pedidos) sí
-      // se muestra y NO avanza, porque en ese caso el código nunca salió.
-      await requestPasswordReset(email);
-      setView({ name: "reset-code", email });
-    } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.forgotPassword.error });
-    }
-  }
-
-  async function onVerifyCodeSubmit(values: ResetCodeValues) {
-    if (view.name !== "reset-code") return;
-    setBanner(null);
-    const code = values.code.trim();
-    try {
-      // No cambia nada todavía (ver verify_password_reset_code en
-      // backend/app/routes/auth_routes.py: es de solo lectura, no consume el
-      // código) -- solo confirma que vale la pena pedir la contraseña nueva
-      // antes de hacerlo escribir dos veces.
-      await verifyPasswordResetCode(view.email, code);
-      setView({ name: "reset-password", email: view.email, code });
-    } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resetPassword.verifyError });
-    }
-  }
-
-  async function onResetPasswordSubmit(values: ResetPasswordValues) {
-    if (view.name !== "reset-password") return;
-    setBanner(null);
-    if (values.newPassword !== values.confirmPassword) {
-      resetPasswordForm.setError("confirmPassword", { message: t.auth.resetPassword.passwordMismatch });
-      return;
-    }
-    try {
-      // El código ya se validó en el paso anterior, pero se vuelve a mandar
-      // acá: el backend lo revalida igual (ver reset_password en
-      // auth_routes.py), entre otras cosas por si venció justo en el medio.
-      goToApp(await resetPassword(view.email, view.code, values.newPassword));
-    } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resetPassword.error });
-    }
-  }
-
-  async function onResendReset() {
-    if (view.name !== "reset-code" && view.name !== "reset-password") return;
-    setBanner(null);
-    setResending(true);
-    try {
-      await requestPasswordReset(view.email);
-      setBanner({ variant: "info", message: t.auth.resendCode.success });
-      // El código anterior (si el paso previo ya lo había validado) queda
-      // invalidado por este reenvío (ver set_password_reset_code en
-      // backend/app/database.py: uno nuevo reemplaza al pendiente) -- hay
-      // que volver a pedirlo y validarlo de cero.
-      if (view.name === "reset-password") setView({ name: "reset-code", email: view.email });
-    } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.resendCode.error });
+      failWith(err, a.errors.resend);
     } finally {
       setResending(false);
     }
   }
 
   async function onGoogleCredential(credential: string) {
-    setBanner(null);
+    setNotice(null);
     try {
       goToApp(await googleLogin(credential));
     } catch (err) {
-      setBanner({ variant: "error", message: err instanceof Error ? err.message : t.auth.login.googleError });
+      failWith(err, a.errors.google);
     }
   }
 
-  function backToLogin() {
-    setView({ name: "form" });
-    setBanner(null);
+  const texts = a.steps[step];
+  const isAuth = step === "login" || step === "signup";
+  const flowEmail = flow && "email" in flow ? flow.email : "";
+
+  function passwordMessage(k: FieldKey): Message | null {
+    if (errors[k]) return { tone: "error", text: errors[k]! };
+    if (k !== "pass" || step === "login") return null;
+    const missing = MIN_PASSWORD - vals.pass.length;
+    if (!vals.pass) return { tone: "rule", text: a.passwordRule.empty };
+    if (missing > 0) return { tone: "rule", text: a.passwordRule.missing(missing) };
+    return { tone: "ok", text: a.passwordRule.ok };
   }
 
-  const modeLabel =
-    view.name === "confirm"
-      ? t.auth.verifyEmail.modeLabel
-      : view.name === "forgot"
-        ? t.auth.forgotPassword.modeLabel
-        : view.name === "reset-code" || view.name === "reset-password"
-          ? t.auth.resetPassword.modeLabel
-          : mode === "login"
-            ? t.auth.login.modeLabelLogin
-            : t.auth.login.modeLabelRegister;
+  function renderField(k: FieldKey) {
+    const common = {
+      id: fieldId(k),
+      value: vals[k],
+      onChange: (v: string) => setValue(k, v),
+      error: Boolean(errors[k]),
+    };
+    switch (k) {
+      case "email":
+        return (
+          <Field
+            key={k}
+            {...common}
+            label={a.fields.email}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder={a.fields.emailPlaceholder}
+            message={errors.email ? { tone: "error", text: errors.email } : null}
+          />
+        );
+      case "name":
+        return (
+          <Field
+            key={k}
+            {...common}
+            label={a.fields.name}
+            optional={a.fields.optional}
+            type="text"
+            autoComplete="nickname"
+            maxLength={32}
+            placeholder={a.fields.namePlaceholder}
+            message={{ tone: "hint", text: a.fields.nameHint }}
+          />
+        );
+      case "pass":
+      case "pass2":
+        return (
+          <Field
+            key={k}
+            {...common}
+            label={
+              k === "pass2"
+                ? a.fields.repeatPassword
+                : step === "newpass"
+                  ? a.fields.newPassword
+                  : a.fields.password
+            }
+            type={shown[k] ? "text" : "password"}
+            autoComplete={step === "login" ? "current-password" : "new-password"}
+            message={passwordMessage(k)}
+            eye={{
+              shown: Boolean(shown[k]),
+              toggle: () => setShown((s) => ({ ...s, [k]: !s[k] })),
+              show: a.fields.showPassword,
+              hide: a.fields.hidePassword,
+            }}
+          />
+        );
+      case "code":
+        return (
+          <Field
+            key={k}
+            {...common}
+            code
+            label={a.fields.code}
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="000000"
+            message={errors.code ? { tone: "error", text: errors.code } : null}
+          />
+        );
+    }
+  }
+
+  const subtitle: ReactNode =
+    "subtitle" in texts ? (
+      texts.subtitle
+    ) : "before" in texts ? (
+      <>
+        {texts.before}
+        <strong>{flowEmail}</strong>
+        {texts.after}
+      </>
+    ) : null;
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} lang={lang}>
       <Helmet>
-        <title>{t.auth.login.pageTitle}</title>
+        <title>{signupUrl ? a.meta.titleSignup : a.meta.titleLogin}</title>
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <GraphBackground />
+      <div className={styles.bgWrap} aria-hidden="true">
+        <GraphBackground />
+      </div>
+      <div className={styles.veil} aria-hidden="true" />
 
-      <div className={styles.card}>
-        <Link to="/" className={styles.backLink}>
-          {t.auth.login.backToHome}
+      <header className={styles.header}>
+        <Link to="/" className={styles.logo} aria-label={a.header.logoLabel}>
+          <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
+          <span>
+            Route<span className={styles.accent}>EV</span>
+          </span>
         </Link>
-        <p className={["eyebrow", styles.eyebrow].join(" ")}>Uruguay</p>
-        <h1 className={styles.brand}>
-          <Brand size={26} />
-        </h1>
-        <p className={styles.tagline}>{t.auth.login.tagline}</p>
-        <p className={styles.modeLabel}>{modeLabel}</p>
+        <div className={styles.headerEnd}>
+          <Link to="/" className={styles.homeLink}>
+            <IconArrowLeft />
+            <span className={styles.homeLong}>{a.header.backHome}</span>
+            <span className={styles.homeShort}>{a.header.backHomeShort}</span>
+          </Link>
+          <div role="group" aria-label={a.header.language} className={styles.langSeg}>
+            {LANGS.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                lang={l.code}
+                aria-pressed={lang === l.code}
+                aria-label={l.name}
+                onClick={() => setLang(l.code)}
+              >
+                {l.short}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
 
-        {banner && <Banner variant={banner.variant}>{banner.message}</Banner>}
+      <main className={styles.main}>
+        <div className={styles.card}>
+          {isAuth ? (
+            <nav aria-label={a.mode.label} className={styles.seg}>
+              <Link
+                to="/login"
+                replace
+                preventScrollReset
+                className={styles.segItem}
+                aria-current={step === "login" ? "page" : undefined}
+                onClick={() => step !== "login" && go(null)}
+              >
+                {a.mode.login}
+              </Link>
+              <Link
+                to="/login?crear=1"
+                replace
+                preventScrollReset
+                className={styles.segItem}
+                aria-current={step === "signup" ? "page" : undefined}
+                onClick={() => step !== "signup" && go(null)}
+              >
+                {a.mode.signup}
+              </Link>
+            </nav>
+          ) : (
+            <button type="button" className={styles.back} onClick={backToLogin}>
+              <IconChevronLeft />
+              {a.backToLogin}
+            </button>
+          )}
 
-        {view.name === "form" ? (
-          <>
-            <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-              <div className="field">
-                <label htmlFor="email">{t.auth.login.emailLabel}</label>
-                <input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder={t.auth.login.emailPlaceholder}
-                  {...form.register("email", {
-                    required: true,
-                    validate: (v) => EMAIL_RE.test(v.trim()) || t.auth.login.emailInvalid,
-                  })}
-                />
-                {form.formState.errors.email && (
-                  <p className={styles.fieldError}>{form.formState.errors.email.message || t.auth.login.emailInvalid}</p>
-                )}
+          <div className={styles.stepHead}>
+            {"eyebrow" in texts && (
+              <p className={styles.eyebrow}>
+                <span className={styles.eyebrowDot} aria-hidden="true" />
+                {texts.eyebrow}
+              </p>
+            )}
+            <h1 ref={headRef} tabIndex={-1} className={styles.title}>
+              {texts.title}
+            </h1>
+            {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+          </div>
+
+          <form className={styles.form} onSubmit={onSubmit} noValidate aria-busy={run.sending}>
+            {notice?.tone === "error" && (
+              <div role="alert" className={`${styles.notice} ${styles.noticeError}`}>
+                <IconAlert />
+                <span>{notice.text}</span>
               </div>
-              <div className="field">
-                <label htmlFor="password">{t.auth.login.passwordLabel}</label>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete={mode === "register" ? "new-password" : "current-password"}
-                  placeholder="••••••••"
-                  {...form.register("password", {
-                    required: t.auth.login.passwordRequired,
-                    validate: (v) =>
-                      mode === "register" && v.length < 10 ? t.auth.login.passwordTooShort : true,
-                  })}
-                />
-                {form.formState.errors.password && (
-                  <p className={styles.fieldError}>{form.formState.errors.password.message}</p>
-                )}
-              </div>
-              {mode === "register" && (
-                <div className="field">
-                  <label htmlFor="display-name">{t.auth.register.displayNameLabel}</label>
-                  <input
-                    id="display-name"
-                    type="text"
-                    autoComplete="nickname"
-                    maxLength={32}
-                    placeholder={t.auth.register.displayNamePlaceholder}
-                    // Sin `required` y sin ninguna regla de validación a
-                    // propósito: es el único campo del formulario que NUNCA
-                    // puede frenar un alta. Dejarlo vacío es una opción
-                    // legítima y el texto de abajo lo dice.
-                    {...form.register("displayName")}
-                  />
-                  <p className={styles.fieldHint}>{t.auth.register.displayNameHint}</p>
+            )}
+            {/* Montado siempre y vacío cuando no hay nada: los lectores de
+                pantalla anuncian mejor un cambio de contenido que un nodo nuevo. */}
+            <div role="status" className={styles.status}>
+              {notice && notice.tone !== "error" && (
+                <div
+                  className={`${styles.notice} ${notice.tone === "ok" ? styles.noticeOk : styles.noticeInfo}`}
+                >
+                  {notice.tone === "ok" ? <IconMail /> : <IconInfo />}
+                  <span>{notice.text}</span>
                 </div>
               )}
-              <div className={styles.actions}>
-                <button
-                  type="submit"
-                  className="primary"
-                  disabled={form.formState.isSubmitting}
-                  aria-busy={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <Spinner /> {t.auth.login.submitting}
-                    </>
-                  ) : mode === "login" ? (
-                    t.auth.login.submitLogin
-                  ) : (
-                    t.auth.login.submitRegister
-                  )}
-                </button>
+            </div>
+
+            {FIELDS[step].map(renderField)}
+
+            {step === "login" && (
+              <div className={styles.forgotRow}>
                 <button
                   type="button"
-                  className={styles.toggleMode}
-                  onClick={() => {
-                    setMode(mode === "login" ? "register" : "login");
-                    setBanner(null);
-                  }}
+                  className={styles.forgot}
+                  onClick={() => go({ step: "forgot" })}
                 >
-                  {mode === "login" ? t.auth.login.toggleToRegister : t.auth.login.toggleToLogin}
+                  {a.forgotLink}
                 </button>
-                {mode === "login" && (
-                  <button
-                    type="button"
-                    className={styles.toggleMode}
-                    onClick={() => {
-                      setView({ name: "forgot" });
-                      setBanner(null);
-                    }}
-                  >
-                    {t.auth.login.forgotPasswordLink}
-                  </button>
+              </div>
+            )}
+
+            <div className={styles.actions}>
+              <button type="submit" className={styles.primary} disabled={run.sending}>
+                {run.sending && <span className={styles.spinner} aria-hidden="true" />}
+                <span>{run.sending ? texts.busy : texts.submit}</span>
+              </button>
+              <div aria-live="polite" className={styles.status}>
+                {run.slow && (
+                  <p className={styles.slow}>
+                    <IconClock />
+                    {a.slow}
+                  </p>
                 )}
               </div>
-            </form>
+            </div>
 
-            <GoogleSignIn onCredential={onGoogleCredential} />
-          </>
-        ) : view.name === "confirm" ? (
-          <form onSubmit={confirmForm.handleSubmit(onConfirmSubmit)} noValidate>
-            {view.notice && <p className={styles.tagline}>{view.notice}</p>}
-            <div className="field">
-              <label htmlFor="confirm-code">{t.auth.verifyEmail.codeLabel}</label>
-              <input
-                id="confirm-code"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                autoComplete="one-time-code"
-                placeholder="123456"
-                {...confirmForm.register("code", {
-                  required: true,
-                  validate: (v) => /^\d{6}$/.test(v.trim()) || t.auth.verifyEmail.codeInvalid,
-                })}
-              />
-              {confirmForm.formState.errors.code && (
-                <p className={styles.fieldError}>{confirmForm.formState.errors.code.message || t.auth.verifyEmail.codeInvalid}</p>
-              )}
-            </div>
-            <div className={styles.actions}>
+            {(step === "confirm" || step === "code" || step === "newpass") && (
               <button
-                type="submit"
-                className="primary"
-                disabled={confirmForm.formState.isSubmitting}
-                aria-busy={confirmForm.formState.isSubmitting}
+                type="button"
+                className={styles.secondary}
+                onClick={onResend}
+                disabled={run.sending || resending}
               >
-                {confirmForm.formState.isSubmitting ? (
-                  <>
-                    <Spinner /> {t.auth.verifyEmail.confirming}
-                  </>
-                ) : (
-                  t.auth.verifyEmail.submit
-                )}
+                <IconResend />
+                {step === "newpass" ? a.newCode : a.resend}
               </button>
-              <button type="button" className={styles.toggleMode} onClick={onResend} disabled={resending}>
-                {t.auth.resendCode.button}
-              </button>
-              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
-                {t.auth.verifyEmail.backToLogin}
-              </button>
-            </div>
+            )}
+
+            {step === "signup" && (
+              <p className={styles.terms}>
+                {a.terms.before}
+                <Link to="/terminos">{a.terms.terms}</Link>
+                {a.terms.middle}
+                <Link to="/privacidad">{a.terms.privacy}</Link>
+                {a.terms.after}
+              </p>
+            )}
           </form>
-        ) : view.name === "forgot" ? (
-          <form onSubmit={forgotForm.handleSubmit(onForgotSubmit)} noValidate>
-            <p className={styles.tagline}>{t.auth.forgotPassword.tagline}</p>
-            <div className="field">
-              <label htmlFor="forgot-email">{t.auth.login.emailLabel}</label>
-              <input
-                id="forgot-email"
-                type="email"
-                autoComplete="email"
-                placeholder={t.auth.login.emailPlaceholder}
-                {...forgotForm.register("email", {
-                  required: true,
-                  validate: (v) => EMAIL_RE.test(v.trim()) || t.auth.login.emailInvalid,
-                })}
-              />
-              {forgotForm.formState.errors.email && (
-                <p className={styles.fieldError}>{forgotForm.formState.errors.email.message || t.auth.login.emailInvalid}</p>
-              )}
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className="primary"
-                disabled={forgotForm.formState.isSubmitting}
-                aria-busy={forgotForm.formState.isSubmitting}
-              >
-                {forgotForm.formState.isSubmitting ? (
-                  <>
-                    <Spinner /> {t.auth.forgotPassword.submitting}
-                  </>
-                ) : (
-                  t.auth.forgotPassword.submit
-                )}
-              </button>
-              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
-                {t.auth.forgotPassword.backToLogin}
-              </button>
-            </div>
-          </form>
-        ) : view.name === "reset-code" ? (
-          <form onSubmit={resetCodeForm.handleSubmit(onVerifyCodeSubmit)} noValidate>
-            <p className={styles.tagline}>{t.auth.resetPassword.notice(view.email)}</p>
-            <div className="field">
-              <label htmlFor="reset-code">{t.auth.resetPassword.codeLabel}</label>
-              <input
-                id="reset-code"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                autoComplete="one-time-code"
-                placeholder="123456"
-                {...resetCodeForm.register("code", {
-                  required: true,
-                  validate: (v) => /^\d{6}$/.test(v.trim()) || t.auth.resetPassword.codeInvalid,
-                })}
-              />
-              {resetCodeForm.formState.errors.code && (
-                <p className={styles.fieldError}>
-                  {resetCodeForm.formState.errors.code.message || t.auth.resetPassword.codeInvalid}
-                </p>
-              )}
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className="primary"
-                disabled={resetCodeForm.formState.isSubmitting}
-                aria-busy={resetCodeForm.formState.isSubmitting}
-              >
-                {resetCodeForm.formState.isSubmitting ? (
-                  <>
-                    <Spinner /> {t.auth.resetPassword.verifying}
-                  </>
-                ) : (
-                  t.auth.resetPassword.verifyCode
-                )}
-              </button>
-              <button type="button" className={styles.toggleMode} onClick={onResendReset} disabled={resending}>
-                {t.auth.resetPassword.resendCode}
-              </button>
-              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
-                {t.auth.resetPassword.backToLogin}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={resetPasswordForm.handleSubmit(onResetPasswordSubmit)} noValidate>
-            <p className={styles.tagline}>{t.auth.resetPassword.codeVerifiedNotice}</p>
-            <div className="field">
-              <label htmlFor="reset-new-password">{t.auth.resetPassword.newPasswordLabel}</label>
-              <input
-                id="reset-new-password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••"
-                {...resetPasswordForm.register("newPassword", {
-                  required: t.auth.login.passwordRequired,
-                  validate: (v) => v.length >= 10 || t.auth.resetPassword.newPasswordTooShort,
-                })}
-              />
-              {resetPasswordForm.formState.errors.newPassword && (
-                <p className={styles.fieldError}>{resetPasswordForm.formState.errors.newPassword.message}</p>
-              )}
-            </div>
-            <div className="field">
-              <label htmlFor="reset-confirm-password">{t.auth.resetPassword.confirmPasswordLabel}</label>
-              <input
-                id="reset-confirm-password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••"
-                {...resetPasswordForm.register("confirmPassword", { required: t.auth.resetPassword.passwordMismatch })}
-              />
-              {resetPasswordForm.formState.errors.confirmPassword && (
-                <p className={styles.fieldError}>{resetPasswordForm.formState.errors.confirmPassword.message}</p>
-              )}
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className="primary"
-                disabled={resetPasswordForm.formState.isSubmitting}
-                aria-busy={resetPasswordForm.formState.isSubmitting}
-              >
-                {resetPasswordForm.formState.isSubmitting ? (
-                  <>
-                    <Spinner /> {t.auth.resetPassword.submitting}
-                  </>
-                ) : (
-                  t.auth.resetPassword.submit
-                )}
-              </button>
-              <button type="button" className={styles.toggleMode} onClick={backToLogin}>
-                {t.auth.resetPassword.backToLogin}
-              </button>
-            </div>
-          </form>
+
+          {isAuth && <GoogleSignIn onCredential={onGoogleCredential} signup={step === "signup"} />}
+        </div>
+
+        <footer className={styles.footer}>
+          <span>© {new Date().getFullYear()} RouteEV</span>
+          <Link to="/privacidad">{a.footer.privacy}</Link>
+          <Link to="/terminos">{a.footer.terms}</Link>
+          <a
+            href="https://instagram.com/routeev.uy"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className={styles.footerIcon}
+          >
+            <IconInstagram size={18} />
+          </a>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+type Message = { tone: "error" | "rule" | "ok" | "hint"; text: string };
+
+interface FieldProps {
+  id: string;
+  label: string;
+  optional?: string;
+  value: string;
+  onChange: (value: string) => void;
+  error: boolean;
+  message: Message | null;
+  type: "email" | "text" | "password";
+  inputMode?: "email" | "numeric";
+  autoComplete: string;
+  placeholder?: string;
+  maxLength?: number;
+  code?: boolean;
+  eye?: { shown: boolean; toggle: () => void; show: string; hide: string };
+}
+
+/** Label visible arriba, el campo, y debajo su mensaje (error, requisito o aclaración). */
+function Field({
+  id,
+  label,
+  optional,
+  value,
+  onChange,
+  error,
+  message,
+  type,
+  inputMode,
+  autoComplete,
+  placeholder,
+  maxLength,
+  code = false,
+  eye,
+}: FieldProps) {
+  const msgId = message ? `${id}-msg` : undefined;
+  const inputClass = [styles.input, code ? styles.inputCode : "", eye ? styles.inputPassword : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className={styles.field}>
+      <label htmlFor={id} className={styles.label}>
+        {label}
+        {optional && <span className={styles.optional}> {optional}</span>}
+      </label>
+      <div className={styles.inputWrap}>
+        <input
+          id={id}
+          className={inputClass}
+          type={type}
+          inputMode={inputMode}
+          autoComplete={autoComplete}
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={error || undefined}
+          aria-describedby={msgId}
+        />
+        {eye && (
+          <button
+            type="button"
+            className={styles.eye}
+            onClick={eye.toggle}
+            aria-label={eye.shown ? eye.hide : eye.show}
+            aria-pressed={eye.shown}
+            aria-controls={id}
+          >
+            {eye.shown ? <IconEyeOff /> : <IconEye />}
+          </button>
         )}
       </div>
+      {message && (
+        <p
+          id={msgId}
+          className={[
+            styles.msg,
+            message.tone === "error" ? styles.msgError : message.tone === "ok" ? styles.msgOk : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {message.tone === "error" && <IconAlert size={16} />}
+          {message.tone === "ok" && <IconCheck />}
+          {message.tone === "rule" && <IconCircle />}
+          <span>{message.text}</span>
+        </p>
+      )}
     </div>
   );
 }

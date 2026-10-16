@@ -30,3 +30,17 @@ dist-ssr
 .gstack/
 .sidecolors
 
+
+# Handoffs de diseño (referencias en HTML, no código de la app)
+design_handoff_bienvenida/
+design_handoff_landing/
+design_handoff_showroom/
+
+# Documentos de trabajo locales
+DESIGN.md
+guia-seo.md
+paleta-colores.md
+prompt-claude-design-paneles.md
+
+# Handoff del panel lateral de /app (referencias en HTML)
+panel/

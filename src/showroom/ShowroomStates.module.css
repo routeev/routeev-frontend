@@ -1,0 +1,171 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: var(--content-w);
+  margin: 0 auto;
+  padding: 48px 0 0;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skEyebrow,
+.skTitle,
+.skLine,
+.skCardName,
+.skCardSub {
+  border-radius: 6px;
+  background: var(--bg-track);
+}
+
+.skEyebrow {
+  width: 160px;
+  height: 14px;
+}
+
+.skTitle {
+  width: min(560px, 90%);
+  height: 44px;
+  border-radius: 10px;
+}
+
+.skLine {
+  width: min(420px, 70%);
+  height: 16px;
+  background: var(--bg-panel);
+}
+
+.skSearch {
+  max-width: 640px;
+  height: 56px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.skGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 104px;
+  padding: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.skCardName {
+  width: 55%;
+  height: 18px;
+}
+
+.skCardSub {
+  width: 35%;
+  height: 12px;
+}
+
+.slow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  width: var(--content-w);
+  margin: 0 auto;
+  padding: 72px 0 24px;
+}
+
+.errorCard,
+.notFoundCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--bg-panel);
+}
+
+.errorCard {
+  border: 1px solid var(--danger-line);
+}
+
+.notFoundCard {
+  border: 1px solid var(--border);
+}
+
+.errorIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+.cardTitle {
+  margin: 0;
+  font: 600 24px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.cardBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.browse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+@media (max-width: 899.98px) {
+  .loading {
+    padding-top: 28px;
+  }
+
+  .skGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .skCard {
+    height: 76px;
+    padding: 12px 14px;
+  }
+
+  .skCard:nth-child(n + 7) {
+    display: none;
+  }
+
+  .center {
+    padding-top: 40px;
+  }
+}

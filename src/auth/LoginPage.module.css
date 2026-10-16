@@ -1,120 +1,735 @@
+/* Login y registro. Siempre oscuro (ver theme.ts). Escritorio >= 900px: el
+   fondo ocupa toda la pantalla y la tarjeta va a la derecha, donde no tapa la
+   ruta animada. Celular: el fondo en una franja de 200px bajo el header y el
+   formulario sube como una hoja. */
+
 .page {
+  --content-w: min(1200px, calc(100% - 2 * clamp(20px, 4vw, 56px)));
+  /* Detrás de la tarjeta, para que el grafo gris no compita con el
+     formulario. No llega a la ruta. */
+  --login-veil: radial-gradient(
+    ellipse 34% 70% at 80% 52%,
+    rgba(var(--bg-rgb), 0.72),
+    rgba(var(--bg-rgb), 0) 72%
+  );
+  --radius-card: 20px;
+  --radius-sheet: 24px;
+  --radius-button: 16px;
+
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.bgWrap,
+.veil {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.veil {
+  background: var(--login-veil);
+}
+
+.accent {
+  color: var(--accent-text);
+}
+
+/* ---- Header: logo, volver al inicio e idioma. Sin menú: entra todo. ---- */
+
+.header {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 20px;
+  width: var(--content-w);
+  height: 64px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font: 700 21px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo img {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.headerEnd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.homeLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.homeLink:hover {
+  color: var(--text);
+}
+
+.homeShort {
+  display: none;
+}
+
+.langSeg {
+  display: flex;
+  height: 44px;
   overflow: hidden;
-  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(var(--bg-rgb), 0.6);
+}
+
+.langSeg button {
+  min-width: 44px;
+  height: 42px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 13px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.langSeg button[aria-pressed="true"] {
+  background: var(--bg-panel-raised);
+  color: var(--text);
+}
+
+.langSeg button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---- La tarjeta ---- */
+
+.main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  width: var(--content-w);
+  min-height: calc(100dvh - 64px);
+  margin: 0 auto;
+  padding: 24px 0 16px;
 }
 
 .card {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 380px;
-  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 400px;
+  max-width: 100%;
+  padding: 32px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-panel);
-  padding: 32px 28px;
+  border-radius: var(--radius-card);
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-float);
 }
 
-.backLink {
-  display: inline-block;
-  font-size: 12.5px;
-  color: var(--text-faint);
+/* Iniciar sesión | Crear cuenta: dos links reales, la URL acompaña. */
+.seg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-sunken);
+}
+
+.segItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font: 600 14px/1.2 var(--font-body);
+  text-align: center;
+  color: var(--text-muted);
   text-decoration: none;
-  margin-bottom: 18px;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
-.backLink:hover {
-  color: var(--accent-astar);
+.segItem:hover {
+  color: var(--text);
+}
+
+.segItem[aria-current="page"] {
+  background: var(--bg-panel-raised);
+  box-shadow: 0 0 0 1px var(--border-strong);
+  color: var(--text);
+}
+
+/* "Volver a iniciar sesión", arriba de los pasos intermedios. */
+.back {
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: -8px 0 -12px -6px;
+  padding: 0 10px 0 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-muted);
+  font: 500 14px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+.stepHead {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .eyebrow {
-  margin-bottom: 10px;
-}
-
-.brand {
-  font-size: 26px;
-  margin: 0 0 4px;
-}
-
-.tagline {
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
   font-size: 13px;
-  margin: 0 0 26px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
-.modeLabel {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 16px;
+.eyebrowDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.18);
 }
+
+.title {
+  margin: 0;
+  font: 600 28px/1.15 var(--font-display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  outline: none;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.subtitle strong {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* El contenedor de los avisos que se anuncian queda montado aunque esté
+   vacío. Vacío sale del flujo para no sumar un gap del formulario, pero sin
+   display:none: una región oculta así puede no anunciarse al llenarse. */
+.status {
+  display: flex;
+  flex-direction: column;
+}
+
+.status:empty {
+  position: absolute;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.noticeError {
+  border: 1px solid var(--danger-line);
+  background: var(--danger-soft);
+  color: var(--error-text);
+}
+
+.noticeError svg {
+  color: var(--danger-text);
+}
+
+.noticeInfo {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel-raised);
+  color: var(--text);
+}
+
+.noticeInfo svg {
+  color: var(--text-muted);
+}
+
+.noticeOk {
+  border: 1px solid rgba(52, 227, 168, 0.32);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.noticeOk svg {
+  color: var(--accent-astar);
+}
+
+/* ---- Campos ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.inputWrap {
+  position: relative;
+}
+
+/* Inter 16: menos de 16px hace que iOS haga zoom al enfocar. */
+.input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: 400 16px/1.2 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s;
+  /* Con el teclado abierto, al enfocar el último campo el botón principal
+     queda a la vista. */
+  scroll-margin-bottom: 120px;
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+/* El foco es un contorno aparte: el borde no cambia, así un campo con error
+   sigue rojo mientras se corrige. */
+.input:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.input[aria-invalid="true"],
+.input[aria-invalid="true"]:hover {
+  border-color: var(--danger);
+}
+
+.inputPassword {
+  padding-right: 50px;
+}
+
+.inputCode {
+  height: 56px;
+  font: 500 24px/1 var(--font-mono);
+  letter-spacing: 0.42em;
+}
+
+.eye {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.eye:hover {
+  color: var(--text);
+}
+
+.eye:focus-visible {
+  outline-offset: -2px;
+}
+
+.msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.msg svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.msgError {
+  color: var(--danger-text);
+}
+
+.msgOk {
+  color: var(--accent-text);
+}
+
+.forgotRow {
+  display: flex;
+  justify-content: flex-end;
+  margin: -14px 0 -8px;
+}
+
+.forgot {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--accent-text);
+  font: 500 14px/1.2 var(--font-body);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+/* ---- Botones ---- */
 
 .actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 6px;
 }
 
-.actions button[type="submit"] {
-  width: 100%;
-  padding: 11px;
+/* white-space normal: en inglés el texto no se corta, el botón crece en alto. */
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 20px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+  font: 600 16px/1.25 var(--font-body);
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.toggleMode {
-  background: transparent;
-  border: none;
+.primary:hover {
+  background: var(--button-primary-hover);
+}
+
+.primary:disabled {
+  cursor: progress;
+}
+
+.spinner {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(6, 35, 29, 0.25);
+  border-top-color: var(--button-primary-text);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.slow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
   color: var(--text-muted);
-  font-size: 12.5px;
-  text-decoration: underline;
-  padding: 4px;
+  text-wrap: pretty;
 }
 
-.toggleMode:hover {
-  border-color: transparent;
-  color: var(--accent-astar);
+.slow svg {
+  flex: none;
+  margin-top: 1px;
 }
 
-.fieldError {
-  margin: -6px 0 10px;
-  font-size: 12px;
-  color: var(--danger);
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-top: -8px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--text);
+  font: 600 15px/1.2 var(--font-body);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
-/* Aclaración de un campo opcional. Deliberadamente NO usa el color de
-   .fieldError: no es un problema, es una explicación, y teñirla de rojo haría
-   que "Nombre (opcional)" pareciera un campo mal llenado. */
-.fieldHint {
-  margin: 6px 0 0;
-  font-size: 12px;
+.secondary:hover:not(:disabled) {
+  border-color: var(--accent-astar);
+  color: var(--accent-text);
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.terms {
+  margin: -4px 0 0;
+  font-size: 13px;
   line-height: 1.5;
-  color: var(--text-faint);
+  color: var(--text-muted);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.terms a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.terms a:hover {
+  text-decoration-color: var(--text);
+}
+
+/* ---- Google (solo si el backend lo tiene configurado) ---- */
+
+.google {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .googleDivider {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  margin: 20px 0 14px;
-  color: var(--text-faint);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .googleDivider::before,
 .googleDivider::after {
   content: "";
-  flex: 1;
   height: 1px;
-  background: var(--border-soft);
+  background: var(--border);
 }
 
 .googleBtn {
   display: flex;
   justify-content: center;
+  min-height: 40px;
+}
+
+/* ---- Pie ---- */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 20px;
+  width: 400px;
+  max-width: 100%;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.footer > * {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--text);
+}
+
+.footer .footerIcon {
+  justify-content: center;
+  width: 44px;
+  margin: 0 -12px;
+}
+
+/* ---- Celular ---- */
+
+@media (max-width: 899.98px) {
+  /* El fondo en una franja bajo el header; scrollea con la página para que
+     con el teclado abierto se llegue a todo el formulario. */
+  .bgWrap {
+    position: absolute;
+    top: 56px;
+    bottom: auto;
+    height: 200px;
+  }
+
+  .veil {
+    display: none;
+  }
+
+  .header {
+    gap: 8px;
+    width: auto;
+    height: 56px;
+    padding: 0 16px 0 20px;
+  }
+
+  .logo {
+    gap: 9px;
+    font-size: 20px;
+  }
+
+  .logo img {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+
+  .homeLong {
+    display: none;
+  }
+
+  .homeShort {
+    display: inline;
+  }
+
+  /* La hoja: empieza en y=216 y tapa los últimos 40px de la franja. */
+  .main {
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    width: auto;
+    min-height: calc(100dvh - 216px);
+    margin-top: 160px;
+    padding: 24px 20px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    background: var(--bg-panel);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .footer {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .page *,
+  .page *::before,
+  .page *::after {
+    transition: none !important;
+  }
 }

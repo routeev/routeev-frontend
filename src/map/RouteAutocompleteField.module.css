@@ -1,264 +1,164 @@
-.slot {
-  display: grid;
-  /* El "x" de borrar solo se renderiza si hay un pin puesto -- grid-column
-     explicito en .clear/.pin (mas abajo) para que .pin quede siempre en la
-     ultima columna sin importar si .clear esta en el DOM o no (el
-     auto-placement por orden de aparicion lo hubiera corrido a la columna
-     de .clear cuando falta, con el ancho equivocado). */
-  /* Las columnas de los botones son 10px mas anchas que el boton (28+10 y
-     36+10) porque el margin de un item de grid va ADENTRO de su columna: esos
-     10px son el antiguo `gap: 10px`, mudado a margin-left en .clear/.pin.
-     ¿Por que mudarlo? Porque el input necesita padding horizontal REAL (ver
-     .slot input, abajo) y el gap del grid vive AFUERA de la caja del input:
-     con gap, el texto arrancaba pegado al borde de su propia caja. Con las
-     columnas asi, cada elemento cae exactamente donde caia antes. */
-  grid-template-columns: 12px 1fr 38px 46px;
-  align-items: center;
-  column-gap: 0;
-}
+/* Una fila del bloque origen/destino (ver PlanView.module.css .odCard). La
+   tarjeta es una grilla: columna 1 las viñetas, columna 2 estas filas,
+   columna 3 el botón de invertir. Fila 1 origen, fila 2 destino, filas 3 y 4
+   los mensajes de cada campo cuando los hay. */
 
-.autocomplete {
-  position: relative;
+.row {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
   min-width: 0;
+  height: 52px;
 }
 
-.slot input {
-  width: 100%;
-  background: none;
-  border: none;
-  /* El radio no se ve (el input no tiene fondo ni borde propio) pero SI lo
-     sigue el anillo de foco de :focus-visible, que si no quedaba con esquinas
-     en angulo recto, distinto del resto de la app. */
-  border-radius: var(--radius-sm);
-  /* 10px a los costados: sin esto el texto (y sobre todo el anillo verde de
-     foco, que ademas estaba con outline-offset negativo) quedaba literalmente
-     pegado al borde de la caja mientras se escribia -- el unico input de la
-     app sin aire adentro. Reportado como "el texto queda contra el borde". */
-  padding: 12px 10px;
-  font-weight: 500;
-  text-overflow: ellipsis;
+.rowOrigin {
+  grid-row: 1;
+  border-bottom: 1px solid var(--border);
 }
 
-.slot input:hover {
+.rowDest {
+  grid-row: 2;
+}
+
+/* Reset de la regla global de input (base.css): acá el campo no lleva caja
+   propia, la caja es la tarjeta entera. */
+.input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: 500 15px/1 var(--font-body);
+  color: var(--text);
+}
+
+.input:hover {
   border-color: transparent;
 }
 
-.slot input:focus-visible {
-  /* 0, no -2px: con el padding de arriba el anillo ya cae bien lejos del
-     texto y encima traza exactamente la caja del campo, que es lo que se
-     espera de un input enfocado. */
-  outline-offset: 0;
+.input:focus-visible {
+  outline: none;
 }
 
-.marker {
-  width: 10px;
-  height: 10px;
-  justify-self: center;
-  flex-shrink: 0;
+/* El foco del teclado se marca en la fila entera, no en un input sin borde. */
+.row:has(.input:focus-visible) {
+  box-shadow: inset 0 -2px 0 var(--accent-astar);
 }
 
-.markerOrigin {
-  border-radius: 50%;
-  background: var(--point-origin);
-}
-
-.markerDest {
-  border-radius: 2px;
-  background: var(--point-dest);
-}
-
-.pin {
-  grid-column: 4;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin-left: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg-panel-raised);
-  /* Cada rol con su color, el mismo de su viñeta (.markerOrigin/.markerDest) y
-     el de su chincheta en el mapa. Antes las dos eran var(--text-faint): dos
-     iconos grises identicos que no se leian como botones ni decian a cual de
-     los dos campos pertenecian. */
-  color: var(--point-origin);
-}
-
-.pinDest {
-  color: var(--point-dest);
-}
-
-/* El cuadrado visible mide 36px porque la columna del grid mide 36px, pero un
-   dedo no apunta como un mouse: este pseudo-elemento estira el area REAL de
-   toque a 40px sin agrandar el boton ni descolocar la grilla. Mismo criterio
-   que button.small en base.css. Los 2px que se comen para cada lado caben en
-   el margin-left de 10px, asi que no pisa el "x" de borrar. */
-.pin::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: var(--radius-sm);
-}
-
-/* "Estoy esperando que toques el mapa". Cambia fondo, borde, color Y forma del
-   icono (chincheta -> mira, ver RouteAutocompleteField.tsx) mas el halo: el
-   estado no se comunica nunca solo por color. */
-.pin.pinActive {
-  background: var(--accent-astar);
-  border-color: var(--accent-astar);
-  color: #06231d;
-  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.22);
-}
-
-/* Sin nadie marcando activamente, este es el rol que se lleva el proximo toque
-   del mapa. Es una pista, no un estado apretado: por eso solo el borde. */
-.pin.pinNext {
-  border-color: var(--text-faint);
-}
-
-/* El fill por default de un <path>/<circle> de SVG es negro (initial value
-   de la spec), no currentColor -- sin esto el icono ignoraba por completo
-   el `color` de .pin/.pinDest/.pinActive de arriba y quedaba siempre
-   negro, casi invisible contra el panel oscuro. */
-.pin svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
-
-.clear {
-  grid-column: 3;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin-left: 10px;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border-color: transparent;
-  background: none;
+.input::placeholder {
   color: var(--text-faint);
 }
 
-/* Mismo estirado del area de toque que .pin, con mas margen porque el cuadrado
-   visible es mas chico (28px -> 40px). Cabe en el column-gap de 10px que
-   .clear/.pin llevan como margin-left. */
-.clear::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: var(--radius-sm);
-}
-
-.clear:hover {
-  color: var(--danger);
-  border-color: transparent;
-}
-
-.clear svg {
-  width: 15px;
-  height: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
+/* En mobile base.css sube los inputs a 16px para que iOS no haga zoom al
+   enfocarlos; acá ya es 15px en escritorio y se respeta ese mínimo. */
 @media (max-width: 640px) {
-  .slot {
-    /* Mismo criterio que arriba: 40px de boton + los 10px de margin-left. */
-    grid-template-columns: 12px 1fr 50px 50px;
-  }
-  .pin {
-    width: 40px;
-    height: 40px;
-  }
-  .clear {
-    width: 40px;
-    height: 40px;
-  }
-  .clear svg {
-    width: 17px;
-    height: 17px;
-  }
-  /* Ya miden 40px de verdad en mobile: el estirado deja de hacer falta y solo
-     traeria solapes entre los dos botones. */
-  .pin::after,
-  .clear::after {
-    inset: 0;
+  .input {
+    font-size: 16px;
   }
 }
 
-.pin:hover {
-  border-color: var(--accent-astar);
+.iconBtn {
+  flex: none;
+  width: 40px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--text-muted);
 }
 
+.iconBtn:hover {
+  border-color: transparent;
+  background: var(--overlay-hover);
+  color: var(--text);
+}
+
+.pinActive,
+.pinActive:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* ---- Sugerencias ---- */
+
+/* Posicionada contra la tarjeta (no contra la fila): cae debajo del bloque
+   entero y con su mismo ancho, sea del origen o del destino. */
 .list {
   position: absolute;
   top: calc(100% + 6px);
-  /* -24 y no -34: el input ahora arranca 10px mas a la izquierda (el gap del
-     grid se volvio padding del propio input, ver .slot arriba), asi que la
-     lista se corre lo mismo para seguir cayendo alineada con el panel. */
-  left: -24px;
-  right: -12px;
+  left: 0;
+  right: 0;
   z-index: 20;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   list-style: none;
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
   box-shadow: var(--shadow-float);
-  max-height: 260px;
+  max-height: 300px;
   overflow-y: auto;
-  /* Los nombres de calle largos llegan hasta el borde derecho y la barra de
-     scroll de escritorio se dibuja encima. Misma corrección que en
-     StationsPanel .list y TripDashboard .dashboard. */
-  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .item {
-  padding: 9px 10px;
-  font-size: 13px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  color: var(--text);
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font: 500 15px/1.2 var(--font-body);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .item:hover,
 .itemActive {
-  background: var(--bg);
+  background: var(--overlay-hover);
+}
+
+.itemIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
 }
 
 .itemGeocode {
-  border-top: 1px solid var(--border);
   margin-top: 4px;
-  padding-top: 10px;
-  color: var(--accent-astar);
-  font-weight: 500;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 10px 10px;
+  color: var(--accent-text);
+  font-size: 14px;
+}
+
+.itemGeocode .itemIcon {
+  color: var(--accent-text);
 }
 
 .itemEmpty {
   color: var(--text-faint);
+  font-size: 14px;
+  font-weight: 400;
   cursor: default;
 }
 
-/* Sugerencia con tipo: nombre + etiqueta (Departamento / Ciudad / Calle) y
-   una segunda linea que dice a donde lleva. Ver map/lugares.ts. */
 .itemBody {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  width: 100%;
+  flex: 1;
 }
 
 .itemMain {
@@ -275,54 +175,61 @@
 }
 
 .itemDetail {
-  font-size: 11.5px;
+  font: 400 13px/1.2 var(--font-body);
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Qué es cada sugerencia: departamento, ciudad o calle (ver map/lugares.ts). */
 .kind {
   flex-shrink: 0;
   margin-left: auto;
-  padding: 1px 7px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 1.5;
+  height: 20px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font: 500 12px/1 var(--font-body);
+  color: var(--text-muted);
 }
 
 .kindDepartment {
-  color: var(--accent-astar);
+  border-color: var(--accent-astar);
+  color: var(--accent-text);
 }
 
-.kindCity {
-  color: var(--text);
-}
-
+.kindCity,
 .kindStreet {
-  color: var(--text-faint);
-  font-weight: 500;
+  color: var(--text-muted);
 }
+
+/* ---- Mensaje del campo ("Encontrado: ...", errores de geocodificación) ---- */
 
 .result {
-  margin-top: 8px;
-  font-size: 12px;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 8px 4px 6px;
+  border-top: 1px solid var(--border);
+  font: 400 13px/1.45 var(--font-body);
   color: var(--text-muted);
-  line-height: 1.5;
-  padding: 8px 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  text-wrap: pretty;
+}
+
+.resultOrigin {
+  grid-row: 3;
+}
+
+.resultDest {
+  grid-row: 4;
 }
 
 .resultWarn {
-  color: var(--accent-dijkstra);
-  border-color: var(--accent-dijkstra-dim);
+  color: var(--warn-text);
 }
 
 .resultError {
-  color: var(--danger);
-  border-color: var(--danger);
+  color: var(--danger-text);
 }

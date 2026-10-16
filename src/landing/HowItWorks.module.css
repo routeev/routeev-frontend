@@ -1,0 +1,334 @@
+.section {
+  padding: 0 0 clamp(72px, 8vw, 120px);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: var(--content-w);
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+}
+
+.title {
+  margin: 0;
+  font: 600 clamp(32px, 3.4vw, 48px)/1.06 var(--font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.body {
+  max-width: 26em;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* 4 columnas, 2 o 1, nunca 3 + 1 suelta. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 1079.98px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 599.98px) {
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 22px;
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.visual {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 128px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-soft);
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.stepNum {
+  font: 500 14px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.stepTitle {
+  margin: 0;
+  font: 600 20px/1.25 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.stepBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* ---- 01: buscador ---- */
+
+.searchVisual {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 -2px;
+  font-size: 14px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.searchBox svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 15px;
+  margin-left: 1px;
+  vertical-align: -2px;
+  background: var(--accent-astar);
+}
+
+.searchResult {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 4px;
+}
+
+.carTile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.capacity {
+  margin-left: auto;
+  font: 500 13px/1 var(--font-display);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ---- 02: origen y destino ---- */
+
+.pointsVisual {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.originDot {
+  justify-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--point-origin);
+}
+
+.pointName {
+  line-height: 30px;
+}
+
+.pointsLine {
+  justify-self: center;
+  width: 0;
+  height: 22px;
+  border-left: 1.5px dashed var(--border-strong);
+}
+
+.pointsDivider {
+  height: 22px;
+  margin-bottom: 11px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.destDiamond {
+  justify-self: center;
+  width: 9px;
+  height: 9px;
+  background: var(--point-dest);
+  transform: rotate(45deg);
+}
+
+/* ---- 03: la ruta con su parada ---- */
+
+.routeVisual {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.miniRoute {
+  position: relative;
+  height: 22px;
+}
+
+.miniLine {
+  position: absolute;
+  top: 10px;
+  right: 6px;
+  left: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-astar);
+}
+
+.miniOrigin {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--point-origin);
+  box-shadow: 0 0 0 3px var(--bg-sunken);
+}
+
+.miniStop {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 6px;
+  background: var(--warn);
+  color: var(--on-warn);
+  font: 600 12px/1 var(--font-display);
+  box-shadow: 0 0 0 3px var(--bg-sunken);
+}
+
+.miniDest {
+  position: absolute;
+  top: 6px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  background: var(--point-dest);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 3px var(--bg-sunken);
+}
+
+.routeMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 500 14px/1.2 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 04: batería al llegar ---- */
+
+.arriveVisual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.arriveRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.arriveValue {
+  font: 500 40px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.arriveUnit {
+  margin-left: 2px;
+  font-size: 20px;
+  color: var(--text-muted);
+}
+
+.arriveTag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-track);
+}
+
+.fill {
+  width: 24%;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent-astar);
+}

@@ -33,7 +33,7 @@ export function useCalculateRoute() {
         destino: { lat: destination.lat, lon: destination.lon },
         vehicle_id: state.selectedVehicleId!,
         start_battery_kwh: startBatteryKwh,
-        ...(state.cargadorEnDestino ? {} : { cargador_en_destino: false }),
+        ...(state.cargadorEnDestino === false ? { cargador_en_destino: false } : {}),
         ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
       };
       const v2Result = await planRoute(v2Payload);
@@ -53,6 +53,10 @@ export function useCalculateRoute() {
   return {
     calculate: () => mutation.mutate(),
     isPending: mutation.isPending,
+    // Cuándo arrancó el cálculo en curso: el aviso de "está tardando" se ata a
+    // este valor y no a un booleano, así un cálculo nuevo no hereda el aviso
+    // encendido del anterior.
+    startedAt: mutation.submittedAt,
     error: mutation.error instanceof Error ? mutation.error.message : null,
   };
 }

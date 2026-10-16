@@ -1,0 +1,254 @@
+.wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Buscador, filtros y conteo: fijos arriba, la lista scrollea por debajo. */
+.controls {
+  flex: none;
+  padding: 12px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: inherit;
+}
+
+.search:focus-within {
+  border-color: var(--border-strong);
+}
+
+/* Reset de la regla global de input: la caja es el label. */
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: 400 15px/1 var(--font-body);
+  color: var(--text);
+}
+
+.searchInput:hover {
+  border-color: transparent;
+}
+
+.searchInput:focus-visible {
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-faint);
+}
+
+@media (max-width: 640px) {
+  .searchInput {
+    font-size: 16px;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+
+.filterBtn {
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.filterBtn:hover {
+  border-color: transparent;
+}
+
+.filterPill {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  font: 500 13px/1 var(--font-body);
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.filterBtn:hover .filterPill {
+  border-color: var(--border-strong);
+}
+
+.filterBtn[aria-pressed="true"] .filterPill {
+  border-color: var(--accent-astar);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.count {
+  margin: 0;
+  font: 400 13px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+/* ---- Lista ---- */
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 8px 8px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.row:hover {
+  border-color: transparent;
+  background: var(--overlay-hover);
+}
+
+.rowIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rowName {
+  font: 500 15px/1.3 var(--font-body);
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.rowSub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font: 400 13px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.privTag {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  font: 500 12px/1 var(--font-body);
+  color: var(--text-muted);
+}
+
+.rowMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.kw {
+  font: 500 15px/1.2 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kw > span {
+  font-size: 12px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 400 12px/1 var(--font-body);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 24px 12px;
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ---- Falló la carga ---- */
+
+.failed {
+  margin: 0;
+  padding: 24px 20px;
+  border-radius: 16px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.failedIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  display: grid;
+  place-items: center;
+}
+
+.failedTitle {
+  margin: 0;
+  font: 600 16px/1.3 var(--font-display);
+  color: var(--text);
+}

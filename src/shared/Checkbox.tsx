@@ -11,7 +11,7 @@ interface CheckboxProps {
       <label> sobre un <input> real adentro -- sin necesitar id/htmlFor. */
   label: ReactNode;
   /** Va en el <label> raíz -- reemplaza el className que antes recibía el
-      Field de cada pantalla (SearchControls/SimulationForm/TripDashboard). */
+      Field de cada pantalla (hoy, TripDashboard). */
   className?: string;
   disabled?: boolean;
   "aria-describedby"?: InputHTMLAttributes<HTMLInputElement>["aria-describedby"];
@@ -21,7 +21,7 @@ interface CheckboxProps {
  * Checkbox propio, sobre un <input type="checkbox"> REAL -- antes era el
  * Checkbox de @headlessui/react, un <span role="checkbox"> sintético. Se
  * sacó junto con el resto de esa librería: era el 90% del chunk más pesado
- * de toda la app (~326KB comprimidos, ver Select.tsx) y se cargaba en /app
+ * de toda la app (~326KB comprimidos) y se cargaba en /app
  * aunque solo hiciera falta para este tilde y el selector de vehículo.
  *
  * El tilde en Firefox (antes fallaba con ::after sobre el <input> mismo, con

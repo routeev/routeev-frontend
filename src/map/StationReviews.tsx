@@ -9,13 +9,12 @@ import {
   type StationReview,
 } from "../api/stationReviews";
 import { useTranslation } from "../i18n/LanguageProvider";
-import { Banner } from "../shared/Banner";
-import buttons from "../shared/buttons.module.css";
 import { formatDate } from "../shared/format";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
-import { RatingSummary } from "./RatingSummary";
+import { IconCamera } from "./panelIcons";
 import { Stars, StarPicker } from "./Stars";
 import { stationReviewPhotoQueryKey, useStationReviewPhoto } from "./useStationReviewPhoto";
+import ui from "./panel.module.css";
 import styles from "./StationReviews.module.css";
 
 interface StationReviewsProps {
@@ -25,6 +24,7 @@ interface StationReviewsProps {
 export function StationReviews({ nodeId }: StationReviewsProps) {
   const { t } = useTranslation();
   const sr = t.map.stationReviews;
+  const sp = t.map.panel.stations;
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["stationReviews", nodeId], queryFn: () => getStationReviews(nodeId) });
   // Con reseña propia ya publicada, lo que se muestra es la reseña -- no el
@@ -42,25 +42,56 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
     queryClient.invalidateQueries({ queryKey: ["stationReviewSummaries"] });
   }
 
-  if (query.isLoading) return <p className="hint">{sr.loading}</p>;
-  if (query.isError) return <Banner variant="error">{sr.loadError}</Banner>;
-  if (!query.data) return null;
+  const head = (count: number | null) => (
+    <div className={styles.head}>
+      <h3 className={ui.sectionTitle}>{sp.reviews}</h3>
+      {count != null && count > 0 && <span className={styles.count}>{sp.reviewCount(count)}</span>}
+    </div>
+  );
+
+  if (query.isLoading) {
+    return (
+      <section className={styles.wrap}>
+        {head(null)}
+        <p className={ui.muted}>{sr.loading}</p>
+      </section>
+    );
+  }
+  if (query.isError || !query.data) {
+    return (
+      <section className={styles.wrap}>
+        {head(null)}
+        {query.isError && (
+          <p role="alert" className={ui.alertDanger}>
+            <span className={ui.alertText}>{sr.loadError}</span>
+          </p>
+        )}
+      </section>
+    );
+  }
 
   const { summary, reviews } = query.data;
   const myReview = reviews.find((r) => r.is_own) ?? null;
   const otherReviews = reviews.filter((r) => !r.is_own);
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.summaryLine}>
-        {summary.count > 0 ? (
-          <RatingSummary summary={summary} size={14} />
-        ) : (
-          <span className="hint" style={{ margin: 0 }}>
-            {sr.noReviewsYet}
-          </span>
-        )}
-      </div>
+    <section className={styles.wrap}>
+      {head(summary.count)}
+
+      {reviews.length === 0 && (
+        <div className={styles.empty}>
+          <p className={ui.cardTitle}>{sp.noReviewsTitle}</p>
+          <p className={ui.muted}>{sp.noReviewsBody}</p>
+        </div>
+      )}
+
+      {otherReviews.length > 0 && (
+        <ul className={styles.list}>
+          {otherReviews.map((r) => (
+            <ReviewItem key={r.id} review={r} />
+          ))}
+        </ul>
+      )}
 
       {myReview && !editing ? (
         <MyReview review={myReview} onEdit={() => setEditing(true)} />
@@ -77,15 +108,7 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
           onCancel={myReview ? () => setEditing(false) : undefined}
         />
       )}
-
-      {otherReviews.length > 0 && (
-        <ul className={styles.list}>
-          {otherReviews.map((r) => (
-            <ReviewItem key={r.id} review={r} />
-          ))}
-        </ul>
-      )}
-    </div>
+    </section>
   );
 }
 
@@ -107,7 +130,7 @@ function MyReview({ review, onEdit }: { review: StationReview; onEdit: () => voi
       {photoUrl && <img src={photoUrl} alt="" className={styles.itemPhoto} />}
       <div className={styles.mineFooter}>
         <span className={styles.itemDate}>{formatDate(review.updated_at)}</span>
-        <button type="button" className="ghost small" onClick={onEdit}>
+        <button type="button" className={ui.btnOutline} onClick={onEdit}>
           Editar
         </button>
       </div>
@@ -201,6 +224,7 @@ function ReviewForm({ nodeId, existing, onSaved, onCancel }: ReviewFormProps) {
         className={styles.textarea}
         placeholder={sr.commentPlaceholder}
         maxLength={1000}
+        rows={3}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
@@ -208,17 +232,24 @@ function ReviewForm({ nodeId, existing, onSaved, onCancel }: ReviewFormProps) {
       {existing?.has_photo && photoUrl && (
         <div className={styles.photoPreviewRow}>
           <img src={photoUrl} alt="" className={styles.photoPreview} />
-          <button type="button" className="ghost small" disabled={busy} onClick={() => removePhoto.mutate()}>
+          <button type="button" className={ui.btnOutline} disabled={busy} onClick={() => removePhoto.mutate()}>
             {sr.removePhoto}
           </button>
         </div>
       )}
 
-      {error && <Banner variant="error">{error}</Banner>}
+      {error && (
+        <p role="alert" className={ui.alertDanger}>
+          <span className={ui.alertText}>{error}</span>
+        </p>
+      )}
 
       <div className={styles.formActions}>
+        {/* La foto se sube sobre una reseña que ya existe (la API la cuelga
+            de la reseña), por eso recién aparece después de publicar. */}
         {existing && (
-          <label className={buttons.ghost}>
+          <label className={[ui.btnOutline, styles.photoBtn].join(" ")}>
+            <IconCamera />
             {existing.has_photo ? sr.changePhoto : sr.addPhoto}
             <input
               type="file"
@@ -233,19 +264,21 @@ function ReviewForm({ nodeId, existing, onSaved, onCancel }: ReviewFormProps) {
             />
           </label>
         )}
-        {onCancel && (
-          <button type="button" className="ghost small" disabled={busy} onClick={onCancel}>
-            Cancelar
+        <span className={styles.actionsEnd}>
+          {existing && (
+            <button type="button" className={ui.btnOutline} disabled={busy} onClick={() => removeReview.mutate()}>
+              {sr.delete}
+            </button>
+          )}
+          {onCancel && (
+            <button type="button" className={ui.btnOutline} disabled={busy} onClick={onCancel}>
+              Cancelar
+            </button>
+          )}
+          <button type="submit" className={[ui.btnOutline, ui.btnStrong].join(" ")} disabled={busy}>
+            {upsert.isPending ? sr.saving : existing ? sr.update : sr.publish}
           </button>
-        )}
-        <button type="submit" className="primary small" disabled={busy}>
-          {upsert.isPending ? sr.saving : existing ? sr.update : sr.publish}
-        </button>
-        {existing && (
-          <button type="button" className="ghost small" disabled={busy} onClick={() => removeReview.mutate()}>
-            {sr.delete}
-          </button>
-        )}
+        </span>
       </div>
     </form>
   );
@@ -257,11 +290,11 @@ function ReviewItem({ review }: { review: StationReview }) {
     <li className={styles.item}>
       <div className={styles.itemHeader}>
         <span className={styles.itemUser}>{review.username}</span>
-        <Stars value={review.rating} size={12} />
+        <span className={styles.itemDate}>{formatDate(review.updated_at)}</span>
       </div>
+      <Stars value={review.rating} size={14} />
       {review.comment && <p className={styles.itemComment}>{review.comment}</p>}
       {photoUrl && <img src={photoUrl} alt="" className={styles.itemPhoto} />}
-      <span className={styles.itemDate}>{formatDate(review.updated_at)}</span>
     </li>
   );
 }

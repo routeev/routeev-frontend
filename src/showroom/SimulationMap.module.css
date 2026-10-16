@@ -1,31 +1,34 @@
+/* Mapa del resultado de la simulación. Colores fijos del mapa oscuro: el
+   showroom es siempre oscuro (ver la nota al final de tokens.css). */
+
 .wrap {
-  position: relative;
-  border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border);
-  /* Mismo arreglo que .mapWrap en MapPage.module.css: leaflet.css le pone
-     z-index 400-1000 a los panes/controles de adentro, y sin un contexto de
-     apilamiento propio esos números compiten en el contexto raíz contra el
-     z-index 20 del header sticky del sitio (SiteHeader) -- al scrollear la
-     ficha, el mapa se dibujaba ENCIMA del header (reporte real, con
-     captura). `isolation: isolate` encierra todos esos z-index acá adentro
-     sin depender de position/z-index propios. */
+  border-radius: 16px;
+  background: var(--bg-panel);
+  /* leaflet.css le pone z-index 400-1000 a sus capas y controles: sin un
+     contexto de apilamiento propio compiten con el header pegado arriba y el
+     mapa se dibujaba encima al scrollear. */
   isolation: isolate;
 }
 
+.mapBox {
+  position: relative;
+  aspect-ratio: 760 / 580;
+}
+
 .map {
-  height: 280px;
-  background: var(--bg);
+  width: 100%;
+  height: 100%;
+  background: #0b0e12;
 }
 
 .map :global(.leaflet-popup-content),
 .map :global(.leaflet-control) {
-  font-family: var(--font-body, inherit);
+  font-family: var(--font-body);
 }
 
-/* Los botones de zoom salen con el tema claro de leaflet.css: sobre este mapa
-   oscuro se ven como un recorte de otra pagina. Y 30px de lado es poco para un
-   dedo -- 40px es el minimo que usamos en toda la app. */
+/* Los botones de zoom de leaflet.css son claros y de 30px: acá oscuros y de 40. */
 .map :global(.leaflet-bar) {
   border: 1px solid var(--border);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
@@ -34,152 +37,158 @@
 .map :global(.leaflet-bar a) {
   width: 40px;
   height: 40px;
-  line-height: 40px;
   font-size: 20px;
-  background: rgba(10, 14, 19, 0.9);
-  color: var(--text);
+  line-height: 40px;
+  background: rgba(var(--bg-rgb), 0.9);
   border-bottom-color: var(--border);
+  color: var(--text);
 }
 
 .map :global(.leaflet-bar a:hover),
 .map :global(.leaflet-bar a:focus-visible) {
   background: var(--bg-panel-raised);
-  color: var(--accent-astar);
+  color: var(--accent-text);
 }
 
 .map :global(.leaflet-bar a.leaflet-disabled) {
-  background: rgba(10, 14, 19, 0.9);
+  background: rgba(var(--bg-rgb), 0.9);
   color: var(--text-faint);
 }
 
-.mapActions {
+/* ---- Ver todo / repetir ---- */
+
+.actions {
   position: absolute;
+  z-index: 500;
   top: 10px;
   right: 10px;
-  z-index: 500;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 6px;
 }
 
-.mapAction {
-  min-height: 40px;
-  padding: 7px 12px;
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(var(--bg-rgb), 0.88);
   font-size: 12px;
-  background: rgba(10, 14, 19, 0.82);
-  backdrop-filter: blur(3px);
+  font-weight: 600;
+  color: var(--text);
 }
 
+.action:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.action:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* ---- La batería en vivo ---- */
+
 .live {
-  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
 }
 
 .liveRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 22px;
-  margin-bottom: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.liveItem {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.liveItem span {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
-}
-
-.liveItem b {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent-astar);
-}
-
-.progressTrack {
-  position: relative;
-  height: 9px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 5px;
+.status {
+  min-width: 0;
   overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.status:global(.charging) {
+  color: var(--warn-text);
+}
+
+.status:global(.done) {
+  color: var(--accent-text);
+}
+
+.battery b {
+  font: 600 18px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.progress {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg-track);
 }
 
 .progressFill {
   position: absolute;
   top: 0;
   left: 0;
-  height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent-astar-dim), var(--accent-astar));
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent-astar);
   transition: width 0.12s linear;
 }
 
+/* Cargando en una parada: ámbar, como el cuadrado de la parada. */
 .progressFill:global(.charging) {
-  background: linear-gradient(90deg, var(--accent-dijkstra-dim), var(--accent-dijkstra));
+  background: var(--warn);
 }
 
-.status {
-  margin-top: 6px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-}
+/* ---- Marcadores (DivIcon) ---- */
 
-.status:global(.charging) {
-  color: var(--accent-dijkstra);
-}
-
-.status:global(.done) {
-  color: var(--accent-astar);
-}
-
-/* --- Marcadores (DivIcon) ---------------------------------------------- */
-
-.nodeMarker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #06231d;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+.originMarker {
   width: 100%;
   height: 100%;
+  border: 3.5px solid var(--point-origin);
+  border-radius: 50%;
+  background: #0b0e12;
+  box-shadow: 0 0 0 2px #0b0e12;
 }
 
-.origin {
-  background: var(--point-origin);
-}
-
-.destination {
+.destMarker {
+  width: 12px;
+  height: 12px;
+  margin: 1px;
+  border-radius: 2px;
   background: var(--point-dest);
-  color: #1c0f33;
+  box-shadow:
+    0 0 0 3px #0b0e12,
+    0 0 14px rgba(177, 140, 242, 0.5);
+  transform: rotate(45deg);
 }
 
-.stationMarker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent-dijkstra);
-  border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 8px rgba(242, 161, 84, 0.6);
+.stopMarker {
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
-}
-
-.stationMarker svg {
-  width: 11px;
-  height: 11px;
-  fill: #241d00;
+  border-radius: 6px;
+  background: var(--warn);
+  box-shadow: 0 0 0 3px #0b0e12;
+  font: 700 12px/1 var(--font-display);
+  color: var(--on-warn);
 }
 
 .carMarker {
@@ -219,12 +228,12 @@
 
 .carIcon {
   position: absolute;
+  z-index: 2;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -58%);
   line-height: 0;
-  z-index: 2;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+  transform: translate(-50%, -58%);
 }
 
 .carIcon svg {
@@ -236,22 +245,5 @@
 @media (prefers-reduced-motion: reduce) {
   .carPulse {
     animation: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .map {
-    height: 220px;
-  }
-  .mapActions {
-    top: 8px;
-    right: 8px;
-    /* Sin el ancho acotado, los dos botones en una fila tapan medio mapa en un
-       celular: asi se apilan y el mapa sigue mirandose. */
-    max-width: 62%;
-  }
-  .mapAction {
-    padding: 6px 10px;
-    font-size: 11px;
   }
 }

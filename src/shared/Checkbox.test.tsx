@@ -3,7 +3,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Checkbox } from "./Checkbox";
 
-/** Controlado, igual que en el uso real (TripDashboard, SearchControls, SimulationForm). */
+/** Controlado, igual que en el uso real (TripDashboard). */
 function Host({ onChange }: { onChange?: (v: boolean) => void }) {
   const [checked, setChecked] = useState(false);
   return (

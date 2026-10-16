@@ -31,10 +31,10 @@ const URUGUAY_BOUNDS: [[number, number], [number, number]] = [
   [-30.05, -53.1],
 ];
 
-// El mapa cambia de tamaño real cuando el panel "Datos del viaje" se
-// colapsa/expande en pantalla angosta (ver .dashboardWrap/.mapWrap en
-// MapPage.module.css: ahora comparten alto real, no es un panel flotando
-// encima). Sin este reencuadre el recorrido calculado podía quedar cortado
+// El mapa cambia de tamaño real cuando la hoja inferior del panel (ver
+// useBottomSheet y .mainArea en MapPage.module.css) cambia de altura en
+// pantalla angosta: el mapa termina donde ella empieza, no queda tapado
+// por detrás. Sin este reencuadre el recorrido calculado podía quedar cortado
 // o descentrado dentro del espacio nuevo -- se llama tanto al terminar de
 // calcular como en cada resize del contenedor (ver CaptureMap abajo).
 function refitToRoute(map: L.Map) {
@@ -171,15 +171,14 @@ function CaptureMap({ onLocateFail }: CaptureMapProps) {
 
   useEffect(() => {
     // Leaflet mide su contenedor una sola vez al montar y no vuelve a
-    // hacerlo solo porque el layout de alrededor cambie de tamaño (p. ej.
-    // AppTopbar crece cuando se abre el menú móvil, o el bottom sheet del
-    // sidebar se expande/colapsa en mobile): sin este aviso explícito, el
-    // mapa queda con el tamaño viejo cacheado y los tiles se ven
-    // cortados/desplazados hasta el próximo resize real de la ventana.
+    // hacerlo solo porque el layout de alrededor cambie de tamaño (p. ej. la
+    // hoja inferior del panel se expande/colapsa en mobile): sin este aviso
+    // explícito, el mapa queda con el tamaño viejo cacheado y los tiles se
+    // ven cortados/desplazados hasta el próximo resize real de la ventana.
     const container = map.getContainer();
     const observer = new ResizeObserver(() => {
       map.invalidateSize();
-      // El resize puede venir de .dashboardWrap colapsandose/expandiendose
+      // El resize puede venir de la hoja inferior del panel cambiando de altura
       // (ver MapPage.module.css): reencuadra el recorrido calculado al
       // espacio nuevo en vez de dejarlo donde haya quedado la camara.
       refitToRoute(map);

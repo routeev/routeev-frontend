@@ -190,7 +190,9 @@ export interface RouteDetalle {
   // costo_uyu_recargas está presente.
   costo_uyu_energia: number;
   peaje_uyu: number;
-  peajes?: string;
+  // Cuántos peajes hay en el camino. El backend en producción manda un número;
+  // el tipo viejo decía string, así que se lee con Number() y se tolera igual.
+  peajes?: number | string;
   tramos: RouteTramo[];
   costo_uyu_recargas?: number;
   recargas_sin_tarifa?: number;
@@ -199,6 +201,9 @@ export interface RouteDetalle {
 export interface Parada {
   nombre: string;
   direccion?: string;
+  // Opcionales: el backend viejo no los manda.
+  ciudad?: string;
+  departamento?: string;
   operador?: string;
   minutos: number;
   kwh: number;

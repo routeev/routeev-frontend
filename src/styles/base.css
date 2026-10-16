@@ -132,31 +132,6 @@ button.primary:disabled {
   cursor: not-allowed;
 }
 
-button.ghost {
-  background: transparent;
-}
-
-/* Para acciones destructivas (eliminar cuenta, ver AccountPanel.tsx) --
-   mismo esqueleto que button.ghost (fondo transparente, sin ganarle
-   protagonismo visual a .primary) pero con el color de --danger en vez del
-   texto normal, para que se lea como "cuidado" antes de leer la palabra. */
-button.danger {
-  background: transparent;
-  border-color: var(--danger);
-  color: var(--danger);
-}
-
-button.danger:hover {
-  background: var(--danger-dim);
-}
-
-button.danger:disabled {
-  background: var(--bg-panel-raised);
-  border-color: var(--border);
-  color: var(--text-faint);
-  cursor: not-allowed;
-}
-
 input,
 select {
   background: var(--bg);
@@ -195,24 +170,6 @@ label {
   margin-bottom: 4px;
 }
 
-.field {
-  margin-bottom: 12px;
-}
-
-/* Fila checkbox + texto -- el checkbox en si es src/shared/Checkbox.tsx, que
-   ya trae su propio <input> escondido del tamaño exacto de la caja visible
-   (.box en Checkbox.module.css): align-items:center alcanza sin compensar
-   ningun offset porque no hay ningun checkbox nativo VISIBLE en el layout. */
-.check-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text);
-}
-
 .error-banner {
   background: var(--danger-dim);
   border: 1px solid var(--danger);
@@ -243,118 +200,9 @@ label {
   margin-bottom: 14px;
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
 .mono-num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-}
-
-/* Shell de /app y /profile (portado de css/app.css): panel, hint, formulario
-   en linea, resultado de busqueda de direccion. Global (no CSS module)
-   porque las dos pantallas comparten exactamente estas clases. */
-
-.panel {
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 14px;
-}
-
-.panel h2 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  color: var(--text);
-  margin: 0 0 14px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--text-faint);
-  margin: 6px 0 12px;
-  line-height: 1.5;
-}
-
-.hint.hint-ok {
-  color: var(--accent-astar);
-}
-
-button.small {
-  padding: 6px 10px;
-  font-size: 12.5px;
-}
-
-/* En mobile el dedo apunta, no el mouse: button.small queda en ~28px de alto
-   con el padding de arriba, bien debajo de los ~44px que recomienda el
-   criterio de touch target. Se agranda el area de toque con padding real
-   (no un truco de margen negativo) sin tocar el tamano visual en desktop,
-   donde el diseño compacto es intencional. */
-@media (max-width: 640px) {
-  button.small {
-    padding: 11px 14px;
-  }
-}
-
-.inline-form {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.address-search-row {
-  display: flex;
-  gap: 8px;
-}
-
-.address-search-row input {
-  flex: 1;
-}
-
-.address-result {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  padding: 8px 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.address-result .warn {
-  color: var(--accent-dijkstra);
-}
-
-.address-result .error {
-  color: var(--danger);
-}
-
-.full-width {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 @media (prefers-reduced-motion: reduce) {

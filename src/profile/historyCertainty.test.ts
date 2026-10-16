@@ -48,7 +48,9 @@ describe("certaintyPointsFromRoute", () => {
 
   it("adds a vertical jump at each recharge stop", () => {
     const points = certaintyPointsFromRoute(
-      route({ recharges: [{ node_id: "n2", added_kwh: 15, time_min: 20, station_name: "Estación X" }] }),
+      route({
+        recharges: [{ node_id: "n2", added_kwh: 15, time_min: 20, station_name: "Estación X" }],
+      }),
       50,
       50
     );
@@ -64,7 +66,11 @@ describe("certaintyPointsFromRoute", () => {
   });
 
   it("clamps battery percentage into 0-100 when the trip overdraws the battery", () => {
-    const points = certaintyPointsFromRoute(route({ breakdown: { ...route().breakdown, energia_kwh: 999 } }), 50, 50);
+    const points = certaintyPointsFromRoute(
+      route({ breakdown: { ...route().breakdown, energia_kwh: 999 } }),
+      50,
+      50
+    );
     for (const p of points) {
       expect(p.batteryPct).toBeGreaterThanOrEqual(0);
       expect(p.batteryPct).toBeLessThanOrEqual(100);
@@ -86,7 +92,14 @@ describe("certaintyPointsFromRoute con viajes guardados por POST /api/route/trip
       route({
         ...V2,
         recharges: [
-          { node_id: "station_7", added_kwh: 15, time_min: 20, station_name: "UTE Pando", lat: -34.5, lon: -56.0 },
+          {
+            node_id: "station_7",
+            added_kwh: 15,
+            time_min: 20,
+            station_name: "UTE Pando",
+            lat: -34.5,
+            lon: -56.0,
+          },
         ],
       }),
       50,
@@ -106,7 +119,14 @@ describe("certaintyPointsFromRoute con viajes guardados por POST /api/route/trip
       route({
         ...V2,
         recharges: [
-          { node_id: "station_7", added_kwh: 15, time_min: 20, station_name: "UTE Pando", lat: -34.5, lon: -56.0 },
+          {
+            node_id: "station_7",
+            added_kwh: 15,
+            time_min: 20,
+            station_name: "UTE Pando",
+            lat: -34.5,
+            lon: -56.0,
+          },
         ],
       }),
       50,

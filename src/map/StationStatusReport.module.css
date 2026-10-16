@@ -1,108 +1,54 @@
 .wrap {
-  margin: var(--space-4) 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-}
-
-.titulo {
-  margin: 0 0 2px;
-  font: var(--text-body);
-  font-weight: 600;
-  color: var(--text);
-}
-
-.subtitulo {
-  margin: 0 0 var(--space-2);
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-faint);
-}
-
-.botones {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.boton {
-  flex: 1 1 auto;
-  padding: 8px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.boton:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Mismo lenguaje de color que StationStatusChip.module.css: verde = anda,
-   naranja = ocupado, rojo = roto. Ver ese archivo para el criterio de por
-   que el color nunca es la unica pista (el texto del boton ya lo dice). */
-.boton.funciona:hover,
-.boton.funciona:focus-visible {
-  color: var(--accent-astar);
-  border-color: var(--accent-astar-dim);
-}
-
-.boton.ocupado:hover,
-.boton.ocupado:focus-visible {
-  color: var(--accent-dijkstra);
-  border-color: var(--accent-dijkstra-dim);
-}
-
-.boton.noFunciona:hover,
-.boton.noFunciona:focus-visible {
-  color: var(--danger);
-  border-color: var(--danger-dim);
-}
-
-.lista {
-  list-style: none;
-  margin: var(--space-2) 0 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.send {
+  align-self: flex-start;
+}
+
+/* Los reportes vigentes, más nuevo primero: una línea por reporte con un
+   punto del color del estado (el texto ya dice cuál es). */
+.lista {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .item {
-  font-size: 12px;
-  padding-left: 12px;
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 400 13px/1.4 var(--font-body);
   color: var(--text-muted);
 }
 
 .item::before {
   content: "";
-  position: absolute;
-  left: 0;
-  top: 6px;
-  width: 6px;
-  height: 6px;
+  flex: none;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: currentColor;
 }
 
-.item.funciona {
-  color: var(--accent-astar);
+.funciona::before {
+  background: var(--accent-astar);
 }
 
-.item.ocupado {
-  color: var(--accent-dijkstra);
+.ocupado::before {
+  background: var(--warn);
 }
 
-.item.noFunciona {
-  color: var(--danger);
-}
-
-.sinReportes {
-  margin: var(--space-2) 0 0;
-  font-size: 12px;
-  color: var(--text-faint);
+.noFunciona::before {
+  background: var(--danger);
 }

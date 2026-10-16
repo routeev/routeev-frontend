@@ -40,7 +40,7 @@ interface MapState {
 
   searchableNodes: SearchableNode[];
   stations: Station[];
-  // Estación elegida a mano en StationsPanel (lista "todas las estaciones").
+  // Estación elegida a mano en StationsList (pestaña "Estaciones") o en el mapa.
   // El mapa no dibuja las 200+ estaciones de una: solo esta, o -- si ya hay
   // una ruta calculada -- las que esa ruta realmente usa (ver StationsLayer).
   // NodeId (string), no number: el id de una estación es el id de su nodo en
@@ -54,8 +54,11 @@ interface MapState {
   selectedVehicleId: number | null;
   startBatteryPct: number;
   /**
-   * ¿Hay dónde enchufar en el destino? Arranca en true porque el viaje más
-   * frecuente es volver a casa, donde uno ya sabe que tiene el cargador.
+   * ¿Hay dónde enchufar en el destino? Arranca en null, sin responder: el
+   * panel la pregunta apenas hay destino y "Calcular ruta" no aparece hasta
+   * que se contesta. Antes arrancaba en true (el viaje más frecuente es volver
+   * a casa), pero un default silencioso es justo lo que hace que alguien que
+   * va a una chacra sin enchufe calcule el viaje sin la reserva que necesita.
    *
    * En false, el margen deja de ser "llegar con algo de colchón" y pasa a ser
    * "llegar pudiendo alcanzar un cargador": el backend sube la reserva a la
@@ -63,7 +66,7 @@ interface MapState {
    * Llegar con 10% a una casa sin enchufe, con la estación más cercana a 45 km,
    * es quedarse a pie igual, sólo que un día después.
    */
-  cargadorEnDestino: boolean;
+  cargadorEnDestino: boolean | null;
 
   /**
    * "eficiente" (default): el algoritmo también pesa el ahorro de batería,
@@ -163,6 +166,12 @@ interface MapState {
     payload: TripLogSeed | null,
     replaySuffix?: string
   ) => void;
+  /**
+   * "Editar" desde Datos del viaje: vuelve al formulario con origen, destino y
+   * respuestas como estaban. Solo suelta la ruta calculada, a diferencia de
+   * resetTripPlanning, que es "Cancelar" y empieza de cero.
+   */
+  clearResult: () => void;
   resetTripPlanning: () => void;
 }
 
@@ -182,7 +191,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   evModels: [],
   selectedVehicleId: null,
   startBatteryPct: 100,
-  cargadorEnDestino: true,
+  cargadorEnDestino: null,
   routeMode: "eficiente",
 
   originNode: null,
@@ -340,6 +349,7 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setLastResult: (result, payload, replaySuffix) =>
     set({ lastResult: result, lastRoutePayload: payload, replaySuffix, selectedStationId: null }),
+  clearResult: () => set({ lastResult: null, lastRoutePayload: null, replaySuffix: undefined }),
 
   // El store es un singleton a nivel de modulo: no se resetea solo al
   // navegar entre /app y /profile (React Router desmonta/remonta las
@@ -367,7 +377,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       // de un viaje a una chacra sin enchufe se calculara con la reserva
       // inflada del viaje anterior, y hasta metiera una parada de carga que no
       // hacía falta.
-      cargadorEnDestino: true,
+      cargadorEnDestino: null,
     }),
 }));
 
@@ -399,8 +409,10 @@ export function calculateGateMissing(params: {
   hasSelectedVehicle: boolean;
   origin: { lat: number; lon: number } | null;
   destination: { lat: number; lon: number } | null;
+  /** cargadorEnDestino ya tiene respuesta (no es null). */
+  chargerAnswered: boolean;
 }): string[] {
-  const { vehiclesLoaded, hasSelectedVehicle, origin, destination } = params;
+  const { vehiclesLoaded, hasSelectedVehicle, origin, destination, chargerAnswered } = params;
   const missing: string[] = [];
   if (!vehiclesLoaded) missing.push("cargando vehículos...");
   else if (!hasSelectedVehicle) missing.push("elegí o creá un vehículo");
@@ -414,5 +426,6 @@ export function calculateGateMissing(params: {
   if (origin && destination && haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
     missing.push("origen y destino están demasiado cerca");
   }
+  if (!chargerAnswered) missing.push("respondé si podés cargar en el destino");
   return missing;
 }

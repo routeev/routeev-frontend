@@ -12,7 +12,7 @@ export function vehiclePhotoQueryKey(vehicleId: number) {
  * useEffect: antes se volvía a pedir y a crear una blob URL nueva en CADA
  * remonte (entrar y salir de /profile), aunque la foto siguiera siendo la
  * misma. Quien sube o borra una foto es responsable de invalidar esta query
- * (y revocar la blob URL vieja) a mano -- ver VehiclesPanel.tsx.
+ * (y revocar la blob URL vieja) a mano -- ver CarsSection.tsx.
  */
 export function useVehiclePhoto(vehicleId: number, hasPhoto: boolean | undefined) {
   const { data } = useQuery({

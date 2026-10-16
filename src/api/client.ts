@@ -104,7 +104,7 @@ export async function apiFetch<T = unknown>(
     //
     // getToken() !== token (no solo "token" a secas, leido al principio de
     // esta funcion): un pedido que salio ANTES de cambiar la contraseña
-    // (ver AccountPanel.tsx#PasswordField) puede volver DESPUES con un 401
+    // (ver AccountSection.tsx, savePassword) puede volver DESPUES con un 401
     // real -- el cambio invalida TODOS los tokens viejos, incluido el que
     // este pedido en particular llevaba pegado. Para cuando la respuesta
     // llega, la sesion ya tiene guardado el token NUEVO que devolvio el

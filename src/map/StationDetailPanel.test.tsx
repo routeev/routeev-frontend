@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Station } from "../api/graph";
@@ -12,6 +13,7 @@ vi.mock("./useStationStatus", () => ({
   useStationStatus: () => ({ datos: null, estadoDe: () => null }),
 }));
 vi.mock("./pointName", () => ({ nameInBackground: vi.fn(() => Promise.resolve()) }));
+vi.mock("../api/stationReviews", () => ({ listStationReviewSummaries: vi.fn(() => Promise.resolve({})) }));
 
 const STATION = {
   node_id: "station_ute_ancap_florida",
@@ -45,15 +47,22 @@ describe("StationDetailPanel -- Ir hasta acá desde mi ubicación", () => {
     });
     useMapStore.setState({ stations: [STATION], selectedStationId: STATION.node_id });
     const onCalculate = vi.fn();
+    const onGoTo = vi.fn();
     render(
-      <LanguageProvider>
-        <StationDetailPanel onCalculate={onCalculate} />
-      </LanguageProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <StationDetailPanel onCalculate={onCalculate} onGoTo={onGoTo} />
+        </LanguageProvider>
+      </QueryClientProvider>
     );
 
     fireEvent.click(screen.getByRole("button", { name: /ir hasta acá desde mi ubicación/i }));
 
     expect(useMapStore.getState().destinationNode?.name).toBe("ANCAP Florida");
     expect(useMapStore.getState().originNode).not.toBeNull();
+    // El destino es un cargador: la pregunta queda contestada sola, y el
+    // panel pasa a la pestaña Viaje para mostrar el resultado.
+    expect(useMapStore.getState().cargadorEnDestino).toBe(true);
+    expect(onGoTo).toHaveBeenCalled();
   });
 });

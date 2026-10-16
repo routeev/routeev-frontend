@@ -2,92 +2,112 @@ export const landing = {
   meta: {
     title: "RouteEV — Plan electric car trips across Uruguay",
     description:
-      "Find out if your electric car can make it, and where to stop and charge, on the real road map of Uruguay and its 261 charging stations from UTE and private operators. 632 preloaded models, no account needed.",
+      "Find out if your electric car can make it, and where to stop and charge, on the real road map of Uruguay and its 261 charging stations from UTE and private operators. 328 preloaded models, no account needed.",
     ogTitle: "Will your electric car make it? Check before you go.",
     ogDescription:
-      "Pick one of 632 models, set your origin and destination, and RouteEV tells you if you'll make it, where to charge, and what it costs. On the real map of Uruguay.",
+      "Pick one of 328 models, set your origin and destination, and RouteEV tells you if you'll make it, where to charge, and what it costs. On the real map of Uruguay.",
     jsonLdDescription:
       "Trip planner for electric vehicles in Uruguay: calculates whether your car will make it, where to stop and charge, and how much it costs, on the country's real road map.",
   },
   nav: {
+    ariaLabel: "Main",
+    // "Inicio" lo usan todas las páginas menos la landing.
     home: "Home",
     showroom: "Showroom",
-    howItWorks: "How it works",
-    realData: "Real data",
+    // /app y /profile.
+    map: "Map",
+    light: "Light",
+    dark: "Dark",
+    getApp: "Get the app",
+    here: "You are here",
+    menu: "Menu",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    language: "Language",
   },
   header: {
     goToApp: "Go to the app",
     login: "Log in",
     createAccount: "Create account",
+    createFreeAccount: "Create a free account",
   },
   hero: {
-    eyebrow: "Electric mobility",
-    titleLine1: "Your electric car doesn't stop",
-    titleLine2: "in Uruguay; neither does your battery.",
+    eyebrow: "Electric car trip planner · Uruguay",
+    titleLead: "Will your EV make it?",
+    titleAccent: "Check before you leave.",
     subtitle:
-      "RouteEV calculates the most efficient route for your electric vehicle on the country's real road map, checking your battery stretch by stretch and adding the charging stops you'll need along the way.",
-    ctaPrimary: "Browse the catalog and simulate a trip",
-    ctaSecondary: "Create a free account",
-    note: "The catalog doesn't require an account: you enter, pick a car, and calculate the trip.",
-    visualCaption: "Montevideo → Rivera · 497 km, 1 charging stop",
+      "Pick your car, set your start and destination, and we’ll tell you where to charge, how long it takes and what it costs. On Uruguay’s real road map.",
+    cta: "Try it with my car",
+    ctaSignup: "or create a free account",
+    ctaApp: "or continue in the app",
+    note: "No account needed: pick the model and plan the trip.",
+    appLink: "Prefer your phone? Get the app",
+    // El viaje de ejemplo del mapa: datos de ejemplo, no un cálculo real.
+    mapAria:
+      "Sample trip from Montevideo to Rivera: 497 km, 1 charging stop in Paso de los Toros, you arrive with 24%",
+    vehicle: "BYD Dolphin · leaving at 100%",
+    stops: "Stops",
   },
-  stats: {
-    intersections: "Real OpenStreetMap intersections",
-    departments: "Departments covered",
-    stations: "Charging stations on the map",
-    models: "Preloaded electric car models",
+  stores: {
+    scanToGet: "Scan to get the app",
+    qrAlt: "QR code to get the app",
   },
-  problem: {
-    eyebrow: "The problem",
-    title: "Real-world range isn't the one on the brochure.",
-    body: "An electric vehicle performs differently on every street: traffic, speed, and the car's own consumption change how much battery is left on arrival. Regular maps calculate the shortest or fastest path, but none of them tell you whether your battery can actually handle that route, or where to stop and charge if it can't.",
+  data: {
+    title: "Built on real data",
+    body: "No averages: the calculation uses the road network and chargers that actually exist.",
+    intersections: "real intersections from OpenStreetMap",
+    departments: "departments, the whole country",
+    stations: "UTE and private charging stations",
+    models: "electric car models preloaded",
   },
-  solution: {
-    eyebrow: "The solution",
-    title: "A routing engine that understands batteries.",
-    body: "RouteEV builds the route on the country's real road graph (not an approximation): every street is weighted by what it actually costs to travel, and the system checks your battery before each stretch. If it won't be enough, it finds a real charging station along the way, without you having to plan it yourself.",
-  },
-  showroomSection: {
-    eyebrow: "Showroom · no account needed",
-    title: "Before you buy it, check if it'll make it.",
-    body1:
-      "Search any of the 632 electric cars in the catalog and see the real numbers: battery, real-world range, consumption, how much every 100 km costs in pesos, and how long it takes to charge at the stations that exist in Uruguay.",
-    body2:
-      "And with your car picked, calculate an actual trip just like you would from the map: the same routing engine returns the distance, time, the battery you'll arrive with, tolls, total cost, and which charging station to stop at, with its address and power output.",
-    cta: "Enter the showroom",
-    steps: {
-      search: "Search for the model by name",
-      view: "See its full spec sheet, with photo",
-      choose: "Choose where from and where to",
-      result: "It tells you if you'll make it, and where to stop and charge",
-    },
+  battery: {
+    title: "Real range isn’t the brochure range.",
+    body: "How much charge you leave with changes the whole trip. RouteEV runs the numbers with your model and the real road map, and tells you where to stop.",
+    question: "Try it: how much charge do you leave with?",
+    sample: "BYD Dolphin · sample data",
+    arriveWith: "You arrive with",
+    goodMargin: "Good margin",
+    lowMargin: "Low margin",
+    goodMarginMessage: "You arrive with plenty of charge to get around.",
+    lowMarginMessage:
+      "You arrive with little margin. Keep it at 90 km/h or less so you don’t fall short.",
+    time: "Time",
+    cost: "Cost",
+    stops: "Charging stops",
+    routeAria: (stops: number) =>
+      `Montevideo to Rivera route with ${stops} charging ${stops === 1 ? "stop" : "stops"}`,
   },
   howItWorks: {
-    eyebrow: "How it works",
-    title: "Four steps, one calculated trip.",
-    steps: {
-      loadVehicle: {
-        title: "Load your vehicle",
-        body: "Pick a real model from a catalog of electric cars (Nissan Leaf, Tesla, BYD, and more) or enter your own battery and consumption data by hand.",
-      },
-      markOriginDestination: {
-        title: "Set origin and destination",
-        body: "Click on the map, type an address, or choose from a list of real intersections.",
-      },
-      calculateRoute: {
-        title: "The route gets calculated",
-        body: "The system finds the most efficient path for your car, checking the battery edge by edge and adding recharges if needed.",
-      },
-      viewTripData: {
-        title: "See your trip data",
-        body: "Distance, time, energy, tolls, and every charging stop with its address and real power output.",
-      },
+    title: "Four steps, no account.",
+    body: "It’s exactly what you do in the showroom: open it and within a minute you know if you’ll make it.",
+    pickCar: {
+      title: "Pick your car",
+      body: "Search among 328 models and see its spec sheet.",
     },
+    setPoints: {
+      title: "Set start and destination",
+      body: "Type an address or tap the map.",
+    },
+    calculate: {
+      title: "We calculate the route",
+      body: "On real roads, with the charging stops you need.",
+    },
+    arrive: {
+      title: "See what you arrive with",
+      body: "Battery on arrival, trip time and cost.",
+    },
+    oneStop: "1 stop",
+    goodMargin: "Good margin",
   },
-  finalCta: {
+  closing: {
     title: "Try it with your car.",
-    body: "Pick a model, set a trip you'd actually take, and see if it makes it. No account needed.",
-    ctaPrimary: "Calculate a trip",
-    ctaSecondary: "Create a free account",
+    webLabel: "On the web",
+    webBody: "Open the showroom, pick your model and plan a trip. No account needed.",
+    webCta: "Plan a trip",
+    phoneLabel: "On your phone",
+    phoneBody: "Plan from your phone and follow the trip while you drive.",
+  },
+  footer: {
+    ariaLabel: "Footer",
   },
 };

@@ -1,0 +1,129 @@
+/* Piezas que se repiten en todo el showroom: botones, anillo de espera,
+   etiquetas. Cada vista tiene su propio .module.css para el resto.
+
+   Ojo con base.css: le da a todo <button> borde, padding, fondo y un
+   button:hover que pinta el borde de menta (0,1,1 de especificidad, le gana a
+   una clase sola). Por eso cada botón de acá declara su propio :hover. */
+
+.btnPrimary,
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 14px;
+  font: 600 15px/1 var(--font-body);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnPrimary {
+  border: 1px solid var(--accent-astar);
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+}
+
+.btnPrimary:hover {
+  border-color: var(--button-primary-hover);
+  background: var(--button-primary-hover);
+  color: var(--button-primary-text);
+}
+
+.btnPrimary:disabled {
+  border-color: var(--accent-astar-dim);
+  background: var(--accent-astar-dim);
+  color: var(--button-primary-text);
+  cursor: progress;
+}
+
+.btnOutline {
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.btnOutline:hover {
+  border-color: var(--accent-astar);
+  color: var(--accent-text);
+}
+
+.btnSmall {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* Anillo de espera. Con movimiento reducido, base.css corta la animación y
+   queda el anillo quieto con su texto al lado. */
+.spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent-astar);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.spinnerOnAccent {
+  border-color: rgba(6, 35, 29, 0.3);
+  border-top-color: var(--button-primary-text);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Etiqueta "IA" y de cantidad de versiones. */
+.pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: rgba(var(--bg-rgb), 0.82);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.pillStrong {
+  border-color: var(--border-strong);
+  font-weight: 600;
+}
+
+.pillSmall {
+  height: 20px;
+  padding: 0 6px;
+  border-color: var(--border-strong);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.unit {
+  margin-left: 3px;
+  font-size: 0.5em;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.prefix {
+  margin-right: 3px;
+  font-size: 0.55em;
+  font-weight: 500;
+  color: var(--text-muted);
+}

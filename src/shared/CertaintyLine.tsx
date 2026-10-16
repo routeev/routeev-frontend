@@ -25,18 +25,20 @@ interface CertaintyLineProps {
   points: CertaintyPoint[];
   scale?: CertaintyLineScale;
   className?: string;
+  /** Reemplaza la descripción genérica ("llega" / "no llega") por una propia. */
+  ariaLabel?: string;
 }
 
 const DIMENSIONS: Record<
   CertaintyLineScale,
   { width: number; height: number; pad: number; padBottom: number }
 > = {
-  micro: { width: 40, height: 16, pad: 1, padBottom: 1 },
+  micro: { width: 76, height: 28, pad: 2, padBottom: 2 },
   macro: { width: 480, height: 130, pad: 10, padBottom: 26 },
   hero: { width: 520, height: 230, pad: 12, padBottom: 30 },
 };
 
-export function CertaintyLine({ points, scale = "macro", className }: CertaintyLineProps) {
+export function CertaintyLine({ points, scale = "macro", className, ariaLabel }: CertaintyLineProps) {
   const { t } = useTranslation();
   if (points.length < 2) return null;
 
@@ -62,9 +64,8 @@ export function CertaintyLine({ points, scale = "macro", className }: CertaintyL
       viewBox={`0 0 ${width} ${height}`}
       role="img"
       aria-label={
-        infeasible
-          ? t.shared.certaintyLine.infeasibleAriaLabel
-          : t.shared.certaintyLine.feasibleAriaLabel
+        ariaLabel ??
+        (infeasible ? t.shared.certaintyLine.infeasibleAriaLabel : t.shared.certaintyLine.feasibleAriaLabel)
       }
     >
       <path
@@ -72,7 +73,7 @@ export function CertaintyLine({ points, scale = "macro", className }: CertaintyL
         pathLength={1}
         fill="none"
         stroke={strokeColor}
-        strokeWidth={scale === "micro" ? 1.5 : 2}
+        strokeWidth={scale === "micro" ? 1.8 : 2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

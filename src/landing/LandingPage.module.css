@@ -1,332 +1,458 @@
-/* Porta css/landing.css (secciones propias de la landing; nav/footer/botones
-   ya son componentes compartidos en src/shared/). */
+/* Landing. Escritorio >= 900px, celular por debajo (el corte de todo el
+   sitio). Las secciones de BatteryDemo, HowItWorks y el header tienen su
+   propio .module.css y leen --content-w de acá. */
 
 .page {
-  overflow-x: hidden;
+  /* Ancho del contenido: 1200px de tope, con un margen que va de 20px en el
+     celular a 56px en escritorio. */
+  --content-w: min(1200px, calc(100% - 2 * clamp(20px, 4vw, 56px)));
+  /* Propios de esta página, sobre los de tokens.css. */
+  --glow: rgba(52, 227, 168, 0.1);
+
+  min-height: 100%;
+  /* clip y no hidden: hidden la vuelve contenedor de scroll y el header deja
+     de quedar pegado arriba. */
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
 }
 
-.section {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding-left: 28px;
-  padding-right: 28px;
+/* El header pegado arriba tapaba el título de la sección al saltar a un
+   ancla (#app). */
+.page section[id] {
+  scroll-margin-top: 64px;
 }
 
-/* Separa cada sección de la siguiente en el scroll -- antes no había ningún
-   límite ahí, solo padding vertical sobre el mismo fondo continuo. Se probó
-   también con fondo alternado (--bg-panel) entre secciones, tipo cebra: no
-   convenció (feedback explícito), así que queda solo la línea, sin cambio
-   de fondo -- todas las secciones sobre el mismo --bg de siempre. */
-.band {
-  border-top: 1px solid var(--border-soft);
+.accent {
+  color: var(--accent-text);
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+/* ---- Piezas compartidas por el hero y el cierre ---- */
+
+.ctaPrimary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 24px;
+  border-radius: 16px;
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.15s;
 }
 
-.eyebrowCenter {
-  text-align: center;
+.ctaPrimary:hover {
+  background: var(--button-primary-hover);
 }
 
-/* --- Hero --- */
+.underlineLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 4px;
+  transition: color 0.15s;
+}
 
-.heroWrap {
+.underlineLink:hover {
+  color: var(--text);
+}
+
+/* ---- Hero ---- */
+
+.hero {
   position: relative;
   overflow: hidden;
 }
 
-.hero {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(320px, 460px) 1fr;
-  gap: 40px;
-  align-items: center;
-  padding-top: 72px;
-  padding-bottom: 48px;
-  min-height: 560px;
+.heroGlow {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, var(--glow) 0%, transparent 60%);
+  pointer-events: none;
 }
 
-.hero h1 {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 4.2vw, 52px);
-  line-height: 1.08;
-  letter-spacing: -0.015em;
-  margin: 14px 0 20px;
+.heroInner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 56px;
+  width: var(--content-w);
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.eyebrowDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.18);
+}
+
+.heroTitle {
+  max-width: 11em;
+  margin: 0;
+  font: 600 clamp(40px, 3.9vw, 60px)/1.03 var(--font-display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .heroSub {
-  font-size: 16px;
-  line-height: 1.65;
+  max-width: 28em;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
   color: var(--text-muted);
-  max-width: 46ch;
-  margin: 0 0 28px;
+  text-wrap: pretty;
 }
 
-.heroActions {
+.heroCtas {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
-.heroActionsCenter {
-  justify-content: center;
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
 }
 
 .heroNote {
-  font-size: 12.5px;
-  color: var(--text-faint);
-}
-
-.heroVisual {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-}
-
-/* Antes era texto suelto directo sobre el degradé del hero -- sin ningún
-   contenedor quedaba flotando sin ancla visual, como un dato que se olvidó
-   de tener diseño. Un badge/pill (mismo radius-pill que usa el resto de la
-   app -- LanguageSwitcher, botones) lo agrupa como una sola pieza y lo
-   distingue del fondo animado detrás. */
-.heroVisualCaption {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  gap: 8px;
+  font-size: 14px;
   color: var(--text-muted);
-  background: rgba(var(--bg-rgb), 0.55);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-pill);
-  padding: 7px 14px;
-  backdrop-filter: blur(4px);
 }
 
-.heroVisualCaption::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-astar);
-  flex-shrink: 0;
+.heroNote svg {
+  flex: none;
+  color: var(--accent-astar);
 }
 
-/* --- Stats ---
-   Cada stat es su propia SpotlightCard (radius + borde + fondo propios,
-   src/shared/SpotlightCard.module.css) en vez de celdas de grilla pegadas
-   con lineas de 1px -- con cards redondeadas ese truco de "gap:1px +
-   background:var(--border)" para las divisiones se ve roto en las esquinas. */
+.appLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
 
+.appLink:hover {
+  color: var(--text);
+}
+
+/* ---- Datos reales ---- */
+
+.data {
+  background: var(--bg-sunken);
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.dataInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 28px 48px;
+  width: var(--content-w);
+  margin: 0 auto;
+  padding: clamp(40px, 5vw, 64px) 0;
+}
+
+.dataIntro {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 300px;
+}
+
+.dataTitle {
+  margin: 0;
+  font: 600 24px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.dataBody {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* 4 columnas o 2x2, nunca 3 + 1 suelta. */
 .stats {
-  /* minmax(0, 1fr), no un ancho fijo en px: con columnas fijas, dejar que
-     el navegador decidiera cuántas entraban por fila daba una tarjeta
-     huérfana en anchos intermedios, y fijar el corte por breakpoint (como
-     se probó después) obligaba a elegir entre "una sola fila en desktop" O
-     "no desbordar en mobile", nunca las dos -- un ancho fijo no puede
-     angostarse para caber 4 y ensancharse para llenar la fila al mismo
-     tiempo. Con columnas PROPORCIONALES las 4 (o las 2, en mobile) se
-     reparten el ancho disponible en partes iguales de verdad (el piso en 0
-     evita que una columna se estire más que las otras -- ver abajo por
-     qué), entran siempre en una sola fila porque el número de columnas es
-     fijo (nunca "las que entren"), y se angostan solas en pantallas chicas
-     en vez de desbordar. */
   display: grid;
+  flex: 999 1 560px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-24);
+  gap: 28px 24px;
+  min-width: 0;
+  margin: 0;
 }
 
-/* Mismo breakpoint que .hero/.split/.showroom/.stepsList más abajo: 2
-   columnas × 2 filas siempre (4 tarjetas ÷ 2 columnas), nunca una quinta
-   fila huérfana porque el número de tarjetas es fijo. */
-@media (max-width: 900px) {
+@media (max-width: 1179.98px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* --- Problema / Solucion --- */
-
-.split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 56px;
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-24);
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
 }
 
-.split h2 {
-  font-family: var(--font-display);
-  font-size: clamp(22px, 2.4vw, 28px);
-  line-height: 1.25;
-  margin: 12px 0 16px;
-  letter-spacing: -0.01em;
-}
-
-.split p {
-  color: var(--text-muted);
-  line-height: 1.7;
+/* En el HTML el <dt> va antes (así lo pide <dl>); a la vista, la cifra
+   primero. */
+.statLabel {
+  order: 2;
   font-size: 15px;
-}
-
-/* --- Showroom teaser --- */
-
-.showroom {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 56px;
-  align-items: center;
-  /* padding-top solía ser 20px, mucho menos que el resto -- a propósito
-     cuando esta sección todavía vivía pegada a "Problema/Solución" sobre el
-     mismo fondo corrido. Ahora que cada una tiene su propia franja (.band,
-     con borde y fondo alternado, ver arriba) esa cercanía deliberada ya no
-     hace falta: el ritmo parejo con el resto se lee más prolijo. */
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-24);
-}
-
-.showroom h2 {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 2.8vw, 32px);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  margin: 12px 0 16px;
-}
-
-.showroom p {
+  line-height: 1.4;
   color: var(--text-muted);
-  line-height: 1.7;
-  font-size: 15px;
-  margin: 0 0 16px;
-  max-width: 56ch;
+  text-wrap: pretty;
 }
 
-.showroomSteps {
-  list-style: none;
+.statValue {
+  order: 1;
   margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 1px;
-  background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+  font: 500 clamp(34px, 3.9vw, 56px)/1 var(--font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.showroomSteps li {
+.statPlus {
+  margin-left: 2px;
+  font-size: 0.5em;
+  color: var(--text-muted);
+}
+
+/* ---- Cierre ---- */
+
+.closing {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(72px, 8vw, 112px) 0;
+  background: var(--bg-sunken);
+  border-top: 1px solid var(--border-soft);
+}
+
+.closingGlow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1100px;
+  height: 700px;
+  transform: translate(-50%, -55%);
+  background: radial-gradient(ellipse at 50% 50%, var(--glow) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.closingInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: var(--content-w);
+  margin: 0 auto;
+}
+
+.closingTitle {
+  margin: 0;
+  font: 600 clamp(36px, 4.4vw, 64px)/1.02 var(--font-display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.closingCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.closingCard {
+  display: flex;
+  flex: 1 1 400px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  min-width: 0;
+  padding: clamp(20px, 2.4vw, 32px);
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.closingLabel {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: var(--bg-panel);
-  padding: 18px 20px;
+  gap: 10px;
   font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
-.showroomStepIcon {
-  flex-shrink: 0;
-  color: var(--accent-astar);
-}
-
-.stepNum {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--accent-astar);
-  letter-spacing: 0.08em;
-}
-
-/* --- Como funciona --- */
-
-.steps {
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-24);
-}
-
-.stepsTitle {
-  font-family: var(--font-display);
-  text-align: center;
-  font-size: clamp(24px, 3vw, 34px);
-  margin: 10px 0 48px;
-  letter-spacing: -0.01em;
-}
-
-.stepsList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.closingIcon {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
-.stepsList li {
-  border-top: 2px solid var(--accent-astar);
-  padding-top: 16px;
-}
-
-.stepsList .stepNum {
-  color: var(--text-faint);
-}
-
-.stepsList h3 {
-  font-size: 16px;
-  margin: 10px 0 8px;
-}
-
-.stepsList p {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
-/* --- CTA final --- */
-
-.finalCta {
-  text-align: center;
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-24);
-}
-
-.finalCta h2 {
-  font-family: var(--font-display);
-  font-size: clamp(26px, 3.4vw, 38px);
-  margin: 0 0 12px;
+.closingBody {
+  max-width: 22em;
+  margin: 0;
+  font: 500 clamp(20px, 1.8vw, 24px)/1.3 var(--font-display);
   letter-spacing: -0.01em;
+  text-wrap: pretty;
 }
 
-.finalCta p {
-  color: var(--text-muted);
-  margin: 0 0 28px;
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: stretch;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: auto;
 }
 
-/* --- Responsive --- */
-
-@media (max-width: 900px) {
-  .hero {
-    grid-template-columns: 1fr;
-    padding-top: 40px;
-    min-height: 0;
-  }
-  .split,
-  .showroom {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-  .stepsList {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.closingActions .ctaPrimary {
+  height: 52px;
+  padding: 0 22px;
 }
 
-@media (max-width: 520px) {
-  .stepsList {
-    grid-template-columns: 1fr;
+/* ---- Celular ---- */
+
+@media (max-width: 899.98px) {
+  .page section[id] {
+    scroll-margin-top: 56px;
+  }
+
+  .heroInner {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 28px;
+    padding: 24px 0 48px;
+  }
+
+  .heroText {
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .eyebrow {
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .eyebrowDot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .heroTitle {
+    max-width: none;
+    font-size: clamp(30px, 8.8vw, 38px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .heroSub {
+    max-width: none;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .heroCtas {
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .ctaRow {
+    display: block;
+  }
+
+  .hero .ctaPrimary {
+    justify-content: center;
+    height: auto;
+    min-height: 52px;
+    padding: 0 20px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* El link de cuenta vive en el menú en el celular. */
+  .heroSecondary {
+    display: none;
+  }
+
+  /* En bloque, con el tilde en línea: si la nota ocupa dos renglones (en
+     inglés pasa), el tilde sigue pegado al texto y no al borde. */
+  .heroNote {
+    display: block;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .heroNote svg {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    vertical-align: -2px;
+  }
+
+  /* Las tiendas están en el cierre, y el menú tiene "Bajar la app". */
+  .appLink {
+    display: none;
   }
 }

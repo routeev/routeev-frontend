@@ -143,10 +143,10 @@ export function StationsLayer() {
             // El detalle completo (formulario de reseña, fotos, lista de
             // comentarios) ya no vive en este popup -- clickear el marcador
             // selecciona la estacion, y eso abre StationDetailPanel en el
-            // sidebar (ver MapPage), con lugar de sobra para todo eso. El
+            // panel, pestaña Estaciones (ver MapPanel), con lugar para todo. El
             // popup queda como un vistazo rapido nomas. Tambien centra el
             // mapa ahi, mismo comportamiento que elegirla desde la lista
-            // (StationsPanel), para que da igual por donde se entre.
+            // (StationsList), para que da igual por donde se entre.
             eventHandlers={{
               click: () => {
                 selectStation(st.node_id);

@@ -1,105 +1,49 @@
 .wrap {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-
-.summaryLine {
-  margin-bottom: 10px;
-  font-size: 12.5px;
-}
-
-.form {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px;
-}
-
-.formHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.formLabel {
-  font-size: 12px;
-  font-weight: 600;
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.count {
+  font: 400 13px/1 var(--font-body);
   color: var(--text-muted);
 }
 
-.textarea {
-  width: 100%;
-  min-height: 56px;
-  resize: vertical;
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 12.5px;
-  color: var(--text);
-}
-
-.textarea::placeholder {
-  color: var(--text-faint);
-}
-
-.photoPreviewRow {
+.empty {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1.5px dashed var(--border-strong);
 }
 
-.photoPreview {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-
-.formActions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  justify-content: flex-end;
-}
-
-.formActions label {
-  cursor: pointer;
-  margin-right: auto;
-}
-
-/* Pie de la reseña propia en modo lectura: la fecha a la izquierda y el
-   unico control ("Editar") a la derecha. */
-.mineFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-/* .itemDate trae su propio margen superior porque en la lista de reseñas
-   ajenas va debajo del texto; aca ya lo separa el gap del flex. */
-.mineFooter .itemDate {
-  margin-top: 0;
-}
+/* ---- Reseñas ajenas ---- */
 
 .list {
-  list-style: none;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .item {
-  padding: 8px 0;
-  border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
 }
 
 .itemHeader {
@@ -110,31 +54,119 @@
 }
 
 .itemUser {
-  font-size: 12.5px;
-  font-weight: 600;
+  font: 600 14px/1.2 var(--font-body);
   color: var(--text);
 }
 
-.itemComment {
-  margin: 4px 0 0;
-  font-size: 12.5px;
+.itemDate {
+  font: 400 12px/1 var(--font-body);
   color: var(--text-muted);
-  line-height: 1.5;
+}
+
+.itemComment {
+  margin: 0;
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--text);
+  text-wrap: pretty;
 }
 
 .itemPhoto {
   display: block;
-  margin-top: 6px;
   max-width: 100%;
-  max-height: 160px;
-  border-radius: var(--radius-sm);
+  max-height: 180px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   object-fit: cover;
 }
 
-.itemDate {
-  display: block;
-  margin-top: 4px;
-  font-size: 10.5px;
+/* ---- Tu reseña: formulario, o la propia en modo lectura ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.formLabel {
+  font: 600 14px/1.3 var(--font-body);
+  color: var(--text);
+}
+
+/* Reset de la regla global de textarea/input. */
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--text);
+}
+
+.textarea:hover {
+  border-color: var(--border-strong);
+}
+
+.textarea::placeholder {
   color: var(--text-faint);
+}
+
+@media (max-width: 640px) {
+  .textarea {
+    font-size: 16px;
+  }
+}
+
+.photoPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.photoPreview {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Reset de la regla global de label (base.css). */
+.photoBtn {
+  margin: 0;
+  cursor: pointer;
+}
+
+.actionsEnd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.mineFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }

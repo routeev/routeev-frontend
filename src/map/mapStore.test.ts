@@ -7,7 +7,7 @@ import { fromCoords, fromNode, pointKey, SAME_POINT_KM } from "./routePoint";
 // ni jsdom.
 const MVD = { lat: -34.9055, lon: -56.1851 };
 const PDE = { lat: -34.9633, lon: -54.9497 };
-const LISTO = { vehiclesLoaded: true, hasSelectedVehicle: true, origin: MVD, destination: PDE };
+const LISTO = { vehiclesLoaded: true, hasSelectedVehicle: true, origin: MVD, destination: PDE, chargerAnswered: true };
 
 describe("calculateGateMissing", () => {
   it("no reporta nada cuando están los dos puntos y el vehículo", () => {
@@ -51,6 +51,43 @@ describe("calculateGateMissing", () => {
       "cargando vehículos..."
     );
     expect(calculateGateMissing({ ...LISTO, hasSelectedVehicle: false })).toContain("elegí o creá un vehículo");
+  });
+
+  it("no deja calcular sin responder si hay dónde cargar en el destino", () => {
+    expect(calculateGateMissing({ ...LISTO, chargerAnswered: false })).toContain(
+      "respondé si podés cargar en el destino"
+    );
+  });
+});
+
+describe("cargadorEnDestino", () => {
+  beforeEach(() => useMapStore.getState().resetTripPlanning());
+
+  it("arranca sin responder, y vuelve a sin responder al cancelar el plan", () => {
+    expect(useMapStore.getState().cargadorEnDestino).toBeNull();
+    useMapStore.getState().setCargadorEnDestino(false);
+    useMapStore.getState().resetTripPlanning();
+    expect(useMapStore.getState().cargadorEnDestino).toBeNull();
+  });
+});
+
+describe("clearResult", () => {
+  beforeEach(() => useMapStore.getState().resetTripPlanning());
+
+  it("suelta la ruta calculada pero deja origen, destino y respuestas", () => {
+    const s = useMapStore.getState();
+    s.setOrigin(fromCoords(MVD.lat, MVD.lon));
+    s.setDestination(fromCoords(PDE.lat, PDE.lon));
+    s.setCargadorEnDestino(false);
+    s.setLastResult({ astar: { found: true } } as unknown as CompareRoutesResult, null);
+
+    useMapStore.getState().clearResult();
+
+    const after = useMapStore.getState();
+    expect(after.lastResult).toBeNull();
+    expect(after.originNode).not.toBeNull();
+    expect(after.destinationNode).not.toBeNull();
+    expect(after.cargadorEnDestino).toBe(false);
   });
 });
 

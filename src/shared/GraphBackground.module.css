@@ -30,3 +30,10 @@
     stroke-dashoffset: -160;
   }
 }
+
+/* La ruta queda dibujada, punteada y con brillo, pero quieta. */
+@media (prefers-reduced-motion: reduce) {
+  .bg .route {
+    animation: none;
+  }
+}

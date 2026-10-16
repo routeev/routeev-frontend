@@ -1,185 +1,52 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { create } from "zustand";
 import { showroomModels, type ShowroomModel } from "../api/showroom";
-import { normalizeForSearch } from "../shared/geo";
-import { useDebouncedValue } from "../shared/useDebouncedValue";
-import { modelAliases } from "./modelAlias";
-import { groupFamilies, type ModelFamily } from "./modelFamily";
-
-const PAGINA = 24;
-
-export type Orden = "relevancia" | "autonomia" | "bateria" | "carga" | "consumo";
-
-const COMPARADORES: Partial<Record<Orden, (a: ShowroomModel, b: ShowroomModel) => number>> = {
-  autonomia: (a, b) => b.autonomia_aprox_km - a.autonomia_aprox_km,
-  bateria: (a, b) => b.bateria_kwh - a.bateria_kwh,
-  carga: (a, b) => b.potencia_carga_kw - a.potencia_carga_kw,
-  consumo: (a, b) => a.consumo_kwh_km - b.consumo_kwh_km,
-};
+import { buildCatalog } from "./catalog";
 
 /**
- * Estado y lógica de búsqueda/filtro/orden del showroom, portados de
- * filtrar() en js/showroom.js. El catálogo se baja una sola vez (TanStack
- * Query lo cachea) y todo lo demás es 100% client-side -- con 632 entradas
- * no hace falta ir al servidor en cada tecla.
+ * Los autos que la IA encontró fuera del catálogo en esta visita. Viven
+ * afuera de la página (y no en un useState) porque se encuentran en la
+ * búsqueda y se usan en la ficha: son dos URLs distintas, y tienen que seguir
+ * ahí al ir y volver entre ellas.
+ */
+const useAiModels = create<{ models: ShowroomModel[]; add: (model: ShowroomModel) => void }>(
+  (set) => ({
+    models: [],
+    add: (model) =>
+      set((s) => (s.models.some((m) => m.id === model.id) ? s : { models: [...s.models, model] })),
+  })
+);
+
+/**
+ * El catálogo se baja una sola vez (TanStack Query lo guarda) y se arma por
+ * marca y modelo en el navegador: buscar, ordenar o cambiar de marca no
+ * vuelve a pedir nada.
  */
 export function useShowroomCatalog() {
-  // staleTime: Infinity -- catalogo estatico (mismo criterio que
-  // useMapLoaders.ts: stations/searchableNodes/evModels). Sin esto, "se baja
-  // una sola vez" de arriba no era cierto: volver a esta pantalla, o solo
-  // volver a la pestaña del navegador, disparaba un refetch igual.
-  const catalogQuery = useQuery({
+  // staleTime: Infinity -- el catálogo no cambia mientras dura la visita.
+  // Sin esto, volver a la pestaña disparaba un refetch del catálogo entero.
+  const query = useQuery({
     queryKey: ["showroomModels"],
     queryFn: () => showroomModels(),
     staleTime: Infinity,
   });
-  // Modelos encontrados por IA (fuera del catálogo): se suman en memoria,
-  // quedan buscables por lo que dure la visita (agregarModelo en el original).
-  const [extraModels, setExtraModels] = useState<ShowroomModel[]>([]);
+  const extra = useAiModels((s) => s.models);
+  const addModel = useAiModels((s) => s.add);
 
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 120);
-  const [marca, setMarca] = useState("");
-  const [orden, setOrden] = useState<Orden>("relevancia");
-  const [soloDc, setSoloDc] = useState(false);
-  const [visibles, setVisibles] = useState(PAGINA);
-
-  const modelos = useMemo(() => {
-    const base = catalogQuery.data?.models ?? [];
-    if (extraModels.length === 0) return base;
+  const catalog = useMemo(() => {
+    if (!query.data) return null;
+    const base = query.data.models;
     const ids = new Set(base.map((m) => m.id));
-    return [...base, ...extraModels.filter((m) => !ids.has(m.id))];
-  }, [catalogQuery.data, extraModels]);
-
-  // El índice incluye los nombres locales del modelo cuando el backend los
-  // manda (QA MEDIO 9): buscar el auto como se lo conoce acá tiene que
-  // encontrarlo, no devolver "no hay ningún modelo así en el catálogo".
-  // modelAliases() devuelve [] cuando el campo no viene, así que con el
-  // backend viejo el índice queda idéntico al de antes.
-  const indexado = useMemo(
-    () =>
-      modelos.map((m) => {
-        const alias = modelAliases(m);
-        return {
-          model: m,
-          busqueda: normalizeForSearch([m.marca, m.modelo, ...alias].join(" ")),
-          // Los nombres contra los que se mide el "arranca con" del orden por
-          // relevancia. El alias va como uno más y no concatenado al final de
-          // `busqueda`: si no, escribir el nombre local nunca podría empezar
-          // la cadena y el auto buscado quedaba abajo de todo.
-          inicios: [normalizeForSearch(m.modelo), ...alias.map(normalizeForSearch)],
-        };
-      }),
-    [modelos]
-  );
-
-  const marcas = useMemo(
-    () => [...new Set(modelos.map((m) => m.marca))].sort((a, b) => a.localeCompare(b, "es")),
-    [modelos]
-  );
-
-  const filtrados = useMemo(() => {
-    const consulta = normalizeForSearch(debouncedQuery.trim());
-    const tokens = consulta ? consulta.split(/\s+/) : [];
-
-    let lista = indexado.filter(({ model, busqueda }) => {
-      if (marca && model.marca !== marca) return false;
-      if (soloDc && model.potencia_carga_kw < 50) return false;
-      // Todas las palabras tienen que aparecer, en cualquier orden: asi
-      // "leaf nissan" y "nissan leaf" encuentran lo mismo.
-      return tokens.every((t) => busqueda.includes(t));
-    });
-
-    const comparador = COMPARADORES[orden];
-    if (comparador) {
-      lista = [...lista].sort((a, b) => comparador(a.model, b.model));
-    } else if (consulta) {
-      // Relevancia: primero lo que EMPIEZA con lo escrito (marca o modelo),
-      // y dentro de cada grupo, mayor autonomía primero.
-      const arranca = ({ busqueda, inicios }: (typeof indexado)[number]) =>
-        Number(busqueda.startsWith(consulta) || inicios.some((i) => i.startsWith(consulta)));
-      lista = [...lista].sort(
-        (a, b) => arranca(b) - arranca(a) || b.model.autonomia_aprox_km - a.model.autonomia_aprox_km
-      );
-    } else {
-      lista = [...lista].sort((a, b) => b.model.autonomia_aprox_km - a.model.autonomia_aprox_km);
-    }
-
-    return lista.map((x) => x.model);
-  }, [indexado, debouncedQuery, marca, orden, soloDc]);
-
-  // Una tarjeta por AUTO, no por versión: las versiones de un mismo modelo
-  // ("ORA 03 48/63 kWh/GT") se agrupan y la elección de cuál es queda en la
-  // ficha, a criterio del usuario. El orden de las familias es el de su
-  // mejor versión según el orden elegido (la lista ya viene ordenada).
-  const familias = useMemo(() => groupFamilies(filtrados), [filtrados]);
-
-  // La familia COMPLETA de cada modelo, sin filtros: la ficha ofrece todas
-  // las versiones aunque la búsqueda haya matcheado una sola.
-  const familiaPorId = useMemo(() => {
-    const map = new Map<string, ModelFamily>();
-    for (const familia of groupFamilies(modelos)) {
-      for (const version of familia.versiones) map.set(version.id, familia);
-    }
-    return map;
-  }, [modelos]);
-
-  // Memoizado (no un simple .slice() suelto): sin esto, cada tecla en el
-  // buscador genera un array nuevo aunque el contenido no haya cambiado, y
-  // eso le gana de mano al React.memo de ModelGrid (solucion.md 2.11).
-  const visible = useMemo(() => familias.slice(0, visibles), [familias, visibles]);
-  const hayMas = visibles < familias.length;
-
-  // Referencias estables (useCallback): las consume ModelGrid, que ahora
-  // esta memoizado -- una funcion nueva en cada render volveria a invalidar
-  // ese memo aunque nada mas haya cambiado.
-  const verMas = useCallback(() => setVisibles((v) => v + PAGINA), []);
-
-  const addModel = useCallback((model: ShowroomModel) => {
-    setExtraModels((prev) => (prev.some((m) => m.id === model.id) ? prev : [...prev, model]));
-  }, []);
-
-  // Cualquier cambio de filtro reinicia la paginación (mismo criterio que filtrar()).
-  const updateQuery = useCallback((v: string) => {
-    setQuery(v);
-    setVisibles(PAGINA);
-  }, []);
-  const updateMarca = useCallback((v: string) => {
-    setMarca(v);
-    setVisibles(PAGINA);
-  }, []);
-  const updateOrden = useCallback((v: Orden) => {
-    setOrden(v);
-    setVisibles(PAGINA);
-  }, []);
-  const updateSoloDc = useCallback((v: boolean) => {
-    setSoloDc(v);
-    setVisibles(PAGINA);
-  }, []);
+    return buildCatalog([...base, ...extra.filter((m) => !ids.has(m.id))]);
+  }, [query.data, extra]);
 
   return {
-    isLoading: catalogQuery.isLoading,
-    isError: catalogQuery.isError,
-    error: catalogQuery.error,
-    // Para el botón "Reintentar" del estado de error: el fallo más común es
-    // transitorio (la API tarda cerca de un minuto en arrancar), así que la
-    // salida tiene que ser volver a pedirlo, no recargar la página a mano.
-    refetch: catalogQuery.refetch,
-    total: modelos.length,
-    marcas,
-    query,
-    setQuery: updateQuery,
-    marca,
-    setMarca: updateMarca,
-    orden,
-    setOrden: updateOrden,
-    soloDc,
-    setSoloDc: updateSoloDc,
-    familias,
-    familiaPorId,
-    visible,
-    hayMas,
-    verMas,
+    catalog,
+    isError: query.isError && !catalog,
+    // El fallo más común es transitorio (la API tarda cerca de un minuto en
+    // arrancar): la salida es volver a pedirlo, no recargar la página.
+    refetch: query.refetch,
     addModel,
   };
 }

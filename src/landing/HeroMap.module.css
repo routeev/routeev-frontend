@@ -1,0 +1,388 @@
+/* Mapa del hero. Ancho: el país entero con dos paneles flotando a la
+   derecha. Angosto: un recorte sobre la ruta y el resultado abajo, como la
+   hoja inferior de /app. Colores del mapa fijos: el dibujo es el del mapa
+   oscuro de /app y la landing es siempre oscura. */
+
+/* La composición la decide el ancho del mapa y no el de la ventana: con
+   menos de ~550px el panel de resultado cae encima de la etiqueta de la
+   parada. Eso pasa en el celular, pero también en el hero de escritorio
+   entre 900 y ~1180px, donde la columna del mapa queda chica. */
+.root {
+  container-type: inline-size;
+}
+
+.figure {
+  --map-bg: #0b0e12;
+  --map-line: #2a3442;
+
+  position: relative;
+  aspect-ratio: 760 / 640;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--map-bg);
+  border: 1px solid var(--border);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.country {
+  fill: var(--bg-panel);
+  stroke: var(--map-line);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.road {
+  fill: none;
+  stroke: var(--map-line);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route,
+.routeGlow {
+  fill: none;
+  stroke: var(--accent-astar);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route {
+  stroke-width: 3.5;
+}
+
+.routeGlow {
+  stroke-width: 11;
+  stroke-opacity: 0.18;
+}
+
+/* ---- Pines: el punto cae sobre su lugar del mapa (--xw/--yw con el mapa
+   ancho, --xn/--yn angosto, ver HeroMap.tsx) y la etiqueta va a la derecha. */
+
+.pin {
+  position: absolute;
+  top: var(--yw);
+  left: var(--xw);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pinOrigin {
+  transform: translate(-6.5px, -50%);
+}
+
+.pinDest {
+  gap: 10px;
+  transform: translate(-6px, -50%);
+}
+
+.pinStop {
+  transform: translate(-11px, -50%);
+}
+
+.originDot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--point-origin);
+  box-shadow: 0 0 0 3px var(--map-bg);
+}
+
+.destDiamond {
+  width: 12px;
+  height: 12px;
+  background: var(--point-dest);
+  transform: rotate(45deg);
+  box-shadow:
+    0 0 0 3px var(--map-bg),
+    0 0 14px rgba(177, 140, 242, 0.5);
+}
+
+.pinLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: 0 0 4px var(--map-bg);
+}
+
+.stopSquare {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--warn);
+  color: var(--on-warn);
+  font: 600 12px/1 var(--font-display);
+  box-shadow: 0 0 0 3px var(--map-bg);
+}
+
+.stopLabel {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stopMinutes {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+}
+
+/* ---- Paneles flotantes (mapa ancho) ---- */
+
+.odPanel,
+.result {
+  position: absolute;
+  right: 16px;
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+}
+
+.odPanel {
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  width: min(250px, 38%);
+  padding: 4px 14px 10px;
+}
+
+.odGrid {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.odOrigin {
+  justify-self: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--point-origin);
+}
+
+.odName {
+  line-height: 36px;
+}
+
+.odLine {
+  justify-self: center;
+  width: 0;
+  height: 10px;
+  border-left: 1.5px dashed var(--border-strong);
+}
+
+.odDivider {
+  height: 1px;
+  background: var(--border);
+}
+
+.odDest {
+  justify-self: center;
+  width: 9px;
+  height: 9px;
+  background: var(--point-dest);
+  transform: rotate(45deg);
+}
+
+.vehicle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.vehicle svg {
+  flex: none;
+}
+
+.result {
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(270px, 40%);
+  padding: 16px;
+}
+
+.handle {
+  display: none;
+}
+
+.resultHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.resultTag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.resultValue {
+  font: 500 48px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultUnit {
+  margin-left: 2px;
+  font-size: 0.5em;
+  color: var(--text-muted);
+}
+
+.track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-track);
+}
+
+.fill {
+  width: 24%;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent-astar);
+}
+
+/* Columnas iguales mientras entren; si el panel se angosta, cada una crece
+   hasta lo que necesita su cifra en vez de pisarse con la de al lado. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(min-content, 1fr));
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statValue {
+  font: 500 18px/1.15 var(--font-display);
+  white-space: nowrap;
+}
+
+.unitH,
+.unitCost {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.unitH {
+  margin: 0 3px 0 2px;
+}
+
+.unitCost {
+  margin-right: 3px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.narrowOnly {
+  display: none;
+}
+
+/* ---- Angosto ---- */
+
+@container (max-width: 559.98px) {
+  .figure {
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: auto;
+  }
+
+  .canvas {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 530 / 520;
+  }
+
+  .pin {
+    top: var(--yn);
+    left: var(--xn);
+  }
+
+  .wideOnly,
+  .odPanel {
+    display: none;
+  }
+
+  .narrowOnly {
+    display: block;
+  }
+
+  /* La hoja inferior de /app: sube 16px sobre el mapa, con su manija. */
+  .result {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    margin-top: -16px;
+    padding: 10px 16px 16px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: none;
+  }
+
+  .handle {
+    display: block;
+    align-self: center;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+  }
+
+  .resultValue {
+    font-size: 44px;
+  }
+}
+
+/* Celulares de 320px: la etiqueta de la parada se pasaba unos píxeles del
+   borde del mapa. */
+@container (max-width: 299.98px) {
+  .stopLabel {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+}

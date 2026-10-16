@@ -1,0 +1,315 @@
+/* Mockup de la app en un teléfono, a tamaño base 316x652 (lo escala quien lo
+   usa). Colores fijos en hex y no con var(): el mockup es siempre oscuro
+   como la app, también si la página pasa a claro, y los tokens de
+   tokens.css cambian con el tema. Son los valores oscuros de esos mismos
+   tokens (--bg-panel, --border, --text, --accent-astar, --point-dest...). */
+
+.frame {
+  position: relative;
+  width: 316px;
+  height: 652px;
+  padding: 9px;
+  border-radius: 54px;
+  background: #1a212c;
+  box-shadow:
+    inset 0 0 0 1.5px #3a4555,
+    0 40px 90px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.screen {
+  position: relative;
+  width: 298px;
+  height: 634px;
+  overflow: hidden;
+  border-radius: 45px;
+  background: #0b0e12;
+  color: #e9eef3;
+  font-family: var(--font-body);
+}
+
+/* ---- Mapa ---- */
+
+.map {
+  position: absolute;
+  left: -11.4px;
+  top: -26px;
+  width: 768px;
+  height: 1280px;
+  transform: scale(0.54);
+  transform-origin: 0 0;
+}
+
+.map svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.country {
+  fill: #121821;
+  stroke: #2a3442;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.road {
+  fill: none;
+  stroke: #2a3442;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route,
+.routeGlow {
+  fill: none;
+  stroke: #34e3a8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route {
+  stroke-width: 7;
+}
+
+.routeGlow {
+  stroke-width: 22;
+  stroke-opacity: 0.18;
+}
+
+/* Oscurece arriba y abajo, donde van las tarjetas. */
+.shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 14, 19, 0.9) 0%,
+    rgba(10, 14, 19, 0) 24%,
+    rgba(10, 14, 19, 0) 62%,
+    rgba(10, 14, 19, 0.92) 100%
+  );
+}
+
+/* ---- Pines (left/top los pone el componente, sobre el punto proyectado) ---- */
+
+.pin {
+  position: absolute;
+}
+
+.originDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 3px #0a0e13,
+    0 0 0 5px rgba(255, 255, 255, 0.25);
+}
+
+.destinationDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #b18cf2;
+  box-shadow:
+    0 0 0 3px #0a0e13,
+    0 0 14px rgba(177, 140, 242, 0.6);
+}
+
+.chargeStop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chargeDot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #3aa0ff;
+  box-shadow:
+    0 0 0 3px #0a0e13,
+    0 0 18px rgba(58, 160, 255, 0.55);
+}
+
+.chargeDot polygon {
+  fill: #06121f;
+}
+
+.chargeLabel {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(18, 24, 33, 0.94);
+  border: 1px solid #232c38;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---- Chrome del teléfono ---- */
+
+.statusBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 30px 0 34px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.battery {
+  width: 24px;
+  height: 11px;
+  padding: 1.5px;
+  border-radius: 3px;
+  border: 1.2px solid rgba(233, 238, 243, 0.6);
+}
+
+.battery > div {
+  width: 70%;
+  height: 100%;
+  border-radius: 1.5px;
+  background: #e9eef3;
+}
+
+.island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  width: 96px;
+  height: 28px;
+  margin-left: -48px;
+  border-radius: 20px;
+  background: #000;
+}
+
+/* ---- Tarjetas de la app ---- */
+
+.routeCard {
+  position: absolute;
+  top: 54px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 14px;
+  border-radius: 18px;
+  background: rgba(18, 24, 33, 0.94);
+  border: 1px solid #232c38;
+}
+
+.routeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.originMark,
+.destinationMark {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.originMark {
+  border: 2px solid #ffffff;
+}
+
+.destinationMark {
+  background: #b18cf2;
+}
+
+.routeDivider {
+  height: 1px;
+  margin-left: 22px;
+  background: #232c38;
+}
+
+.tripCard {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 22px;
+  background: rgba(18, 24, 33, 0.96);
+  border: 1px solid #232c38;
+}
+
+.tripHead {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vehicle {
+  font-size: 11px;
+  color: #8b97a5;
+}
+
+.summary {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.charge {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chargeTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #232c38;
+}
+
+.chargeFill {
+  width: 24%;
+  height: 100%;
+  border-radius: 3px;
+  background: #34e3a8;
+}
+
+.chargeMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #8b97a5;
+}
+
+.value {
+  font-family: var(--font-mono);
+  color: #e9eef3;
+}
+
+.startTrip {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-radius: 12px;
+  background: #34e3a8;
+  color: #06231d;
+  font-size: 14px;
+  font-weight: 600;
+}

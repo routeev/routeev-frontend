@@ -1,450 +1,573 @@
-.dashboard {
-  height: 100%;
-  overflow-y: auto;
-  /* Mismo problema que en StationsPanel .list: las filas de las paradas de
-     carga (.stopRow) son `justify-content: space-between` y la barra de scroll
-     de escritorio se dibuja encima del valor de la derecha. */
-  scrollbar-gutter: stable;
-  background: var(--bg-panel);
-  border-top: 1px solid var(--border);
-  /* El padding lo pone esta seccion y no el contenedor: en escritorio el
-     panel reemplaza a "Tu viaje" adentro del sidebar y
-     .sidebarScrollDashboard le pone padding:0 justamente para eso (ver
-     MapPage.module.css). Asimetrico a proposito -- a la derecha va menos
-     porque ahi ya esta la canaleta de la barra de scroll (scrollbar-gutter
-     arriba), que suma su propio aire. */
-  padding: 16px 6px 0px 10px;
-  border-radius: 4%;
-}
-
-/* En pantalla angosta el panel deja de vivir en el sidebar y pasa a ser la
-   tarjeta flotante sobre el mapa (.dashboardWrap en MapPage.module.css, mismo
-   corte de 860px): ahi ocupa el ancho de la pantalla y comparte alto con el
-   mapa, asi que va mas apretado -- cada px de alto que se ahorra arriba es un
-   px mas de datos visibles sin scrollear. */
-@media (max-width: 860px) {
-  .dashboard {
-    padding: 10px 8px 0px;
-  }
-}
+/* ---- Cabecera ---- */
 
 .header {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.headRow {
+  display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 12px;
 }
 
-.header h2 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--text);
-  margin: 0;
-}
-
-.routeLabel {
-  font-size: 12.5px;
-  color: var(--text-faint);
-  margin-top: 2px;
-}
-
-/* Con qué prioridad se calculó la ruta: etiqueta + qué significó. */
-.tripMode {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.tripModeChip {
-  padding: 2px 8px;
-  border: 1px solid var(--accent-astar);
-  border-radius: 999px;
-  color: var(--accent-astar);
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.tripModeText {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-/* Un solo grid para las 8 tarjetas (ya no separadas por sección "Recorrido/
-   Batería/Costo y peajes" -- cada label ya es autodescriptivo, y partirlas
-   en bloques forzaba un salto de fila por sección aunque sobrara ancho).
-   2 columnas fijas, no auto-fit con minmax(160px): con un resultado
-   calculado este panel vive adentro del sidebar de 372px (ver el ternario de
-   MapPage.tsx y .sidebarScrollDashboard), donde quedan ~320px utiles -- por
-   debajo de los 330px que auto-fit necesitaba para dos columnas de 160px,
-   asi que terminaba cayendo a una sola columna y cada dato se comia una fila
-   entera. Los valores son cortos ("1.9 km", "19 km/h"), no necesitan 160px. */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.stat {
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 11px;
-  /* Los labels ("Velocidad promedio", "Batería consumida") rozan el ancho de
-     una tarjeta de media columna; sin esto una palabra larga desbordaba la
-     tarjeta en vez de cortarse. */
-  overflow-wrap: anywhere;
-}
-
-.statLabel {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.statValue {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-/* 20px y no 25: con dos columnas la tarjeta deja ~136px de contenido, y el
-   valor es monoespaciado (mono-num => JetBrains Mono, ~0.6em por caracter).
-   Un tiempo largo ("1 h 23 min", lo que devuelve formatDuration pasada la
-   hora) son 10 caracteres = ~150px a 25px, o sea que desbordaba la tarjeta;
-   a 20px entra con aire de sobra y sigue leyendose como el dato grande
-   frente al resto (17px). */
-.statValueLarge {
-  font-size: 20px;
-  line-height: 1.15;
-}
-
-.statSub {
-  font-size: 11.5px;
-  color: var(--text-faint);
-  margin-top: 3px;
-}
-
-.notFound {
-  color: var(--danger);
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.chargingStops h3 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 4px 0 10px;
-}
-
-.chargingStops {
-  margin-bottom: 16px;
-}
-
-.stopCard {
-  background: var(--bg-panel-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 11px 14px;
-  margin-bottom: 10px;
-  font-size: 12.5px;
-}
-
-.stopHeader {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--accent-dijkstra);
-}
-
-.stopHeader svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  fill: currentColor;
-  stroke: none;
-}
-
-.stopRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 2px 0;
-  color: var(--text-muted);
-}
-
-.stopRow b {
-  font-family: var(--font-mono);
-  color: var(--text);
-}
-
-/* Comercios a pie desde la parada -- una lista, no un par etiqueta:valor,
-   por eso no reusa .stopRow. */
-.stopPois {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--border);
-}
-
-.stopPoisLabel {
-  display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-  margin-bottom: 5px;
-}
-
-.stopPois ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.headText {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
-.stopPois li {
+.eyebrow {
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.route {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font: 600 22px/1.2 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.arrow {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.edit {
+  flex: none;
+  margin-top: -6px;
+}
+
+.mode {
   display: flex;
   flex-direction: column;
-  line-height: 1.35;
+  align-items: flex-start;
+  gap: 6px;
 }
 
-.stopPois li b {
-  color: var(--text);
-  font-weight: 600;
+.modePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font: 600 13px/1 var(--font-body);
 }
 
-.stopPois li span {
-  color: var(--text-muted);
-  font-size: 11.5px;
+/* ---- Sin ruta ---- */
+
+.noRoute {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-line);
 }
 
-/* Los que no entran en el rato de esta parada: quedan de referencia, no de
-   sugerencia. */
-.poiLejano {
-  opacity: 0.55;
-}
-
-.control {
-  margin-bottom: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.controlActions {
+.noRouteTitle {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  margin: 0;
+  font: 600 17px/1.3 var(--font-display);
+  color: var(--danger-text);
 }
 
-/* 16px a los costados y no 22: los dos botones van uno al lado del otro
-   (.controlActions) y en el sidebar hay ~328px -- con 22px la fila se pasaba
-   por unos pocos px y "Cancelar plan" caia a una segunda linea el solo. */
-.startBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+.noRouteBody {
+  margin: 0;
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--text);
+  text-wrap: pretty;
 }
 
-.cancelPlanBtn {
-  padding: 12px 16px;
+.noRouteTips {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font: 400 14px/1.45 var(--font-body);
+  color: var(--text);
 }
 
-.startBtn svg {
-  width: 15px;
-  height: 15px;
-  fill: currentColor;
-  stroke: none;
+.noRouteTips li::marker {
+  color: var(--text-muted);
 }
+
+.noRouteBtn {
+  align-self: flex-start;
+  min-height: 48px;
+  border-radius: 16px;
+  background: var(--bg-panel);
+  font-size: 15px;
+}
+
+/* ---- En viaje ---- */
 
 .live {
-  margin-top: 12px;
-}
-
-.liveRow {
   display: flex;
-  flex-wrap: wrap;
-  /* 16px de separacion entre columnas y no 22: mismo motivo que .startBtn --
-     en el sidebar estos datos en vivo entran justos, y 22px empujaba el
-     ultimo a una fila propia sin necesidad. */
-  gap: 10px 16px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--live-soft);
+  border: 1px solid var(--live-line);
 }
 
-.liveItem {
+.liveHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liveTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 14px/1.2 var(--font-body);
+  color: var(--live-text);
+}
+
+.liveDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-live);
+  box-shadow: 0 0 0 3px var(--live-line);
+}
+
+.livePct {
+  font: 500 13px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.liveBar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-track);
+  overflow: hidden;
+}
+
+.liveFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent-live);
+  transition: width 0.4s ease;
+}
+
+.liveFillCharging {
+  background: var(--warn);
+}
+
+.liveGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveValue {
+  font: 500 24px/1.15 var(--font-display);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.liveStatus {
+  margin: 0;
+  font: 500 13px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+/* ---- Llegás con ---- */
+
+.arrive {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.arriveHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font: 600 13px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.arriveValue {
+  font: 500 56px/1 var(--font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.arriveUnit {
+  margin-left: 2px;
+  font-size: 28px;
+  color: var(--text-muted);
+}
+
+/* El consejo lleva el color de la etiqueta: lo que hay que hacer con el
+   número de arriba, no solo cómo leerlo. */
+.advice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font: 500 14px/1.45 var(--font-body);
+  text-wrap: pretty;
+}
+
+.advice > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.adviceOk {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.adviceLow {
+  background: var(--warn-soft);
+  color: var(--warn-text);
+}
+
+.adviceCrit {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+/* Las notas del backend (reserva, margen inalcanzable) debajo del consejo:
+   mismo color, peso normal, son contexto y no la instrucción. */
+.adviceNote {
+  display: block;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ---- Tiempo y costo, con desglose ---- */
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.details {
+  padding: 14px;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summaryValue {
+  font: 500 26px/1.15 var(--font-display);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.summaryPrefix {
+  margin-right: 4px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.summaryLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 400 13px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.chevron {
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s;
+}
+
+.details[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.partRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 400 13px/1.3 var(--font-body);
+}
+
+.partRow dt {
+  color: var(--text-muted);
+}
+
+.partRow dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text);
+}
+
+.partsNote {
+  margin: 8px 0 0;
+  font: 400 12px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+/* ---- Datos ---- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 8px;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.statValue {
+  font: 500 18px/1.2 var(--font-display);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.statValue > span {
+  font-size: 12px;
+}
+
+.statText {
+  font: 500 14px/1.6 var(--font-body);
+  color: var(--text-muted);
+}
+
+/* ---- Cargador más cercano al destino ---- */
+
+.destCharger {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.destIcon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--dest-soft);
+  color: var(--dest-text);
+  display: grid;
+  place-items: center;
+}
+
+.destText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font: 400 13px/1.4 var(--font-body);
+}
+
+.destName {
+  font: 600 15px/1.3 var(--font-body);
+  color: var(--text);
+}
+
+.smallLabel {
+  font: 400 13px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+/* ---- Paradas ---- */
+
+.stops {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.noStops {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  font: 400 14px/1.45 var(--font-body);
+  color: var(--text);
+}
+
+.noStops > span {
+  display: grid;
+  place-items: center;
+}
+
+.stop {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+}
+
+/* Cuadrado numerado en ámbar: la misma forma que la parada en el mapa. */
+.stopNum {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--warn);
+  color: var(--on-warn);
+  display: grid;
+  place-items: center;
+  font: 700 14px/1 var(--font-display);
+}
+
+.stopBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.stopTitle {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.liveLabel {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-faint);
-}
-
-.liveValue {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent-astar);
-}
-
-.progressTrack {
-  position: relative;
-  height: 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.progressFill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-astar-dim), var(--accent-astar));
-  transition: width 0.15s linear;
-}
-
-.progressFillCharging {
-  background: linear-gradient(90deg, var(--accent-dijkstra-dim), var(--accent-dijkstra));
-}
-
-.status {
-  margin-top: 6px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-}
-
-.statusCharging {
-  color: var(--accent-dijkstra);
-}
-
-.statusDone {
-  color: var(--accent-astar);
-}
-
-.statusWarn {
-  color: var(--danger);
-}
-
-.advisory {
-  margin-top: 8px;
-  padding: 8px 10px;
-  font-size: 12px;
-  line-height: 1.5;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-muted);
-}
-
-.advisoryOk {
-  color: var(--accent-astar);
-  border-color: var(--accent-astar-dim);
-}
-
-.advisoryTight {
-  color: var(--accent-live);
-  border-color: var(--accent-live);
-}
-
-.advisoryWarn {
-  color: var(--accent-dijkstra);
-  border-color: var(--accent-dijkstra-dim);
-}
-
-.advisoryDanger {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-/* Aviso de radar: puntual y pasajero (aparece, se ve mientras se pasa el
-   radar, se va solo), a diferencia del advisory de batería que es un estado
-   continuo -- el borde izquierdo grueso lo separa visualmente del resto de
-   la columna de avisos en vez de ser una fila más entre ellos. */
-.radarAlert {
-  border-left: 4px solid var(--danger);
+.stopName {
+  font: 600 15px/1.3 var(--font-body);
   color: var(--text);
-  font-weight: 600;
 }
 
-/* Fila propia debajo de los botones, no un tercer ítem apretado al costado
-   de "Iniciar/Cancelar viaje": en el panel angosto el texto terminaba
-   partido en tres líneas verticales al lado del botón (reporte real, con
-   captura). flex-basis 100% dentro del mismo .controlActions (que ya es
-   flex-wrap) lo baja a su fila sin tocar el markup, en las dos vistas: con
-   el viaje calculado y durante el viaje en vivo. */
-.radarVibrationToggle {
-  flex-basis: 100%;
+.stopValue {
+  font: 500 18px/1.2 var(--font-display);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.stopNoRate {
+  font: 500 14px/1.6 var(--font-body);
+  color: var(--text-muted);
+}
+
+.stopLabel {
+  font: 400 12px/1.3 var(--font-body);
+  color: var(--text-muted);
+}
+
+.stopRows {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 24px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-/* Solo el color del texto: la caja del tilde es el <Checkbox> compartido
-   (shared/Checkbox.module.css), que trae sus propios estados de hover/focus
-   -- acá no hay ningún input nativo que estilizar. */
-.radarVibrationToggle:hover {
-  color: var(--text);
-}
-
-/* "Donde cargar al llegar": la estacion mas cercana al destino, cuando el
-   usuario dijo que alla no tiene enchufe. Es la respuesta a la pregunta que
-   sigue a "¿llego?", asi que va arriba de las estadisticas del viaje y no
-   perdida entre ellas. */
-.cargadorDestino {
-  margin: 0 0 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent-astar);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel-raised);
-}
-
-.cargadorDestinoTitulo {
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+  font: 400 13px/1.45 var(--font-body);
 }
 
-.cargadorDestinoNombre {
-  margin: 4px 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
+.stopRows > div {
+  display: flex;
+  gap: 8px;
 }
 
-.cargadorDestinoDato {
-  margin: 2px 0 0;
-  font-size: 12.5px;
-  line-height: 1.5;
+.stopRows dt {
+  flex: none;
+  width: 88px;
   color: var(--text-muted);
 }
 
-.cargadorDestinoAviso {
-  margin: 6px 0 0;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--accent-dijkstra);
+.stopRows dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.pois {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.poiMeta {
+  color: var(--text-muted);
+}
+
+.poiFar {
+  opacity: 0.65;
+}
+
+/* ---- Pie ---- */
+
+.footActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.startBtn {
+  flex: 1 1 180px;
+  width: auto;
+}
+
+.cancelBtn {
+  flex: 0 1 auto;
+}
+
+.radarToggle {
+  min-height: 44px;
+  margin: 0;
+  font-size: 14px;
 }

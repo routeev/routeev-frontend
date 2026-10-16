@@ -5,7 +5,7 @@ import { nextTripStep } from "./nextStep";
 // Montevideo y Punta del Este: dos puntos reales bien separados.
 const MVD = { lat: -34.9055, lon: -56.1851 };
 const PDE = { lat: -34.9633, lon: -54.9497 };
-const LISTO = { vehiclesLoaded: true, hasSelectedVehicle: true, origin: MVD, destination: PDE };
+const LISTO = { vehiclesLoaded: true, hasSelectedVehicle: true, origin: MVD, destination: PDE, chargerAnswered: true };
 const t = map.nextStep;
 
 describe("nextTripStep", () => {
@@ -26,7 +26,7 @@ describe("nextTripStep", () => {
   it("asks for a vehicle only after both points are set", () => {
     const step = nextTripStep({ ...LISTO, hasSelectedVehicle: false }, t);
     expect(step.done).toBe(false);
-    expect(step.text).toMatch(/agregá un vehículo/i);
+    expect(step.text).toMatch(/agregá un auto/i);
   });
 
   it("does not blame the vehicle while the points are still missing", () => {
@@ -57,8 +57,24 @@ describe("nextTripStep", () => {
     expect(step.text).toMatch(/cargando tus vehículos/i);
   });
 
-  // done es lo unico que decide si la barra de "Calcular ruta" existe en el
-  // DOM (ver MapPage.tsx): tiene que ser true exactamente cuando se puede.
+  // La pregunta del cargador en el destino ya no tiene respuesta por defecto
+  // (ver cargadorEnDestino en mapStore.ts): sin contestarla no se calcula.
+  it("asks about charging at the destination after the vehicle", () => {
+    const step = nextTripStep({ ...LISTO, chargerAnswered: false }, t);
+    expect(step.done).toBe(false);
+    expect(step.text).toMatch(/dónde cargar al llegar/i);
+    expect(nextTripStep({ ...LISTO, chargerAnswered: false, hasSelectedVehicle: false }, t).text).toMatch(/un auto/i);
+  });
+
+  it("numbers the steps for the circle next to the text", () => {
+    expect(nextTripStep({ ...LISTO, origin: null, destination: null }, t).num).toBe(1);
+    expect(nextTripStep({ ...LISTO, destination: null }, t).num).toBe(2);
+    expect(nextTripStep({ ...LISTO, chargerAnswered: false }, t).num).toBe(3);
+    expect(nextTripStep(LISTO, t).num).toBe(4);
+  });
+
+  // done es lo unico que decide si el pie de "Calcular ruta" existe en el DOM
+  // (ver PlanView.tsx): tiene que ser true exactamente cuando se puede.
   it("is done only when nothing is missing", () => {
     expect(nextTripStep(LISTO, t).done).toBe(true);
     expect(nextTripStep(LISTO, t).text).toMatch(/calcular ruta/i);

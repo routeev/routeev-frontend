@@ -1,0 +1,377 @@
+/* Índice de marcas: cabecera con buscador, marcas destacadas y A–Z. */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.heroGlow {
+  position: absolute;
+  top: -60%;
+  right: -12%;
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, var(--glow) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.heroInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  width: var(--content-w);
+  margin: 0 auto;
+  padding: 56px 0;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.eyebrowDot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-astar);
+  box-shadow: 0 0 0 3px rgba(52, 227, 168, 0.18);
+}
+
+.title {
+  max-width: 15em;
+  margin: 0;
+  font: 600 52px/1.05 var(--font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.intro {
+  max-width: 34em;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---- Secciones ---- */
+
+.featured,
+.az {
+  display: flex;
+  flex-direction: column;
+  width: var(--content-w);
+  margin: 0 auto;
+}
+
+.featured {
+  gap: 20px;
+  padding-top: 48px;
+}
+
+.az {
+  gap: 16px;
+  padding-top: 56px;
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
+.h2 {
+  margin: 0;
+  font: 600 24px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.sectionNote {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ---- Destacadas ---- */
+
+.featuredGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.featuredGrid li {
+  display: flex;
+}
+
+.brandCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  min-height: 104px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-panel);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.brandCard:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-panel-raised);
+}
+
+.brandName {
+  font: 600 22px/1.1 var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.brandMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.brandMeta svg {
+  flex: none;
+}
+
+.brandCount {
+  font: 600 15px/1 var(--font-display);
+  color: var(--text);
+}
+
+/* ---- A–Z ---- */
+
+/* Pegada abajo del header mientras se recorre la lista. */
+.letterBar {
+  position: sticky;
+  z-index: 10;
+  top: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(var(--bg-rgb), 0.94);
+}
+
+.letter {
+  flex: none;
+  width: 40px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: 600 15px/1 var(--font-display);
+  color: var(--text);
+}
+
+.letter:hover {
+  background: var(--bg-track);
+}
+
+.letter:disabled {
+  background: transparent;
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.letter:active {
+  transform: none;
+}
+
+.azCols {
+  padding-top: 8px;
+  column-gap: 40px;
+  columns: 3;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+  break-inside: avoid;
+  /* Header (64) + barra de letras (~53) + aire. */
+  scroll-margin-top: 132px;
+}
+
+.groupLetter {
+  margin: 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font: 600 15px/1 var(--font-display);
+  color: var(--accent-text);
+}
+
+.groupLetter:focus {
+  outline: none;
+}
+
+.groupList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.azRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.azRow:hover {
+  color: var(--accent-text);
+}
+
+.azName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.azRight {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.directNote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.directNote svg {
+  flex: none;
+}
+
+@media (min-width: 1200px) {
+  .azCols {
+    columns: 4;
+  }
+}
+
+/* ---- Celular ---- */
+
+@media (max-width: 899.98px) {
+  .heroInner {
+    gap: 16px;
+    padding: 28px 0 32px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .intro {
+    font-size: 16px;
+  }
+
+  .featured {
+    padding-top: 40px;
+  }
+
+  .az {
+    padding-top: 48px;
+  }
+
+  .featuredGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .brandCard {
+    gap: 10px;
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+
+  .brandName {
+    font-size: 18px;
+  }
+
+  .brandVersions {
+    display: none;
+  }
+
+  /* Una sola fila que se corre con el dedo, de borde a borde. */
+  .letterBar {
+    top: 56px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 4px 14px;
+    border-top: 1px solid var(--border-soft);
+    scrollbar-width: none;
+  }
+
+  .letterBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .letter {
+    width: 36px;
+  }
+
+  .azCols {
+    columns: 1;
+  }
+
+  .group {
+    scroll-margin-top: 120px;
+  }
+
+  .azRow {
+    min-height: 52px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 16px;
+  }
+}

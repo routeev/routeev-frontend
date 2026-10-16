@@ -1,8 +1,4 @@
 export const shared = {
-  uruguayGraph: {
-    mapAriaLabel:
-      "Map of Uruguay with the 19 department capitals and a sample route between Montevideo and Rivera, with a charging stop in Tacuarembó",
-  },
   routeErrorBoundary: {
     staleChunkTitle: "There's a new version of the app",
     genericTitle: "Something went wrong",
@@ -10,18 +6,12 @@ export const shared = {
     genericBody: "Reload the page. If the problem continues, try again in a few minutes.",
     reload: "Reload",
   },
-  modelCombobox: {
-    searching: "Searching the catalog...",
-    minChars: (minChars: number) => `Type at least ${minChars} letters to search the catalog.`,
-    noMatches: "No catalog model matches. You can still fill in the details by hand.",
-  },
   siteFooter: {
     showroom: "Showroom",
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact us",
     instagram: "Follow us on Instagram",
-    copyright: (year: number) => `© ${year} RouteEV. All rights reserved.`,
   },
   toastViewport: {
     dismiss: "Dismiss this notification",

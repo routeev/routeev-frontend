@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ShowroomModel } from "../api/showroom";
-import { fotoPrecargada, groupFamilies, versionLabel } from "./modelFamily";
+import { groupFamilies } from "./modelFamily";
 
 function mk(id: string, marca: string, modelo: string, bateria = 50, autonomia = 300): ShowroomModel {
   return {
@@ -98,27 +98,6 @@ describe("groupFamilies", () => {
   });
 });
 
-describe("versionLabel", () => {
-  const familias = groupFamilies([
-    mk("d1", "BYD", "Dolphin", 44.9),
-    mk("d2", "BYD", "DOLPHIN (60.4 kWh)", 60.5),
-    mk("m1", "Tesla", "Model 3 Standard Range", 57.5),
-    mk("m2", "Tesla", "Model 3 (Performance)", 82),
-  ]);
-  const dolphin = familias[0]!;
-  const model3 = familias[1]!;
-
-  it("es lo que distingue a la versión dentro de la familia", () => {
-    expect(versionLabel(dolphin, dolphin.versiones[1]!)).toBe("60.4 kWh");
-    expect(versionLabel(model3, model3.versiones[0]!)).toBe("Standard Range");
-    expect(versionLabel(model3, model3.versiones[1]!)).toBe("Performance");
-  });
-
-  it("queda vacío para la versión a secas (el componente muestra la batería)", () => {
-    expect(versionLabel(dolphin, dolphin.versiones[0]!)).toBe("");
-  });
-});
-
 describe("groupFamilies con `linea` del backend", () => {
   function conLinea(id: string, marca: string, modelo: string, linea: string, bateria: number): ShowroomModel {
     return { ...mk(id, marca, modelo, bateria), linea } as ShowroomModel;
@@ -169,35 +148,5 @@ describe("groupFamilies con `linea` del backend", () => {
 
     expect(familias).toHaveLength(1);
     expect(familias[0]!.nombre).toBe("ORA 03");
-  });
-});
-
-describe("fotoPrecargada", () => {
-  const conFoto = (m: ShowroomModel, url: string): ShowroomModel => ({
-    ...m,
-    foto_url: url,
-    foto_credito: { autor: `autor de ${m.id}` },
-  });
-
-  it("usa la foto del representante cuando la tiene", () => {
-    const [familia] = groupFamilies([
-      conFoto(mk("a", "GWM", "ORA 03 (48 kWh)", 45.4, 400), "/foto-a"),
-      conFoto(mk("b", "GWM", "ORA 03 (63 kWh)", 59.3, 300), "/foto-b"),
-    ]);
-    expect(fotoPrecargada(familia!)).toEqual({ url: "/foto-a", credito: { autor: "autor de a" } });
-  });
-
-  it("si el representante no trae foto pero una versión hermana sí, usa esa (no la pide en frío)", () => {
-    const [familia] = groupFamilies([
-      mk("a", "GWM", "ORA 03 (48 kWh)", 45.4, 400),
-      conFoto(mk("b", "GWM", "ORA 03 (63 kWh)", 59.3, 300), "/foto-b"),
-    ]);
-    expect(familia!.representante.id).toBe("a");
-    expect(fotoPrecargada(familia!)).toEqual({ url: "/foto-b", credito: { autor: "autor de b" } });
-  });
-
-  it("si ninguna versión trae foto, no inventa una: la tarjeta tiene que pedirla por nombre", () => {
-    const [familia] = groupFamilies([mk("a", "GWM", "ORA 03 (48 kWh)"), mk("b", "GWM", "ORA 03 (63 kWh)")]);
-    expect(fotoPrecargada(familia!)).toBeUndefined();
   });
 });

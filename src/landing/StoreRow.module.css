@@ -1,0 +1,108 @@
+/* Contenedor de consulta: decide por el ancho que le toca (columna del
+   hero, tarjeta del cierre) y no por el de la ventana. */
+.root {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  display: block;
+  flex: none;
+  height: 48px;
+}
+
+.badge img {
+  display: block;
+  width: auto;
+  height: 100%;
+}
+
+.qrBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+  padding-left: 20px;
+  border-left: 1px solid var(--border);
+}
+
+.qr {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  padding: 5px;
+  border-radius: 10px;
+  /* Blanco siempre: un QR necesita el contraste de siempre. */
+  background: #ffffff;
+}
+
+.qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.qrHint {
+  max-width: 96px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Badges + QR en una fila piden ~526px. Con menos, el QR baja entero a su
+   propia fila, sin el divisor (que si no queda colgando al principio de la
+   línea nueva). */
+@container (max-width: 529.98px) {
+  .qrBlock {
+    flex-basis: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .qrHint {
+    max-width: none;
+  }
+}
+
+/* Celular: sin QR (nadie escanea con el mismo teléfono que lo muestra) y los
+   dos badges en una grilla que los achica juntos. Cada columna mide en la
+   proporción de su badge (App Store 3:1, Google Play ~3,36:1), así quedan
+   del mismo alto a cualquier ancho, con 50px de tope. */
+@media (max-width: 899.98px) {
+  .stores {
+    display: grid;
+    grid-template-columns: 3fr 3.36fr;
+    gap: 10px;
+    max-width: calc(50px * 6.36 + 10px);
+  }
+
+  .playFirst {
+    grid-template-columns: 3.36fr 3fr;
+  }
+
+  .playFirst .playBadge {
+    order: -1;
+  }
+
+  .badge {
+    height: auto;
+    min-width: 0;
+  }
+
+  .badge img {
+    width: 100%;
+    height: auto;
+  }
+
+  .qrBlock {
+    display: none;
+  }
+}

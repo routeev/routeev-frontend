@@ -1,213 +1,331 @@
-import { lazy, Suspense, useMemo } from "react";
-import type { ShowroomModel, SimulateResult } from "../api/showroom";
+import { lazy, Suspense, useMemo, type CSSProperties, type ReactNode } from "react";
+import type { SimulateResult } from "../api/showroom";
 import { useTranslation } from "../i18n/LanguageProvider";
-import { formatDuration, formatUyu } from "../shared/format";
-import { num } from "./num";
+import { IconAlert, IconCheck } from "../map/panelIcons";
+import { useFormat } from "./format";
+import { IconXCircle } from "./showroomIcons";
 import { cargarSimulationMap } from "./simulationMapLoader";
-import { armarTramos } from "./simulationTimeline";
+import { armarTramos, type ParadaConKm } from "./simulationTimeline";
 import { tarifaLinea } from "./tarifaTexto";
 import styles from "./SimulationResult.module.css";
+import ui from "./ui.module.css";
 
 // Ver simulationMapLoader.ts: el mapa (leaflet + maplibre) baja recién acá, no
-// con la página del showroom. SimulationForm arranca esa descarga al apretar
-// "Simular", en paralelo al cálculo del servidor, así que cuando llega el
-// resultado el chunk casi siempre ya está.
+// con la página del showroom. TripSimulator arranca esa descarga al apretar
+// "Calcular viaje", en paralelo al cálculo del servidor.
 const SimulationMap = lazy(() => cargarSimulationMap().then((m) => ({ default: m.SimulationMap })));
 
-interface SimulationResultProps {
-  resultado: SimulateResult;
-  model: ShowroomModel;
-  desde: string;
-  hasta: string;
-  bateria: number;
-  /** Margen de seguridad (% de batería) que el plan intenta mantener como piso. */
-  margenPct?: number;
+type Tone = "ok" | "low" | "crit";
+
+/** Con margen desde 20 %, margen bajo de 10 a 19 %, crítico por debajo de 10 %. */
+function toneOf(pct: number): Tone {
+  return pct >= 20 ? "ok" : pct >= 10 ? "low" : "crit";
 }
 
-export function SimulationResult({ resultado, model, desde, hasta, bateria, margenPct = 10 }: SimulationResultProps) {
-  const { t } = useTranslation();
-  const sr = t.showroom.simulationResult;
-  const tramosInfo = useMemo(() => armarTramos(resultado), [resultado]);
-  const tieneMapa = resultado.detalle.tramos.every((t) => Array.isArray(t.route_coords) && t.route_coords.length > 1);
+/** Por debajo de esta distancia entre paradas, sus nombres se pisan en la tira. */
+const MIN_LABEL_GAP = 0.2;
 
-  if (!resultado.llega) {
+interface SimulationResultProps {
+  result: SimulateResult;
+  /** Capacidad de la versión simulada, para la animación de la batería. */
+  batteryKwh: number;
+  startBattery: number;
+  from: string;
+  to: string;
+}
+
+export function SimulationResult({
+  result,
+  batteryKwh,
+  startBattery,
+  from,
+  to,
+}: SimulationResultProps) {
+  const { t } = useTranslation();
+  const tr = t.showroom.simulationResult;
+  const f = useFormat();
+
+  const tramos = useMemo(() => (result.llega ? armarTramos(result) : []), [result]);
+  const hasMap = tramos.length > 0 && tramos.every((tramo) => tramo.coords.length > 1);
+  // Las paradas numeradas en el orden en que se hacen: la ida y después la vuelta.
+  const stops: (ParadaConKm & { n: number })[] = tramos
+    .flatMap((tramo) => tramo.paradas)
+    .map((p, i) => ({ ...p, n: i + 1 }));
+
+  if (!result.llega) {
     return (
-      <div className={styles.out}>
-        <p className={[styles.veredicto, styles.no].join(" ")}>{sr.noLlega}</p>
-        <p className={styles.detalle}>{sr.noLlegaDetalle(bateria)}</p>
+      <div className={styles.verdict}>
+        <span className="sr-only">{tr.sr.no(to)}</span>
+        <div className={styles.verdictHead}>
+          <span className={styles.verdictLabel}>{tr.verdict}</span>
+          <span className={styles.toneNo}>
+            <IconXCircle size={14} />
+            {tr.noTag}
+          </span>
+        </div>
+        <span className={styles.noTitle}>{tr.noTitle}</span>
+        <p className={styles.noBody}>{tr.noBody(startBattery, to)}</p>
+        <p className={styles.noWhy}>{tr.noWhy}</p>
       </div>
     );
   }
 
-  const d = resultado.detalle;
-  const paradas = resultado.paradas ?? [];
-
-  // Backend nuevo: costo_uyu_recargas presente significa que costo_uyu_energia
-  // es SOLO la energía de casa y cada recarga en ruta viene cotizada con el
-  // tarifario de su operador. Backend viejo en producción: nada de esto llega
-  // y el desglose queda como siempre.
+  const d = result.detalle;
+  const pct = Math.round(result.bateria_llegada_pct);
+  const tone = toneOf(pct);
+  const ida = tramos[0];
+  const idaStops = stops.filter((s) => s.tramo === "ida");
+  const fractions = idaStops.map((s) => (ida && ida.totalKm > 0 ? s.cumKm / ida.totalKm : 0));
+  const points = [0, ...fractions, 1];
+  const roomy = points.every((p, i) => i === 0 || p - points[i - 1]! >= MIN_LABEL_GAP);
   const conTarifas = d.costo_uyu_recargas != null;
-  // El detalle no trae los kWh de casa por separado: se derivan restando lo
-  // recargado en ruta (suma de las paradas) del total consumido.
-  const kwhCasa = Math.max(0, d.energia_kwh - paradas.reduce((acc, p) => acc + p.kwh, 0));
   const sinTarifa = d.recargas_sin_tarifa ?? 0;
+  const tolls = Number(d.peajes) || null;
+  const totalH = Math.floor(Math.round(result.tiempo_total_min) / 60);
+  const totalM = Math.round(result.tiempo_total_min) % 60;
 
   return (
-    <div className={styles.out}>
-      {tieneMapa && (
-        <div className={styles.anim}>
-          <Suspense fallback={<div className={styles.mapaCargando} aria-hidden="true" />}>
-            <SimulationMap
-              tramosInfo={tramosInfo}
-              capacidadKwh={model.bateria_kwh}
-              bateriaInicialPct={bateria}
-              tiempoTotalMin={resultado.tiempo_total_min}
+    <div className={styles.result}>
+      <div className={hasMap ? styles.top : undefined}>
+        {hasMap && (
+          <figure className={styles.map} aria-label={tr.mapAria(from, to, stops.length)}>
+            <Suspense fallback={<div className={styles.mapLoading} aria-hidden="true" />}>
+              <SimulationMap
+                tramosInfo={tramos}
+                capacidadKwh={batteryKwh}
+                bateriaInicialPct={startBattery}
+                tiempoTotalMin={result.tiempo_total_min}
+              />
+            </Suspense>
+          </figure>
+        )}
+
+        <div className={styles.verdict}>
+          <span className="sr-only">{tr.sr[tone](to, f.n(pct))}</span>
+          <div className={styles.verdictHead}>
+            <span className={styles.verdictLabel}>{tr.arriveWith}</span>
+            <span className={styles.tone} data-tone={tone}>
+              {tone === "ok" ? <IconCheck size={14} strokeWidth={2} /> : <IconAlert size={14} />}
+              {tr.tone[tone]}
+            </span>
+          </div>
+          <span className={styles.pct}>
+            {pct}
+            <span className={styles.pctUnit}>%</span>
+          </span>
+          <div className={styles.track}>
+            <div
+              className={styles.fill}
+              data-tone={tone}
+              style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
             />
-          </Suspense>
-        </div>
-      )}
+          </div>
+          <p className={styles.message} data-tone={tone}>
+            {tr.message[tone]}
+          </p>
 
-      {/* Acá vivía el perfil batería-vs-distancia (<CertaintyLine
-          scale="macro">). Se retiró a pedido: con los nombres reales de las
-          paradas las etiquetas del eje se pisaban unas a otras y la
-          animación del mapa de arriba ya cuenta la misma historia (la
-          batería bajando tramo a tramo) mejor. La versión "micro" del
-          historial (/profile) sigue viva -- ahí no dibuja etiquetas. */}
-      <p className={[styles.veredicto, styles.si].join(" ")}>{sr.llega}</p>
-      <p className={styles.detalle}>{sr.llegaDetalle(desde, hasta, bateria, d.tramos.length > 1)}</p>
-
-      {/* Semáforo del margen: crítico < 5% siempre; "bajo" hasta el margen que
-          el plan intentó mantener (el backend ya sumó las recargas que pudo). */}
-      {resultado.bateria_llegada_pct < 5 ? (
-        <p className={[styles.margenAviso, styles.margenCritico].join(" ")}>
-          {sr.margenCritico(num(resultado.bateria_llegada_pct, 1))}
-        </p>
-      ) : resultado.bateria_llegada_pct < margenPct ? (
-        <p className={[styles.margenAviso, styles.margenBajo].join(" ")}>
-          {sr.margenBajo(num(resultado.bateria_llegada_pct, 1), num(margenPct), resultado.margen_alcanzado === false)}
-        </p>
-      ) : (
-        <p className={[styles.margenAviso, styles.margenOk].join(" ")}>
-          {sr.margenOk(num(resultado.bateria_llegada_pct, 1), num(margenPct))}
-        </p>
-      )}
-
-      <dl className={styles.cifras}>
-        <div>
-          <dt>{sr.dtDistancia}</dt>
-          <dd className="mono-num">{num(d.distancia_km, 1)} km</dd>
-        </div>
-        <div>
-          <dt>{sr.dtTiempoTotal}</dt>
-          <dd className="mono-num">{formatDuration(resultado.tiempo_total_min)}</dd>
-        </div>
-        <div>
-          <dt>{sr.dtBateriaLlegada}</dt>
-          <dd className={["mono-num", styles.bat].join(" ")}>{num(resultado.bateria_llegada_pct, 1)}%</dd>
-        </div>
-        <div>
-          <dt>{sr.dtCostoViaje}</dt>
-          <dd className={["mono-num", styles.costo].join(" ")}>{formatUyu(resultado.costo_uyu)}</dd>
-        </div>
-      </dl>
-
-      <div className={styles.desglose}>
-        <div>
-          <h5>{sr.tiempoTitulo}</h5>
-          <ul>
-            <li>
-              <span>{sr.manejando}</span>
-              <span className="mono-num">{formatDuration(d.conduccion_min)}</span>
-            </li>
-            <li>
-              <span>{sr.demorasTrafico}</span>
-              <span className="mono-num">{formatDuration(d.trafico_min)}</span>
-            </li>
-            <li>
-              <span>{sr.enchufadoCargando}</span>
-              <span className="mono-num">{formatDuration(d.recarga_min)}</span>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h5>{sr.plataTitulo}</h5>
-          <ul>
-            <li>
-              <span>{conTarifas ? sr.energiaCasa(num(kwhCasa, 1)) : sr.energiaTotal(num(d.energia_kwh, 1))}</span>
-              <span className="mono-num">{formatUyu(d.costo_uyu_energia)}</span>
-            </li>
-            {conTarifas && paradas.length > 0 && (
-              <li>
-                <span>{sr.recargasEnRuta(paradas.length)}</span>
-                <span className="mono-num">{formatUyu(d.costo_uyu_recargas ?? 0)}</span>
-              </li>
-            )}
-            {sinTarifa > 0 && <li className={styles.desgloseNota}>{sr.recargasSinTarifa(sinTarifa)}</li>}
-            <li>
-              <span>
-                {sr.peajes}
-                {d.peajes ? ` (${d.peajes})` : ""}
+          <div
+            role="img"
+            aria-label={tr.stripAria(from, to, idaStops.length)}
+            className={styles.strip}
+          >
+            <div className={styles.stripLine} />
+            <span className={styles.stripOrigin} />
+            <span className={styles.stripDest} />
+            {idaStops.map((s, i) => (
+              <span
+                key={s.n}
+                className={styles.stripStop}
+                style={{ "--at": fractions[i] } as CSSProperties}
+              >
+                <span className={styles.stopSquare}>{s.n}</span>
+                {roomy && <span className={styles.stripStopName}>{s.ciudad ?? s.nombre}</span>}
               </span>
-              <span className="mono-num">{formatUyu(d.peaje_uyu)}</span>
-            </li>
-            <li className={styles.desgloseTotal}>
-              <span>{sr.total}</span>
-              <span className="mono-num">{formatUyu(resultado.costo_uyu)}</span>
-            </li>
-          </ul>
+            ))}
+            <span className={styles.stripFrom}>{from}</span>
+            <span className={styles.stripTo}>{to}</span>
+          </div>
         </div>
       </div>
 
+      <dl className={styles.figures}>
+        <Figure label={tr.distance}>
+          {f.n(d.distancia_km)}
+          <span className={ui.unit}>km</span>
+        </Figure>
+        <Figure label={tr.time}>
+          {totalH}
+          <span className={styles.unitMid}>h</span>
+          {totalM}
+          <span className={ui.unit}>min</span>
+        </Figure>
+        <Figure label={tr.batteryArrival}>
+          {pct}
+          <span className={ui.unit}>%</span>
+        </Figure>
+        <Figure label={tr.cost}>
+          <span className={ui.prefix}>≈ $U</span>
+          {f.n(result.costo_uyu)}
+        </Figure>
+      </dl>
+
+      <div className={styles.breaks}>
+        <Breakdown
+          title={tr.timeTitle}
+          rows={[
+            [tr.driving, f.duration(d.conduccion_min)],
+            [tr.traffic, f.duration(d.trafico_min)],
+            [tr.charging, f.duration(d.recarga_min)],
+          ]}
+          total={[tr.total, f.duration(result.tiempo_total_min)]}
+        />
+        <Breakdown
+          title={tr.moneyTitle}
+          rows={[
+            [conTarifas ? tr.homeEnergy : tr.energy, `$U ${f.n(d.costo_uyu_energia)}`],
+            ...(conTarifas && stops.length > 0
+              ? [
+                  [tr.recharges(stops.length), `$U ${f.n(d.costo_uyu_recargas ?? 0)}`] as [
+                    string,
+                    string,
+                  ],
+                ]
+              : []),
+            [tr.tolls(tolls), `$U ${f.n(d.peaje_uyu)}`],
+          ]}
+          total={[tr.total, `$U ${f.n(result.costo_uyu)}`]}
+          note={sinTarifa > 0 ? tr.noTariff(sinTarifa) : undefined}
+        />
+      </div>
+
       {d.tramos.length > 1 && (
-        <ul className={styles.tramos}>
-          {d.tramos.map((tramo) => (
-            <li key={tramo.tramo}>
-              <span className={styles.tramoNombre}>{tramo.tramo === "ida" ? sr.ida : sr.vuelta}</span>
-              <span className="mono-num">{num(tramo.distancia_km, 1)} km</span>
-              <span className="mono-num">{formatDuration(tramo.conduccion_min + tramo.trafico_min + tramo.recarga_min)}</span>
-              <span className="mono-num">{formatUyu(tramo.costo_uyu_total)}</span>
-            </li>
-          ))}
-        </ul>
+        <div className={styles.block}>
+          <h3 className={styles.h3}>{tr.legsTitle}</h3>
+          <ul className={styles.legs}>
+            {d.tramos.map((tramo) => {
+              const n = stops.filter((s) => s.tramo === tramo.tramo).length;
+              const ida = tramo.tramo === "ida";
+              return (
+                <li key={tramo.tramo} className={styles.leg}>
+                  <span className={styles.legTitle}>
+                    {ida ? `${tr.outbound} · ${from} → ${to}` : `${tr.return} · ${to} → ${from}`}
+                  </span>
+                  <span className={styles.legDetail}>
+                    {[
+                      `${f.n(tramo.distancia_km)} km`,
+                      n ? tr.stopsTitle(n) : null,
+                      f.duration(tramo.conduccion_min + tramo.trafico_min + tramo.recarga_min),
+                      `$U ${f.n(tramo.costo_uyu_total)}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
-      {paradas.length ? (
-        <>
-          <h5 className={styles.paradasTitulo}>{sr.paradasTitulo}</h5>
-          <ol className={styles.paradas}>
-            {paradas.map((parada, i) => {
-              const datos = [sr.enchufado(formatDuration(parada.minutos)), sr.kwhGanados(num(parada.kwh, 1))];
-              if (parada.potencia_efectiva_kw) {
-                datos.push(
-                  parada.potencia_efectiva_kw < parada.potencia_kw
-                    ? sr.potenciaLimitada(num(parada.potencia_efectiva_kw), num(parada.potencia_kw))
-                    : sr.potenciaSimple(num(parada.potencia_kw))
-                );
-              }
-              if (parada.conector) datos.push(parada.conector);
-              if (parada.costo_uyu != null) datos.push(formatUyu(parada.costo_uyu));
-
+      {stops.length > 0 ? (
+        <div className={styles.block}>
+          <h3 className={styles.h3}>{tr.stopsTitle(stops.length)}</h3>
+          <ol className={styles.stops}>
+            {stops.map((s) => {
+              const limited =
+                s.potencia_efectiva_kw != null && s.potencia_efectiva_kw < s.potencia_kw;
+              const chips = [
+                s.operador,
+                tr.minutes(f.n(s.minutos)),
+                `+${f.n(s.kwh, 1)} kWh`,
+                limited
+                  ? tr.powerLimited(f.n(s.potencia_efectiva_kw!), f.n(s.potencia_kw))
+                  : `${f.n(s.potencia_kw)} kW`,
+                s.conector,
+                d.tramos.length > 1 ? (s.tramo === "ida" ? tr.outbound : tr.return) : null,
+                s.tarifa?.tarifa_conocida && s.tarifa.modalidad
+                  ? tr.tariffChip(s.tarifa.modalidad)
+                  : null,
+              ].filter(Boolean);
+              const address = s.direccion ?? [s.ciudad, s.departamento].filter(Boolean).join(", ");
               return (
-                <li key={i}>
-                  <div className={styles.paradaHead}>
-                    <span className={styles.paradaNombre}>{parada.nombre}</span>
-                    {d.tramos.length > 1 && <span className={styles.paradaTramo}>{parada.tramo}</span>}
+                <li key={s.n} className={styles.stop}>
+                  <span className={styles.stopSquareBig} aria-hidden="true">
+                    {s.n}
+                  </span>
+                  <div className={styles.stopBody}>
+                    <div className={styles.stopHead}>
+                      <span className={styles.stopName}>{s.nombre}</span>
+                      <span className={styles.stopCost}>
+                        {s.costo_uyu != null ? (
+                          <>
+                            <span className={ui.prefix}>$U</span>
+                            {f.n(s.costo_uyu)}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </span>
+                    </div>
+                    {address && <span className={styles.stopAddress}>{address}</span>}
+                    <span className={styles.chips}>
+                      {chips.map((c) => (
+                        <span key={c} className={styles.chip}>
+                          {c}
+                        </span>
+                      ))}
+                    </span>
+                    {s.tarifa && (
+                      <span className={styles.stopTariff}>
+                        {tarifaLinea(s.tarifa, t.showroom.tarifaTexto)}
+                      </span>
+                    )}
                   </div>
-                  <p className={styles.paradaDir}>{[parada.direccion, parada.operador].filter(Boolean).join(" · ")}</p>
-                  <p className={["mono-num", styles.paradaDatos].join(" ")}>{datos.join(" · ")}</p>
-                  {/* De dónde sale el costo de arriba (o por qué no hay costo).
-                      Sin `tarifa` (backend viejo) no se muestra nada. */}
-                  {parada.tarifa && (
-                    <p className={styles.paradaTarifa}>{tarifaLinea(parada.tarifa, t.showroom.tarifaTexto)}</p>
-                  )}
                 </li>
               );
             })}
           </ol>
-        </>
+        </div>
       ) : (
-        <p className={styles.sinParadas}>{sr.sinParadas}</p>
+        <p className={styles.noStops}>{tr.noStops}</p>
       )}
+    </div>
+  );
+}
+
+function Figure({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className={styles.figure}>
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
+interface BreakdownProps {
+  title: string;
+  rows: [string, string][];
+  total: [string, string];
+  note?: string;
+}
+
+function Breakdown({ title, rows, total, note }: BreakdownProps) {
+  return (
+    <div className={styles.breakdown}>
+      <h3 className={styles.breakdownTitle}>{title}</h3>
+      <dl className={styles.breakdownList}>
+        {rows.map(([label, value]) => (
+          <div key={label} className={styles.breakdownRow}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+        <div className={styles.breakdownTotal}>
+          <dt>{total[0]}</dt>
+          <dd>{total[1]}</dd>
+        </div>
+      </dl>
+      {note && <p className={styles.breakdownNote}>{note}</p>}
     </div>
   );
 }

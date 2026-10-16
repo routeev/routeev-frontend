@@ -18,7 +18,7 @@ export interface Toast {
  * persona reintentando a ciegas la misma acción que ya falló. El feedback que
  * originó todo esto era justamente de alguien mayor, que lee sin apuro.
  */
-const DURACION_MS: Record<ToastVariant, number> = { ok: 5000, error: 10000 };
+const DURACION_MS: Record<ToastVariant, number> = { ok: 4500, error: 10000 };
 
 let nextId = 1;
 

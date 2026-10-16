@@ -1,0 +1,108 @@
+.hero,
+.bar {
+  position: relative;
+  width: 100%;
+}
+
+.hero {
+  max-width: 640px;
+  margin-top: 4px;
+}
+
+.bar {
+  flex: none;
+  width: 340px;
+}
+
+.icon {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: flex;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.bar .icon {
+  top: 13px;
+  left: 14px;
+}
+
+/* type="search" trae su propia cruz en Chrome/Safari: va la nuestra, de 44px. */
+.input {
+  width: 100%;
+  height: 56px;
+  margin: 0;
+  padding: 0 52px 0 50px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  outline: none;
+  background: var(--bg-panel);
+  font-size: 16px;
+  color: var(--text);
+  appearance: none;
+}
+
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.bar .input {
+  height: 44px;
+  padding: 0 44px 0 42px;
+  border-color: var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.input:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--accent-astar);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.clear {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.clear:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+.bar .clear {
+  top: 0;
+  right: 0;
+}
+
+/* En el celular la barra no tiene buscador (va la lupa); el del índice
+   ocupa el ancho entero y el texto queda en 16px para que iOS no haga zoom. */
+@media (max-width: 899.98px) {
+  .hero {
+    max-width: none;
+  }
+
+  .bar .input {
+    font-size: 16px;
+  }
+}

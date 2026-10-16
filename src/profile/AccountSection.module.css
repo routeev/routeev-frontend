@@ -1,0 +1,254 @@
+/* Mi cuenta: filas de configuración con "Cambiar"; la que se edita pasa a
+   fondo hundido con su formulario. Eliminar cuenta va aparte, al final. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-margin-top: 88px;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  font: 600 24px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.skeleton {
+  height: 360px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--bg-panel);
+}
+
+.row,
+.rowEditing {
+  padding: 14px 16px 14px 20px;
+}
+
+.row + .row,
+.row + .rowEditing,
+.rowEditing + .row {
+  border-top: 1px solid var(--border);
+}
+
+.rowEditing {
+  padding: 20px;
+  background: var(--bg-sunken);
+}
+
+.rowEditing:first-child {
+  border-radius: calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px) 0 0;
+}
+
+.rowEditing:last-child {
+  border-radius: 0 0 calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px);
+}
+
+.rowView {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-track);
+  font: 600 18px/1 var(--font-display);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rowLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.rowValue,
+.rowValueMuted {
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.rowValueMuted {
+  color: var(--text-muted);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.removeButton {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: var(--text-muted);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.removeButton:hover {
+  border-color: transparent;
+  color: var(--danger-text);
+}
+
+/* ---- Formulario en el lugar ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formTitle {
+  margin: 0;
+  font: 600 17px/1.3 var(--font-display);
+}
+
+.formBody {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.formBody strong {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  max-width: 420px;
+}
+
+.fieldsWide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---- Eliminar cuenta ---- */
+
+.danger {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--danger-line);
+  border-radius: var(--radius-card);
+  scroll-margin-top: 88px;
+}
+
+.dangerTitle {
+  margin: 0;
+  font: 600 19px/1.3 var(--font-display);
+  color: var(--danger-text);
+}
+
+.dangerStart {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+.dangerConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+}
+
+.dangerSure {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--error-text);
+}
+
+.dangerSure > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--danger-text);
+}
+
+.dangerCancel {
+  background: var(--bg-panel);
+}
+
+@media (max-width: 899.98px) {
+  .fieldsWide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
