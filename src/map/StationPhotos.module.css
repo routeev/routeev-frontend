@@ -1,0 +1,262 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Tira horizontal: con muchas fotos se desliza con el dedo, y cada foto
+   encaja al borde (scroll-snap). */
+.strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.addBtn {
+  cursor: pointer;
+}
+
+.addBtn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 168px;
+  height: 120px;
+  border-radius: 14px;
+  scroll-snap-align: start;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.thumbImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbLoading {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--bg-sunken), var(--border), var(--bg-sunken));
+  background-size: 200% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes brillo {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.addTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--border-strong);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+}
+
+.addTile:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.addTile[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.addLabel {
+  font: 600 13px/1.2 var(--font-body);
+}
+
+.addHint {
+  font: 400 12px/1.4 var(--font-body);
+  text-wrap: pretty;
+}
+
+/* ---- Visor a pantalla completa ---- */
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgb(0 0 0 / 0.82);
+}
+
+/* margin: auto centra cuando entra y, cuando no (el formulario de reporte
+   abierto en una pantalla baja), deja scrollear sin cortar la parte de arriba. */
+.viewerInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(960px, 100%);
+  margin: auto;
+}
+
+.viewerClose {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+  cursor: pointer;
+}
+
+.viewerStage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.viewerImg {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 220px);
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  cursor: pointer;
+}
+
+.navPrev {
+  left: 8px;
+}
+
+.navNext {
+  right: 8px;
+}
+
+.navNext svg {
+  transform: rotate(180deg);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.captionMain {
+  margin: 0;
+  font: 500 14px/1.4 var(--font-body);
+}
+
+.credit {
+  margin: 0;
+  font: 400 12px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+.credit a {
+  color: inherit;
+}
+
+.notice {
+  margin: 0;
+  font: 400 13px/1.4 var(--font-body);
+  color: var(--text-muted);
+}
+
+.reportLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 400 13px/1.4 var(--font-body);
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.reportForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.reportTitle {
+  margin-bottom: 4px;
+  font: 600 14px/1.3 var(--font-body);
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 400 14px/1.3 var(--font-body);
+}
+
+.reportActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

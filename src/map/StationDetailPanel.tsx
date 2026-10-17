@@ -3,6 +3,7 @@ import { listStationReviewSummaries } from "../api/stationReviews";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { IconBack, IconNavigate, IconPlug } from "./panelIcons";
+import { StationPhotos } from "./StationPhotos";
 import { StationReviews } from "./StationReviews";
 import { StationStatusChip } from "./StationStatusChip";
 import { StationStatusReport } from "./StationStatusReport";
@@ -89,6 +90,9 @@ export function StationDetailPanel({ onCalculate, onGoTo }: StationDetailPanelPr
             fuente={estadoEnVivo?.fuente ?? ""}
           />
         </div>
+
+        {/* Lo primero que se ve: reconocer el lugar al llegar (ver StationPhotos). */}
+        <StationPhotos nodeId={String(station.node_id)} />
 
         <div className={ui.metrics3}>
           <div className={ui.metric}>

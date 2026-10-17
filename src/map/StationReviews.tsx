@@ -13,6 +13,7 @@ import { formatDate } from "../shared/format";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { IconCamera } from "./panelIcons";
 import { Stars, StarPicker } from "./Stars";
+import { stationPhotosQueryKey } from "./stationPhotosQuery";
 import { stationReviewPhotoQueryKey, useStationReviewPhoto } from "./useStationReviewPhoto";
 import ui from "./panel.module.css";
 import styles from "./StationReviews.module.css";
@@ -40,6 +41,8 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
     // del mapa) sale de una consulta aparte -- sin esto quedaria
     // desactualizado hasta la proxima vez que se recargue toda la lista.
     queryClient.invalidateQueries({ queryKey: ["stationReviewSummaries"] });
+    // Las fotos de las reseñas también se muestran en la galería de arriba.
+    queryClient.invalidateQueries({ queryKey: stationPhotosQueryKey(nodeId) });
   }
 
   const head = (count: number | null) => (

@@ -9,9 +9,10 @@
 const MAX_DIM = 800;
 const JPEG_QUALITY = 0.82;
 
-export async function resizePhotoForUpload(file: File): Promise<Blob> {
+/** `maxDim`: lado mayor final. 800 alcanza para un avatar o un auto; la galería de una estación usa más (ver StationPhotos.tsx). */
+export async function resizePhotoForUpload(file: File, maxDim: number = MAX_DIM): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
 

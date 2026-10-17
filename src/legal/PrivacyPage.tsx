@@ -36,6 +36,9 @@ export function PrivacyPage() {
         <li>
           <strong>{p.withAccount.history.label}</strong> {p.withAccount.history.body}
         </li>
+        <li>
+          <strong>{p.withAccount.stationPhotos.label}</strong> {p.withAccount.stationPhotos.body}
+        </li>
       </ul>
 
       <h3>{p.google.heading}</h3>

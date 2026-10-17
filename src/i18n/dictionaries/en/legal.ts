@@ -35,6 +35,10 @@ export const legal = {
         label: "Your trip history.",
         body: "Origins, destinations, distances, and consumption of the trips you save.",
       },
+      stationPhotos: {
+        label: "Charging station photos.",
+        body: "Photos you upload to a station or a review are visible to other users, along with your username. Before storing them we remove the file's hidden data, such as your phone's location. You can delete them at any time, and they're deleted with your account.",
+      },
     },
     google: {
       heading: "If you sign in with Google",

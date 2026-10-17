@@ -35,6 +35,10 @@ export const legal = {
         label: "Tu historial de viajes.",
         body: "Orígenes, destinos, distancias y consumo de los viajes que guardás.",
       },
+      stationPhotos: {
+        label: "Fotos de estaciones de carga.",
+        body: "Las fotos que subís a una estación o a una reseña las ven los demás usuarios, junto a tu nombre de usuario. Antes de guardarlas les borramos los datos ocultos del archivo, como la ubicación del celular. Las podés borrar cuando quieras, y se borran con tu cuenta.",
+      },
     },
     google: {
       heading: "Si entrás con Google",
