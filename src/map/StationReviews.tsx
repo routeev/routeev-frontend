@@ -9,6 +9,7 @@ import {
   type StationReview,
 } from "../api/stationReviews";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { formatDate } from "../shared/format";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { IconCamera } from "./panelIcons";
@@ -126,7 +127,10 @@ function MyReview({ review, onEdit }: { review: StationReview; onEdit: () => voi
   return (
     <div className={styles.form}>
       <div className={styles.formHeader}>
-        <span className={styles.formLabel}>Tu reseña</span>
+        <span className={styles.author}>
+          <ReviewAvatar review={review} />
+          <span className={styles.formLabel}>Tu reseña</span>
+        </span>
         <Stars value={review.rating} size={16} />
       </div>
       {review.comment && <p className={styles.itemComment}>{review.comment}</p>}
@@ -292,12 +296,32 @@ function ReviewItem({ review }: { review: StationReview }) {
   return (
     <li className={styles.item}>
       <div className={styles.itemHeader}>
-        <span className={styles.itemUser}>{review.username}</span>
+        <span className={styles.author}>
+          <ReviewAvatar review={review} />
+          <span className={styles.itemUser}>{review.username}</span>
+        </span>
         <span className={styles.itemDate}>{formatDate(review.updated_at)}</span>
       </div>
       <Stars value={review.rating} size={14} />
       {review.comment && <p className={styles.itemComment}>{review.comment}</p>}
       {photoUrl && <img src={photoUrl} alt="" className={styles.itemPhoto} />}
     </li>
+  );
+}
+
+/** Foto de perfil del autor, o su inicial si no subió ninguna (mismo criterio que el avatar del encabezado). */
+function ReviewAvatar({ review }: { review: StationReview }) {
+  return review.user_photo_url ? (
+    <img
+      src={cloudinaryResize(review.user_photo_url, 64)}
+      className={styles.avatar}
+      width={28}
+      height={28}
+      alt=""
+    />
+  ) : (
+    <span className={styles.avatar} aria-hidden="true">
+      {review.username.charAt(0).toUpperCase()}
+    </span>
   );
 }

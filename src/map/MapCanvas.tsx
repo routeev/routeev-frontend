@@ -31,6 +31,35 @@ const URUGUAY_BOUNDS: [[number, number], [number, number]] = [
   [-30.05, -53.1],
 ];
 
+/**
+ * Hasta dónde se puede arrastrar el mapa: Uruguay con unos 250 km de margen
+ * por lado (alcanza para ver la costa argentina y el sur de Brasil, de donde
+ * vienen los viajes que cruzan), pero no para perderse en el océano o en otro
+ * continente, donde la app no tiene nada que mostrar.
+ */
+const LIMITE_ARRASTRE = L.latLngBounds([-37.5, -61], [-27.5, -50.5]);
+
+/**
+ * El zoom mínimo coherente: un nivel menos que el que encuadra Uruguay entero
+ * en esta pantalla. Depende del tamaño (en un celular el país necesita alejarse
+ * más que en un monitor), así que se calcula al montar y se recalcula al
+ * cambiar el tamaño de la ventana, en vez de fijar un número para todos.
+ */
+function LimiteDeZoom() {
+  const map = useMap();
+  useEffect(() => {
+    function ajustar() {
+      map.setMinZoom(Math.max(4, map.getBoundsZoom(URUGUAY_BOUNDS) - 1));
+    }
+    ajustar();
+    map.on("resize", ajustar);
+    return () => {
+      map.off("resize", ajustar);
+    };
+  }, [map]);
+  return null;
+}
+
 // El mapa cambia de tamaño real cuando la hoja inferior del panel (ver
 // useBottomSheet y .mainArea en MapPage.module.css) cambia de altura en
 // pantalla angosta: el mapa termina donde ella empieza, no queda tapado
@@ -229,8 +258,13 @@ export function MapCanvas({ liveTripPosition, onMapError }: MapCanvasProps) {
       // tope Leaflet deja acercarse indefinidamente: el estilo se queda sin
       // detalle que mostrar y el mapa pasa a ser un plano gigante y vacio.
       maxZoom={19}
+      // Ver LIMITE_ARRASTRE y LimiteDeZoom: viscosidad 1 = el borde frena en
+      // seco, en vez de dejar pasar y rebotar.
+      maxBounds={LIMITE_ARRASTRE}
+      maxBoundsViscosity={1}
       style={{ height: "100%", width: "100%" }}
     >
+      <LimiteDeZoom />
       <ZoomControl position="topright" zoomInTitle={mc.zoomIn} zoomOutTitle={mc.zoomOut} />
       <CaptureMap onLocateFail={(msg) => onMapError(msg, "warn")} />
       <BasemapLayer />

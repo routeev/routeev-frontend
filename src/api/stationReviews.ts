@@ -12,6 +12,8 @@ export interface StationReview {
   created_at: string;
   updated_at: string;
   is_own: boolean;
+  /** Foto de perfil del autor (Cloudinary), o null si no subió ninguna. */
+  user_photo_url?: string | null;
 }
 
 export interface StationReviewSummary {

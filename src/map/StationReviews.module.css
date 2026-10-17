@@ -170,3 +170,25 @@
   justify-content: space-between;
   gap: 8px;
 }
+
+/* ---- Autor: avatar + nombre ---- */
+
+.author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-track);
+  color: var(--text);
+  font: 600 12px/1 var(--font-display);
+}

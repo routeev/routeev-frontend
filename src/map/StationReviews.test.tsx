@@ -66,7 +66,7 @@ describe("StationReviews: la reseña propia", () => {
     // Acotado al encabezado de la tarjeta: el promedio de la estación pinta
     // sus propias estrellas con la misma etiqueta, y lo que se verifica acá
     // es que la reseña propia muestre LAS SUYAS al lado de "Tu reseña".
-    const encabezado = screen.getByText("Tu reseña").parentElement!;
+    const encabezado = screen.getByText("Tu reseña").closest("div")!;
     expect(within(encabezado).getByLabelText("5.0 de 5 estrellas")).toBeInTheDocument();
     // Lo que el usuario pidió: nada de textarea ni botones de edición hasta
     // que los pida.
@@ -123,5 +123,18 @@ describe("StationReviews: la reseña propia", () => {
     expect(screen.getByText("Estaba ocupado.")).toBeInTheDocument();
     // La propia sigue en modo lectura, sin formulario.
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("cada reseña muestra la foto de perfil de su autor, o su inicial", async () => {
+    mockPayload([
+      mkReview({ user_photo_url: "https://res.cloudinary.com/demo/image/upload/yo.jpg" }),
+      mkReview({ id: 8, username: "Gonzalo", is_own: false, user_photo_url: null }),
+    ]);
+    const { container } = renderReviews();
+    await screen.findByText("Gonzalo");
+
+    const avatares = container.querySelectorAll("img[src*='res.cloudinary.com']");
+    expect(avatares).toHaveLength(1);
+    expect(screen.getByText("G")).toBeInTheDocument();
   });
 });
