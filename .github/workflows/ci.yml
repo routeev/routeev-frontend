@@ -1,0 +1,43 @@
+# CI del frontend: lo mismo que hay que correr a mano antes de pushear (ver
+# README), en cada push y en cada Pull Request. `main` exige que este check
+# pase antes de mergear, asi un PR que no compila no llega a Vercel.
+#
+# `npm run build` es el chequeo importante: corre `tsc -b`, que typechequea
+# tambien los tests, y es lo que tumba el deploy de Vercel si falla.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-y-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build (incluye tsc -b)
+        run: npm run build
