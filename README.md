@@ -131,7 +131,7 @@ npx vercel deploy --prebuilt --prod --yes
 
 Datos viales © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL); mapa base de [OpenFreeMap](https://openfreemap.org). El detalle de fuentes y licencias de datos está en la API.
 
-© RouteEV. Todos los derechos reservados. El código es público para que se pueda ver; usarlo o redistribuirlo requiere permiso.
+© 2026 RouteEV. Todos los derechos reservados: el código es público para que se pueda consultar, pero usarlo, copiarlo o redistribuirlo requiere permiso por escrito. Ver [LICENSE](LICENSE).
 
 ---
 
