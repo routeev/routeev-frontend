@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="https://routeev.uy"><img alt="Captura de routeev.uy" src="public/img/og-cover.png" width="820"></a>
+  <a href="https://routeev.uy"><img alt="Captura de la portada de routeev.uy" src="docs/landing.jpg" width="820"></a>
 </p>
 
 ## Qué hay acá
