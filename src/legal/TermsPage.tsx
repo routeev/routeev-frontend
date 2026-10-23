@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { CONTACT_EMAIL } from "../landing/LandingFooter";
 import { LegalLayout } from "./LegalLayout";
 import styles from "./LegalLayout.module.css";
 
@@ -60,7 +61,7 @@ export function TermsPage() {
 
       <h2>{s.accounts.heading}</h2>
       <p>
-        {s.accounts.before} <a href="mailto:routemindtbo@gmail.com">routemindtbo@gmail.com</a>
+        {s.accounts.before} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         {s.accounts.afterEmailBeforeLink} <Link to="/privacidad">{s.accounts.privacyLinkLabel}</Link>
         {s.accounts.after}
       </p>

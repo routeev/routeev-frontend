@@ -3,7 +3,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { IconInstagram } from "./landingIcons";
 import styles from "./LandingFooter.module.css";
 
-export const CONTACT_EMAIL = "routemindtbo@gmail.com";
+export const CONTACT_EMAIL = "contacto@routeev.uy";
 
 interface LandingFooterProps {
   /** Cada página linkea a las otras, no a sí misma. */
