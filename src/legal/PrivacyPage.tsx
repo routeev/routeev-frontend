@@ -1,4 +1,5 @@
 import { useTranslation } from "../i18n/LanguageProvider";
+import { CONTACT_EMAIL } from "../landing/LandingFooter";
 import { LegalLayout } from "./LegalLayout";
 import styles from "./LegalLayout.module.css";
 
@@ -15,7 +16,7 @@ export function PrivacyPage() {
 
       <h2>{p.responsible.heading}</h2>
       <p>
-        {p.responsible.before} <a href="mailto:routemindtbo@gmail.com">routemindtbo@gmail.com</a>
+        {p.responsible.before} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         {p.responsible.after}
       </p>
 
@@ -67,7 +68,7 @@ export function PrivacyPage() {
       <h2>{p.rights.heading}</h2>
       <p>
         {p.rights.before} <strong>{p.rights.lawNameBold}</strong> {p.rights.afterLawBeforeEmail}{" "}
-        <a href="mailto:routemindtbo@gmail.com">routemindtbo@gmail.com</a> {p.rights.afterEmail}
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> {p.rights.afterEmail}
       </p>
       <p>{p.rights.complaint}</p>
 

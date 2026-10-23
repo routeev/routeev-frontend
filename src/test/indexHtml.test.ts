@@ -62,13 +62,28 @@ describe("index.html", () => {
   });
 
   // El <body> es el punto de montaje de React y el script de entrada (que
-  // Vite mueve al <head> al construir). Texto suelto acá no puede venir de
-  // otro lado que un comentario roto -- y se ve en pantalla. Las etiquetas
+  // Vite mueve al <head> al construir). Fuera de #root, texto suelto no puede
+  // venir de otro lado que un comentario roto -- y se ve en pantalla. Lo de
+  // adentro de #root es a propósito (ver el test siguiente). Las etiquetas
   // de <head> que se caen al <body> por ese mismo motivo las cubre el test
   // de arriba; este agarra el síntoma visible.
-  it("el <body> no tiene texto suelto ni etiquetas de <head>", () => {
-    expect(doc.body.textContent?.trim()).toBe("");
+  it("el <body> no tiene texto suelto fuera de #root ni etiquetas de <head>", () => {
+    const root = doc.getElementById("root");
+    expect(root?.parentElement?.tagName).toBe("BODY");
+    const fuera = doc.body.cloneNode(true) as HTMLElement;
+    fuera.querySelector("#root")?.remove();
+    expect(fuera.textContent?.trim()).toBe("");
     expect(doc.body.querySelectorAll("meta, link, title").length).toBe(0);
-    expect(doc.getElementById("root")?.parentElement?.tagName).toBe("BODY");
+  });
+
+  // Lo que lee quien no ejecuta JS (buscadores, el verificador de sitios de
+  // AWS Activate): con #root vacío veían una página en blanco. React lo
+  // reemplaza en el primer render. El contacto tiene que ser del dominio: un
+  // correo gratuito acá contradice el dominio de la empresa.
+  it("#root trae una descripción del sitio con el contacto del dominio", () => {
+    const texto = doc.getElementById("root")?.textContent ?? "";
+    expect(texto).toContain("RouteEV");
+    expect(texto).toContain("contacto@routeev.uy");
+    expect(texto).not.toMatch(/@(gmail|hotmail|outlook|yahoo)\./i);
   });
 });

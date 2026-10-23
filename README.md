@@ -135,4 +135,4 @@ Datos viales © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/c
 
 ---
 
-<p align="center">Hecho en Montevideo 🇺🇾 por Eduardo Monzón, Matías Filgueiras y Lautaro Álvarez · <a href="mailto:routemindtbo@gmail.com">routemindtbo@gmail.com</a></p>
+<p align="center">Hecho en Montevideo 🇺🇾 por Eduardo Monzón, Matías Filgueiras y Lautaro Álvarez · <a href="mailto:contacto@routeev.uy">contacto@routeev.uy</a></p>

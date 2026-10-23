@@ -99,7 +99,29 @@
     <title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- El contenido de #root es para quien NO ejecuta JS: buscadores y los
+         verificadores automáticos de sitios (por ejemplo el de AWS Activate)
+         leen el HTML crudo, y con el <div> vacío veían una página en blanco.
+         React lo reemplaza entero en el primer render (createRoot vacía el
+         contenedor), así que en el navegador no se ve. Mantener las cifras
+         alineadas con la landing (LandingPage.tsx). -->
+    <div id="root">
+      <main style="max-width: 640px; margin: 0 auto; padding: 48px 16px; font-family: system-ui, sans-serif; line-height: 1.5">
+        <h1>RouteEV</h1>
+        <p>Planificador de viajes en auto eléctrico por Uruguay.</p>
+        <p>
+          Elegí tu auto, marcá origen y destino, y RouteEV te dice si llegás, dónde conviene cargar,
+          cuánto tardás y cuánto sale. Sobre el mapa vial real de Uruguay, con las 261 estaciones de
+          carga de UTE y de operadores privados en los 19 departamentos. 328 modelos precargados, sin
+          crear cuenta.
+        </p>
+        <p>
+          <a href="/app">Planificar un viaje</a> · <a href="/showroom">Showroom de autos eléctricos</a> ·
+          <a href="/privacidad">Privacidad</a> · <a href="/terminos">Términos</a>
+        </p>
+        <p>RouteEV · Montevideo, Uruguay · <a href="mailto:contacto@routeev.uy">contacto@routeev.uy</a></p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
