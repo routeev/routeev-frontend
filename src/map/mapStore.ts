@@ -4,6 +4,7 @@ import type { GraphNode, NodeId, Station } from "../api/graph";
 import type { CompareRoutesResult, RouteModo } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
 import { haversineKm, normalizeForSearch } from "../shared/geo";
+import type { StationFilter } from "./stationFilter";
 import { pointKey, SAME_POINT_KM, SAME_SPOT_KM, type RoutePoint, type TripLogSeed } from "./routePoint";
 
 export type SearchableNode = GraphNode & { _norm: string };
@@ -47,6 +48,9 @@ interface MapState {
   // el grafo, que el backend declara como string. Estaba tipado `number` por
   // el mismo error que `GraphNode.id` (ver api/graph.ts).
   selectedStationId: NodeId | null;
+  // Filtro de la pestaña "Estaciones" (todas / rápidas / UTE / privadas). Vive
+  // acá y no en StationsList para que el mapa dibuje lo mismo que la lista.
+  stationFilter: StationFilter;
 
   vehicles: Vehicle[];
   vehiclesLoaded: boolean;
@@ -123,6 +127,7 @@ interface MapState {
   setSearchableNodes: (nodes: GraphNode[]) => void;
   setStations: (stations: Station[]) => void;
   selectStation: (id: NodeId | null) => void;
+  setStationFilter: (filter: StationFilter) => void;
 
   setVehicles: (vehicles: Vehicle[]) => void;
   addVehicle: (vehicle: Vehicle) => void;
@@ -185,6 +190,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   searchableNodes: [],
   stations: [],
   selectedStationId: null,
+  stationFilter: "all",
 
   vehicles: [],
   vehiclesLoaded: false,
@@ -212,6 +218,7 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setStations: (stations) => set({ stations }),
   selectStation: (id) => set({ selectedStationId: id }),
+  setStationFilter: (filter) => set({ stationFilter: filter }),
 
   setVehicles: (vehicles) =>
     set(() => ({

@@ -9,6 +9,7 @@ import { AUTO_LOCATE_ZOOM } from "../mapConstants";
 import { RatingSummary } from "../RatingSummary";
 import { stationIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
+import { matchesStationFilter } from "../stationFilter";
 import { StationStatusChip } from "../StationStatusChip";
 import { useStationStatus } from "../useStationStatus";
 import styles from "./StationPopup.module.css";
@@ -83,6 +84,7 @@ export function StationsLayer() {
   const leafletMap = useMapStore((s) => s.leafletMap);
   const lastResult = useMapStore((s) => s.lastResult);
   const picking = useMapStore((s) => s.picking);
+  const stationFilter = useMapStore((s) => s.stationFilter);
 
   useEffect(() => {
     if (query.data) setStations(query.data);
@@ -108,13 +110,18 @@ export function StationsLayer() {
     // Set preserva el orden de inserción (el mismo de query.data, estable
     // entre renders): recortar con slice da un subconjunto determinístico,
     // sin parpadeo por reordenarse solo de un render al siguiente.
-    const ids =
-      inViewIds.size > MAX_STATIONS_SIN_RUTA
-        ? new Set([...inViewIds].slice(0, MAX_STATIONS_SIN_RUTA))
-        : new Set(inViewIds);
+    // El filtro de la pestaña "Estaciones" va ANTES del tope: si no, con
+    // "Solo UTE" el tope de 80 podía gastarse en privadas que después se
+    // descartan y dejar el mapa con menos de las que corresponden.
+    const filtered = query.data
+      ? query.data
+          .filter((st) => inViewIds.has(st.node_id) && matchesStationFilter(st, stationFilter))
+          .map((st) => st.node_id)
+      : [];
+    const ids = new Set<NodeId>(filtered.slice(0, MAX_STATIONS_SIN_RUTA));
     if (selectedStationId != null) ids.add(selectedStationId);
     return ids;
-  }, [inViewIds, lastResult, selectedStationId]);
+  }, [inViewIds, lastResult, selectedStationId, stationFilter, query.data]);
 
   if (!query.data || visibleIds.size === 0) return null;
 
