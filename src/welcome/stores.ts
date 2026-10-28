@@ -1,8 +1,8 @@
 import type { Lang } from "../i18n/LanguageProvider";
 
-// PENDIENTE: la ficha real de la app en el App Store. Mientras no esté, el
-// badge lleva a la portada de la tienda en vez de a un link roto.
-export const APP_STORE_URL = "https://apps.apple.com/";
+// Sin país (/uy/): Apple redirige a la tienda de quien lo abre, igual que el
+// link de Google Play de abajo elige el idioma solo.
+export const APP_STORE_URL = "https://apps.apple.com/app/id6822563795";
 // Sin ?hl=: Google Play elige el idioma según quien la abre.
 export const GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=uy.routeev.movil";
 
