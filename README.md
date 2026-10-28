@@ -29,9 +29,9 @@ Este repo es el **frontend** de RouteEV: la landing, el mapa con el planificador
 | | |
 |---|---|
 | 🗺️ **Planificador** (`/app`) | Origen, destino y auto: devuelve la ruta con las paradas de carga, la batería estimada en cada tramo, peajes y tiempos. Modos rápido, eficiente y económico. |
-| 🔌 **Cargadores** | Los 261 cargadores del país en el mapa, con galería de fotos, reseñas, estado reportado por la comunidad y "Ir hasta acá" desde tu ubicación. |
+| 🔌 **Cargadores** | Los más de 260 cargadores del país en el mapa, con galería de fotos, reseñas, estado reportado por la comunidad y "Ir hasta acá" desde tu ubicación. |
 | 📍 **Viaje en vivo** | Seguimiento con GPS y batería restante estimada en cada momento del viaje. |
-| 🚗 **Showroom** (`/showroom`) | Catálogo de 587 modelos y simulador para comparar autos en viajes reales entre ciudades. |
+| 🚗 **Showroom** (`/showroom`) | Catálogo de más de 300 modelos (587 versiones) y simulador para comparar autos en viajes reales entre ciudades. |
 | 👤 **Perfil** (`/profile`) | Cuenta, vehículos propios e historial de viajes con estadísticas. |
 
 ## Empezar
@@ -124,7 +124,7 @@ npx vercel deploy --prebuilt --prod --yes
 - `CertaintyLine` (`src/shared/`) es el elemento visual de firma del sistema de diseño.
 - `RouteErrorBoundary` (`src/shared/`) atrapa errores de carga de los chunks lazy por ruta (`routes.tsx`) y ofrece recargar: cubre el caso de un deploy nuevo mientras alguien tiene la app vieja abierta.
 - Meta tags OG/Twitter estáticos en `index.html` (no vía `react-helmet`): los crawlers de WhatsApp, Twitter e Instagram no ejecutan JS, así que necesitan las tags ya presentes en el HTML servido para armar la vista previa del link.
-- `StationsLayer` (`src/map/layers/`) no dibuja las ~261 estaciones de una: sin ruta calculada muestra las que caen en el área visible (hasta 80) más la elegida en `StationsList`, y con ruta calculada solo las paradas que esa ruta usa. Dibujarlas todas saturaba el mapa apenas se abría `/app`.
+- `StationsLayer` (`src/map/layers/`) no dibuja las ~265 estaciones de una: sin ruta calculada muestra las que caen en el área visible (hasta 80) más la elegida en `StationsList`, y con ruta calculada solo las paradas que esa ruta usa. Dibujarlas todas saturaba el mapa apenas se abría `/app`.
 - El mapa no se aleja más de lo necesario para ver Uruguay entero en esa pantalla, ni se arrastra lejos del país (`MapCanvas.tsx`).
 
 ## Datos y licencia
