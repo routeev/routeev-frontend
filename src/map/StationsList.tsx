@@ -8,11 +8,7 @@ import { useMapStore } from "./mapStore";
 import { IconAlert, IconBolt, IconRetry, IconSearch, STAR_PATH } from "./panelIcons";
 import ui from "./panel.module.css";
 import styles from "./StationsList.module.css";
-
-type Filter = "all" | "fast" | "ute" | "priv";
-
-/** "Rápidas": desde acá una parada de carga deja de ser de media hora larga. */
-const FAST_KW = 50;
+import { matchesStationFilter } from "./stationFilter";
 
 interface StationsListProps {
   loadFailed: boolean;
@@ -35,7 +31,8 @@ export function StationsList({ loadFailed, onRetry }: StationsListProps) {
     queryKey: ["stationReviewSummaries"],
     queryFn: listStationReviewSummaries,
   });
-  const [filter, setFilter] = useState<Filter>("all");
+  const filter = useMapStore((s) => s.stationFilter);
+  const setFilter = useMapStore((s) => s.setStationFilter);
   const [search, setSearch] = useState("");
 
   if (loadFailed) {
@@ -62,9 +59,7 @@ export function StationsList({ loadFailed, onRetry }: StationsListProps) {
 
   const q = normalizeForSearch(search.trim());
   const shown = stations.filter((s) => {
-    if (filter === "fast" && s.potencia_kw < FAST_KW) return false;
-    if (filter === "ute" && esPrivada(s.operador)) return false;
-    if (filter === "priv" && !esPrivada(s.operador)) return false;
+    if (!matchesStationFilter(s, filter)) return false;
     return (
       !q || normalizeForSearch(`${s.nombre} ${s.departamento ?? ""} ${s.direccion}`).includes(q)
     );

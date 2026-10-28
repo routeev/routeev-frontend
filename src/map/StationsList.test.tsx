@@ -54,7 +54,7 @@ const nombres = () =>
 describe("StationsList", () => {
   beforeEach(() => {
     localStorage.clear();
-    useMapStore.setState({ stations: STATIONS, selectedStationId: null });
+    useMapStore.setState({ stations: STATIONS, selectedStationId: null, stationFilter: "all" });
   });
 
   it("lista todas y marca solo las privadas", () => {
@@ -76,6 +76,16 @@ describe("StationsList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "UTE" }));
     expect(nombres()).toHaveLength(2);
+  });
+
+  it("el filtro queda en el store, que es de donde lo lee el mapa", () => {
+    renderList();
+
+    fireEvent.click(screen.getByRole("button", { name: "UTE" }));
+    expect(useMapStore.getState().stationFilter).toBe("ute");
+
+    fireEvent.click(screen.getByRole("button", { name: "Todas" }));
+    expect(useMapStore.getState().stationFilter).toBe("all");
   });
 
   it("busca por nombre o por departamento, sin importar los acentos", () => {
