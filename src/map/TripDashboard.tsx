@@ -354,7 +354,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 </span>
               )}
               {arrivalPct != null && tone && (
-                <div className={ui.bar}>
+                <div className={[ui.bar, ui.barArrival].join(" ")}>
                   <div
                     className={[ui.barFill, toneBar[tone]].join(" ")}
                     style={{ width: `${Math.max(2, Math.min(100, arrivalPct))}%` }}

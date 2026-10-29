@@ -11,6 +11,12 @@
   stroke-width: 1;
 }
 
+/* Edición Halloween: las aristas pasan a hilos de telaraña. La ruta queda
+   verde y fluyendo como siempre. Sin --hw-web (fuera de temporada) no cambia. */
+:global([data-season="halloween"]) .bg .edge {
+  stroke: var(--hw-web, var(--border));
+}
+
 .bg .node {
   fill: var(--text-faint);
 }

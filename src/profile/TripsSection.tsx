@@ -13,6 +13,7 @@ import { listVehicles, type Vehicle } from "../api/vehicles";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconArrowRight } from "../landing/landingIcons";
 import { IconBolt, IconChevronDown } from "../map/panelIcons";
+import { Pumpkin } from "../season/HalloweenDecor";
 import { CertaintyLine } from "../shared/CertaintyLine";
 import { useFormat, type Format } from "../showroom/format";
 import { certaintyPointsFromRoute } from "./historyCertainty";
@@ -68,6 +69,7 @@ export function TripsSection() {
       ) : empty ? (
         <div className={styles.empty}>
           <div className={styles.emptyText}>
+            <Pumpkin size={56} />
             <span className={styles.emptyTitle}>{tr.emptyTitle}</span>
             <span className={styles.emptyBody}>{tr.emptyBody}</span>
           </div>

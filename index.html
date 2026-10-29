@@ -19,6 +19,16 @@
             document.documentElement.setAttribute("data-theme", "light");
           }
         } catch (e) {}
+        // Edición Halloween: mismas fechas y misma clave que
+        // src/season/season.ts (lo chequea src/test/indexHtml.test.ts).
+        var ahora = Date.now();
+        if (ahora >= Date.parse("2026-10-27T00:00:00-03:00") && ahora < Date.parse("2026-11-03T00:00:00-03:00")) {
+          var apagada = false;
+          try {
+            apagada = localStorage.getItem("routeev_season_off") === "halloween-2026";
+          } catch (e) {}
+          if (!apagada) document.documentElement.setAttribute("data-season", "halloween");
+        }
       })();
     </script>
     <!-- /favicon.ico explícito (no solo el <link>): Google Search y varios

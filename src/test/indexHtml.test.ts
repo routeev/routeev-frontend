@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 // node:fs/node:path o usar __dirname rompe el BUILD DE PRODUCCION, no solo el
 // test. Asi lo carga Vite, que es quien lo resuelve igual en test y en build.
 import html from "../../index.html?raw";
+import { HALLOWEEN, SEASON_OFF_KEY } from "../season/season";
 
 // El index.html no lo revisa nadie: no pasa por TypeScript, ni por ESLint, y
 // Vite lo sirve tal cual esté (un comentario mal cerrado no es un error de
@@ -39,6 +40,21 @@ describe("index.html", () => {
   it("el script del tema llega vivo al DOM (no comentado)", () => {
     const inline = Array.from(doc.querySelectorAll("script:not([src])"));
     expect(inline.some((s) => s.textContent?.includes("routeev_theme"))).toBe(true);
+  });
+
+  // La temporada se decide dos veces: en el script inline (antes del primer
+  // paint) y en src/season/season.ts (el chip, los adornos). Si las fechas o la
+  // clave se desincronizan, el disfraz se prende sin chip para apagarlo, o el
+  // chip apaga una clave que el script no lee.
+  it("el script de la temporada usa las mismas fechas y clave que season.ts", () => {
+    const script = Array.from(doc.querySelectorAll("script:not([src])"))
+      .map((s) => s.textContent ?? "")
+      .find((t) => t.includes("data-season"));
+    expect(script).toBeDefined();
+    const fechas = [...script!.matchAll(/Date\.parse\("([^"]+)"\)/g)].map((m) => Date.parse(m[1]!));
+    expect(fechas).toEqual([HALLOWEEN.start, HALLOWEEN.end]);
+    expect(script).toContain(`"${SEASON_OFF_KEY}"`);
+    expect(script).toContain(`"${HALLOWEEN.edition}"`);
   });
 
   // Un comentario sin cerrar deja texto suelto en el <head>; el parser cierra

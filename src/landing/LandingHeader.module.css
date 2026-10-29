@@ -25,6 +25,8 @@
 }
 
 .logo {
+  /* Ancla del sombrerito de temporada (src/season/HalloweenDecor.tsx). */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -115,6 +117,11 @@
   align-items: center;
   gap: 10px;
   margin-left: auto;
+}
+
+/* Copia del chip de temporada para el celular, donde .actions no se ve. */
+.seasonMobile {
+  display: none;
 }
 
 .langSeg {
@@ -362,6 +369,11 @@
   .nav,
   .actions {
     display: none;
+  }
+
+  .seasonMobile {
+    display: inline-flex;
+    margin-left: auto;
   }
 
   .menuToggle {

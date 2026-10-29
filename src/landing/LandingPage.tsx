@@ -6,6 +6,7 @@ import { getToken } from "../api/session";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { WelcomePage } from "../lazyPages";
 import { IconCheck } from "../map/panelIcons";
+import { HeroNight } from "../season/HalloweenDecor";
 import { markWelcomeSeen, shouldShowWelcome } from "../welcome/welcomeGate";
 import { BatteryDemo } from "./BatteryDemo";
 import { HeroMap } from "./HeroMap";
@@ -101,6 +102,7 @@ export function LandingPage() {
       <main>
         <section aria-labelledby="hero-titulo" className={styles.hero}>
           <div className={styles.heroGlow} aria-hidden="true" />
+          <HeroNight />
           <div className={styles.heroInner}>
             <div className={styles.heroText}>
               <span className={styles.eyebrow}>

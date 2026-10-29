@@ -15,6 +15,8 @@ import { ApiError } from "../api/client";
 import { setSession } from "../api/session";
 import { useTranslation, type Lang } from "../i18n/LanguageProvider";
 import { IconInstagram } from "../landing/landingIcons";
+import { LoginNight, WitchHat } from "../season/HalloweenDecor";
+import { SeasonChip } from "../season/SeasonChip";
 import { GraphBackground } from "../shared/GraphBackground";
 import {
   IconAlert,
@@ -406,18 +408,21 @@ export function LoginPage() {
       </Helmet>
 
       <div className={styles.bgWrap} aria-hidden="true">
+        <LoginNight />
         <GraphBackground />
       </div>
       <div className={styles.veil} aria-hidden="true" />
 
       <header className={styles.header}>
         <Link to="/" className={styles.logo} aria-label={a.header.logoLabel}>
+          <WitchHat />
           <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
           <span>
             Route<span className={styles.accent}>EV</span>
           </span>
         </Link>
         <div className={styles.headerEnd}>
+          <SeasonChip />
           <Link to="/" className={styles.homeLink}>
             <IconArrowLeft />
             <span className={styles.homeLong}>{a.header.backHome}</span>

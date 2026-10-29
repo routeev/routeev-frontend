@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listStationReviewSummaries } from "../api/stationReviews";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { Ghost } from "../season/HalloweenDecor";
 import { normalizeForSearch } from "../shared/geo";
 import { esPrivada } from "./esPrivada";
 import { useMapStore } from "./mapStore";
@@ -161,7 +162,10 @@ export function StationsList({ loadFailed, onRetry }: StationsListProps) {
           );
         })}
         {stations.length > 0 && shown.length === 0 && (
-          <li className={styles.empty}>{q ? sp.noMatch(search.trim()) : sp.noMatchFilter}</li>
+          <li className={styles.empty}>
+            <Ghost />
+            {q ? sp.noMatch(search.trim()) : sp.noMatchFilter}
+          </li>
         )}
       </ul>
     </div>
