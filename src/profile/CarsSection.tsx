@@ -9,6 +9,8 @@ import {
 } from "../api/vehicles";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconCamera, IconPlus } from "../map/panelIcons";
+import { Pumpkin } from "../season/HalloweenDecor";
+import { useSeason } from "../season/season";
 import { useMediaQuery } from "../shared/useMediaQuery";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
@@ -38,6 +40,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
   const queryClient = useQueryClient();
   const isDesktop = useMediaQuery("(min-width: 900px)");
   const vehicles = useQuery({ queryKey: ["vehicles"], queryFn: listVehicles });
+  const season = useSeason();
   const [adding, setAdding] = useState(addOnLoad);
   const [deleting, setDeleting] = useState<Vehicle | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -132,7 +135,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
       ) : list.length === 0 ? (
         <div className={styles.empty}>
           <span className={styles.emptyArt}>
-            <CarOutline width={72} />
+            {season ? <Pumpkin /> : <CarOutline width={72} />}
           </span>
           <div className={styles.emptyText}>
             <span className={styles.emptyTitle}>{c.emptyTitle}</span>

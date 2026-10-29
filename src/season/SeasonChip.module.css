@@ -1,0 +1,62 @@
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 2px 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg-panel);
+  color: var(--text);
+  font: 500 12.5px/1 var(--font-body);
+  white-space: nowrap;
+}
+
+/* Reset de la regla global de button (base.css): acá es un ícono redondo. */
+.close {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+/* 28px a la vista, 44px para el dedo. */
+.close::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.close:hover {
+  border-color: transparent;
+  background: var(--overlay-hover);
+  color: var(--text);
+}
+
+.close:focus-visible {
+  outline-offset: 0;
+}
+
+/* En pantallas angostas queda la calabaza y el cerrar; el texto sigue para
+   los lectores de pantalla. */
+@media (max-width: 519.98px) {
+  .chip {
+    padding-left: 6px;
+  }
+
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

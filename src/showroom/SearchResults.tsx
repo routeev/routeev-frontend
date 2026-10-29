@@ -5,6 +5,7 @@ import { ApiError } from "../api/client";
 import { showroomLookupAi, type ShowroomFicha, type ShowroomModel } from "../api/showroom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconArrowRight } from "../landing/landingIcons";
+import { Pumpkin } from "../season/HalloweenDecor";
 import { brandHref, linePath, searchCatalog, type Catalog } from "./catalog";
 import { useFormat } from "./format";
 import { LineList } from "./LineList";
@@ -106,6 +107,7 @@ export function SearchResults({ catalog, query, headingLevel, onAddModel }: Sear
       {noHits && (
         <div className={styles.none}>
           <div className={styles.noneText}>
+            <Pumpkin size={56} />
             <p className={styles.noneTitle}>{ts.noResultsTitle(trimmed)}</p>
             <p className={styles.noneBody}>{ts.noResultsBody}</p>
             <Link to="/showroom" className={styles.browse}>

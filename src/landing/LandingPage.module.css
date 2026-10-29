@@ -20,6 +20,12 @@
 
 /* El header pegado arriba tapaba el título de la sección al saltar a un
    ancla (#app). */
+/* Edición Halloween: el brillo verde del hero le deja el lugar al cielo de
+   noche (HeroNight, src/season/). */
+:global(:root[data-season="halloween"]:not([data-theme="light"])) .page {
+  --glow: transparent;
+}
+
 .page section[id] {
   scroll-margin-top: 64px;
 }

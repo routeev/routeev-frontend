@@ -5,6 +5,8 @@ import { reportWebVitals } from "./shared/reportWebVitals.ts";
 import { setupStaleChunkReload } from "./shared/reloadOnStaleChunk.ts";
 import "./styles/tokens.css";
 import "./styles/base.css";
+// Después de tokens.css: pisa sus valores solo con data-season="halloween".
+import "./styles/season-halloween.css";
 
 setupStaleChunkReload();
 

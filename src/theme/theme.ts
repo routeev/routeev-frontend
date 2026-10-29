@@ -32,10 +32,21 @@ export function getStoredTheme(): Theme {
 
 // El color de la barra de direcciones del navegador (meta theme-color) tiene
 // que seguir al tema igual que el resto de la UI -- sin esto quedaba fijo en
-// el valor oscuro de index.html sin importar qué tema esté activo.
+// el valor oscuro de index.html sin importar qué tema esté activo. En la
+// edición Halloween (data-season, ver src/season/season.ts) el oscuro es el
+// --bg de season-halloween.css.
 function syncThemeColorMeta(theme: Theme): void {
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", theme === "light" ? "#eef1f4" : "#0a0e13");
+  if (!meta) return;
+  const season = document.documentElement.hasAttribute("data-season");
+  meta.setAttribute("content", theme === "light" ? "#eef1f4" : season ? "#0d0a14" : "#0a0e13");
+}
+
+/** Vuelve a calcular theme-color con lo que hay hoy en <html> (al apagar la temporada). */
+export function refreshThemeColorMeta(): void {
+  syncThemeColorMeta(
+    document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"
+  );
 }
 
 export function applyTheme(theme: Theme): void {

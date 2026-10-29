@@ -416,6 +416,14 @@
   overflow: hidden;
 }
 
+/* Edición Halloween: la barra de llegada con margen bajo brilla como una
+   calabaza. Va en la barra y no en el relleno porque .bar corta lo que se
+   sale (overflow: hidden). Sin --shadow-pumpkin (fuera de temporada, o en el
+   tema claro) no hace nada. Ni en crítico ni en vivo. */
+.barArrival:has(> .toneWarn) {
+  box-shadow: var(--shadow-pumpkin, none);
+}
+
 .barFill {
   height: 100%;
   border-radius: 4px;

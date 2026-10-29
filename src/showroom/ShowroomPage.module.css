@@ -27,6 +27,11 @@
   font-family: var(--font-body);
 }
 
+/* Edición Halloween: el resplandor del hero toma el color de noche. */
+:global(:root[data-season="halloween"]:not([data-theme="light"])) .page {
+  --glow: rgba(58, 36, 110, 0.35);
+}
+
 .main {
   display: flex;
   flex: 1 0 auto;

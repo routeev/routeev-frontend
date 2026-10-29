@@ -1,0 +1,155 @@
+/* Adornos de la edición Halloween. Todos sin eventos de puntero y por debajo
+   del contenido; ver HalloweenDecor.tsx. */
+
+.sky,
+.loginSky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(ellipse 70% 80% at 85% 0%, var(--hw-night), transparent 70%);
+}
+
+.web {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: 160px;
+}
+
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* La luna arriba a la derecha del hero, detrás del mapa (que se pinta
+   después). Alineada con el borde derecho del contenido de 1200px. */
+.heroMoon {
+  position: absolute;
+  top: -24px;
+  right: max(-110px, calc((100% - 1200px) / 2 - 150px));
+  width: 240px;
+  height: 240px;
+}
+
+.bat {
+  position: absolute;
+}
+
+/* Sobre la parte de la luna que asoma a la derecha del mapa. */
+.batA {
+  top: 76px;
+  left: 112px;
+  width: 40px;
+  height: 20px;
+}
+
+.batB {
+  top: 132px;
+  left: 150px;
+  width: 28px;
+  height: 14px;
+}
+
+/* Entran una sola vez y quedan quietos. Dentro de no-preference: sin pedido
+   explícito de movimiento, no se animan (además del freno global de base.css). */
+@media (prefers-reduced-motion: no-preference) {
+  .batA,
+  .batB {
+    animation: batIn 2.4s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+  }
+
+  .batB {
+    animation-delay: 0.35s;
+  }
+}
+
+@keyframes batIn {
+  from {
+    transform: translate(-90px, 40px) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.fog {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 160px;
+  background: linear-gradient(to top, var(--hw-fog), transparent);
+}
+
+/* En un hueco del grafo del fondo (GraphBackground escala con el ancho, así
+   que en porcentaje cae siempre entre los mismos nodos), lejos de la tarjeta. */
+.loginMoon {
+  position: absolute;
+  top: 40px;
+  left: 48%;
+  width: 180px;
+  height: 180px;
+}
+
+/* Sobre la esquina del ícono (30px, centrado en el link de 44px). */
+.hat {
+  position: absolute;
+  top: calc(50% - 25px);
+  left: -9px;
+  width: 20px;
+  height: 16px;
+  transform: rotate(-20deg);
+  pointer-events: none;
+}
+
+.pumpkin {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 0 10px rgba(242, 161, 84, 0.35));
+}
+
+.ghost {
+  display: block;
+  margin: 0 auto 8px;
+}
+
+/* Celular: el texto del hero ocupa todo el ancho desde arriba, así que la
+   luna, los murciélagos y la telaraña lo pisarían. Quedan la noche y la
+   niebla (y el sombrero y el chip en el header). */
+@media (max-width: 899.98px) {
+  .web {
+    width: 96px;
+    height: 96px;
+  }
+
+  .sky .web,
+  .heroMoon {
+    display: none;
+  }
+
+  .fog {
+    height: 90px;
+  }
+
+  .loginMoon {
+    top: -20px;
+    right: -30px;
+    left: auto;
+    width: 130px;
+    height: 130px;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .web {
+    display: none;
+  }
+}
