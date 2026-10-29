@@ -1,0 +1,130 @@
+/* Interruptor de la edición Halloween. Mide 44px de alto como el selector de
+   idioma que tiene al lado. Solo tokens que existen con y sin temporada. */
+
+/* Reset de la regla global de button (base.css): acá no es un botón de
+   formulario. Las pseudo-clases se repiten porque `button:hover` pesa más que
+   una clase sola. */
+.switch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 13px/1 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.switch:hover {
+  border-color: var(--border-strong);
+  background: var(--overlay-hover);
+  color: var(--text);
+}
+
+.switch:active {
+  transform: none;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}
+
+.on {
+  color: var(--text);
+}
+
+.on:hover {
+  border-color: var(--border-strong);
+}
+
+/* Apagada, la calabaza se apaga con ella: lo primero que se ve es el estado. */
+.pumpkin {
+  display: block;
+  flex: none;
+  filter: grayscale(1);
+  opacity: 0.55;
+  transition:
+    filter 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.on .pumpkin {
+  filter: none;
+  opacity: 1;
+}
+
+/* La pista apagada lleva borde (3:1 o más sobre el header), no solo relleno. */
+.track {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 999px;
+  background: transparent;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.on .track {
+  border-color: var(--accent-astar);
+  background: var(--accent-astar);
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  color: transparent;
+  transform: translateY(-50%);
+  transition:
+    left 0.16s ease,
+    background-color 0.16s ease;
+}
+
+/* Prendida: perilla a la derecha, oscura sobre el verde (10:1), con tilde. */
+.on .thumb {
+  left: 18px;
+  background: var(--button-primary-text);
+  color: var(--accent-astar);
+}
+
+.check {
+  display: block;
+  opacity: 0;
+}
+
+.on .check {
+  opacity: 1;
+}
+
+/* Celular angosto: queda la calabaza y la pista; el texto sigue para los
+   lectores de pantalla. */
+@media (max-width: 519.98px) {
+  .switch {
+    gap: 6px;
+    padding: 0 9px;
+  }
+
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

@@ -14,8 +14,10 @@ export const common = {
   networkError: "We couldn't connect to the server. It might be your connection, or the server may still be starting up: try again in a few seconds.",
   sessionExpired: "Your session expired, sign in again",
   unreadableResponse: "The server sent back something we couldn't read. Try again.",
-  // Chip de temporada (src/season/SeasonChip.tsx), solo en páginas públicas.
+  // Interruptor de temporada (src/season/SeasonSwitch.tsx).
   season: {
     halloween: "Halloween edition",
+    turnOff: "Turn off the Halloween edition",
+    turnOn: "Turn on the Halloween edition",
   },
 };

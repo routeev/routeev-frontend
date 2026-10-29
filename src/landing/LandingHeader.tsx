@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation, type Lang } from "../i18n/LanguageProvider";
 import { IconClose } from "../map/panelIcons";
 import { WitchHat } from "../season/HalloweenDecor";
-import { SeasonChip } from "../season/SeasonChip";
+import { SeasonSwitch } from "../season/SeasonSwitch";
 import { useMediaQuery } from "../shared/useMediaQuery";
 import { AccountMenu, MenuAccount, ThemeSeg } from "./HeaderAccount";
 import { IconArrowRight, IconChevronRight, IconMenu } from "./landingIcons";
@@ -96,9 +96,6 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
 
   const landing = page === "landing";
   const withAccount = page === "app" || page === "profile";
-  // El chip de temporada solo en las páginas públicas de vidriera: en /app y
-  // /profile el disfraz es solo la paleta, y los legales no se disfrazan.
-  const seasonChip = landing || page === "showroom";
   // En las pantallas con cuenta (mapa y perfil), sin Inicio ni Showroom:
   // ahí se va a planificar.
   const nav: NavItem[] = landing
@@ -141,7 +138,7 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
           </nav>
 
           <div className={styles.actions}>
-            {seasonChip && <SeasonChip />}
+            <SeasonSwitch />
             <div role="group" aria-label={n.language} className={styles.langSeg}>
               {LANGS.map((l) => (
                 <button
@@ -178,9 +175,9 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
             )}
           </div>
 
-          {/* En el celular .actions no se ve (pasa al menú): el chip va
-              suelto, al lado del botón del menú. */}
-          {seasonChip && <SeasonChip className={styles.seasonMobile} />}
+          {/* En el celular .actions no se ve (pasa al menú): el interruptor de
+              temporada va suelto, al lado del botón del menú. */}
+          <SeasonSwitch className={styles.seasonMobile} />
 
           <button
             ref={toggleRef}

@@ -16,7 +16,7 @@ import { setSession } from "../api/session";
 import { useTranslation, type Lang } from "../i18n/LanguageProvider";
 import { IconInstagram } from "../landing/landingIcons";
 import { LoginNight, WitchHat } from "../season/HalloweenDecor";
-import { SeasonChip } from "../season/SeasonChip";
+import { SeasonSwitch } from "../season/SeasonSwitch";
 import { GraphBackground } from "../shared/GraphBackground";
 import {
   IconAlert,
@@ -422,7 +422,7 @@ export function LoginPage() {
           </span>
         </Link>
         <div className={styles.headerEnd}>
-          <SeasonChip />
+          <SeasonSwitch />
           <Link to="/" className={styles.homeLink}>
             <IconArrowLeft />
             <span className={styles.homeLong}>{a.header.backHome}</span>

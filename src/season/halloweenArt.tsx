@@ -96,7 +96,7 @@ export function PumpkinArt({ className, size }: { className?: string; size: numb
       />
       <path
         d="M34.5 24 25 39h6.5l-3 12 11-16.5H33l3.5-10.5Z"
-        fill="var(--hw-candle)"
+        fill="var(--hw-candle, #ffd27a)"
         stroke="var(--on-warn)"
         strokeWidth="1.6"
         strokeLinejoin="round"

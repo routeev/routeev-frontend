@@ -12,11 +12,16 @@
          siempre se queda en el oscuro de toda la vida. -->
     <script>
       (function () {
-        // Edición Halloween: mismas fechas que src/season/season.ts (lo
-        // chequea src/test/indexHtml.test.ts). Mientras dura no se puede
-        // apagar y la app es siempre oscura: el claro guardado vuelve después.
+        // Edición Halloween: mismas fechas y misma clave que
+        // src/season/season.ts (lo chequea src/test/indexHtml.test.ts). Prendida
+        // por defecto durante la ventana, salvo que la persona la haya apagado
+        // con el interruptor del header. Prendida la app es siempre oscura; si
+        // no, el tema claro guardado se respeta como siempre.
         var ahora = Date.now();
         var temporada = ahora >= Date.parse("2026-10-27T00:00:00-03:00") && ahora < Date.parse("2026-11-03T00:00:00-03:00");
+        try {
+          if (temporada && localStorage.getItem("routeev_season_off") === "halloween-2026") temporada = false;
+        } catch (e) {}
         if (temporada) document.documentElement.setAttribute("data-season", "halloween");
         try {
           var path = location.pathname;
