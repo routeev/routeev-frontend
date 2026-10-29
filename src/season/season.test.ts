@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { dismissSeason, HALLOWEEN, isHalloweenWindow, readSeason, SEASON_OFF_KEY } from "./season";
+import { syncThemeForRoute } from "../theme/theme";
+import { HALLOWEEN, isHalloweenWindow, readSeason } from "./season";
 
 const root = document.documentElement;
 
@@ -24,24 +25,26 @@ describe("readSeason", () => {
     expect(readSeason()).toBeNull();
   });
 
-  it("con data-season y tema oscuro, es halloween", () => {
+  it("con data-season es halloween", () => {
     root.setAttribute("data-season", "halloween");
     expect(readSeason()).toBe("halloween");
   });
-
-  // En claro los tokens hw-* no existen: los adornos no se pueden pintar.
-  it("en el tema claro no se ve, aunque haya temporada", () => {
-    root.setAttribute("data-season", "halloween");
-    root.setAttribute("data-theme", "light");
-    expect(readSeason()).toBeNull();
-  });
 });
 
-describe("dismissSeason", () => {
-  it("saca el atributo y recuerda la edición cerrada", () => {
+// El disfraz es solo oscuro y no se puede sacar: quien había elegido claro
+// en /app lo ve oscuro hasta el 3/11, y su preferencia vuelve después.
+describe("tema durante la temporada", () => {
+  it("en /app ignora el claro guardado sin borrarlo", () => {
+    window.localStorage.setItem("routeev_theme", "light");
     root.setAttribute("data-season", "halloween");
-    dismissSeason();
-    expect(root.hasAttribute("data-season")).toBe(false);
-    expect(window.localStorage.getItem(SEASON_OFF_KEY)).toBe(HALLOWEEN.edition);
+    syncThemeForRoute("/app");
+    expect(root.hasAttribute("data-theme")).toBe(false);
+    expect(window.localStorage.getItem("routeev_theme")).toBe("light");
+  });
+
+  it("sin temporada el claro guardado vuelve", () => {
+    window.localStorage.setItem("routeev_theme", "light");
+    syncThemeForRoute("/app");
+    expect(root.getAttribute("data-theme")).toBe("light");
   });
 });

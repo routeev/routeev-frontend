@@ -2,7 +2,7 @@ import { BatArt, CobwebArt, GhostArt, MoonArt, PumpkinArt, WitchHatArt } from ".
 import { useSeason } from "./season";
 import styles from "./HalloweenDecor.module.css";
 
-// Cada adorno devuelve null fuera de temporada (o en el tema claro), así que
+// Cada adorno devuelve null fuera de temporada, así que
 // montarlos no cuesta nada el resto del año. Ninguno va sobre el mapa, el
 // panel de viaje ni la navegación en vivo: solo en páginas públicas y en
 // estados vacíos.

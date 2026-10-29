@@ -22,7 +22,7 @@
    ancla (#app). */
 /* Edición Halloween: el brillo verde del hero le deja el lugar al cielo de
    noche (HeroNight, src/season/). */
-:global(:root[data-season="halloween"]:not([data-theme="light"])) .page {
+:global(:root[data-season="halloween"]) .page {
   --glow: transparent;
 }
 
