@@ -4,8 +4,8 @@
    leen los adornos de src/season/). Lo activa el atributo data-season que pone
    el script inline de index.html entre las fechas de src/season/season.ts.
 
-   El :not([data-theme="light"]) es a propósito: quien eligió el tema claro en
-   /app o /profile lo sigue viendo igual que siempre.
+   Mientras dura no se puede sacar, y la app es siempre oscura: theme.ts e
+   index.html no aplican el claro guardado (vuelve cuando termina).
 
    Los cinco colores con significado (verde, naranja, rojo, violeta, azul) NO
    se tocan: la ruta los duplica como hex en RouteLayers.tsx y
@@ -16,7 +16,7 @@
    index.html que ponen el atributo.
 --------------------------------------------------------------------------- */
 
-:root[data-season="halloween"]:not([data-theme="light"]) {
+:root[data-season="halloween"] {
   --bg: #0d0a14;
   --bg-panel: #161124;
   --bg-panel-raised: #1f182f;

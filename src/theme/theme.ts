@@ -4,6 +4,8 @@
 // atributo data-theme -- lo poco que necesita saber "cuál está activo
 // ahora" (el selector del header, los mapas) lo lee con useActiveTheme.
 
+import { readSeason } from "../season/season";
+
 export type Theme = "dark" | "light";
 
 // Mismo prefijo routeev_ que el resto de las claves de localStorage del
@@ -38,15 +40,8 @@ export function getStoredTheme(): Theme {
 function syncThemeColorMeta(theme: Theme): void {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
-  const season = document.documentElement.hasAttribute("data-season");
+  const season = readSeason() !== null;
   meta.setAttribute("content", theme === "light" ? "#eef1f4" : season ? "#0d0a14" : "#0a0e13");
-}
-
-/** Vuelve a calcular theme-color con lo que hay hoy en <html> (al apagar la temporada). */
-export function refreshThemeColorMeta(): void {
-  syncThemeColorMeta(
-    document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"
-  );
 }
 
 export function applyTheme(theme: Theme): void {
@@ -65,7 +60,10 @@ export function setTheme(theme: Theme): void {
  * la página y en cada cambio de ruta (ver App.tsx, router.subscribe). Fuera
  * de /app y /profile fuerza oscuro sin tocar localStorage: la preferencia
  * elegida sigue ahí, lista para cuando la persona vuelva a entrar a la app.
+ * Durante una temporada (data-season, ver src/season/season.ts) también
+ * fuerza oscuro en la app: el disfraz es solo oscuro y no se puede sacar.
  */
 export function syncThemeForRoute(pathname: string): void {
-  applyTheme(isThemedRoute(pathname) ? getStoredTheme() : "dark");
+  const themed = isThemedRoute(pathname) && readSeason() === null;
+  applyTheme(themed ? getStoredTheme() : "dark");
 }

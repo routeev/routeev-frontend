@@ -12,23 +12,19 @@
          siempre se queda en el oscuro de toda la vida. -->
     <script>
       (function () {
+        // Edición Halloween: mismas fechas que src/season/season.ts (lo
+        // chequea src/test/indexHtml.test.ts). Mientras dura no se puede
+        // apagar y la app es siempre oscura: el claro guardado vuelve después.
+        var ahora = Date.now();
+        var temporada = ahora >= Date.parse("2026-10-27T00:00:00-03:00") && ahora < Date.parse("2026-11-03T00:00:00-03:00");
+        if (temporada) document.documentElement.setAttribute("data-season", "halloween");
         try {
           var path = location.pathname;
           var enApp = path === "/app" || path.indexOf("/app/") === 0 || path === "/profile" || path.indexOf("/profile/") === 0;
-          if (enApp && localStorage.getItem("routeev_theme") === "light") {
+          if (!temporada && enApp && localStorage.getItem("routeev_theme") === "light") {
             document.documentElement.setAttribute("data-theme", "light");
           }
         } catch (e) {}
-        // Edición Halloween: mismas fechas y misma clave que
-        // src/season/season.ts (lo chequea src/test/indexHtml.test.ts).
-        var ahora = Date.now();
-        if (ahora >= Date.parse("2026-10-27T00:00:00-03:00") && ahora < Date.parse("2026-11-03T00:00:00-03:00")) {
-          var apagada = false;
-          try {
-            apagada = localStorage.getItem("routeev_season_off") === "halloween-2026";
-          } catch (e) {}
-          if (!apagada) document.documentElement.setAttribute("data-season", "halloween");
-        }
       })();
     </script>
     <!-- /favicon.ico explícito (no solo el <link>): Google Search y varios

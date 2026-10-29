@@ -6,6 +6,7 @@ import { getMe, nombreParaMostrar } from "../api/user";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconChevronDown } from "../map/panelIcons";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
+import { useSeason } from "../season/season";
 import { setTheme, type Theme } from "../theme/theme";
 import { useActiveTheme } from "../theme/useActiveTheme";
 import { IconLogout, IconMoon, IconSun, IconUser } from "./landingIcons";
@@ -68,6 +69,10 @@ const THEMES: { code: Theme; Icon: typeof IconSun }[] = [
 export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
   const { t } = useTranslation();
   const active = useActiveTheme();
+  // Durante la edición Halloween la app es siempre oscura (ver theme.ts): no
+  // hay tema para elegir. La preferencia guardada vuelve cuando termina.
+  const season = useSeason();
+  if (season) return null;
   const label = (code: Theme) => (code === "light" ? t.common.lightMode : t.common.darkMode);
 
   if (inMenu) {

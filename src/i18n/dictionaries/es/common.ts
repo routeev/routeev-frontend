@@ -18,6 +18,5 @@ export const common = {
   // Chip de temporada (src/season/SeasonChip.tsx), solo en páginas públicas.
   season: {
     halloween: "Edición Halloween",
-    dismissHalloween: "Quitar la edición Halloween",
   },
 };
