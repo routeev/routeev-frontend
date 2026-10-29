@@ -98,9 +98,12 @@
   height: 20px;
 }
 
-/* Operador privado (eONE, DISA/EVE Move, Evergo...): mismo rayo, otro color,
-   para que se lea de un vistazo que ese cargador no es de la red de UTE. */
+/* Operador privado (eONE, DISA/EVE Move, Evergo...): mismo rayo, otro color
+   y otra forma (cuadrado redondeado en vez de circulo), para que se lea de un
+   vistazo que ese cargador no es de la red de UTE sin depender solo del color
+   (WCAG 1.4.1). Mismo tamaño, asi que el anclaje centrado no cambia. */
 .stationPrivada {
+  border-radius: 5px;
   background: var(--accent-astar);
   box-shadow: 0 0 8px rgba(52, 227, 168, 0.55);
 }
