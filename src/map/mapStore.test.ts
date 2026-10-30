@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { CompareRoutesResult } from "../api/route";
 import { calculateGateMissing, useMapStore } from "./mapStore";
-import { fromCoords, fromNode, pointKey, SAME_POINT_KM } from "./routePoint";
+import { fromCoords, fromNode, pointKey, SAME_POINT_KM, suggestedName } from "./routePoint";
 
 // calculateGateMissing es una función pura exportada: no necesita el store
 // ni jsdom.
@@ -160,6 +160,22 @@ describe("routePoint", () => {
     expect(p.name).toBe("-34.9055, -56.1851");
     expect(p.lat).toBe(-34.9055);
     expect(p.lon).toBe(-56.1851);
+  });
+
+  it("con etiqueta, muestra la etiqueta y no la coordenada, y no la sugiere al guardar", () => {
+    const p = fromCoords(-34.8859, -56.0962, "Tu ubicación");
+    expect(p.name).toBe("Tu ubicación");
+    expect(suggestedName(p)).toBeUndefined();
+  });
+
+  it("cuando llega el nombre de la calle, deja de ser provisorio y se sugiere", () => {
+    const s = useMapStore.getState();
+    s.setOrigin(fromCoords(-34.8859, -56.0962, "Punto en el mapa"));
+    s.annotateName("origin", pointKey(-34.8859, -56.0962), "Avenida Italia, Montevideo");
+
+    const origen = useMapStore.getState().originNode!;
+    expect(origen.name).toBe("Avenida Italia, Montevideo");
+    expect(suggestedName(origen)).toBe("Avenida Italia, Montevideo");
   });
 
   it("un punto del autocompletado ya viene nombrado", () => {

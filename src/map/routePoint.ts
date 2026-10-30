@@ -24,6 +24,14 @@ export interface RoutePoint {
   name: string;
   lat: number;
   lon: number;
+  /**
+   * El punto todavía no tiene nombre de verdad: `name` es una etiqueta genérica
+   * ("Tu ubicación", "Punto en el mapa") que se muestra mientras el nombre de la
+   * calle llega en segundo plano, o para siempre si no llega. No se manda como
+   * sugerencia al guardar: la API aceptaría la etiqueta tal cual y el historial
+   * quedaría con "Tu ubicación" en vez del lugar real.
+   */
+  provisional?: boolean;
 }
 
 /** Cuatro decimales ≈ 11 m: suficiente para reconocer el lugar, sin ruido. */
@@ -49,9 +57,19 @@ export function fromNode(n: GraphNode): RoutePoint {
   return { name: n.name, lat: n.lat, lon: n.lon };
 }
 
-/** Un punto que es solo una coordenada: toque en el mapa o GPS. */
-export function fromCoords(lat: number, lon: number): RoutePoint {
-  return { name: formatCoords(lat, lon), lat, lon };
+/**
+ * Un punto que es solo una coordenada: toque en el mapa o GPS. `label` es lo
+ * que se muestra hasta que llegue el nombre de la calle (ver pointName.ts):
+ * antes se mostraba la coordenada misma, "-34.8859, -56.0962", que nadie
+ * reconoce como su casa y además terminaba en el título del viaje.
+ */
+export function fromCoords(lat: number, lon: number, label = formatCoords(lat, lon)): RoutePoint {
+  return { name: label, lat, lon, provisional: true };
+}
+
+/** El nombre a mandarle a la API como sugerencia: nada si es solo una etiqueta genérica. */
+export function suggestedName(p: RoutePoint): string | undefined {
+  return p.provisional ? undefined : p.name;
 }
 
 /**
@@ -106,6 +124,6 @@ export const SNAP_NAME_MAX_KM = 2;
  */
 export interface TripLogSeed {
   plan_id: string;
-  origin_name: string;
-  destination_name: string;
+  origin_name?: string;
+  destination_name?: string;
 }

@@ -69,7 +69,7 @@ export function useGeolocation() {
       // cruce más cercano del grafo. Antes esto esperaba a /api/graph/nearest
       // y podía terminar poniendo el origen a kilómetros de donde estaba la
       // persona, con un aviso de "quedó impreciso" como único consuelo.
-      const p = fromCoords(latitude, longitude);
+      const p = fromCoords(latitude, longitude, t.map.pointLabels.myLocation);
       setOrigin(p);
       setPickMode("destination");
       const map = useMapStore.getState().leafletMap;

@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { planRoute, toCompareRoutesResult } from "../api/route";
 import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
+import { suggestedName } from "./routePoint";
 
 /**
  * Botón "Calcular ruta", portado de js/map/routeCalc.js.
@@ -41,7 +42,11 @@ export function useCalculateRoute() {
       // Sin plan_id no hay viaje que guardar, y eso es lo correcto: la API sólo
       // guarda el plan cuando encontró una ruta.
       const payload = v2Result.plan_id
-        ? { plan_id: v2Result.plan_id, origin_name: origin.name, destination_name: destination.name }
+        ? {
+            plan_id: v2Result.plan_id,
+            origin_name: suggestedName(origin),
+            destination_name: suggestedName(destination),
+          }
         : null;
       return { result, payload };
     },
