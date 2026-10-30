@@ -10,6 +10,12 @@ import { setRadarVibrationEnabled } from "./radarAlertPrefs";
 import { fromCoords } from "./routePoint";
 import { useLiveTrip } from "./useLiveTrip";
 
+// La precarga de tiles (tilePrefetch.ts) pide a OpenFreeMap con fetch: en
+// estos tests no tiene que salir a la red. Se prueba aparte.
+vi.mock("./tilePrefetch", () => ({
+  createRoutePrefetcher: () => ({ advance: vi.fn(), stop: vi.fn() }),
+}));
+
 /**
  * Aviso de radar en el viaje en vivo (ver useLiveTrip.ts: RADAR_ALERT_*,
  * radarAlertThresholdKm). Mismo patrón de mock de geolocation/mapStore que

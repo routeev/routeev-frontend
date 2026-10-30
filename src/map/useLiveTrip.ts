@@ -8,6 +8,7 @@ import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
 import { getRadarVibrationEnabled } from "./radarAlertPrefs";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
+import { createRoutePrefetcher, type RoutePrefetcher } from "./tilePrefetch";
 
 // Umbral minimo de avance real para que un viaje cancelado cuente en el
 // historial (filtra el jitter de un GPS quieto en el mismo punto).
@@ -160,6 +161,8 @@ interface TripRecord {
   watchId: number | null;
   /** Ya se confirmó con un fix que la persona está en el origen (ver start). */
   originChecked: boolean;
+  /** Precarga los tiles del mapa por delante de la posición (ver tilePrefetch.ts). */
+  prefetch: RoutePrefetcher;
   coords: [number, number][];
   cum: number[];
   totalKm: number;
@@ -301,6 +304,7 @@ export function useLiveTrip() {
   const end = useCallback(() => {
     const trip = tripRef.current;
     if (trip?.watchId != null) navigator.geolocation.clearWatch(trip.watchId);
+    trip?.prefetch.stop();
     tripRef.current = null;
     orientationCleanupRef.current?.();
     orientationCleanupRef.current = null;
@@ -376,6 +380,7 @@ export function useLiveTrip() {
       const onRoute = offRouteM <= FAR_FROM_ROUTE_M;
       if (onRoute) trip.lastTrustedKm = Math.max(0, Math.min(trip.totalKm, traveledKm));
       const clampedKm = trip.lastTrustedKm;
+      trip.prefetch.advance(clampedKm);
 
       let newlyArrivedStation: string | null = null;
       if (onRoute) {
@@ -624,6 +629,7 @@ export function useLiveTrip() {
     const trip: TripRecord = {
       watchId: null,
       originChecked: false,
+      prefetch: createRoutePrefetcher(coords, cum),
       coords,
       cum,
       totalKm,
@@ -643,6 +649,8 @@ export function useLiveTrip() {
       smoothedFix: null,
     };
     tripRef.current = trip;
+    // Los primeros km se piden ya, mientras el GPS busca la primera posición.
+    trip.prefetch.advance(0);
 
     setUi({
       ...initialUi,
