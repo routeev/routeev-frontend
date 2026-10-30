@@ -11,6 +11,7 @@ import { LineList } from "./LineList";
 import { IconSpark } from "./showroomIcons";
 import styles from "./SearchResults.module.css";
 import ui from "./ui.module.css";
+import { Pumpkin } from "../season/HalloweenDecor";
 
 interface SearchResultsProps {
   catalog: Catalog;
@@ -105,6 +106,7 @@ export function SearchResults({ catalog, query, headingLevel, onAddModel }: Sear
 
       {noHits && (
         <div className={styles.none}>
+          <Pumpkin />
           <div className={styles.noneText}>
             <p className={styles.noneTitle}>{ts.noResultsTitle(trimmed)}</p>
             <p className={styles.noneBody}>{ts.noResultsBody}</p>

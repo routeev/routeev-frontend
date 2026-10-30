@@ -33,3 +33,11 @@
   flex-direction: column;
   padding-bottom: 96px;
 }
+
+/* ---- Disfraz de temporada ----
+   Igual que la landing: el resplandor del hero toma la luz de la noche. Las
+   tarjetas de marca y de modelo no llevan adornos -- es un catalogo para
+   comparar numeros. */
+:global([data-season="halloween"]) .page {
+  --glow: rgba(177, 140, 242, 0.08);
+}

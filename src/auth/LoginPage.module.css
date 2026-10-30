@@ -733,3 +733,35 @@
     transition: none !important;
   }
 }
+
+/* ---- Disfraz de temporada ----
+   El sombrerito del logo necesita un contenedor relativo: se apoya en la
+   esquina del recuadro, por fuera del trazo. */
+.logoMark {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
+/* El interruptor va en la barra en escritorio y en el pie en el celular: el
+   header del login ya tiene el link a la home y el idioma, y un control mas
+   no entra en 360px. */
+.seasonBar {
+  display: flex;
+}
+
+.seasonFoot {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .seasonBar {
+    display: none;
+  }
+
+  .seasonFoot {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+}

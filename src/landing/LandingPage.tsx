@@ -15,6 +15,7 @@ import { LandingHeader } from "./LandingHeader";
 import { IconArrowRight, IconMonitor, IconPhone } from "./landingIcons";
 import { StoreRow } from "./StoreRow";
 import styles from "./LandingPage.module.css";
+import { HeroNight } from "../season/HalloweenDecor";
 
 /**
  * La home. Una idea por sección y el producto a la vista: el resultado de un
@@ -100,6 +101,9 @@ export function LandingPage() {
 
       <main>
         <section aria-labelledby="hero-titulo" className={styles.hero}>
+          {/* Primero en el DOM a proposito: los adornos van debajo del
+              resplandor y del texto (.heroText ya es z-index 1). */}
+          <HeroNight />
           <div className={styles.heroGlow} aria-hidden="true" />
           <div className={styles.heroInner}>
             <div className={styles.heroText}>

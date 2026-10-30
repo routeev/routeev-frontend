@@ -20,6 +20,7 @@ import { LoadError } from "./parts";
 import { IconMap, IconNoRoute } from "./profileIcons";
 import styles from "./TripsSection.module.css";
 import ui from "./ui.module.css";
+import { Pumpkin } from "../season/HalloweenDecor";
 
 const HISTORY_PAGE = 10;
 
@@ -67,6 +68,7 @@ export function TripsSection() {
         />
       ) : empty ? (
         <div className={styles.empty}>
+          <Pumpkin />
           <div className={styles.emptyText}>
             <span className={styles.emptyTitle}>{tr.emptyTitle}</span>
             <span className={styles.emptyBody}>{tr.emptyBody}</span>

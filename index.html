@@ -9,13 +9,35 @@
          src/theme/theme.ts -- misma clave de localStorage y mismas dos
          rutas. El tema es una preferencia de la aplicación, no del sitio
          entero: fuera de esas rutas (landing, showroom, legales, login)
-         siempre se queda en el oscuro de toda la vida. -->
+         siempre se queda en el oscuro de toda la vida.
+         Tambien fija data-season, por el mismo motivo: el disfraz de
+         temporada cambia el fondo de TODAS las rutas, y resolverlo despues
+         en React daria un parpadeo de la paleta de siempre. Ver
+         src/season/season.ts. -->
     <script>
       (function () {
         try {
           var path = location.pathname;
-          var enApp = path === "/app" || path.indexOf("/app/") === 0 || path === "/profile" || path.indexOf("/profile/") === 0;
-          if (enApp && localStorage.getItem("routeev_theme") === "light") {
+          var enApp =
+            path === "/app" ||
+            path.indexOf("/app/") === 0 ||
+            path === "/profile" ||
+            path.indexOf("/profile/") === 0;
+          // Disfraz de Halloween: del 27/10 al 2/11 inclusive, hora de
+          // Montevideo, salvo que la persona lo haya apagado con el
+          // interruptor. Mismas dos fechas y misma clave que
+          // src/season/season.ts -- season.test.ts lee este archivo y
+          // chequea que no se desincronicen. Se apaga solo el 3/11 a las
+          // 00:00, sin desplegar nada.
+          var ahora = Date.now();
+          var temporada =
+            ahora >= Date.parse("2026-10-27T00:00:00-03:00") &&
+            ahora < Date.parse("2026-11-03T00:00:00-03:00") &&
+            localStorage.getItem("routeev_season_off") !== "halloween-2026";
+          if (temporada) document.documentElement.setAttribute("data-season", "halloween");
+          // El disfraz es solo oscuro: mientras esta prendido no se aplica
+          // el claro guardado, pero tampoco se borra -- apagandolo vuelve.
+          if (enApp && !temporada && localStorage.getItem("routeev_theme") === "light") {
             document.documentElement.setAttribute("data-theme", "light");
           }
         } catch (e) {}
@@ -106,20 +128,32 @@
          contenedor), así que en el navegador no se ve. Mantener las cifras
          alineadas con la landing (LandingPage.tsx). -->
     <div id="root">
-      <main style="max-width: 640px; margin: 0 auto; padding: 48px 16px; font-family: system-ui, sans-serif; line-height: 1.5">
+      <main
+        style="
+          max-width: 640px;
+          margin: 0 auto;
+          padding: 48px 16px;
+          font-family: system-ui, sans-serif;
+          line-height: 1.5;
+        "
+      >
         <h1>RouteEV</h1>
         <p>Planificador de viajes en auto eléctrico por Uruguay.</p>
         <p>
           Elegí tu auto, marcá origen y destino, y RouteEV te dice si llegás, dónde conviene cargar,
           cuánto tardás y cuánto sale. Sobre el mapa vial real de Uruguay, con las 261 estaciones de
-          carga de UTE y de operadores privados en los 19 departamentos. 328 modelos precargados, sin
-          crear cuenta.
+          carga de UTE y de operadores privados en los 19 departamentos. 328 modelos precargados,
+          sin crear cuenta.
         </p>
         <p>
-          <a href="/app">Planificar un viaje</a> · <a href="/showroom">Showroom de autos eléctricos</a> ·
+          <a href="/app">Planificar un viaje</a> ·
+          <a href="/showroom">Showroom de autos eléctricos</a> ·
           <a href="/privacidad">Privacidad</a> · <a href="/terminos">Términos</a>
         </p>
-        <p>RouteEV · Montevideo, Uruguay · <a href="mailto:contacto@routeev.uy">contacto@routeev.uy</a></p>
+        <p>
+          RouteEV · Montevideo, Uruguay ·
+          <a href="mailto:contacto@routeev.uy">contacto@routeev.uy</a>
+        </p>
       </main>
     </div>
     <script type="module" src="/src/main.tsx"></script>

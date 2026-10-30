@@ -5,6 +5,7 @@ import { clearSession, getUsername } from "../api/session";
 import { getMe, nombreParaMostrar } from "../api/user";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconChevronDown } from "../map/panelIcons";
+import { useSeason } from "../season/season";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { setTheme, type Theme } from "../theme/theme";
 import { useActiveTheme } from "../theme/useActiveTheme";
@@ -68,7 +69,18 @@ const THEMES: { code: Theme; Icon: typeof IconSun }[] = [
 export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
   const { t } = useTranslation();
   const active = useActiveTheme();
-  const label = (code: Theme) => (code === "light" ? t.common.lightMode : t.common.darkMode);
+  // Con el disfraz de temporada prendido la app es oscura, asi que el
+  // selector queda bloqueado -- pero a la vista, no escondido: si
+  // desapareciera, al apagar el disfraz todo lo que tiene al lado se
+  // correria de lugar. aria-disabled y no disabled: sigue en el orden de
+  // tabulacion y el lector de pantalla puede leer el motivo.
+  const bloqueado = useSeason() === "halloween";
+  const motivo = t.common.season.themeLocked;
+  const label = (code: Theme) =>
+    bloqueado ? motivo : code === "light" ? t.common.lightMode : t.common.darkMode;
+  const elegir = (code: Theme) => {
+    if (!bloqueado) setTheme(code);
+  };
 
   if (inMenu) {
     return (
@@ -82,13 +94,18 @@ export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
               key={code}
               type="button"
               aria-pressed={active === code}
-              onClick={() => setTheme(code)}
+              aria-disabled={bloqueado || undefined}
+              title={bloqueado ? motivo : undefined}
+              onClick={() => elegir(code)}
             >
               <Icon />
               {code === "light" ? t.landing.nav.light : t.landing.nav.dark}
             </button>
           ))}
         </div>
+        {/* En el celular el motivo va escrito: no hay donde posar el cursor
+            para ver un title. */}
+        {bloqueado && <p className={styles.menuLangNote}>{motivo}</p>}
       </div>
     );
   }
@@ -100,9 +117,10 @@ export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
           key={code}
           type="button"
           aria-pressed={active === code}
+          aria-disabled={bloqueado || undefined}
           aria-label={label(code)}
           title={label(code)}
-          onClick={() => setTheme(code)}
+          onClick={() => elegir(code)}
         >
           <Icon />
         </button>

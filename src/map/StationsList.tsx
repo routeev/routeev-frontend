@@ -9,6 +9,7 @@ import { IconAlert, IconBolt, IconRetry, IconSearch, STAR_PATH } from "./panelIc
 import ui from "./panel.module.css";
 import styles from "./StationsList.module.css";
 import { matchesStationFilter } from "./stationFilter";
+import { Ghost } from "../season/HalloweenDecor";
 
 interface StationsListProps {
   loadFailed: boolean;
@@ -156,7 +157,10 @@ export function StationsList({ loadFailed, onRetry }: StationsListProps) {
           );
         })}
         {stations.length > 0 && shown.length === 0 && (
-          <li className={styles.empty}>{q ? sp.noMatch(search.trim()) : sp.noMatchFilter}</li>
+          <li className={styles.empty}>
+            <Ghost />
+            {q ? sp.noMatch(search.trim()) : sp.noMatchFilter}
+          </li>
         )}
       </ul>
     </div>

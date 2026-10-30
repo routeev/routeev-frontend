@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 // node:fs/node:path o usar __dirname rompe el BUILD DE PRODUCCION, no solo el
 // test. Asi lo carga Vite, que es quien lo resuelve igual en test y en build.
 import html from "../../index.html?raw";
+import { SEASON_END, SEASON_ID, SEASON_OFF_KEY, SEASON_START } from "../season/season";
 
 // El index.html no lo revisa nadie: no pasa por TypeScript, ni por ESLint, y
 // Vite lo sirve tal cual esté (un comentario mal cerrado no es un error de
@@ -85,5 +86,29 @@ describe("index.html", () => {
     expect(texto).toContain("RouteEV");
     expect(texto).toContain("contacto@routeev.uy");
     expect(texto).not.toMatch(/@(gmail|hotmail|outlook|yahoo)\./i);
+  });
+
+  // El disfraz de temporada se decide en el MISMO script, por el mismo
+  // motivo: cambia el fondo de todas las rutas, y resolverlo despues en
+  // React daria un parpadeo de la paleta de siempre. Las fechas y la clave
+  // estan escritas dos veces (aca y en season.ts) porque este script no
+  // puede importar nada -- corre antes del bundle. Desincronizarlas no
+  // rompe nada visible: la app se disfraza un dia distinto del que dice el
+  // codigo, o el interruptor apaga una clave que el script no lee y el
+  // disfraz vuelve en cada recarga.
+  it("el script de la temporada llega vivo al DOM", () => {
+    const inline = Array.from(doc.querySelectorAll("script:not([src])"));
+    expect(inline.some((s) => s.textContent?.includes(SEASON_OFF_KEY))).toBe(true);
+  });
+
+  it("las fechas y la clave de la temporada coinciden con season.ts", () => {
+    const script =
+      Array.from(doc.querySelectorAll("script:not([src])"))
+        .map((s) => s.textContent ?? "")
+        .find((t) => t.includes(SEASON_OFF_KEY)) ?? "";
+
+    for (const valor of [SEASON_START, SEASON_END, SEASON_ID, SEASON_OFF_KEY]) {
+      expect(script, `el script de index.html tendria que traer ${valor}`).toContain(valor);
+    }
   });
 });

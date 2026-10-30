@@ -1,0 +1,216 @@
+/* Colocacion de los adornos. Todo lo que se pinta aca vive en una capa
+   absoluta DEBAJO del contenido y con pointer-events: none -- el texto
+   nunca se corre por un adorno, y si un layout responsivo acerca uno a un
+   parrafo, el adorno se oculta (no se mueve el texto).
+
+   Cada medida sale del grupo Decoraciones del design system. Los
+   var(--hw-*, transparent) son cinturon y tirantes: los componentes ya no
+   se montan fuera de temporada, pero si alguna vez se montaran, sin los
+   tokens declarados no se veria nada en vez de verse mal. */
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ---- Noche y niebla: solo degrades, sin imagenes ni backdrop-filter ---- */
+
+.noche {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 120% 90% at 85% 0%,
+    var(--hw-night, transparent) 0%,
+    transparent 70%
+  );
+}
+
+.niebla {
+  position: absolute;
+  inset: auto 0 0;
+  height: 140px;
+  background: linear-gradient(to top, var(--hw-fog, transparent), transparent);
+}
+
+/* ---- Luna ---- */
+
+.luna {
+  position: absolute;
+  top: -34px;
+  right: 2%;
+  width: 200px;
+  height: 200px;
+}
+
+/* En la portada, de 900 para abajo el hero pasa a una columna y el titular
+   toma todo el ancho: la luna lo pisaria, asi que sale. */
+@media (max-width: 899.98px) {
+  .lunaPortada {
+    display: none;
+  }
+}
+
+/* En el login si queda en mobile, mas chica y cortada por el borde. */
+.lunaLogin {
+  top: -46px;
+  right: -36px;
+}
+
+@media (max-width: 640px) {
+  .lunaLogin {
+    width: 130px;
+    height: 130px;
+    top: -30px;
+    right: -30px;
+  }
+}
+
+/* ---- Murcielagos: solo en la portada, cruzando la luna ---- */
+
+/* Misma caja que la luna a proposito: asi los dos quedan CRUZANDOLA y no
+   al costado, que es donde el hw-bat casi desaparece contra la noche. Las
+   posiciones de abajo son relativas al disco, que en el viewBox de 200 esta
+   centrado y tiene radio 54. */
+.murcielagos {
+  position: absolute;
+  top: -34px;
+  right: 2%;
+  width: 200px;
+  height: 200px;
+}
+
+.batGrande {
+  position: absolute;
+  top: 62px;
+  left: 40px;
+  width: 40px;
+  height: 20px;
+}
+
+.batChico {
+  position: absolute;
+  top: 118px;
+  left: 118px;
+  width: 28px;
+  height: 14px;
+}
+
+/* Van con la luna: si la luna no esta, los murcielagos tampoco. */
+@media (max-width: 899.98px) {
+  .murcielagos {
+    display: none;
+  }
+}
+
+/* La unica animacion que suma el disfraz: entran una vez y quedan quietos.
+   Dentro de no-preference a proposito (y no apagada despues con reduce):
+   con reduce no hay animacion que apagar, se pintan directo en su lugar.
+   Solo transform y opacity, asi que va por el compositor. */
+@media (prefers-reduced-motion: no-preference) {
+  .batGrande,
+  .batChico {
+    animation: entrarVolando 2.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  .batChico {
+    animation-delay: 0.35s;
+  }
+}
+
+@keyframes entrarVolando {
+  from {
+    transform: translate3d(-70px, -34px, 0) rotate(-14deg);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ---- Telarana de esquina ---- */
+
+.telarana {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: 160px;
+}
+
+/* En la portada pisaria el titular una vez que el hero es de una columna. */
+@media (max-width: 899.98px) {
+  .telaranaPortada {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .telaranaLogin {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+/* De 360 para abajo no hay lugar ni para la de 96. */
+@media (max-width: 359.98px) {
+  .telaranaLogin {
+    display: none;
+  }
+}
+
+/* ---- Adornos en linea (no van en la capa) ---- */
+
+/* Apoyado en la esquina superior izquierda del recuadro del logo, por
+   fuera del trazo: el logo oficial se usa tal cual, nunca tapado. */
+.sombrero {
+  position: absolute;
+  top: -11px;
+  left: -8px;
+  width: 20px;
+  height: 16px;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .sombrero {
+    top: -9px;
+    left: -6px;
+    width: 16px;
+    height: 13px;
+  }
+}
+
+.calabaza {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 4px;
+}
+
+@media (max-width: 640px) {
+  .calabaza {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+.fantasma {
+  display: block;
+  width: 96px;
+  height: 80px;
+  margin: 0 auto 4px;
+}
+
+@media (max-width: 640px) {
+  .fantasma {
+    width: 72px;
+    height: 60px;
+  }
+}

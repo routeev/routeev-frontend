@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useTranslation, type Lang } from "../i18n/LanguageProvider";
 import { IconClose } from "../map/panelIcons";
 import { useMediaQuery } from "../shared/useMediaQuery";
+import { WitchHat } from "../season/HalloweenDecor";
+import { SeasonSwitch } from "../season/SeasonSwitch";
 import { AccountMenu, MenuAccount, ThemeSeg } from "./HeaderAccount";
 import { IconArrowRight, IconChevronRight, IconMenu } from "./landingIcons";
 import styles from "./LandingHeader.module.css";
@@ -115,7 +117,10 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
       <header className={styles.header}>
         <div className={styles.inner}>
           <Link to="/" className={styles.logo} aria-label="RouteEV">
-            <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
+            <span className={styles.logoMark}>
+              <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
+              <WitchHat />
+            </span>
             <span>
               Route<span className={styles.accent}>EV</span>
             </span>
@@ -135,6 +140,7 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
           </nav>
 
           <div className={styles.actions}>
+            <SeasonSwitch />
             <div role="group" aria-label={n.language} className={styles.langSeg}>
               {LANGS.map((l) => (
                 <button
@@ -170,6 +176,8 @@ export function LandingHeader({ loggedIn, page = "landing" }: LandingHeaderProps
               </>
             )}
           </div>
+
+          <SeasonSwitch variant="compact" />
 
           <button
             ref={toggleRef}

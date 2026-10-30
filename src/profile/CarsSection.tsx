@@ -23,6 +23,8 @@ import { useModal } from "../shared/useModal";
 import { useVehiclePhoto, vehiclePhotoQueryKey } from "./useVehiclePhoto";
 import styles from "./CarsSection.module.css";
 import ui from "./ui.module.css";
+import { Pumpkin } from "../season/HalloweenDecor";
+import { useSeason } from "../season/season";
 
 const menuTriggerId = (id: number) => `auto-menu-${id}`;
 
@@ -35,6 +37,10 @@ interface CarsSectionProps {
 export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
   const { t } = useTranslation();
   const c = t.profile.cars;
+  // Mientras dura el disfraz de temporada, el estado vacio cambia el auto
+  // dibujado por la calabaza: apilar las dos ilustraciones es justo el ruido
+  // que el disfraz evita, y el texto ya dice en palabras que no hay autos.
+  const enTemporada = useSeason() === "halloween";
   const queryClient = useQueryClient();
   const isDesktop = useMediaQuery("(min-width: 900px)");
   const vehicles = useQuery({ queryKey: ["vehicles"], queryFn: listVehicles });
@@ -132,7 +138,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
       ) : list.length === 0 ? (
         <div className={styles.empty}>
           <span className={styles.emptyArt}>
-            <CarOutline width={72} />
+            {enTemporada ? <Pumpkin /> : <CarOutline width={72} />}
           </span>
           <div className={styles.emptyText}>
             <span className={styles.emptyTitle}>{c.emptyTitle}</span>

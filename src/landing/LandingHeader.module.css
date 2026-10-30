@@ -35,6 +35,15 @@
   text-decoration: none;
 }
 
+/* Contenedor del recuadro del logo: existe para que el sombrerito de bruja
+   del disfraz de temporada se apoye en su esquina (position: absolute) por
+   fuera del trazo. Sin temporada no envuelve nada mas que la imagen. */
+.logoMark {
+  position: relative;
+  display: block;
+  flex: none;
+}
+
 .logo img {
   display: block;
   width: 30px;
@@ -115,6 +124,12 @@
   align-items: center;
   gap: 10px;
   margin-left: auto;
+}
+
+.langSeg button[aria-disabled="true"],
+.menuLangSeg button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .langSeg {
@@ -366,6 +381,7 @@
 
   .menuToggle {
     display: grid;
+    margin-left: 8px;
     place-items: center;
     width: 44px;
     height: 44px;
@@ -454,6 +470,15 @@
 .menuLangLabel {
   font-size: 13px;
   font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* El motivo del tema bloqueado, debajo del selector, solo mientras dura el
+   disfraz de temporada. */
+.menuLangNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--text-muted);
 }
 

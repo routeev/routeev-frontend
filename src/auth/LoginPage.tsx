@@ -31,6 +31,8 @@ import {
 } from "./authIcons";
 import { GoogleSignIn } from "./GoogleSignIn";
 import styles from "./LoginPage.module.css";
+import { LoginNight, WitchHat } from "../season/HalloweenDecor";
+import { SeasonSwitch } from "../season/SeasonSwitch";
 
 /**
  * Los dos primeros pasos salen de la URL (`/login` y `/login?crear=1`, que ya
@@ -409,10 +411,17 @@ export function LoginPage() {
         <GraphBackground />
       </div>
       <div className={styles.veil} aria-hidden="true" />
+      {/* Despues del velo: la luna queda por encima de la tarjeta (sin
+          tocarla) y la telarana en la esquina. Las aristas del grafo se
+          pintan como hilos desde GraphBackground.module.css. */}
+      <LoginNight />
 
       <header className={styles.header}>
         <Link to="/" className={styles.logo} aria-label={a.header.logoLabel}>
-          <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
+          <span className={styles.logoMark}>
+            <img src="/apple-touch-icon.png" alt="" width={30} height={30} />
+            <WitchHat />
+          </span>
           <span>
             Route<span className={styles.accent}>EV</span>
           </span>
@@ -423,6 +432,9 @@ export function LoginPage() {
             <span className={styles.homeLong}>{a.header.backHome}</span>
             <span className={styles.homeShort}>{a.header.backHomeShort}</span>
           </Link>
+          <div className={styles.seasonBar}>
+            <SeasonSwitch />
+          </div>
           <div role="group" aria-label={a.header.language} className={styles.langSeg}>
             {LANGS.map((l) => (
               <button
@@ -558,6 +570,10 @@ export function LoginPage() {
           </form>
 
           {isAuth && <GoogleSignIn onCredential={onGoogleCredential} signup={step === "signup"} />}
+        </div>
+
+        <div className={styles.seasonFoot}>
+          <SeasonSwitch variant="withLabel" />
         </div>
 
         <footer className={styles.footer}>

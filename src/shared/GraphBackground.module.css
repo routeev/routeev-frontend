@@ -37,3 +37,12 @@
     animation: none;
   }
 }
+
+/* ---- Disfraz de temporada ----
+   Las aristas del grafo pasan de borde a hilo de telarana. La ruta queda
+   verde, punteada y fluyendo como siempre: es lo que se lee como "esto es
+   RouteEV". El fallback a --border es lo que hace que fuera de temporada,
+   sin --hw-web declarado, esta regla no cambie nada. */
+:global([data-season="halloween"]) .bg .edge {
+  stroke: var(--hw-web, var(--border));
+}

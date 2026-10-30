@@ -421,6 +421,19 @@
   border-radius: 4px;
 }
 
+/* Solo la barra de bateria AL LLEGAR (no la de salida ni la de progreso):
+   es la unica donde el naranja ya significa "margen bajo" y ya va con el
+   texto al lado, asi que el brillo de calabaza del disfraz de temporada no
+   agrega informacion ni la saca. Con "Critico" la barra es roja y no
+   brilla: el rojo nunca brilla.
+
+   El brillo va en la barra y no en el relleno porque .bar tiene overflow:
+   hidden y lo cortaria. Y fuera de temporada --shadow-pumpkin no esta
+   declarado, asi que el fallback a none deja esto en nada. */
+.barArrival:has(> .toneWarn) {
+  box-shadow: var(--shadow-pumpkin, none);
+}
+
 .toneAccent {
   background: var(--accent-astar);
 }

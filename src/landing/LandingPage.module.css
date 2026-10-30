@@ -456,3 +456,13 @@
     display: none;
   }
 }
+
+/* ---- Disfraz de temporada ----
+   El resplandor del hero y el del cierre son el verde de marca al 10 %.
+   Mientras dura el disfraz pasan a la luz lila de la noche: con el verde
+   sobre un fondo violeta la pagina quedaba de dos temperaturas a la vez.
+   Es el unico cambio de esta hoja, y :global porque data-season vive en
+   <html>, fuera del scope del modulo. */
+:global([data-season="halloween"]) .page {
+  --glow: rgba(177, 140, 242, 0.1);
+}

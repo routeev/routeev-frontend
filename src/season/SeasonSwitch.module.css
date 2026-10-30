@@ -1,0 +1,120 @@
+/* Mismas medidas que el selector de idioma de LandingHeader (44 px de alto,
+   radio 12, borde --border): el interruptor es un control mas de la barra,
+   no un banner de campana. Solo usa tokens que existen con y sin temporada
+   y en los dos temas, asi que no se rompe en el instante entre apagarlo y
+   el proximo render. */
+
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.wrap:hover {
+  background: var(--bg-panel-raised);
+}
+
+.wrap:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}
+
+/* Solo por debajo de 900, al lado del boton del menu: arriba de eso vive en
+   .actions, que es lo que se oculta en mobile. */
+.soloMovil {
+  display: none;
+}
+
+@media (max-width: 899.98px) {
+  .soloMovil {
+    display: inline-flex;
+    /* .inner del header pasa a space-between y oculta .nav y .actions: con
+       solo el logo, este y el boton del menu, el auto se come el hueco y
+       los dos quedan juntos a la derecha en vez de uno al medio. */
+    margin-left: auto;
+    /* Mas angosto que el de la barra: al lado del boton del menu, en 360
+       px, cada pixel cuenta. */
+    height: 44px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+}
+
+.calabaza {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+/* Apagado la calabaza queda en gris: el estado se ve por la calabaza, por
+   la pista y por la perilla a la vez, nunca solo por el color. */
+.calabazaOff {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.track {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent-astar);
+  transition: background 0.15s;
+}
+
+.trackOff {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--text-faint);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 19px;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--button-primary-text);
+  color: var(--accent-astar);
+  transition: left 0.15s;
+}
+
+.knobOff {
+  left: 3px;
+  background: var(--text-faint);
+}
+
+.knob svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* El aviso se anuncia y no se dibuja: lo que se ve ya cambio (toda la
+   paleta). */
+.aviso {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

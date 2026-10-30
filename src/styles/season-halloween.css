@@ -1,0 +1,70 @@
+/* ---------------------------------------------------------------------------
+   RouteEV -- disfraz de Halloween. Se importa DESPUES de tokens.css (ver
+   main.tsx) y pisa 16 de sus tokens mientras data-season="halloween" este
+   en <html>. No edita tokens.css: el 3/11 se saca este archivo y la app
+   queda exactamente como estaba.
+
+   Los cinco colores con significado (accent-astar, warn, danger, point-dest,
+   accent-live) NO estan aca a proposito: conservan el mismo valor, no solo
+   el mismo significado. La ruta y la linea de navegacion los pasan como hex
+   a Leaflet y MapLibre (COLORES_RUTA en RouteLayers.tsx, ROUTE_COLOR en
+   NavigationMap.tsx), asi que si cambiaran, el panel diria un verde y el
+   mapa mostraria otro. Con los mismos valores el mapa queda igual por
+   diseno, sin tocar una linea de JS.
+
+   :not([data-theme="light"]) porque el disfraz es solo oscuro -- con la
+   temporada prendida el tema claro queda bloqueado (ver theme.ts), pero el
+   selector sigue a la vista y esto cubre el instante entre un click y el
+   proximo render.
+--------------------------------------------------------------------------- */
+
+:root[data-season="halloween"]:not([data-theme="light"]) {
+  /* Las cuatro superficies se corren de negro azulado a negro violeta,
+     manteniendo el mismo orden de luminosidad que hoy -- cada una se sigue
+     separando igual de la que tiene al lado. */
+  --bg: #0d0a14;
+  --bg-panel: #161124;
+  --bg-panel-raised: #1f182f;
+  --bg-sunken: #110d1a;
+  --bg-track: #261e3a;
+  --border: #2c2440;
+  --border-soft: #1f182f;
+  --border-strong: #433860;
+
+  /* Los tres textos se aclaran un punto y se tinen de lila: sobre cada
+     superficie dan igual o mas contraste que hoy (text-muted sobre bg-panel
+     pasa de 6,0:1 a 7,1:1). */
+  --text: #f1ecf8;
+  --text-muted: #a69cba;
+  --text-faint: #9a8fb0;
+
+  --danger-dim: #4a2030;
+  /* 4,62:1 con texto blanco, contra 4,32:1 del valor base, que no llega a
+     AA -- conviene llevar este valor tambien a tokens.css, aparte y
+     permanente. */
+  --danger-fill: #d24040;
+
+  /* El velo del login y los degrades del showroom componen
+     rgba(var(--bg-rgb), x): sin esto quedan azulados sobre el fondo nuevo. */
+  --bg-rgb: 13, 10, 20;
+  --overlay: rgba(8, 4, 16, 0.7);
+  /* Luz lila en vez de blanca, para que el hover no "lave" el violeta. */
+  --overlay-hover: rgba(220, 204, 255, 0.08);
+  --overlay-shimmer: rgba(220, 204, 255, 0.055);
+
+  --shadow-panel: 0 8px 30px rgba(4, 0, 12, 0.5);
+  --shadow-float: 0 4px 12px rgba(4, 0, 12, 0.34), 0 16px 48px rgba(4, 0, 12, 0.55);
+
+  /* Opcionales: solo los leen los adornos de src/season/. Fuera de
+     temporada no estan declarados, asi que un var(--hw-*, fallback) en
+     cualquier .module.css no hace nada -- es lo que mantiene a
+     GraphBackground y a la barra de llegada sin cambios el resto del ano. */
+  --hw-night: #1a1030;
+  --hw-moon: #f3e6c4;
+  --hw-moon-glow: rgba(243, 230, 196, 0.1);
+  --hw-web: rgba(214, 196, 255, 0.16);
+  --hw-fog: rgba(214, 196, 255, 0.06);
+  --hw-bat: #3a2f55;
+  --hw-candle: #ffd27a;
+  --shadow-pumpkin: 0 0 10px rgba(242, 161, 84, 0.45);
+}
