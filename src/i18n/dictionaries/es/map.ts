@@ -290,6 +290,11 @@ export const map = {
     pickOnMapActiveSr: (roleLabel: string) =>
       `Tocá el mapa para marcar el ${roleLabel}. Tocá este botón de nuevo para cancelar.`,
   },
+  // Lo que dice un punto marcado por coordenada mientras no tiene nombre de calle.
+  pointLabels: {
+    myLocation: "Tu ubicación",
+    pointOnMap: "Punto en el mapa",
+  },
   geolocation: {
     permissionDenied:
       "No nos diste permiso para ver tu ubicación. Podés habilitarlo desde el candado en la barra de direcciones del navegador.",

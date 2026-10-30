@@ -46,7 +46,7 @@ export function useGoToStation(calculate: () => void, onPointsSet?: () => void) 
       (pos) => {
         const { latitude, longitude } = pos.coords;
         const store = useMapStore.getState();
-        store.setOrigin(fromCoords(latitude, longitude));
+        store.setOrigin(fromCoords(latitude, longitude, t.map.pointLabels.myLocation));
         store.setDestination({ name: station.nombre, lat: station.lat, lon: station.lon });
         // El destino ES un cargador: la pregunta de "¿tenés dónde cargar en
         // el destino?" ya está contestada, y preguntarla frenaría el cálculo

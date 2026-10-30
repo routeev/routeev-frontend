@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMapEvents } from "react-leaflet";
+import { useTranslation } from "../../i18n/LanguageProvider";
 import { useMapStore, type PickMode } from "../mapStore";
 import { claimPickRole, DOUBLE_CLICK_GUARD_MS } from "../pickSequence";
 import { fromCoords } from "../routePoint";
@@ -32,6 +33,7 @@ interface ClickToPickProps {
 }
 
 export function ClickToPick({ onError }: ClickToPickProps) {
+  const { t } = useTranslation();
   // Timeouts agendados y todavía sin correr. Un array, no un solo id: ver el
   // comentario del componente.
   // El rol viaja junto al timeout para poder devolver SOLO los roles de los
@@ -83,7 +85,7 @@ export function ClickToPick({ onError }: ClickToPickProps) {
   function applyPick(role: PickMode, lat: number, lon: number) {
     const store = useMapStore.getState();
     // Síncrono y exacto: el punto es la coordenada del toque.
-    const p = fromCoords(lat, lon);
+    const p = fromCoords(lat, lon, t.map.pointLabels.pointOnMap);
     if (role === "origin") {
       store.setOrigin(p);
       store.setPickMode("destination");

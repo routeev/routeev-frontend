@@ -324,7 +324,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       // El punto que hay ahora no es el que se pidió nombrar: la persona
       // volvió a tocar (o canceló) mientras la respuesta venía en camino.
       if (cur == null || pointKey(cur.lat, cur.lon) !== key) return {};
-      const next: RoutePoint = { ...cur, name };
+      const next: RoutePoint = { lat: cur.lat, lon: cur.lon, name };
       return role === "origin" ? { originNode: next } : { destinationNode: next };
     }),
 
