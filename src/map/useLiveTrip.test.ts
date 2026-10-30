@@ -7,6 +7,12 @@ import { useMapStore } from "./mapStore";
 import { fromCoords } from "./routePoint";
 import { useLiveTrip } from "./useLiveTrip";
 
+// La precarga de tiles (tilePrefetch.ts) pide a OpenFreeMap con fetch: en
+// estos tests no tiene que salir a la red. Se prueba aparte.
+vi.mock("./tilePrefetch", () => ({
+  createRoutePrefetcher: () => ({ advance: vi.fn(), stop: vi.fn() }),
+}));
+
 /**
  * Regresión del bug reportado: "cuando me pide ubicación y le doy que no al
  * iniciar el viaje se bugea". start() pedía la posición inicial (para
