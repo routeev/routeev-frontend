@@ -158,6 +158,8 @@ function normalizeOrientationHeading(event: DeviceOrientationEvent): number | nu
 
 interface TripRecord {
   watchId: number | null;
+  /** Ya se confirmó con un fix que la persona está en el origen (ver start). */
+  originChecked: boolean;
   coords: [number, number][];
   cum: number[];
   totalKm: number;
@@ -621,6 +623,7 @@ export function useLiveTrip() {
 
     const trip: TripRecord = {
       watchId: null,
+      originChecked: false,
       coords,
       cum,
       totalKm,
@@ -658,11 +661,28 @@ export function useLiveTrip() {
     // Antes de arrancar el seguimiento hay que confirmar que la persona esta
     // efectivamente en el origen: un viaje en vivo mide lo que se recorre
     // DESDE el origen.
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
+    //
+    // El chequeo se hace con el PRIMER fix del propio watchPosition, y no
+    // con un getCurrentPosition previo como antes. Aquello encadenaba dos
+    // búsquedas de GPS de alta precisión (hasta 15 s cada una con el chip
+    // frío): el seguimiento recién empezaba a escuchar cuando la primera
+    // terminaba, y esa espera era la demora que se sentía al tocar "Iniciar
+    // viaje". Ahora hay una sola búsqueda y el primer fix útil sirve para
+    // las dos cosas.
+    const onFix = (pos: GeolocationPosition) => {
+      if (tripRef.current !== trip) return;
+      if (!trip.originChecked) {
+        const accuracyM = pos.coords.accuracy ?? null;
+        // Demasiado impreciso para decidir si está en el origen: handlePosition
+        // lo descarta igual (solo publica la precisión) y se espera al próximo.
+        if (accuracyM != null && accuracyM > GPS_HARD_REJECT_ACCURACY_M) {
+          handlePosition(pos);
+          return;
+        }
         const distanciaAlOrigenKm = haversineKm(pos.coords.latitude, pos.coords.longitude, coords[0]![0], coords[0]![1]);
         if (distanciaAlOrigenKm > MAX_DISTANCE_FROM_ORIGIN_KM) {
-          tripRef.current = null;
+          // end() primero y el aviso después, por lo mismo que en handleError.
+          end();
           setUi({
             ...initialUi,
             statusText: lt.tooFarFromOrigin(distanciaAlOrigenKm.toFixed(1)),
@@ -670,16 +690,19 @@ export function useLiveTrip() {
           });
           return;
         }
-        setUi((u) => ({ ...u, statusText: lt.onRoute, statusKind: "" }));
-        trip.watchId = navigator.geolocation.watchPosition(handlePosition, handleError, {
-          enableHighAccuracy: true,
-          maximumAge: 4000,
-          timeout: 15000,
-        });
-      },
-      handleError,
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-    );
+        trip.originChecked = true;
+      }
+      handlePosition(pos);
+    };
+    trip.watchId = navigator.geolocation.watchPosition(onFix, handleError, {
+      enableHighAccuracy: true,
+      maximumAge: 4000,
+      timeout: 15000,
+    });
+    // Si el navegador contestó en el acto (un error sincrónico) y eso ya
+    // terminó el viaje, end() corrió antes de que existiera el watchId: el
+    // watch quedaría huérfano escuchando el GPS para siempre.
+    if (tripRef.current !== trip) navigator.geolocation.clearWatch(trip.watchId);
   }, [end, handlePosition, handleError, attachDeviceOrientation, lt]);
 
   const cancel = useCallback(() => {
