@@ -16,7 +16,7 @@ import { setSession } from "../api/session";
 import { useTranslation, type Lang } from "../i18n/LanguageProvider";
 import { IconInstagram } from "../landing/landingIcons";
 import { LoginNight, WitchHat } from "../season/HalloweenDecor";
-import { SeasonChip } from "../season/SeasonChip";
+import { SeasonSwitch } from "../season/SeasonSwitch";
 import { GraphBackground } from "../shared/GraphBackground";
 import {
   IconAlert,
@@ -422,7 +422,7 @@ export function LoginPage() {
           </span>
         </Link>
         <div className={styles.headerEnd}>
-          <SeasonChip />
+          <SeasonSwitch className={styles.seasonHeader} />
           <Link to="/" className={styles.homeLink}>
             <IconArrowLeft />
             <span className={styles.homeLong}>{a.header.backHome}</span>
@@ -566,6 +566,11 @@ export function LoginPage() {
         </div>
 
         <footer className={styles.footer}>
+          {/* En el celular el header no tiene lugar para el interruptor: va acá,
+              con su texto, debajo del formulario. */}
+          <div className={styles.footerSeason}>
+            <SeasonSwitch withLabel />
+          </div>
           <span>© {new Date().getFullYear()} RouteEV</span>
           <Link to="/privacidad">{a.footer.privacy}</Link>
           <Link to="/terminos">{a.footer.terms}</Link>

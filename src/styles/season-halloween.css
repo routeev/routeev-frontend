@@ -4,8 +4,9 @@
    leen los adornos de src/season/). Lo activa el atributo data-season que pone
    el script inline de index.html entre las fechas de src/season/season.ts.
 
-   Mientras dura no se puede sacar, y la app es siempre oscura: theme.ts e
-   index.html no aplican el claro guardado (vuelve cuando termina).
+   Arranca prendida y cada persona la puede apagar con el interruptor del
+   header (src/season/SeasonSwitch.tsx). Prendida, la app es siempre oscura:
+   theme.ts e index.html no aplican el claro guardado, que vuelve al apagarla.
 
    Los cinco colores con significado (verde, naranja, rojo, violeta, azul) NO
    se tocan: la ruta los duplica como hex en RouteLayers.tsx y

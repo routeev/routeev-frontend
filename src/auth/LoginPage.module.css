@@ -643,6 +643,12 @@
   color: var(--text);
 }
 
+/* El interruptor de temporada: en el header en escritorio, en el pie en el
+   celular (ver la media query de abajo). */
+.footer > .footerSeason {
+  display: none;
+}
+
 .footer .footerIcon {
   justify-content: center;
   width: 44px;
@@ -685,6 +691,17 @@
 
   .homeLong {
     display: none;
+  }
+
+  .seasonHeader {
+    display: none;
+  }
+
+  .footer > .footerSeason {
+    display: flex;
+    flex-basis: 100%;
+    justify-content: center;
+    margin-bottom: 4px;
   }
 
   .homeShort {

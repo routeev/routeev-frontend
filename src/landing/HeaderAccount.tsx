@@ -69,11 +69,16 @@ const THEMES: { code: Theme; Icon: typeof IconSun }[] = [
 export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
   const { t } = useTranslation();
   const active = useActiveTheme();
-  // Durante la edición Halloween la app es siempre oscura (ver theme.ts): no
-  // hay tema para elegir. La preferencia guardada vuelve cuando termina.
-  const season = useSeason();
-  if (season) return null;
+  // Con la edición Halloween prendida la app es siempre oscura (ver
+  // theme.ts): el selector queda a la vista pero bloqueado, con el motivo. No
+  // se esconde para que el interruptor de al lado no se corra al apagarla. La
+  // preferencia guardada vuelve sola al apagar Halloween.
+  const locked = useSeason() !== null;
+  const lockedHint = t.common.season.themeLocked;
   const label = (code: Theme) => (code === "light" ? t.common.lightMode : t.common.darkMode);
+  const choose = (code: Theme) => {
+    if (!locked) setTheme(code);
+  };
 
   if (inMenu) {
     return (
@@ -81,19 +86,31 @@ export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
         <span id="menu-tema" className={styles.menuLangLabel}>
           {t.common.themeSwitcherLabel}
         </span>
-        <div role="group" aria-labelledby="menu-tema" className={styles.menuLangSeg}>
+        <div
+          role="group"
+          aria-labelledby="menu-tema"
+          aria-describedby={locked ? "menu-tema-bloqueado" : undefined}
+          className={styles.menuLangSeg}
+        >
           {THEMES.map(({ code, Icon }) => (
             <button
               key={code}
               type="button"
               aria-pressed={active === code}
-              onClick={() => setTheme(code)}
+              aria-disabled={locked || undefined}
+              onClick={() => choose(code)}
             >
               <Icon />
               {code === "light" ? t.landing.nav.light : t.landing.nav.dark}
             </button>
           ))}
         </div>
+        {/* En el celular no hay hover: el motivo va escrito. */}
+        {locked && (
+          <p id="menu-tema-bloqueado" className={styles.menuHint}>
+            {lockedHint}
+          </p>
+        )}
       </div>
     );
   }
@@ -105,9 +122,11 @@ export function ThemeSeg({ inMenu = false }: { inMenu?: boolean }) {
           key={code}
           type="button"
           aria-pressed={active === code}
+          aria-disabled={locked || undefined}
           aria-label={label(code)}
-          title={label(code)}
-          onClick={() => setTheme(code)}
+          aria-description={locked ? lockedHint : undefined}
+          title={locked ? lockedHint : label(code)}
+          onClick={() => choose(code)}
         >
           <Icon />
         </button>
