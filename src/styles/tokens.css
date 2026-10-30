@@ -65,8 +65,8 @@
   --danger-text: #ff8a8a;
   --danger-soft: rgba(239, 91, 91, 0.12);
   --danger-line: rgba(239, 91, 91, 0.4);
-  /* Botón "Eliminar" lleno: con texto blanco da 4,6:1 (--danger con blanco no llega a AA). */
-  --danger-fill: #d84545;
+  /* Botón "Eliminar" lleno: con texto blanco da 4,62:1 (--danger con blanco no llega a AA). */
+  --danger-fill: #d24040;
   /* Fondo detrás de los diálogos. */
   --overlay: rgba(4, 7, 10, 0.66);
   --live-text: #6cb8ff;
