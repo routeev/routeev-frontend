@@ -148,6 +148,26 @@
   color: var(--text);
 }
 
+/* Bloqueado por la edición Halloween (ver ThemeSeg): sigue a la vista y con
+   foco, pero se nota que no responde. aria-disabled y no disabled, para que el
+   motivo (title y aria-description) llegue también con teclado. */
+.langSeg button[aria-disabled="true"],
+.menuLangSeg button[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.langSeg button[aria-disabled="true"]:not([aria-pressed="true"]),
+.menuLangSeg button[aria-disabled="true"]:not([aria-pressed="true"]) {
+  opacity: 0.45;
+}
+
+.menuHint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .langSeg button:focus-visible {
   outline-offset: -2px;
 }

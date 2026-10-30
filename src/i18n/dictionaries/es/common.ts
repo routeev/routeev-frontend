@@ -20,5 +20,12 @@ export const common = {
     halloween: "Edición Halloween",
     turnOff: "Desactivar la edición Halloween",
     turnOn: "Activar la edición Halloween",
+    // Aviso después de tocar el interruptor.
+    turnedOff:
+      "Edición Halloween desactivada. La podés volver a activar desde el mismo interruptor.",
+    turnedOn: "Edición Halloween activada.",
+    // El selector claro/oscuro, bloqueado mientras está prendida.
+    themeLocked:
+      "Con la edición Halloween activada la app usa el tema oscuro. Desactivala para elegir el claro.",
   },
 };

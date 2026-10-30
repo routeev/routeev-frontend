@@ -112,14 +112,15 @@
 }
 
 /* Celular angosto: queda la calabaza y la pista; el texto sigue para los
-   lectores de pantalla. */
+   lectores de pantalla. Salvo donde va con texto (withLabel), como el pie del
+   login. */
 @media (max-width: 519.98px) {
-  .switch {
+  .switch:not(.withLabel) {
     gap: 6px;
     padding: 0 9px;
   }
 
-  .label {
+  .switch:not(.withLabel) .label {
     position: absolute;
     width: 1px;
     height: 1px;
