@@ -65,15 +65,36 @@ function prepararStoreConRutaCalculada() {
   });
 }
 
-/** navigator.geolocation mockeado: getCurrentPosition invoca SIEMPRE el error callback con el código pedido (1 = PERMISSION_DENIED, ver GeolocationPositionError). */
+/** navigator.geolocation mockeado: watchPosition invoca SIEMPRE el error callback con el código pedido (1 = PERMISSION_DENIED, ver GeolocationPositionError). */
 function mockGeolocationDenegada() {
   const error = { code: 1, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3, message: "denied" };
-  const getCurrentPosition = vi.fn((_success, errorCb) => errorCb(error));
+  const watchPosition = vi.fn((_success, errorCb) => {
+    errorCb(error);
+    return 7;
+  });
+  const clearWatch = vi.fn();
   vi.stubGlobal("navigator", {
     ...navigator,
-    geolocation: { getCurrentPosition, watchPosition: vi.fn(), clearWatch: vi.fn() },
+    geolocation: { getCurrentPosition: vi.fn(), watchPosition, clearWatch },
   });
-  return getCurrentPosition;
+  return { watchPosition, clearWatch };
+}
+
+/** navigator.geolocation mockeado sin respuesta: devuelve el callback de watchPosition para mandarle fixes a mano. */
+function mockGeolocationManual() {
+  const getCurrentPosition = vi.fn();
+  const watchPosition = vi.fn(() => 7);
+  const clearWatch = vi.fn();
+  vi.stubGlobal("navigator", {
+    ...navigator,
+    geolocation: { getCurrentPosition, watchPosition, clearWatch },
+  });
+  const fix = (lat: number, lon: number, accuracy = 10) =>
+    (watchPosition.mock.calls[0] as unknown as [PositionCallback])[0]({
+      coords: { latitude: lat, longitude: lon, accuracy, speed: null, heading: null },
+      timestamp: Date.now(),
+    } as unknown as GeolocationPosition);
+  return { getCurrentPosition, watchPosition, clearWatch, fix };
 }
 
 // jsdom sirve las pruebas desde un origen no seguro: start() corta antes de
@@ -120,5 +141,57 @@ describe("useLiveTrip -- permiso de ubicación denegado al iniciar viaje", () =>
     // usa para decidir mostrar el botón "Iniciar viaje" (no "Cancelar viaje").
     expect(result.current.ui.finished).toBe(false);
     expect(result.current.ui.active).toBe(false);
+  });
+});
+
+describe("useLiveTrip -- arranque del seguimiento", () => {
+  it("empieza a escuchar el GPS en el acto, sin una búsqueda previa aparte", () => {
+    const { getCurrentPosition, watchPosition } = mockGeolocationManual();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+
+    expect(watchPosition).toHaveBeenCalledTimes(1);
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+    expect(result.current.ui.active).toBe(true);
+  });
+
+  it("si el primer fix está lejos del origen, corta el viaje, avisa y suelta el GPS", () => {
+    const { clearWatch, fix } = mockGeolocationManual();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+    act(() => fix(DESTINATION[0], DESTINATION[1]));
+
+    expect(result.current.ui.active).toBe(false);
+    expect(result.current.ui.statusKind).toBe("warn");
+    expect(clearWatch).toHaveBeenCalledWith(7);
+  });
+
+  it("un fix impreciso no decide nada: espera al siguiente", () => {
+    const { fix } = mockGeolocationManual();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+    // Lejísimos y con 2 km de error: no puede cortar el viaje por esto.
+    act(() => fix(DESTINATION[0], DESTINATION[1], 2000));
+    expect(result.current.ui.active).toBe(true);
+
+    act(() => fix(ORIGIN[0], ORIGIN[1]));
+    expect(result.current.ui.active).toBe(true);
+    expect(result.current.ui.livePosition).not.toBeNull();
+  });
+
+  it("si el permiso se niega en el acto, no deja el GPS escuchando", () => {
+    const { clearWatch } = mockGeolocationDenegada();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+
+    expect(clearWatch).toHaveBeenCalledWith(7);
   });
 });
