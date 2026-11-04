@@ -113,6 +113,8 @@ export const map = {
       yourTrip: "Your trip",
       edit: "Edit",
       arriveWith: "You arrive with",
+      noWeather:
+        "This estimate doesn’t account for the weather: a headwind or cold will use more than this.",
       tone: { ok: "Good margin", low: "Low margin", crit: "Critical" },
       advice: {
         ok: "You'll have plenty of charge left to get around.",

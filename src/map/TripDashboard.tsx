@@ -371,6 +371,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 </div>
               )}
               {!tone && marginNotes && <p className={ui.muted}>{marginNotes}</p>}
+              {/* Decirlo es mas honesto que dejarlo ambiguo: el calculo usa
+                  distancia, pendiente y velocidad, nada de clima. El viento es
+                  la variable que mas mueve el consumo en ruta y no la
+                  modelamos. Va pegado al porcentaje de llegada, que es el
+                  numero del que alguien se fia para salir. Espejo de lo que ya
+                  salio en el movil (feedback del 2/11/2026). */}
+              <p className={ui.muted}>{pt.noWeather}</p>
             </div>
 
             <div className={styles.detailsGrid}>
