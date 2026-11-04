@@ -344,6 +344,9 @@ export const map = {
     noCable: " (no cable)",
     connector: "Connector",
     operator: "Operator",
+    payWith: "Pay with",
+    getOnAndroid: "Android",
+    getOnIphone: "iPhone",
     coordinates: "Coordinates",
   },
   // Live status of a charging station. There is no "unknown" label on purpose:

@@ -141,6 +141,28 @@ export function StationDetailPanel({ onCalculate, onGoTo }: StationDetailPanelPr
             )}
             <dt>{sd.operator}</dt>
             <dd>{station.operador}</dd>
+            {/* Lo que alguien parado frente al cargador necesita saber y la
+                app no le decia: con qué se paga ahí y dónde bajarlo. Va al
+                lado del operador porque NO son lo mismo (Mobility se paga con
+                la app de EVE). Los dos links, porque en la web no sabemos qué
+                teléfono tiene. Sin datos no se muestra nada: un null es "no
+                sabemos", no "es gratis". */}
+            {station.pago && (
+              <>
+                <dt>{sd.payWith}</dt>
+                <dd>
+                  {station.pago.app}
+                  {" · "}
+                  <a href={station.pago.android_url} target="_blank" rel="noopener noreferrer">
+                    {sd.getOnAndroid}
+                  </a>
+                  {" · "}
+                  <a href={station.pago.ios_url} target="_blank" rel="noopener noreferrer">
+                    {sd.getOnIphone}
+                  </a>
+                </dd>
+              </>
+            )}
             <dt>{sd.coordinates}</dt>
             <dd className={styles.coords}>
               {station.lat.toFixed(4)}, {station.lon.toFixed(4)}
