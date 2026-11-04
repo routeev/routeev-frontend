@@ -114,6 +114,8 @@ export const map = {
       yourTrip: "Tu viaje",
       edit: "Editar",
       arriveWith: "Llegás con",
+      noWeather:
+        "La estimación no tiene en cuenta el clima: con viento en contra o mucho frío vas a gastar más que esto.",
       tone: { ok: "Con margen", low: "Margen bajo", crit: "Crítico" },
       advice: {
         ok: "Llegás con batería de sobra para moverte allá.",
