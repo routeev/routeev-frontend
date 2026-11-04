@@ -25,6 +25,17 @@ export interface StationConnector {
   cantidad: number;
 }
 
+/**
+ * Con qué app se paga en una estación (ver app/apps_de_pago.py en el
+ * backend). El operador del punto y la app NO son lo mismo: los cargadores de
+ * Mobility Recharge, por ejemplo, se pagan con la app de EVE.
+ */
+export interface StationPago {
+  app: string;
+  android_url: string;
+  ios_url: string;
+}
+
 export interface Station {
   node_id: NodeId;
   nombre: string;
@@ -35,6 +46,11 @@ export interface Station {
   departamento?: string;
   tipo_conector: string;
   operador: string;
+  /**
+   * null = no sabemos (o es un cargador privado sin app pública). NO quiere
+   * decir que sea gratis. Opcional porque un backend anterior no lo manda.
+   */
+  pago?: StationPago | null;
   nota: string;
   conectores?: StationConnector[];
 }

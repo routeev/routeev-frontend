@@ -352,6 +352,9 @@ export const map = {
     noCable: " (sin cable)",
     connector: "Conector",
     operator: "Operador",
+    payWith: "Se paga con",
+    getOnAndroid: "Android",
+    getOnIphone: "iPhone",
     coordinates: "Coordenadas",
   },
   // Estado en vivo de una estación. No hay etiqueta para «desconocido» a
