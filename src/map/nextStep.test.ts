@@ -66,6 +66,22 @@ describe("nextTripStep", () => {
     expect(nextTripStep({ ...LISTO, chargerAnswered: false, hasSelectedVehicle: false }, t).text).toMatch(/un auto/i);
   });
 
+  // De esto depende que el panel resalte la pregunta (ver PlanView.tsx): es el
+  // único paso que no se resuelve en un campo que ya salta a la vista.
+  it("says it is waiting for the charger question, and only then", () => {
+    expect(nextTripStep({ ...LISTO, chargerAnswered: false }, t).waitingFor).toBe("charger");
+    expect(nextTripStep(LISTO, t).waitingFor).toBeUndefined();
+    expect(
+      nextTripStep({ ...LISTO, chargerAnswered: false, destination: null }, t).waitingFor
+    ).toBeUndefined();
+    expect(
+      nextTripStep({ ...LISTO, chargerAnswered: false, hasSelectedVehicle: false }, t).waitingFor
+    ).toBeUndefined();
+    expect(
+      nextTripStep({ ...LISTO, chargerAnswered: false, vehiclesLoaded: false }, t).waitingFor
+    ).toBeUndefined();
+  });
+
   it("numbers the steps for the circle next to the text", () => {
     expect(nextTripStep({ ...LISTO, origin: null, destination: null }, t).num).toBe(1);
     expect(nextTripStep({ ...LISTO, destination: null }, t).num).toBe(2);

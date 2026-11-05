@@ -33,6 +33,12 @@ export interface TripStep {
    * 1 origen, 2 destino, 3 vehículo o la pregunta del cargador, 4 listo.
    */
   num: number;
+  /**
+   * Lo que falta es contestar la pregunta del cargador. Es el único paso que no
+   * se resuelve en un campo que ya salta a la vista, y sin él no hay ningún botón
+   * en pantalla: el panel lo usa para resaltar la pregunta (ver PlanView.tsx).
+   */
+  waitingFor?: "charger";
 }
 
 export function nextTripStep(
@@ -70,7 +76,7 @@ export function nextTripStep(
   // panel: recién aparece cuando hay destino, y para entonces lo que la
   // persona tiene a la vista es la pregunta misma.
   if (!chargerAnswered) {
-    return { text: t.answerCharger, done: false, num: 3 };
+    return { text: t.answerCharger, done: false, num: 3, waitingFor: "charger" };
   }
   return { text: t.readyToCalculate, done: true, num: 4 };
 }

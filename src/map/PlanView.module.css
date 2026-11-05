@@ -143,12 +143,30 @@
   color: var(--button-primary-text);
 }
 
+/* Sin contestar la pregunta del cargador no hay ningún botón en pantalla, y en gris
+   esto no se leía como lo que falta: quien conoce la app se trabó ahí. */
+.stepWaiting {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.stepWaiting .stepNum {
+  border: 1.6px solid var(--accent-astar);
+  color: var(--accent-text);
+}
+
 /* ---- Preguntas ---- */
 
 .questions {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* La pregunta de la que depende "Calcular ruta" (ver stepWaiting). */
+.questions [data-pending] [role="radiogroup"] {
+  border-color: var(--accent-astar);
+  box-shadow: 0 0 0 1px var(--accent-astar);
 }
 
 /* ---- Vehículo ---- */

@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeId } from "../api/graph";
 import { logTrip } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -262,6 +262,20 @@ export function useLiveTrip() {
   // ya alisada, a un ritmo fijo en vez de en cada evento crudo.
   const deviceHeadingRef = useRef<number | null>(null);
   const orientationCleanupRef = useRef<(() => void) | null>(null);
+
+  // Sin un viaje en curso, lo que dice `ui` es de la ruta que estaba en pantalla:
+  // por qué no pudo arrancar, o que ya se llegó. Con otra ruta deja de ser cierto.
+  // Este hook vive en MapPage y sobrevive a cualquier cambio de ruta, así que sin
+  // esto "estás a 3,4 km del origen" seguía en pantalla después de calcular una
+  // ruta que ya salía de donde está la persona, y "Llegaste" pasaba al viaje
+  // siguiente.
+  useEffect(
+    () =>
+      useMapStore.subscribe((state, prev) => {
+        if (state.lastResult !== prev.lastResult && !tripRef.current) setUi(initialUi);
+      }),
+    []
+  );
 
   const logCompletedOrPartial = useCallback((trip: TripRecord, traveledKmOverride?: number) => {
     // TODO lo que sale de `trip` se lee ACÁ, antes de cualquier await: end()
