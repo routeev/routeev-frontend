@@ -333,7 +333,7 @@ export const map = {
     samePoint: "El origen y el destino están demasiado cerca: alejá uno de los dos.",
     loadingVehicles: "Esperá un momento, estamos cargando tus vehículos.",
     addVehicle: "Agregá un auto acá abajo para poder calcular el viaje.",
-    answerCharger: "Contanos si tenés dónde cargar al llegar.",
+    answerCharger: "Para calcular la ruta, contanos si tenés dónde cargar al llegar.",
     readyToCalculate: "Ya está todo: tocá «Calcular ruta».",
   },
   vehiclePanel: {

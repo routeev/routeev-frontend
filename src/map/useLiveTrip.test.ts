@@ -150,6 +150,79 @@ describe("useLiveTrip -- permiso de ubicación denegado al iniciar viaje", () =>
   });
 });
 
+/**
+ * Regresión de lo que se vio en producción el 5/11/2026: se rechaza el arranque
+ * ("estás a 3,4 km del origen"), se cancela, se calcula otra ruta que ya sale de
+ * donde está la persona, y el cartel sigue ahí diciendo que no se puede iniciar.
+ * Lo que dice `ui` sin un viaje en curso es de la ruta de antes.
+ */
+describe("useLiveTrip -- lo que dice es de la ruta que está en pantalla", () => {
+  function rechazadoPorLejos() {
+    const gps = mockGeolocationManual();
+    const hook = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+    prepararStoreConRutaCalculada();
+    act(() => hook.result.current.start());
+    act(() => gps.fix(DESTINATION[0], DESTINATION[1]));
+    expect(hook.result.current.ui.statusText).toMatch(/no se puede iniciar el viaje/i);
+    return { ...hook, ...gps };
+  }
+
+  it("calcular otra ruta borra el aviso de que no se pudo iniciar", () => {
+    const { result } = rechazadoPorLejos();
+
+    act(() => useMapStore.setState({ lastResult: { ...RESULT } }));
+
+    expect(result.current.ui.statusText).toBe("");
+    expect(result.current.ui.statusKind).toBe("");
+  });
+
+  it("cancelar el plan también lo borra", () => {
+    const { result } = rechazadoPorLejos();
+
+    act(() => useMapStore.getState().resetTripPlanning());
+
+    expect(result.current.ui.statusText).toBe("");
+  });
+
+  it("recalcular no le deja a la ruta nueva el 'Llegaste' ni el 'de nuevo' de la anterior", () => {
+    const { fix } = mockGeolocationManual();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+    act(() => fix(ORIGIN[0], ORIGIN[1]));
+    act(() => fix(DESTINATION[0], DESTINATION[1]));
+    expect(result.current.ui.finished).toBe(true);
+
+    act(() => useMapStore.setState({ lastResult: { ...RESULT } }));
+
+    expect(result.current.ui.finished).toBe(false);
+    expect(result.current.ui.statusText).toBe("");
+  });
+
+  it("con un viaje en curso no se toca nada", () => {
+    const { fix } = mockGeolocationManual();
+    const { result } = renderHook(() => useLiveTrip(), { wrapper: LanguageProvider });
+    prepararStoreConRutaCalculada();
+    act(() => result.current.start());
+    act(() => fix(ORIGIN[0], ORIGIN[1]));
+    const antes = result.current.ui.statusText;
+    expect(result.current.ui.active).toBe(true);
+
+    act(() => useMapStore.setState({ lastResult: { ...RESULT } }));
+
+    expect(result.current.ui.active).toBe(true);
+    expect(result.current.ui.statusText).toBe(antes);
+  });
+
+  it("volver a intentar con la misma ruta sigue diciendo por qué no arrancó", () => {
+    const { result } = rechazadoPorLejos();
+
+    act(() => useMapStore.setState({ selectedStationId: null }));
+
+    expect(result.current.ui.statusText).toMatch(/no se puede iniciar el viaje/i);
+  });
+});
+
 describe("useLiveTrip -- arranque del seguimiento", () => {
   it("empieza a escuchar el GPS en el acto, sin una búsqueda previa aparte", () => {
     const { getCurrentPosition, watchPosition } = mockGeolocationManual();

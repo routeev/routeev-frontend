@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { readNumberInput } from "../shared/readNumberInput";
@@ -75,6 +75,20 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
   };
   const ready = calculateGateMissing(gate).length === 0;
   const step = nextTripStep(gate, t.map.nextStep);
+
+  // En la web de celular la pregunta queda debajo de la hoja, y en la pantalla
+  // angosta el aviso de ubicación también la empuja para abajo: resaltarla no
+  // alcanza si no se ve. "nearest" no mueve nada si ya está a la vista.
+  const waitingForCharger = step.waitingFor === "charger";
+  const chargerQuestionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!waitingForCharger) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    chargerQuestionRef.current?.scrollIntoView?.({
+      behavior: reduce ? "auto" : "smooth",
+      block: "nearest",
+    });
+  }, [waitingForCharger]);
 
   // "Está tardando": se enciende a los 6 s del cálculo EN CURSO. Se guarda el
   // startedAt del cálculo para el que venció el plazo, así un cálculo nuevo
@@ -187,7 +201,14 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
             )}
           </div>
 
-          <p role="status" className={[styles.step, step.done ? styles.stepDone : ""].join(" ")}>
+          <p
+            role="status"
+            className={[
+              styles.step,
+              step.done ? styles.stepDone : "",
+              step.waitingFor ? styles.stepWaiting : "",
+            ].join(" ")}
+          >
             {step.done ? (
               <span className={styles.stepCheck} aria-hidden="true">
                 <IconCheck size={12} strokeWidth={3} />
@@ -233,7 +254,11 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
           // Recién con destino: antes la pregunta no tiene sujeto ("¿en el
           // destino?" ¿cuál?).
           <div className={styles.questions}>
-            <div className={ui.question}>
+            <div
+              ref={chargerQuestionRef}
+              className={ui.question}
+              data-pending={waitingForCharger || undefined}
+            >
               <p className={ui.questionLabel} id="q-charger">
                 {ri.chargerAtDestination.legend}
               </p>

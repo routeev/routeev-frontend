@@ -326,7 +326,7 @@ export const map = {
     samePoint: "The origin and destination are too close together: move one of them.",
     loadingVehicles: "Hang on, we're loading your vehicles.",
     addVehicle: "Add a car below to plan the trip.",
-    answerCharger: "Tell us if you can charge when you arrive.",
+    answerCharger: "To calculate the route, tell us if you can charge when you arrive.",
     readyToCalculate: "All set: tap “Plan route”.",
   },
   vehiclePanel: {

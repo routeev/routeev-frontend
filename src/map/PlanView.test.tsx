@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Vehicle } from "../api/vehicles";
@@ -60,7 +60,9 @@ describe("PlanView", () => {
   it("no ofrece calcular hasta que se contesta si hay dónde cargar en el destino", () => {
     renderPlan();
 
-    expect(screen.getByText("Contanos si tenés dónde cargar al llegar.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Para calcular la ruta, contanos si tenés dónde cargar al llegar.")
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /calcular ruta/i })).toBeNull();
 
     fireEvent.click(screen.getByRole("radio", { name: "No tengo" }));
@@ -71,6 +73,67 @@ describe("PlanView", () => {
     expect(
       screen.getByText("Te mostramos el cargador más cercano al destino y llegás con margen.")
     ).toBeInTheDocument();
+  });
+
+  // Lo reportado el 5/11/2026: sin contestar la pregunta no hay ningún botón a la
+  // vista, y lo único que lo explicaba era una frase gris. Quien conoce la app se
+  // trabó ahí, así que quien no la conoce también.
+  describe("la pregunta de la que depende calcular", () => {
+    const preguntaDelCargador = () =>
+      screen.getByRole("radiogroup", { name: /dónde cargar en el destino/i }).parentElement!;
+
+    it("se resalta mientras falta contestarla, y dice para qué hace falta", () => {
+      renderPlan();
+
+      expect(preguntaDelCargador()).toHaveAttribute("data-pending", "true");
+      expect(
+        screen.getByText("Para calcular la ruta, contanos si tenés dónde cargar al llegar.")
+      ).toBeInTheDocument();
+    });
+
+    it("deja de resaltarse apenas se contesta", () => {
+      renderPlan();
+
+      fireEvent.click(screen.getByRole("radio", { name: "Sí, tengo" }));
+
+      expect(preguntaDelCargador()).not.toHaveAttribute("data-pending");
+    });
+
+    // En la web de celular la pregunta queda debajo de la hoja: resaltada, pero
+    // fuera de la pantalla. Comprobado el 5/11/2026 en 375x812.
+    it("se lleva a la vista cuando pasa a ser lo que falta, y una sola vez", () => {
+      const scroll = vi.fn();
+      Element.prototype.scrollIntoView = scroll;
+      useMapStore.getState().clearDestination();
+      renderPlan();
+      expect(scroll).not.toHaveBeenCalled();
+
+      act(() => useMapStore.getState().setDestination(fromCoords(-30.905, -55.55)));
+
+      expect(scroll).toHaveBeenCalledTimes(1);
+      expect(scroll.mock.calls[0]![0]).toMatchObject({ block: "nearest" });
+      expect(scroll.mock.contexts[0]).toBe(preguntaDelCargador());
+
+      act(() => useMapStore.getState().setStartBatteryPct(50));
+
+      expect(scroll).toHaveBeenCalledTimes(1);
+    });
+
+    it("no mueve nada si lo que falta es otra cosa", () => {
+      const scroll = vi.fn();
+      Element.prototype.scrollIntoView = scroll;
+      useMapStore.getState().selectVehicle(null);
+      renderPlan();
+
+      expect(scroll).not.toHaveBeenCalled();
+    });
+
+    it("no se resalta si lo que falta es otra cosa", () => {
+      useMapStore.getState().selectVehicle(null);
+      renderPlan();
+
+      expect(preguntaDelCargador()).not.toHaveAttribute("data-pending");
+    });
   });
 
   it("calcular llama al cálculo de MapPage", () => {
