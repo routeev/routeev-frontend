@@ -106,3 +106,22 @@ export function googleLogin(idToken: string): Promise<AuthSession> {
   // que espera GoogleAuthRequest en backend/app/schemas.py.
   return apiFetch<AuthSession>("/api/auth/google", { method: "POST", body: { id_token: idToken } });
 }
+
+/**
+ * Cambia el token por uno nuevo, con el vencimiento corrido 30 días, sin pedir
+ * la contraseña (routeev-backend#63). Lo llama auth/renovarSesion.ts. Un 401
+ * (sesión vencida o cerrada) lo resuelve apiFetch como cualquier 401 con token.
+ */
+export function refreshSession(): Promise<AuthSession> {
+  return apiFetch<AuthSession>("/api/auth/refresh", { method: "POST" });
+}
+
+/** Cierra la sesión de ESTE navegador del lado del servidor, sin tocar los otros dispositivos (routeev-backend#63). */
+export function logout(): Promise<void> {
+  return apiFetch<void>("/api/auth/logout", { method: "POST" });
+}
+
+/** Cierra la sesión en todos los dispositivos, incluido este navegador. */
+export function logoutAll(): Promise<void> {
+  return apiFetch<void>("/api/auth/logout-all", { method: "POST" });
+}

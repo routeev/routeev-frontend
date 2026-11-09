@@ -231,6 +231,14 @@ export const profile = {
     photoRemoveError: "Couldn't remove the photo.",
   },
 
+  sessions: {
+    title: "Open sessions",
+    body: "If you lost a phone or signed in on a computer that isn't yours, sign out everywhere at once: phones and web, this one included.",
+    button: "Sign out of all devices",
+    sure: "You'll have to sign in again on every device.",
+    confirm: "Yes, sign out everywhere",
+    error: "Couldn't close the sessions.",
+  },
   deleteAccount: {
     title: "Delete account",
     body: "Deletes your account, your cars and your whole trip history. This can't be undone.",

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { logoutAll } from "../api/auth";
 import { clearSession, setSession, setUsername as setStoredUsername } from "../api/session";
 import {
   changeMyPassword,
@@ -465,6 +466,7 @@ export function AccountSection() {
         )}
       </section>
 
+      <LogoutAll />
       <DeleteAccount />
     </>
   );
@@ -580,6 +582,86 @@ function EditForm({
         )}
       </div>
     </form>
+  );
+}
+
+/**
+ * Cerrar la sesión en todos los dispositivos (routeev-backend#63). Pide
+ * confirmación en el lugar, igual que Eliminar cuenta, porque saca también de
+ * este navegador. Espera al servidor: si el pedido no llega, no se cerró nada en
+ * los otros dispositivos y la sesión de acá sigue abierta.
+ */
+function LogoutAll() {
+  const { t } = useTranslation();
+  const s = t.profile.sessions;
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef(false);
+
+  useEffect(() => {
+    if (confirming) cancelRef.current?.focus();
+    else if (returnFocus.current) startRef.current?.focus();
+    returnFocus.current = false;
+  }, [confirming]);
+
+  const cerrar = useMutation({
+    mutationFn: logoutAll,
+    onSuccess: () => {
+      clearSession();
+      navigate("/");
+    },
+  });
+
+  return (
+    <section id="sesiones" aria-labelledby="h-sesiones" className={styles.sessions}>
+      <div className={styles.headText}>
+        <h2 id="h-sesiones" className={styles.sessionsTitle}>
+          {s.title}
+        </h2>
+        <p className={styles.subtitle}>{s.body}</p>
+      </div>
+      {confirming ? (
+        <div role="alert" className={styles.sessionsConfirm}>
+          <p className={styles.sessionsSure}>{s.sure}</p>
+          {cerrar.isError && <ErrorNotice>{message(cerrar.error, s.error)}</ErrorNotice>}
+          <div className={styles.formActions}>
+            <button
+              ref={cancelRef}
+              type="button"
+              className={`${ui.outline} ${styles.dangerCancel}`}
+              onClick={() => {
+                returnFocus.current = true;
+                cerrar.reset();
+                setConfirming(false);
+              }}
+            >
+              {t.profile.common.cancel}
+            </button>
+            <button
+              type="button"
+              className={ui.dangerFill}
+              disabled={cerrar.isPending}
+              aria-busy={cerrar.isPending}
+              onClick={() => cerrar.mutate()}
+            >
+              {cerrar.isPending && <span className={ui.spinnerOnDanger} aria-hidden="true" />}
+              {s.confirm}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          ref={startRef}
+          type="button"
+          className={`${ui.outline} ${styles.dangerStart}`}
+          onClick={() => setConfirming(true)}
+        >
+          {s.button}
+        </button>
+      )}
+    </section>
   );
 }
 

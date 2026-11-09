@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { HelmetProvider } from "react-helmet-async";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as auth from "../api/auth";
 import * as route from "../api/route";
 import * as user from "../api/user";
 import * as vehicles from "../api/vehicles";
@@ -26,6 +27,11 @@ vi.mock("../api/route", async (importOriginal) => ({
   getHistory: vi.fn(),
   getMonthlyStats: vi.fn(),
   getVehicleStats: vi.fn(),
+}));
+
+vi.mock("../api/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../api/auth")>()),
+  logoutAll: vi.fn(),
 }));
 
 vi.mock("../api/user", async (importOriginal) => ({
@@ -180,10 +186,11 @@ describe("ProfilePage", () => {
       await screen.findByRole("heading", { level: 1, name: "Marcela Pérez" })
     ).toBeInTheDocument();
     const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-    expect(headings.slice(0, 4)).toEqual([
+    expect(headings.slice(0, 5)).toEqual([
       "Mis autos",
       "Viajes y gasto",
       "Mi cuenta",
+      "Sesiones abiertas",
       "Eliminar cuenta",
     ]);
     const cars = document.getElementById("autos")!;
@@ -405,5 +412,31 @@ describe("ProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sí, eliminar mi cuenta" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
     expect(localStorage.getItem("routeev_token")).toBeNull();
+  });
+
+  it("cerrar sesión en todos los dispositivos pide confirmación y después saca de acá también", async () => {
+    vi.mocked(auth.logoutAll).mockResolvedValue(undefined);
+    const router = renderProfile();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Cerrar sesión en todos los dispositivos" })
+    );
+    expect(screen.getByRole("button", { name: "Cancelar" })).toHaveFocus();
+    expect(auth.logoutAll).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Sí, cerrar en todos" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/"));
+    expect(auth.logoutAll).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem("routeev_token")).toBeNull();
+  });
+
+  it("si cerrar en todos falla, lo dice y la sesión de acá sigue abierta", async () => {
+    vi.mocked(auth.logoutAll).mockRejectedValue(new Error("No se pudo conectar con el servidor."));
+    const router = renderProfile();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Cerrar sesión en todos los dispositivos" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sí, cerrar en todos" }));
+    expect(await screen.findByText("No se pudo conectar con el servidor.")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/profile");
+    expect(localStorage.getItem("routeev_token")).toBe("tok");
   });
 });
