@@ -14,8 +14,10 @@ import {
   createVehicle,
   listEvModels,
   lookupVehicleAiPhoto,
+  updateVehicle,
   uploadVehiclePhoto,
   type EvModel,
+  type Vehicle,
 } from "../api/vehicles";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconCamera, IconCheck, IconClose, IconSearch } from "../map/panelIcons";
@@ -52,9 +54,17 @@ function useObjectUrl(blob: Blob | null) {
 }
 
 interface AddCarDialogProps {
-  /** Para avisar del nombre repetido antes de mandar. */
+  /** Para avisar del nombre repetido antes de mandar. Al editar, sin el del propio auto. */
   existingNames: string[];
+  /**
+   * El auto a editar. Con él, el diálogo abre directo en el formulario, con sus
+   * datos, y guarda con PUT: es el caso del auto agregado del catálogo cuya
+   * versión no coincide (consumo, batería o carga distintos).
+   */
+  vehicle?: Vehicle;
   onClose: () => void;
+  /** A dónde vuelve el foco al cerrar, si lo que lo abrió ya no existe (un ítem de menú). */
+  returnFocus?: () => HTMLElement | null;
 }
 
 /**
@@ -62,14 +72,17 @@ interface AddCarDialogProps {
  * IA o a mano) y después revisarlos y guardar. Los tres caminos terminan en
  * el mismo formulario.
  */
-export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
+export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: AddCarDialogProps) {
   const { t } = useTranslation();
   const a = t.profile.add;
   const f = useFormat();
   const queryClient = useQueryClient();
   const models = useQuery({ queryKey: ["evModels"], queryFn: listEvModels, staleTime: Infinity });
 
-  const [step, setStep] = useState<"pick" | "form">("pick");
+  // Al editar, cada número con los decimales que tiene: redondearlo para mostrarlo
+  // y guardarlo así cambiaría el dato sin que nadie lo toque (45,12 → 45,1).
+  const exact = (x: number) => f.n(x, Math.min(4, (String(x).split(".")[1] ?? "").length));
+  const [step, setStep] = useState<"pick" | "form">(vehicle ? "form" : "pick");
   const [query, setQuery] = useState("");
   const [nav, setNav] = useState({ query: "", index: -1 });
   const [source, setSource] = useState<Source>("manual");
@@ -77,7 +90,16 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
   const [iaFile, setIaFile] = useState<Blob | null>(null);
   const [ownPhoto, setOwnPhoto] = useState<Blob | null>(null);
   const [iaError, setIaError] = useState<string | null>(null);
-  const [vals, setVals] = useState<Values>(EMPTY);
+  const [vals, setVals] = useState<Values>(() =>
+    vehicle
+      ? {
+          name: vehicle.name,
+          kwh: exact(vehicle.battery_capacity_kwh),
+          cons: exact(vehicle.consumption_kwh_per_km),
+          kw: exact(vehicle.charging_power_kw),
+        }
+      : EMPTY
+  );
   const [errors, setErrors] = useState<Errors>({});
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -93,7 +115,7 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
   const optionId = (i: number) => `${uid}-opt-${i}`;
   const fieldId = (k: CarField) => `${uid}-${k}`;
 
-  useModal(dialogRef, onClose, searchRef);
+  useModal(dialogRef, onClose, vehicle ? nameRef : searchRef, returnFocus);
 
   // Al cambiar de paso, el foco va al primer campo del paso nuevo.
   useEffect(() => {
@@ -165,27 +187,29 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
     fileRef.current?.click();
   }
 
-  const create = useMutation({
+  const save = useMutation({
     mutationFn: async () => {
-      const vehicle = await createVehicle({
+      const payload = {
         name: vals.name.trim(),
         battery_capacity_kwh: parseDecimal(vals.kwh),
         consumption_kwh_per_km: parseDecimal(vals.cons),
         charging_power_kw: parseDecimal(vals.kw),
-      });
+      };
+      if (vehicle) return updateVehicle(vehicle.id, payload);
+      const created = await createVehicle(payload);
       if (source === "ia" && ownPhoto) {
         // Si la foto falla, el auto ya quedó creado: no frena el alta.
         try {
-          await uploadVehiclePhoto(vehicle.id, ownPhoto);
+          await uploadVehiclePhoto(created.id, ownPhoto);
         } catch {
           /* no bloquea */
         }
       }
-      return vehicle;
+      return created;
     },
-    onSuccess: (vehicle) => {
+    onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ["vehicles"] });
-      toast.ok(a.added(vehicle.name));
+      toast.ok(vehicle ? a.updated(saved.name) : a.added(saved.name));
       onClose();
     },
     onError: (err) => {
@@ -193,7 +217,7 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
         setErrors({ name: a.errDuplicate });
         document.getElementById(fieldId("name"))?.focus();
       } else {
-        setApiError(err instanceof Error ? err.message : a.createError);
+        setApiError(err instanceof Error ? err.message : vehicle ? a.updateError : a.createError);
       }
     },
   });
@@ -205,7 +229,7 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
 
   function onSave(e: FormEvent) {
     e.preventDefault();
-    if (create.isPending) return;
+    if (save.isPending) return;
     const found: Errors = {};
     const name = vals.name.trim();
     if (!name) found.name = a.errName;
@@ -221,7 +245,7 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
       document.getElementById(fieldId(first))?.focus();
       return;
     }
-    create.mutate();
+    save.mutate();
   }
 
   function onSearchKey(e: KeyboardEvent<HTMLInputElement>) {
@@ -265,9 +289,11 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
       >
         <div className={styles.head}>
           <div className={styles.headText}>
-            <span className={styles.step}>{step === "form" ? a.step2 : a.step1}</span>
+            <span className={styles.step}>
+              {vehicle ? a.editStep : step === "form" ? a.step2 : a.step1}
+            </span>
             <h2 id={titleId} className={styles.title}>
-              {a.title}
+              {vehicle ? a.editTitle(vehicle.name) : a.title}
             </h2>
           </div>
           <button
@@ -513,19 +539,20 @@ export function AddCarDialog({ existingNames, onClose }: AddCarDialogProps) {
                   <span className={ui.unitSmall}>km</span>
                 </span>
               </div>
+              {vehicle && <p className={styles.editNote}>{a.editNote}</p>}
             </div>
             <div className={styles.foot}>
-              <button type="button" className={ui.outline} onClick={backToPick}>
-                {t.profile.common.back}
+              <button type="button" className={ui.outline} onClick={vehicle ? onClose : backToPick}>
+                {vehicle ? t.profile.common.cancel : t.profile.common.back}
               </button>
               <button
                 type="submit"
                 className={ui.primary}
-                disabled={create.isPending}
-                aria-busy={create.isPending}
+                disabled={save.isPending}
+                aria-busy={save.isPending}
               >
-                {create.isPending && <span className={ui.spinnerOnAccent} aria-hidden="true" />}
-                {a.save}
+                {save.isPending && <span className={ui.spinnerOnAccent} aria-hidden="true" />}
+                {vehicle ? a.saveChanges : a.save}
               </button>
             </div>
           </form>

@@ -13,6 +13,7 @@ vi.mock("../api/vehicles", () => ({
   listVehicles: vi.fn(),
   listEvModels: vi.fn(),
   createVehicle: vi.fn(),
+  updateVehicle: vi.fn(),
   deleteVehicle: vi.fn(),
   uploadVehiclePhoto: vi.fn(),
   deleteVehiclePhoto: vi.fn(),
@@ -207,6 +208,90 @@ describe("ProfilePage", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar auto" }));
     await waitFor(() => expect(vehicles.deleteVehicle).toHaveBeenCalled());
     expect(vi.mocked(vehicles.deleteVehicle).mock.calls[0]![0]).toBe(1);
+  });
+
+  it("editar un auto: el mismo formulario, con sus datos, y guarda con PUT", async () => {
+    vi.mocked(vehicles.updateVehicle).mockResolvedValue({
+      ...DOLPHIN,
+      consumption_kwh_per_km: 0.155,
+    } as vehicles.Vehicle);
+    renderProfile();
+    fireEvent.click(await screen.findByRole("button", { name: "Más opciones para BYD Dolphin" }));
+    fireEvent.click(
+      within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Editar «BYD Dolphin»" });
+    // Directo al formulario: sin el paso de elegir de dónde salen los datos.
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Nombre")).toHaveFocus();
+    expect(within(dialog).getByLabelText("Nombre")).toHaveValue("BYD Dolphin");
+    expect(within(dialog).getByLabelText("Batería")).toHaveValue("44,9");
+    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("0,169");
+    expect(within(dialog).getByLabelText("Carga máxima")).toHaveValue("60");
+    expect(within(dialog).getByText(/Los viajes que ya hiciste no cambian/)).toBeInTheDocument();
+
+    type("Consumo", "0,155");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, {
+        name: "BYD Dolphin",
+        battery_capacity_kwh: 44.9,
+        consumption_kwh_per_km: 0.155,
+        charging_power_kw: 60,
+      })
+    );
+    expect(vehicles.createVehicle).not.toHaveBeenCalled();
+  });
+
+  it("editar: avisa si el nombre es de otro auto, pero deja conservar el propio", async () => {
+    vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+    renderProfile();
+    fireEvent.click(await screen.findByRole("button", { name: "Más opciones para BYD Dolphin" }));
+    fireEvent.click(
+      within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "Editar «BYD Dolphin»" });
+
+    type("Nombre", "el auto de casa");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+    expect(within(dialog).getByLabelText("Nombre")).toHaveAccessibleDescription(
+      /Ya tenés un auto con ese nombre/
+    );
+    expect(vehicles.updateVehicle).not.toHaveBeenCalled();
+
+    type("Nombre", "byd dolphin");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+    await waitFor(() => expect(vehicles.updateVehicle).toHaveBeenCalled());
+    expect(vi.mocked(vehicles.updateVehicle).mock.calls[0]![1].name).toBe("byd dolphin");
+  });
+
+  it("editar no redondea los datos: guardar sin tocar nada manda los mismos números", async () => {
+    const preciso = { ...HOME_CAR, battery_capacity_kwh: 45.12, consumption_kwh_per_km: 0.1455 };
+    vi.mocked(vehicles.listVehicles).mockResolvedValue([preciso] as vehicles.Vehicle[]);
+    vi.mocked(vehicles.updateVehicle).mockResolvedValue(preciso as vehicles.Vehicle);
+    renderProfile();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Más opciones para El auto de casa" })
+    );
+    fireEvent.click(
+      within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "Editar «El auto de casa»" });
+
+    expect(within(dialog).getByLabelText("Batería")).toHaveValue("45,12");
+    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("0,1455");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(vehicles.updateVehicle).toHaveBeenCalledWith(3, {
+        name: "El auto de casa",
+        battery_capacity_kwh: 45.12,
+        consumption_kwh_per_km: 0.1455,
+        charging_power_kw: 50,
+      })
+    );
   });
 
   it("?agregar-vehiculo=1 abre el alta: catálogo → revisar los datos → agregar", async () => {

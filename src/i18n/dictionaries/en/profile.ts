@@ -41,6 +41,7 @@ export const profile = {
     changePhoto: "Change photo",
     uploadPhoto: "Upload a photo",
     removePhoto: "Remove my photo",
+    edit: "Edit details",
     delete: "Delete car",
     deleteTitle: (name: string) => `Delete “${name}”?`,
     deleteBody: "Trips you already made with it stay in your history.",
@@ -92,6 +93,12 @@ export const profile = {
     save: "Add to my cars",
     added: (name: string) => `Done, “${name}” was added to your cars.`,
     createError: "Couldn't add the car.",
+    editTitle: (name: string) => `Edit “${name}”`,
+    editStep: "Fix anything that doesn't match your car",
+    editNote: "Trips you already made don't change: each one keeps the battery it used.",
+    saveChanges: "Save changes",
+    updated: (name: string) => `Done, we saved the changes to “${name}”.`,
+    updateError: "Couldn't save the changes.",
   },
 
   trips: {

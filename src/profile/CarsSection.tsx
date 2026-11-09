@@ -20,7 +20,14 @@ import { useFormat } from "../showroom/format";
 import { AddCarDialog } from "./AddCarDialog";
 import { carFigures, carRange } from "./numbers";
 import { LoadError } from "./parts";
-import { IconDots, IconDotsVertical, IconExternal, IconImageOff, IconTrash } from "./profileIcons";
+import {
+  IconDots,
+  IconDotsVertical,
+  IconExternal,
+  IconImageOff,
+  IconPencil,
+  IconTrash,
+} from "./profileIcons";
 import { useModal } from "../shared/useModal";
 import { useVehiclePhoto, vehiclePhotoQueryKey } from "./useVehiclePhoto";
 import styles from "./CarsSection.module.css";
@@ -43,6 +50,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
   const season = useSeason();
   const [adding, setAdding] = useState(addOnLoad);
   const [deleting, setDeleting] = useState<Vehicle | null>(null);
+  const [editing, setEditing] = useState<Vehicle | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const photoTarget = useRef<number | null>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -101,6 +109,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
   const actions = {
     onPhoto: pickPhoto,
     onRemovePhoto: (v: Vehicle) => removePhoto.mutate(v.id),
+    onEdit: (v: Vehicle) => setEditing(v),
     onDelete: (v: Vehicle) => setDeleting(v),
   };
 
@@ -181,6 +190,14 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
       />
 
       {adding && <AddCarDialog existingNames={list.map((v) => v.name)} onClose={closeAdd} />}
+      {editing && (
+        <AddCarDialog
+          vehicle={editing}
+          existingNames={list.filter((v) => v.id !== editing.id).map((v) => v.name)}
+          onClose={() => setEditing(null)}
+          returnFocus={() => document.getElementById(menuTriggerId(editing.id)) ?? headRef.current}
+        />
+      )}
 
       {deleting && (
         <ConfirmDeleteCar
@@ -200,6 +217,7 @@ interface CarProps {
   car: Vehicle;
   onPhoto: (id: number) => void;
   onRemovePhoto: (v: Vehicle) => void;
+  onEdit: (v: Vehicle) => void;
   onDelete: (v: Vehicle) => void;
 }
 
@@ -230,7 +248,7 @@ function Credit({ car, compact = false }: { car: Vehicle; compact?: boolean }) {
   );
 }
 
-function CarCard({ car, onPhoto, onRemovePhoto, onDelete }: CarProps) {
+function CarCard({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
   const { t } = useTranslation();
   const c = t.profile.cars;
   const f = useFormat();
@@ -256,6 +274,7 @@ function CarCard({ car, onPhoto, onRemovePhoto, onDelete }: CarProps) {
         vertical={false}
         onPhoto={onPhoto}
         onRemovePhoto={onRemovePhoto}
+        onEdit={onEdit}
         onDelete={onDelete}
       />
       <div className={styles.body}>
@@ -297,7 +316,7 @@ function CarCard({ car, onPhoto, onRemovePhoto, onDelete }: CarProps) {
 }
 
 /** En el celular: la fila de la app mobile, con la autonomía grande a la derecha. */
-function CarRow({ car, onPhoto, onRemovePhoto, onDelete }: CarProps) {
+function CarRow({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
   const f = useFormat();
   const photo = useCarPhoto(car);
   const range = carRange(car);
@@ -328,6 +347,7 @@ function CarRow({ car, onPhoto, onRemovePhoto, onDelete }: CarProps) {
         vertical
         onPhoto={onPhoto}
         onRemovePhoto={onRemovePhoto}
+        onEdit={onEdit}
         onDelete={onDelete}
       />
     </li>
@@ -344,6 +364,7 @@ function CarMenu({
   vertical,
   onPhoto,
   onRemovePhoto,
+  onEdit,
   onDelete,
 }: CarProps & { vertical: boolean }) {
   const { t } = useTranslation();
@@ -418,6 +439,15 @@ function CarMenu({
           aria-label={c.menu(car.name)}
           className={styles.menu}
         >
+          <button
+            type="button"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => choose(() => onEdit(car))}
+          >
+            <IconPencil size={18} />
+            {c.edit}
+          </button>
           <button
             type="button"
             role="menuitem"
