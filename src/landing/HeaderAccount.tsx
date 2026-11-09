@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { logout as cerrarSesionEnServidor } from "../api/auth";
 import { clearSession, getUsername } from "../api/session";
 import { getMe, nombreParaMostrar } from "../api/user";
 import { useTranslation } from "../i18n/LanguageProvider";
@@ -25,6 +26,11 @@ function useAccount() {
   const name = nombreParaMostrar(me ?? { username: getUsername() ?? "" }) || t.nav.fallbackUsername;
 
   function logout() {
+    // Cierra esta sesion del lado del servidor sin esperar la respuesta: lo
+    // primero es que la persona salga ya, y si el pedido no llega el token
+    // vence solo. Sale ANTES de borrar el token porque apiFetch lo lee al
+    // arrancar. Desde routeev-backend#63 cierra solo este navegador.
+    void cerrarSesionEnServidor().catch(() => {});
     clearSession();
     navigate("/");
   }

@@ -239,6 +239,14 @@ export const profile = {
     photoRemoveError: "No se pudo quitar la foto.",
   },
 
+  sessions: {
+    title: "Sesiones abiertas",
+    body: "Si perdiste un celular o entraste en una compu que no es tuya, cerrá la sesión en todos lados de una vez: celulares y web, incluida esta.",
+    button: "Cerrar sesión en todos los dispositivos",
+    sure: "Vas a tener que volver a iniciar sesión en cada dispositivo.",
+    confirm: "Sí, cerrar en todos",
+    error: "No se pudieron cerrar las sesiones.",
+  },
   deleteAccount: {
     title: "Eliminar cuenta",
     body: "Borra tu cuenta, tus autos y todo tu historial de viajes. No se puede deshacer.",
