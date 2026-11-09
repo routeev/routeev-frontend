@@ -55,6 +55,11 @@ export function createVehicle(payload: NewVehiclePayload): Promise<Vehicle> {
   return apiFetch<Vehicle>("/api/vehicles", { method: "POST", body: payload });
 }
 
+/** Reemplaza los cuatro datos de un auto propio. La foto y los viajes ya hechos no cambian. */
+export function updateVehicle(id: number, payload: NewVehiclePayload): Promise<Vehicle> {
+  return apiFetch<Vehicle>(`/api/vehicles/${id}`, { method: "PUT", body: payload });
+}
+
 export function deleteVehicle(id: number): Promise<void> {
   return apiFetch<void>(`/api/vehicles/${id}`, { method: "DELETE" });
 }

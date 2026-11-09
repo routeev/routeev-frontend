@@ -374,6 +374,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Al editar: que corregir el consumo no reescribe los viajes ya hechos. */
+.editNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .foot {
   display: flex;
   flex: none;

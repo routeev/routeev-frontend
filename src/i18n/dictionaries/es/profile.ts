@@ -43,6 +43,7 @@ export const profile = {
     changePhoto: "Cambiar la foto",
     uploadPhoto: "Subir una foto",
     removePhoto: "Quitar mi foto",
+    edit: "Editar datos",
     delete: "Eliminar auto",
     deleteTitle: (name: string) => `¿Eliminar «${name}»?`,
     deleteBody: "Los viajes que ya hiciste con él se mantienen en el historial.",
@@ -97,6 +98,12 @@ export const profile = {
     save: "Agregar a mis autos",
     added: (name: string) => `Listo, «${name}» quedó agregado a tus autos.`,
     createError: "No se pudo agregar el auto.",
+    editTitle: (name: string) => `Editar «${name}»`,
+    editStep: "Corregí lo que no coincida con tu auto",
+    editNote: "Los viajes que ya hiciste no cambian: cada uno guarda la batería que usó.",
+    saveChanges: "Guardar cambios",
+    updated: (name: string) => `Listo, guardamos los cambios de «${name}».`,
+    updateError: "No se pudieron guardar los cambios.",
   },
 
   // TripsSection.tsx
