@@ -5,7 +5,10 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text-muted);
-  font: var(--text-eyebrow);
+  /* Los valores de --text-eyebrow, pero con la fuente del cuerpo: con
+     JetBrains Mono, esta etiqueta de carga obligaba a bajar esa familia
+     (31 kB) en todas las rutas, también donde nada más la usa. */
+  font: 500 11px/1.4 var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
