@@ -242,8 +242,8 @@ export function showroomModels(concesionaria?: string): Promise<ShowroomCatalog>
   return apiFetch<ShowroomCatalog>(`/api/showroom/models${qs}`);
 }
 
-export function showroomModel(id: string): Promise<ShowroomFicha> {
-  return apiFetch<ShowroomFicha>(`/api/showroom/models/${encodeURIComponent(id)}`);
+export function showroomModel(id: string, signal?: AbortSignal): Promise<ShowroomFicha> {
+  return apiFetch<ShowroomFicha>(`/api/showroom/models/${encodeURIComponent(id)}`, { signal });
 }
 
 export function showroomImage(nombre: string): Promise<PhotoLookup> {

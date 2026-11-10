@@ -57,7 +57,7 @@ export function StationPhotos({ nodeId }: StationPhotosProps) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: stationPhotosQueryKey(nodeId),
-    queryFn: () => getStationPhotos(nodeId),
+    queryFn: ({ signal }) => getStationPhotos(nodeId, signal),
   });
   const [open, setOpen] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -13,8 +13,11 @@ export interface StationStatusReportsPayload {
   vigente_horas: number;
 }
 
-export function getStationStatusReports(nodeId: string): Promise<StationStatusReportsPayload> {
-  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/estado-reportado`);
+export function getStationStatusReports(
+  nodeId: string,
+  signal?: AbortSignal
+): Promise<StationStatusReportsPayload> {
+  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/estado-reportado`, { signal });
 }
 
 export function reportStationStatus(nodeId: string, estado: EstadoReportado): Promise<StationStatusReport> {

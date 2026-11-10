@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { listStationReviewSummaries } from "../api/stationReviews";
+import { stationSummariesQuery } from "./stationSummariesQuery";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { Ghost } from "../season/HalloweenDecor";
 import { normalizeForSearch } from "../shared/geo";
@@ -28,10 +28,7 @@ export function StationsList({ loadFailed, onRetry }: StationsListProps) {
   const stations = useMapStore((s) => s.stations);
   const leafletMap = useMapStore((s) => s.leafletMap);
   const selectStation = useMapStore((s) => s.selectStation);
-  const summariesQuery = useQuery({
-    queryKey: ["stationReviewSummaries"],
-    queryFn: listStationReviewSummaries,
-  });
+  const summariesQuery = useQuery(stationSummariesQuery);
   const filter = useMapStore((s) => s.stationFilter);
   const setFilter = useMapStore((s) => s.setStationFilter);
   const [search, setSearch] = useState("");

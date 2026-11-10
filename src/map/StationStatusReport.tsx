@@ -34,7 +34,7 @@ export function StationStatusReport({ nodeId }: { nodeId: string }) {
 
   const query = useQuery({
     queryKey: ["stationStatusReports", nodeId],
-    queryFn: () => getStationStatusReports(nodeId),
+    queryFn: ({ signal }) => getStationStatusReports(nodeId, signal),
   });
 
   const mutation = useMutation({

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { listStationReviewSummaries } from "../api/stationReviews";
+import { stationSummariesQuery } from "./stationSummariesQuery";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { IconBack, IconNavigate, IconPlug } from "./panelIcons";
@@ -36,10 +36,7 @@ export function StationDetailPanel({ onCalculate, onGoTo }: StationDetailPanelPr
   const leafletMap = useMapStore((s) => s.leafletMap);
   const myPosition = useMapStore((s) => s.myPosition);
   const { datos: estadoEnVivo, estadoDe } = useStationStatus();
-  const summariesQuery = useQuery({
-    queryKey: ["stationReviewSummaries"],
-    queryFn: listStationReviewSummaries,
-  });
+  const summariesQuery = useQuery(stationSummariesQuery);
 
   const station = stations.find((s) => s.node_id === selectedStationId);
   if (!station) return null;

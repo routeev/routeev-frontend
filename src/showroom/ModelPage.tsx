@@ -35,7 +35,7 @@ export function ModelPage({ line, loggedIn }: ModelPageProps) {
 
   const ficha = useQuery({
     queryKey: ["showroomModel", model.id],
-    queryFn: () => showroomModel(model.id),
+    queryFn: ({ signal }) => showroomModel(model.id, signal),
   });
   const metricas = ficha.data?.metricas;
 

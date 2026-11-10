@@ -307,7 +307,7 @@ describe("ShowroomPage", () => {
       renderAt("/showroom/byd/dolphin");
       expect(await screen.findByText("A precio de casa: $U 6,50 el kWh.")).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: /Cargar del 10 % al 80 %/ })).toBeInTheDocument();
-      expect(api.showroomModel).toHaveBeenCalledWith("byd-dolphin-60");
+      expect(api.showroomModel).toHaveBeenCalledWith("byd-dolphin-60", expect.any(AbortSignal));
     });
 
     it("los links viejos ?modelo=<id> llevan a la ficha nueva con esa versión", async () => {

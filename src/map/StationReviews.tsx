@@ -28,7 +28,7 @@ export function StationReviews({ nodeId }: StationReviewsProps) {
   const sr = t.map.stationReviews;
   const sp = t.map.panel.stations;
   const queryClient = useQueryClient();
-  const query = useQuery({ queryKey: ["stationReviews", nodeId], queryFn: () => getStationReviews(nodeId) });
+  const query = useQuery({ queryKey: ["stationReviews", nodeId], queryFn: ({ signal }) => getStationReviews(nodeId, signal) });
   // Con reseña propia ya publicada, lo que se muestra es la reseña -- no el
   // formulario para volver a escribirla. Editarla es un paso explicito. Va
   // antes de los returns condicionales de abajo (reglas de hooks), y no hace

@@ -31,8 +31,11 @@ export function listStationReviewSummaries(): Promise<Record<string, StationRevi
   return apiFetch("/api/stations/reviews-summary");
 }
 
-export function getStationReviews(nodeId: string): Promise<StationReviewsPayload> {
-  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/reviews`);
+export function getStationReviews(
+  nodeId: string,
+  signal?: AbortSignal
+): Promise<StationReviewsPayload> {
+  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/reviews`, { signal });
 }
 
 export function upsertMyStationReview(
