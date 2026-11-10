@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { planRoute, toCompareRoutesResult } from "../api/route";
-import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
+import { batteryPctToKwh, consumoViajeKwhKm, selectedVehicle, useMapStore } from "./mapStore";
 import { suggestedName } from "./routePoint";
 
 /**
@@ -28,17 +28,26 @@ export function useCalculateRoute() {
       const origin = state.originNode!;
       const destination = state.destinationNode!;
       const startBatteryKwh = vehicle ? batteryPctToKwh(vehicle, state.startBatteryPct) : undefined;
+      // PlanView no deja calcular con un consumo inválido (NaN), así que acá
+      // llega un número o null. isFinite igual: mandar NaN serializa a null y
+      // la API calcularía con el del auto sin que nadie se entere.
+      const consumo = consumoViajeKwhKm(state.consumoViaje);
+      const consumoPropio = consumo != null && Number.isFinite(consumo) ? consumo : undefined;
 
       const v2Payload = {
         origen: { lat: origin.lat, lon: origin.lon },
         destino: { lat: destination.lat, lon: destination.lon },
         vehicle_id: state.selectedVehicleId!,
         start_battery_kwh: startBatteryKwh,
+        ...(consumoPropio != null ? { consumo_kwh_km: consumoPropio } : {}),
         ...(state.cargadorEnDestino === false ? { cargador_en_destino: false } : {}),
         ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
       };
       const v2Result = await planRoute(v2Payload);
-      const result = toCompareRoutesResult(v2Result, origin.name, destination.name);
+      const result = {
+        ...toCompareRoutesResult(v2Result, origin.name, destination.name),
+        ...(consumoPropio != null ? { consumo_propio_kwh_km: consumoPropio } : {}),
+      };
       // Sin plan_id no hay viaje que guardar, y eso es lo correcto: la API sólo
       // guarda el plan cuando encontró una ruta.
       const payload = v2Result.plan_id

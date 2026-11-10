@@ -4,7 +4,7 @@ import type { NodeId } from "../api/graph";
 import { logTrip } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { computeCompassHeading, haversineKm, smoothBearingDeg } from "../shared/geo";
-import { batteryPctToKwh, selectedVehicle, useMapStore } from "./mapStore";
+import { batteryPctToKwh, selectedVehicle, useMapStore, vehicleForResult } from "./mapStore";
 import { getRadarVibrationEnabled } from "./radarAlertPrefs";
 import { buildRouteCumulative, nearestCumulativeDistance, projectOntoRoute } from "./routeProjection";
 import { computeSpeedAdvisory, type SpeedAdvisory } from "./speedAdvisory";
@@ -569,8 +569,10 @@ export function useLiveTrip() {
     end();
     const result = useMapStore.getState().lastResult;
     if (!result?.astar.found) return;
-    const vehicle = selectedVehicle(useMapStore.getState());
-    if (!vehicle) return;
+    const autoElegido = selectedVehicle(useMapStore.getState());
+    if (!autoElegido) return;
+    // Con el consumo del cálculo, no el de la ficha: ver vehicleForResult.
+    const vehicle = vehicleForResult(autoElegido, result);
     const startBatteryKwh = batteryPctToKwh(vehicle, useMapStore.getState().startBatteryPct);
 
     // Zoom al recorrido completo apenas se arranca el viaje -- para este

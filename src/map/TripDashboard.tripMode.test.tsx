@@ -6,6 +6,7 @@ import {
   type CompareRoutesResultV2,
 } from "../api/route";
 import { LanguageProvider } from "../i18n/LanguageProvider";
+import type { Vehicle } from "../api/vehicles";
 import { useMapStore } from "./mapStore";
 import { TripDashboard } from "./TripDashboard";
 import type { LiveTripUi } from "./useLiveTrip";
@@ -79,5 +80,38 @@ describe("Datos del viaje -- tipo de viaje", () => {
     } as unknown as CompareRoutesResultV2;
 
     expect(toCompareRoutesResult(v2, "A", "B").modo).toBe("rapido");
+  });
+});
+
+describe("Datos del viaje -- consumo propio", () => {
+  const AUTO = {
+    id: 7,
+    name: "Auto",
+    battery_capacity_kwh: 60,
+    consumption_kwh_per_km: 0.2,
+    charging_power_kw: 50,
+  } as Vehicle;
+
+  afterEach(() => useMapStore.setState({ vehicles: [], selectedVehicleId: null }));
+
+  it("dice con qué consumo se calculó, y los km salen de ese consumo y no del del auto", () => {
+    useMapStore.setState({ vehicles: [AUTO], selectedVehicleId: AUTO.id });
+    renderDashboard({ ...resultado("eficiente"), consumo_propio_kwh_km: 0.125 });
+
+    expect(
+      screen.getByText("Calculado con 0,125 kWh/km, el consumo que pusiste para este viaje.")
+    ).toBeInTheDocument();
+    // 10 kWh del desglose a 0,125 kWh/km son 80 km. Con el del auto (0,2)
+    // se mostrarían 50.
+    expect(screen.getByText("80")).toBeInTheDocument();
+    expect(screen.queryByText("50")).toBeNull();
+  });
+
+  it("sin consumo propio no agrega la línea", () => {
+    useMapStore.setState({ vehicles: [AUTO], selectedVehicleId: AUTO.id });
+    renderDashboard(resultado("eficiente"));
+
+    expect(screen.queryByText(/el consumo que pusiste/)).toBeNull();
+    expect(screen.getByText("50")).toBeInTheDocument();
   });
 });

@@ -195,6 +195,10 @@ export interface CompareRoutesResult {
   // esté elegida ahora en el formulario). Ausente en un replay del historial:
   // el plan guardado no la trae, y ahí no se muestra.
   modo?: RouteModo;
+  // El consumo propio con que se calculó ESTA ruta (kWh/km), si se puso uno
+  // para el viaje. Ausente cuando se usó el del auto, y en un replay del
+  // historial.
+  consumo_propio_kwh_km?: number;
   dijkstra: RouteResult | null;
   astar: RouteResult;
 }
@@ -224,6 +228,12 @@ export interface RoutePlanPayload {
   destino: { lat: number; lon: number };
   vehicle_id: number;
   start_battery_kwh?: number;
+  /**
+   * Consumo propio para este viaje, en kWh/km: pisa el del auto en el cálculo
+   * y en el viaje que se guarde, sin tocar la ficha. Solo se manda si la
+   * persona lo completó.
+   */
+  consumo_kwh_km?: number;
   cargador_en_destino?: boolean;
   modo?: RouteModo;
   comparar?: boolean;
@@ -268,6 +278,8 @@ export interface CompareRoutesResultV2 {
    */
   plan_id: string | null;
   modo?: RouteModo;
+  /** Con qué consumo se calculó (kWh/km): el del auto o el propio. Opcional: una API vieja no lo manda. */
+  consumo_kwh_km?: number;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };

@@ -11,6 +11,8 @@ export const map = {
       rapido: "Prioriza llegar antes, aunque gaste más batería.",
       economico: "Prioriza gastar menos plata en las recargas.",
     },
+    ownConsumption: (cons: string) =>
+      `Calculado con ${cons} kWh/km, el consumo que pusiste para este viaje.`,
     margin: {
       noPlanFallback:
         " No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.",
@@ -77,6 +79,14 @@ export const map = {
       levels: { high: "Alta", mid: "Media", low: "Baja" },
       less: "Bajar 5 %",
       more: "Subir 5 %",
+      tripConsumption: {
+        open: "Usar otro consumo para este viaje",
+        label: "Consumo para este viaje",
+        help: (carCons: string) =>
+          `Solo para este cálculo: el auto sigue con ${carCons} kWh/km. Sirve si vas cargado, con el aire prendido o por ruta a más velocidad.`,
+        invalid: "Poné el consumo en kWh por km, entre 0,01 y 5 (ej. 0,20).",
+        useCars: "Usar el del auto",
+      },
       noVehicleTitle: "Todavía no cargaste ningún auto",
       noVehicleBody: "Elegilo entre 328 modelos en tu perfil. Es un minuto.",
       calculating: "Calculando ruta…",

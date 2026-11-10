@@ -168,4 +168,42 @@ describe("PlanView", () => {
       "/profile?agregar-vehiculo=1"
     );
   });
+
+  // A5/F4 del plan de cambios: un consumo para este viaje nomás.
+  it("el consumo para este viaje arranca plegado y cambia la autonomía con esta batería", () => {
+    renderPlan();
+
+    expect(screen.queryByLabelText("Consumo para este viaje")).toBeNull();
+    // 57,5 kWh al 80 % con el consumo del auto (0,137): 336 km.
+    expect(screen.getByText("≈ 336 km de autonomía")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Usar otro consumo para este viaje" }));
+    fireEvent.change(screen.getByLabelText("Consumo para este viaje"), { target: { value: "0,23" } });
+
+    expect(useMapStore.getState().consumoViaje).toBe("0,23");
+    // Con 0,23: 57,5 / 0,23 × 0,8 = 200 km.
+    expect(screen.getByText("≈ 200 km de autonomía")).toBeInTheDocument();
+    expect(screen.getByText(/el auto sigue con 0,137 kWh\/km/)).toBeInTheDocument();
+  });
+
+  it("con un consumo que no sirve no deja calcular, y dice por qué", () => {
+    useMapStore.getState().setCargadorEnDestino(true);
+    useMapStore.getState().setConsumoViaje("0");
+    renderPlan();
+
+    expect(screen.getByRole("button", { name: /calcular ruta/i })).toBeDisabled();
+    expect(screen.getByLabelText("Consumo para este viaje")).toHaveAttribute("aria-invalid", "true");
+    // Al lado del campo y en el pie, al lado del botón apagado.
+    expect(screen.getAllByText("Poné el consumo en kWh por km, entre 0,01 y 5 (ej. 0,20).")).toHaveLength(2);
+  });
+
+  it("«Usar el del auto» vacía el consumo propio y pliega el campo", () => {
+    useMapStore.getState().setConsumoViaje("0,2");
+    renderPlan();
+
+    fireEvent.click(screen.getByRole("button", { name: "Usar el del auto" }));
+
+    expect(useMapStore.getState().consumoViaje).toBe("");
+    expect(screen.queryByLabelText("Consumo para este viaje")).toBeNull();
+  });
 });

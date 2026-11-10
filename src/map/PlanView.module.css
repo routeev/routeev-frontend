@@ -356,6 +356,53 @@
   text-align: center;
 }
 
+/* Consumo propio del viaje: plegado detrás de un link, debajo de la batería.
+   Separado con la misma línea que la fila del vehículo. */
+.consumption {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.consumption .batteryHead {
+  align-self: stretch;
+}
+
+.consumptionField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.consumptionInput {
+  width: 8ch;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: 500 17px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.consumptionInput:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 1px;
+}
+
+.consumptionInput[aria-invalid] {
+  border-color: var(--danger);
+}
+
+.consumptionUnit {
+  font: 400 14px/1 var(--font-body);
+  color: var(--text-muted);
+}
+
 /* ---- Pie ---- */
 
 .footNote {
@@ -363,6 +410,12 @@
   font: 400 13px/1.4 var(--font-body);
   color: var(--text-muted);
   text-align: center;
+}
+
+/* Lo que impide calcular (un consumo propio que no sirve), al lado del botón
+   apagado: el mismo cuerpo que footNote, en el color de error. */
+.footNoteError {
+  color: var(--danger-text);
 }
 
 .slowNote {
