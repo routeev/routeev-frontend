@@ -152,13 +152,25 @@ describe("LandingPage", () => {
     expect(demo.getByText("Tacuarembó")).toBeInTheDocument();
   });
 
-  it("cambia el idioma desde el header", () => {
+  it("cambia el idioma desde el header", async () => {
     renderLanding();
     fireEvent.click(screen.getByRole("button", { name: "English" }));
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Will your EV make it? Check before you leave."
+    // El inglés se baja aparte: hasta que llega, la página sigue en español.
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+        "Will your EV make it? Check before you leave."
+      )
     );
     expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("con inglés guardado, la página sale directo en inglés", async () => {
+    localStorage.setItem("routeev_lang", "en");
+    renderLanding();
+    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(
+      "Will your EV make it? Check before you leave."
+    );
+    expect(screen.queryByText("Fijate antes de salir.")).not.toBeInTheDocument();
   });
 
   it("el menú del celular toma el foco, bloquea el scroll y se cierra con Escape", () => {
