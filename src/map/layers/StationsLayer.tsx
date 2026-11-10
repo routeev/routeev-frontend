@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Marker, Popup, useMapEvents } from "react-leaflet";
 import { getStations, type NodeId, type Station } from "../../api/graph";
-import { listStationReviewSummaries } from "../../api/stationReviews";
+import { stationSummariesQuery } from "../stationSummariesQuery";
 import { useTranslation } from "../../i18n/LanguageProvider";
 import { esPrivada } from "../esPrivada";
 import { AUTO_LOCATE_ZOOM } from "../mapConstants";
@@ -76,7 +76,7 @@ export function StationsLayer() {
   // staleTime: Infinity -- catalogo estatico, ver el comentario en
   // useMapLoaders.ts (misma key).
   const query = useQuery({ queryKey: ["stations"], queryFn: getStations, staleTime: Infinity });
-  const summariesQuery = useQuery({ queryKey: ["stationReviewSummaries"], queryFn: listStationReviewSummaries });
+  const summariesQuery = useQuery(stationSummariesQuery);
   const { datos: estadoEnVivo, estadoDe } = useStationStatus();
   const setStations = useMapStore((s) => s.setStations);
   const selectedStationId = useMapStore((s) => s.selectedStationId);

@@ -33,8 +33,8 @@ export interface StationGallery {
 export type StationPhotoReportReason =
   "inapropiada" | "no_es_el_lugar" | "datos_personales" | "otro";
 
-export function getStationPhotos(nodeId: string): Promise<StationGallery> {
-  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/photos`);
+export function getStationPhotos(nodeId: string, signal?: AbortSignal): Promise<StationGallery> {
+  return apiFetch(`/api/stations/${encodeURIComponent(nodeId)}/photos`, { signal });
 }
 
 export function uploadStationPhoto(nodeId: string, blob: Blob): Promise<StationPhoto> {
