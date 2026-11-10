@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { CompareRoutesResult } from "../api/route";
-import { calculateGateMissing, useMapStore } from "./mapStore";
+import type { Vehicle } from "../api/vehicles";
+import { calculateGateMissing, consumoViajeKwhKm, useMapStore, vehicleForResult } from "./mapStore";
 import { fromCoords, fromNode, pointKey, SAME_POINT_KM, suggestedName } from "./routePoint";
 
 // calculateGateMissing es una función pura exportada: no necesita el store
@@ -194,5 +195,60 @@ describe("routePoint", () => {
 
   it("da la misma clave para el mismo punto", () => {
     expect(pointKey(-34.9055, -56.1851)).toBe(pointKey(-34.9055, -56.1851));
+  });
+});
+
+describe("consumo propio del viaje", () => {
+  const AUTO = {
+    id: 1,
+    name: "Auto",
+    battery_capacity_kwh: 60,
+    consumption_kwh_per_km: 0.18,
+    charging_power_kw: 50,
+  } as Vehicle;
+
+  beforeEach(() => {
+    const s = useMapStore.getState();
+    s.resetTripPlanning();
+    s.setVehicles([AUTO, { ...AUTO, id: 2, name: "Otro" }]);
+    s.selectVehicle(1);
+  });
+
+  it("lee el campo con coma o con punto, y vacío es usar el del auto", () => {
+    expect(consumoViajeKwhKm("")).toBeNull();
+    expect(consumoViajeKwhKm("  ")).toBeNull();
+    expect(consumoViajeKwhKm("0,22")).toBe(0.22);
+    expect(consumoViajeKwhKm("0.22")).toBe(0.22);
+  });
+
+  // NaN y no null: tratarlo como vacío calcularía con el consumo del auto sin
+  // avisar, que es justo lo que la persona quiso cambiar.
+  it("lo que no sirve es NaN, con los mismos límites que la API", () => {
+    expect(consumoViajeKwhKm("0")).toBeNaN();
+    expect(consumoViajeKwhKm("0,005")).toBeNaN();
+    expect(consumoViajeKwhKm("5,1")).toBeNaN();
+    expect(consumoViajeKwhKm("abc")).toBeNaN();
+    expect(consumoViajeKwhKm("5")).toBe(5);
+  });
+
+  it("cambiar de auto lo vacía; volver a elegir el mismo, no", () => {
+    useMapStore.getState().setConsumoViaje("0,2");
+    useMapStore.getState().selectVehicle(1);
+    expect(useMapStore.getState().consumoViaje).toBe("0,2");
+
+    useMapStore.getState().selectVehicle(2);
+    expect(useMapStore.getState().consumoViaje).toBe("");
+  });
+
+  it("«Cancelar» (resetTripPlanning) lo vacía: es de ese viaje", () => {
+    useMapStore.getState().setConsumoViaje("0,2");
+    useMapStore.getState().resetTripPlanning();
+    expect(useMapStore.getState().consumoViaje).toBe("");
+  });
+
+  it("vehicleForResult usa el consumo con que se calculó la ruta", () => {
+    expect(vehicleForResult(AUTO, { consumo_propio_kwh_km: 0.12 }).consumption_kwh_per_km).toBe(0.12);
+    expect(vehicleForResult(AUTO, {})).toBe(AUTO);
+    expect(vehicleForResult(null, { consumo_propio_kwh_km: 0.12 })).toBeNull();
   });
 });

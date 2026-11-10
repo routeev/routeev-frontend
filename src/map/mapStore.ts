@@ -3,6 +3,7 @@ import { create } from "zustand";
 import type { GraphNode, NodeId, Station } from "../api/graph";
 import type { CompareRoutesResult, RouteModo } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
+import { parseDecimal } from "../profile/numbers";
 import { haversineKm, normalizeForSearch } from "../shared/geo";
 import type { StationFilter } from "./stationFilter";
 import { pointKey, SAME_POINT_KM, SAME_SPOT_KM, type RoutePoint, type TripLogSeed } from "./routePoint";
@@ -73,6 +74,14 @@ interface MapState {
   cargadorEnDestino: boolean | null;
 
   /**
+   * Consumo propio para el próximo cálculo, tal como se tipea ("0,22"), o ""
+   * para usar el del auto. Es de este viaje nomás ("voy cargado", "voy por
+   * ruta a 110"): no toca la ficha del auto. Se vacía al cambiar de auto,
+   * porque un consumo es de un auto en particular.
+   */
+  consumoViaje: string;
+
+  /**
    * "eficiente" (default): el algoritmo también pesa el ahorro de batería,
    * no solo el tiempo -- puede preferir una estación más lenta si queda más
    * cerca. "rapido": ese peso pasa a 0, dispuesto a gastar más batería
@@ -135,6 +144,7 @@ interface MapState {
   setEvModels: (models: EvModel[]) => void;
   selectVehicle: (id: number | null) => void;
   setStartBatteryPct: (pct: number) => void;
+  setConsumoViaje: (texto: string) => void;
   setCargadorEnDestino: (tiene: boolean) => void;
   setRouteMode: (modo: RouteModo) => void;
 
@@ -198,6 +208,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectedVehicleId: null,
   startBatteryPct: 100,
   cargadorEnDestino: null,
+  consumoViaje: "",
   routeMode: "eficiente",
 
   originNode: null,
@@ -238,8 +249,10 @@ export const useMapStore = create<MapState>((set, get) => ({
       };
     }),
   setEvModels: (evModels) => set({ evModels }),
-  selectVehicle: (id) => set({ selectedVehicleId: id }),
+  selectVehicle: (id) =>
+    set((s) => (s.selectedVehicleId === id ? {} : { selectedVehicleId: id, consumoViaje: "" })),
   setStartBatteryPct: (pct) => set({ startBatteryPct: pct }),
+  setConsumoViaje: (texto) => set({ consumoViaje: texto }),
   // Cambiar la respuesta invalida el resultado anterior, igual que cambiar el
   // origen o el destino: la ruta que hay en pantalla se calculó con la otra
   // respuesta, así que su tarjeta de "dónde cargar al llegar" y su frase sobre
@@ -385,6 +398,9 @@ export const useMapStore = create<MapState>((set, get) => ({
       // inflada del viaje anterior, y hasta metiera una parada de carga que no
       // hacía falta.
       cargadorEnDestino: null,
+      // Mismo criterio: "voy cargado" es de ese viaje. Que quedara puesto
+      // calcularía el siguiente con un consumo que nadie volvió a pedir.
+      consumoViaje: "",
     }),
 }));
 
@@ -398,6 +414,45 @@ export function batteryPctToKwh(vehicle: Vehicle, pct: number): number {
 
 export function vehicleAutonomyKm(vehicle: Vehicle): number {
   return vehicle.battery_capacity_kwh / vehicle.consumption_kwh_per_km;
+}
+
+/**
+ * El auto tal como se usó para calcular `result`: con el consumo propio del
+ * viaje si se puso uno. Lo que muestra o sigue una ruta ya calculada (km del
+ * resumen, batería del viaje en vivo) tiene que salir del mismo consumo que
+ * el cálculo: con el de la ficha, 36 kWh a 0,12 se mostrarían como 200 km en
+ * vez de 300, y el viaje en vivo descontaría batería de más.
+ */
+export function vehicleForResult(
+  vehicle: Vehicle,
+  result: Pick<CompareRoutesResult, "consumo_propio_kwh_km">
+): Vehicle;
+export function vehicleForResult(
+  vehicle: Vehicle | null,
+  result: Pick<CompareRoutesResult, "consumo_propio_kwh_km">
+): Vehicle | null;
+export function vehicleForResult(
+  vehicle: Vehicle | null,
+  result: Pick<CompareRoutesResult, "consumo_propio_kwh_km">
+): Vehicle | null {
+  if (!vehicle || result.consumo_propio_kwh_km == null) return vehicle;
+  return { ...vehicle, consumption_kwh_per_km: result.consumo_propio_kwh_km };
+}
+
+/** Los mismos límites que acepta la API (y que el alta del auto, desde 0,01). */
+const CONSUMO_MIN_KWH_KM = 0.01;
+const CONSUMO_MAX_KWH_KM = 5;
+
+/**
+ * El consumo propio del viaje en kWh/km, leído del texto del campo: null si
+ * está vacío (se usa el del auto) y NaN si lo escrito no sirve. NaN y no null
+ * a propósito: tratar un "0,0" como "vacío" calcularía con el consumo del auto
+ * sin avisar, que es justo lo que la persona quiso cambiar.
+ */
+export function consumoViajeKwhKm(texto: string): number | null {
+  if (!texto.trim()) return null;
+  const n = parseDecimal(texto);
+  return n >= CONSUMO_MIN_KWH_KM && n <= CONSUMO_MAX_KWH_KM ? n : NaN;
 }
 
 /**

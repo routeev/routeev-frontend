@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { readNumberInput } from "../shared/readNumberInput";
-import { calculateGateMissing, useMapStore, vehicleAutonomyKm } from "./mapStore";
+import { calculateGateMissing, consumoViajeKwhKm, useMapStore, vehicleAutonomyKm } from "./mapStore";
 import { nextTripStep } from "./nextStep";
 import {
   IconAlert,
@@ -62,6 +62,11 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
   const selectVehicle = useMapStore((s) => s.selectVehicle);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const setStartBatteryPct = useMapStore((s) => s.setStartBatteryPct);
+  const consumoViaje = useMapStore((s) => s.consumoViaje);
+  const setConsumoViaje = useMapStore((s) => s.setConsumoViaje);
+  // El campo de consumo arranca plegado: es para el que sabe que este viaje
+  // gasta distinto. Abierto también si ya tiene algo (volver de "Editar").
+  const [consumoAbierto, setConsumoAbierto] = useState(false);
   const geolocation = useGeolocation();
 
   // Calculado en cada render y no como selector del store: arma un array
@@ -109,6 +114,18 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
     });
   const pct = Math.max(0, Math.min(100, startBatteryPct || 0));
   const fullRangeKm = vehicle ? vehicleAutonomyKm(vehicle) : 0;
+  const tc = pp.tripConsumption;
+  const consumo = consumoViajeKwhKm(consumoViaje);
+  const consumoInvalido = consumo != null && Number.isNaN(consumo);
+  const consumoVisible = consumoAbierto || consumoViaje !== "";
+  // La autonomía de "con esta batería" cambia con el consumo propio: es la
+  // forma más directa de ver qué significa el número que se está tipeando.
+  // La del auto (vehicleSub) no, porque describe la ficha.
+  const tripRangeKm =
+    vehicle && consumo != null && Number.isFinite(consumo)
+      ? vehicle.battery_capacity_kwh / consumo
+      : fullRangeKm;
+  const carCons = vehicle ? fmt(vehicle.consumption_kwh_per_km, 3).replace(/0$/, "") : "";
   const level = pct >= 40 ? "high" : pct >= 20 ? "mid" : "low";
   const levelTone = { high: ui.toneAccent, mid: ui.toneWarn, low: ui.toneDanger }[level];
   const levelText = { high: ui.textAccent, mid: ui.textWarn, low: ui.textDanger }[level];
@@ -406,7 +423,7 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                     </span>
                     {vehicle && (
                       <span className={styles.batteryRange} aria-live="polite">
-                        {pp.range(fmt((fullRangeKm * pct) / 100))}
+                        {pp.range(fmt((tripRangeKm * pct) / 100))}
                       </span>
                     )}
                   </div>
@@ -424,6 +441,58 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                   <div className={[ui.barFill, levelTone].join(" ")} style={{ width: `${pct}%` }} />
                 </div>
               </div>
+
+              {vehicle && (
+                <div className={styles.consumption}>
+                  {consumoVisible ? (
+                    <>
+                      <div className={styles.batteryHead}>
+                        <label htmlFor="trip-consumption">{tc.label}</label>
+                        <button
+                          type="button"
+                          className={ui.linkAction}
+                          onClick={() => {
+                            setConsumoViaje("");
+                            setConsumoAbierto(false);
+                          }}
+                        >
+                          {tc.useCars}
+                        </button>
+                      </div>
+                      <span className={styles.consumptionField}>
+                        <input
+                          id="trip-consumption"
+                          className={styles.consumptionInput}
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          placeholder={carCons}
+                          value={consumoViaje}
+                          aria-invalid={consumoInvalido || undefined}
+                          aria-describedby="trip-consumption-help"
+                          onChange={(e) => setConsumoViaje(e.target.value)}
+                        />
+                        <span className={styles.consumptionUnit}>kWh/km</span>
+                      </span>
+                      <p
+                        id="trip-consumption-help"
+                        className={consumoInvalido ? ui.textDanger : ui.muted}
+                      >
+                        {consumoInvalido ? tc.invalid : tc.help(carCons)}
+                      </p>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={ui.linkAction}
+                      onClick={() => setConsumoAbierto(true)}
+                    >
+                      <IconPlus />
+                      {tc.open}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -436,7 +505,9 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
           <button
             type="button"
             className={ui.btnPrimary}
-            disabled={calc.isPending}
+            // Con un consumo inválido no se calcula: mandarlo vacío daría la
+            // ruta con el consumo del auto, justo lo que se quiso cambiar.
+            disabled={calc.isPending || consumoInvalido}
             aria-busy={calc.isPending}
             onClick={calc.calculate}
           >
@@ -447,6 +518,10 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
             <p role="status" className={styles.slowNote}>
               <IconClock />
               {pp.calculatingSlow}
+            </p>
+          ) : consumoInvalido && !calc.isPending ? (
+            <p role="status" className={[styles.footNote, styles.footNoteError].join(" ")}>
+              {tc.invalid}
             </p>
           ) : (
             <p role="status" className={styles.footNote}>

@@ -4,7 +4,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
-import { useMapStore, selectedVehicle, batteryPctToKwh } from "./mapStore";
+import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult } from "./mapStore";
 import {
   IconAlert,
   IconBlocked,
@@ -58,7 +58,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const stations = useMapStore((s) => s.stations);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const clearResult = useMapStore((s) => s.clearResult);
-  const vehicle = useMapStore(selectedVehicle);
+  const autoElegido = useMapStore(selectedVehicle);
   // Lazy init: lee localStorage una sola vez al montar, no en cada render.
   const [radarVibrationEnabled, setRadarVibrationEnabledState] = useState(getRadarVibrationEnabled);
 
@@ -66,6 +66,8 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
 
   const live = liveTrip.ui;
   const primary = result.astar.found ? result.astar : (result.dijkstra ?? result.astar);
+  // Con el consumo del cálculo, no el de la ficha: ver vehicleForResult.
+  const vehicle = vehicleForResult(autoElegido, result);
   const startBatteryKwh = vehicle ? batteryPctToKwh(vehicle, startBatteryPct) : 0;
   const summary = summarizeTrip(vehicle, startBatteryKwh, primary);
   const locale = lang === "es" ? "es-UY" : "en-US";
@@ -210,6 +212,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 {t.map.routeInput.routeMode[result.modo]}
               </span>
               <p className={ui.muted}>{td.tripMode[result.modo]}</p>
+              {result.consumo_propio_kwh_km != null && (
+                <p className={ui.muted}>{td.ownConsumption(num(result.consumo_propio_kwh_km, 3).replace(/0$/, ""))}</p>
+              )}
             </div>
           )}
         </div>
