@@ -102,4 +102,22 @@ describe("index.html", () => {
     expect(texto).toContain("contacto@routeev.uy");
     expect(texto).not.toMatch(/@(gmail|hotmail|outlook|yahoo)\./i);
   });
+
+  // Con JS, lo que se ve hasta que React monta es el indicador de carga y no
+  // el texto para buscadores; sin JS, al revés. Las dos piezas viven en #root
+  // y dependen de la clase "js" que pone un script del <head>.
+  it("el texto para buscadores se oculta con JS y deja el indicador de carga", () => {
+    const root = doc.getElementById("root")!;
+    expect(root.querySelector("main[data-nojs]")).not.toBeNull();
+    const shell = root.querySelector("[data-shell]");
+    expect(shell).not.toBeNull();
+    // Vacío: el "Cargando…" va por CSS, para no sumar texto al HTML crudo.
+    expect(shell?.textContent).toBe("");
+    const inline = Array.from(doc.querySelectorAll("head script:not([src])"));
+    expect(inline.some((s) => s.textContent?.includes('classList.add("js")'))).toBe(true);
+    const css = Array.from(doc.querySelectorAll("head style")).map((s) => s.textContent ?? "");
+    expect(css.some((t) => t.includes(".js [data-nojs]") && t.includes(".js [data-shell]"))).toBe(
+      true
+    );
+  });
 });

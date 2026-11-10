@@ -101,6 +101,38 @@
       data-fallback="true"
     />
     <meta name="twitter:image" content="https://routeev.uy/img/og-cover.png" data-fallback="true" />
+    <!-- Lo que se ve hasta que React monta. Con JS (la clase "js" la pone el
+         script de abajo, antes del primer pintado) el texto para buscadores
+         de #root queda oculto y en su lugar va el mismo "Cargando…" de
+         RouteFallback: antes se veían tres pantallas seguidas (ese texto
+         plano, el indicador de carga y la página). El texto del indicador va
+         por CSS para no sumar una palabra suelta al HTML que leen los
+         buscadores. Mantener igual a src/shared/RouteFallback.module.css. -->
+    <style>
+      [data-shell] {
+        display: none;
+      }
+      .js [data-nojs] {
+        display: none;
+      }
+      .js [data-shell] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: var(--bg, #0a0e13);
+        color: var(--text-muted, #8b97a5);
+        font: 500 11px/1.4 "Inter", system-ui, "Segoe UI", sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .js [data-shell]::before {
+        content: "Cargando…";
+      }
+    </style>
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
     <title>RouteEV — Planificá viajes en auto eléctrico por Uruguay</title>
   </head>
   <body>
@@ -111,7 +143,8 @@
          contenedor), así que en el navegador no se ve. Mantener las cifras
          alineadas con la landing (LandingPage.tsx). -->
     <div id="root">
-      <main style="max-width: 640px; margin: 0 auto; padding: 48px 16px; font-family: system-ui, sans-serif; line-height: 1.5">
+      <div data-shell aria-hidden="true"></div>
+      <main data-nojs style="max-width: 640px; margin: 0 auto; padding: 48px 16px; font-family: system-ui, sans-serif; line-height: 1.5">
         <h1>RouteEV</h1>
         <p>Planificador de viajes en auto eléctrico por Uruguay.</p>
         <p>
