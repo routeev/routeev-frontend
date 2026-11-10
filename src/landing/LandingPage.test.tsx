@@ -41,6 +41,29 @@ describe("LandingPage", () => {
     expect(titles[0]).toHaveTextContent("¿Llega tu auto eléctrico? Fijate antes de salir.");
   });
 
+  it("preguntas frecuentes antes del cierre, con la primera abierta y el contacto por correo", () => {
+    renderLanding();
+    const faq = screen.getByRole("region", { name: "Dudas antes de salir." });
+    const questions = within(faq).getAllByRole("heading", { level: 3 });
+    expect(questions).toHaveLength(8);
+    expect(questions[0]).toHaveTextContent("¿RouteEV es gratis?");
+    const items = faq.querySelectorAll("details");
+    expect(items[0]).toHaveAttribute("open");
+    expect(items[1]).not.toHaveAttribute("open");
+    expect(within(faq).getByRole("link", { name: "Mi auto no aparece" })).toHaveAttribute(
+      "href",
+      "mailto:contacto@routeev.uy?subject=Mi%20auto%20no%20aparece"
+    );
+    expect(within(faq).getByRole("link", { name: /^escribinos$/i })).toHaveAttribute(
+      "href",
+      "mailto:contacto@routeev.uy"
+    );
+    expect(within(faq).getByRole("button", { name: "Copiar el correo" })).toBeInTheDocument();
+    // Va después de los pasos y antes del cierre.
+    const sections = [...document.querySelectorAll("main > section")].map((s) => s.id);
+    expect(sections.slice(-3)).toEqual(["como-funciona", "preguntas", "app"]);
+  });
+
   it("sin sesión: el showroom como entrada principal y la cuenta como secundaria", () => {
     renderLanding();
     expect(screen.getByRole("link", { name: /probar con mi auto/i })).toHaveAttribute(

@@ -98,6 +98,63 @@ export const landing = {
     oneStop: "1 parada",
     goodMargin: "Con margen",
   },
+  faq: {
+    title: "Dudas antes de salir.",
+    body: "Lo que más nos preguntan sobre el cálculo, los datos y la cuenta.",
+    items: [
+      {
+        question: "¿RouteEV es gratis?",
+        answer: "Sí. Planificar un viaje no tiene costo, ni en la web ni en la app del celular.",
+      },
+      {
+        question: "¿Necesito crear una cuenta?",
+        answer:
+          "No. En el showroom elegís el modelo y calculás un viaje sin registrarte. La cuenta sirve para guardar tus autos y tu historial de viajes.",
+      },
+      {
+        question: "¿De dónde salen los datos?",
+        answer:
+          "La red vial es la de OpenStreetMap. Las 261 estaciones de carga son las de UTE y de operadores privados, y los 328 modelos usan las especificaciones de fábrica.",
+      },
+      {
+        question: "¿Qué tan exacta es la estimación?",
+        answer:
+          "Es una referencia calculada con tu modelo y el mapa vial real. La batería con la que llegás cambia con la velocidad, el clima y la carga del auto, así que dejá siempre un margen.",
+      },
+      {
+        question: "¿Cómo se calcula el costo del viaje?",
+        answer:
+          "Con la tarifa que publica cada operador de carga. Si una parada es en un operador que no publica su tarifa, te avisamos y esa recarga queda fuera del total.",
+      },
+      {
+        question: "Mi auto no aparece en la lista, ¿qué hago?",
+        answer:
+          "Escribinos con la marca, el modelo y el año. Mientras tanto podés calcular con un modelo de batería parecida.",
+      },
+      {
+        question: "Encontré un cargador que no funciona",
+        answer:
+          "Abrí la ficha de la estación en el mapa y reportá su estado. El aviso les sirve a quienes pasen después.",
+      },
+      {
+        question: "¿Qué hacen con mis datos?",
+        answer:
+          "Guardamos lo necesario para tu cuenta: tus autos y tu historial de viajes. Si nos pedís borrarla, eliminamos todo eso.",
+        privacyLink: "Leer la política de privacidad",
+      },
+    ],
+    contact: {
+      label: "Contacto",
+      title: "¿No está tu duda? Escribinos y te contesta alguien del equipo.",
+      topicsAria: "Escribir sobre un tema",
+      // Cada tema abre el correo con ese asunto.
+      topics: ["Mi auto no aparece", "Un dato está mal", "Otra consulta"],
+      copyEmail: "Copiar el correo",
+      emailCopied: "Correo copiado.",
+      instagram: "@routeev.uy en Instagram",
+      cta: "Escribinos",
+    },
+  },
   closing: {
     title: "Probalo con tu auto.",
     webLabel: "En la web",

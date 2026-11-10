@@ -1,0 +1,362 @@
+/* Preguntas frecuentes y contacto. En escritorio, título y contacto a la
+   izquierda y el acordeón a la derecha; en el celular, una columna con el
+   contacto al final (primero se lee, después se escribe). Lee --content-w de
+   la página. */
+
+.section {
+  padding: 0 0 clamp(72px, 8vw, 120px);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  grid-template-areas:
+    "head list"
+    "contact list";
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  gap: 32px clamp(40px, 5vw, 64px);
+  width: var(--content-w);
+  margin: 0 auto;
+}
+
+/* ---- Encabezado ---- */
+
+.head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font: 600 clamp(32px, 3.4vw, 48px)/1.06 var(--font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.body {
+  max-width: 26em;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+/* ---- Acordeón ---- */
+
+.list {
+  grid-area: list;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.item + .item {
+  border-top: 1px solid var(--border);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 14px 24px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: -2px;
+}
+
+.num {
+  flex: none;
+  width: 22px;
+  font: 500 14px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.question {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 600 18px/1.3 var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.toggle svg {
+  transition: transform 0.15s;
+}
+
+.summary:hover .toggle {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* El más girado hace de cruz: abierta, se cierra. */
+.item[open] .toggle svg {
+  transform: rotate(45deg);
+}
+
+.item[open] .toggle {
+  color: var(--accent-text);
+  border-color: var(--border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle,
+  .toggle svg {
+    transition: none;
+  }
+}
+
+/* Alineada con la pregunta: 24 de borde + 22 del número + 16 de separación. */
+.answer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 0 76px 22px 62px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.answer p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.answerLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 4px;
+}
+
+/* ---- Contacto ---- */
+
+.contact {
+  grid-area: contact;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: clamp(20px, 2.4vw, 28px);
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  /* #contacto, debajo del header pegado. */
+  scroll-margin-top: 80px;
+}
+
+.contactLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.contactIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.contactTitle {
+  margin: 0;
+  font: 500 clamp(20px, 1.7vw, 22px)/1.3 var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.topic {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.topic:hover {
+  border-color: var(--border-strong);
+}
+
+.channels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 4px 0 16px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-soft);
+}
+
+.emailAddress {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.copy {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.copy:hover {
+  background: var(--overlay-hover);
+  color: var(--text);
+}
+
+.instagram {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.instagram:hover {
+  color: var(--text);
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: var(--accent-astar);
+  color: var(--button-primary-text);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.cta:hover {
+  background: var(--button-primary-hover);
+}
+
+/* ---- Celular ---- */
+
+@media (max-width: 899.98px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "list"
+      "contact";
+    grid-template-rows: none;
+    gap: 24px;
+  }
+
+  .head {
+    gap: 12px;
+  }
+
+  .title {
+    font-size: clamp(28px, 8vw, 34px);
+  }
+
+  .body {
+    font-size: 16px;
+  }
+
+  .summary {
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .question {
+    font-size: 17px;
+  }
+
+  .answer {
+    padding: 0 16px 20px 50px;
+  }
+
+  .contact {
+    scroll-margin-top: 72px;
+  }
+}

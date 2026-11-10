@@ -75,6 +75,26 @@ export function IconInstagram({ size = 20 }: IconProps) {
   );
 }
 
+// Preguntas y contacto (Faq.tsx).
+
+export function IconMail({ size = 18 }: IconProps) {
+  return (
+    <svg {...svgProps(size)}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="M3.5 7.5l8.5 6 8.5-6" />
+    </svg>
+  );
+}
+
+export function IconCopy({ size = 16 }: IconProps) {
+  return (
+    <svg {...svgProps(size)}>
+      <rect x="9" y="9" width="12" height="12" rx="2.5" />
+      <path d="M5 15V5.5A2.5 2.5 0 0 1 7.5 3H15" />
+    </svg>
+  );
+}
+
 // La cuenta y el tema, en el header de /app y /profile (HeaderAccount.tsx).
 
 export function IconUser({ size = 18 }: IconProps) {
