@@ -4,6 +4,7 @@ import { useTranslation } from "../i18n/LanguageProvider";
 import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
+import { ComoLlegar } from "./ComoLlegar";
 import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult } from "./mapStore";
 import {
   IconAlert,
@@ -491,6 +492,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                     {cargador.operador ? ` · ${cargador.operador}` : ""}
                     {cargador.direccion ? ` · ${cargador.direccion}` : ""}
                   </span>
+                  <span className={styles.smallLabel}>
+                    <ComoLlegar lat={cargador.lat} lon={cargador.lon} nombre={cargador.nombre} />
+                  </span>
                   {/* No se disimula: si el más cercano está así de lejos, el
                       problema no es el margen, es que ahí no hay dónde cargar. */}
                   {cargador.demasiado_lejos && (
@@ -565,6 +569,16 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                               </dd>
                             </div>
                           )}
+                          {/* lat/lon opcionales: un replay del historial
+                              guardado antes de la v2 no los trae. */}
+                          {rc.lat != null && rc.lon != null && (
+                            <div>
+                              <dt>{t.map.directions.label}</dt>
+                              <dd>
+                                <ComoLlegar lat={rc.lat} lon={rc.lon} nombre={rc.station_name} />
+                              </dd>
+                            </div>
+                          )}
                           {/* Ocupación: informativa (corre si te quedás
                               enchufado sin cargar), no está sumada en ningún costo. */}
                           {rcTarifa?.tarifa_conocida &&
@@ -591,6 +605,16 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                                   respaldo.distancia_km_recta,
                                   respaldo.demasiado_lejos
                                 )}
+                                {/* Lo que pidió Esteban: llegar a un cargador
+                                    que no anda, con la batería justa, y tener
+                                    que reescribir la dirección del otro. */}
+                                <span className={styles.backupLinks}>
+                                  <ComoLlegar
+                                    lat={respaldo.lat}
+                                    lon={respaldo.lon}
+                                    nombre={respaldo.nombre}
+                                  />
+                                </span>
                               </dd>
                             </div>
                           )}

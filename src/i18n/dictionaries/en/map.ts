@@ -2,6 +2,12 @@ export const map = {
   replay: {
     suffix: (date: string) => ` · trip from ${date}`,
   },
+  // Open a charger in the app people drive with (ComoLlegar.tsx).
+  directions: {
+    label: "Directions",
+    appleMaps: "Apple Maps",
+    aria: (app: string, place: string) => `Directions to ${place} with ${app} (opens separately)`,
+  },
   tripDashboard: {
     // The mode's name comes from routeInput.routeMode (the one that was
     // chosen); this only says what it meant for THIS route.

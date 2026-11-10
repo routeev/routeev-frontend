@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Station } from "../api/graph";
 import { LanguageProvider } from "../i18n/LanguageProvider";
@@ -103,5 +103,43 @@ describe("StationDetailPanel -- con qué se paga", () => {
     renderCon({ ...STATION, pago: null } as Station);
     expect(screen.queryByText("Se paga con")).toBeNull();
     expect(screen.queryByRole("link", { name: "Android" })).toBeNull();
+  });
+});
+
+describe("StationDetailPanel -- cómo llegar (N1)", () => {
+  function renderPanel() {
+    useMapStore.setState({ stations: [STATION], selectedStationId: STATION.node_id });
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <StationDetailPanel onCalculate={vi.fn()} onGoTo={vi.fn()} />
+        </LanguageProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  it("abre la estación en Waze o Google Maps, en otra pestaña", () => {
+    renderPanel();
+
+    expect(screen.getByText("Cómo llegar")).toBeTruthy();
+    const waze = screen.getByRole("link", { name: "Cómo llegar a ANCAP Florida con Waze (se abre aparte)" });
+    expect(waze.getAttribute("href")).toBe("https://waze.com/ul?ll=-34.0994,-56.2142&navigate=yes");
+    expect(waze.getAttribute("target")).toBe("_blank");
+    expect(waze.getAttribute("rel")).toContain("noopener");
+    expect(
+      screen.getByRole("link", { name: "Cómo llegar a ANCAP Florida con Google Maps (se abre aparte)" })
+    ).toBeTruthy();
+  });
+
+  it("Mapas de Apple aparece solo en un dispositivo de Apple", () => {
+    renderPanel();
+    expect(screen.queryByRole("link", { name: /Mapas de Apple/ })).toBeNull();
+    cleanup();
+
+    vi.stubGlobal("navigator", { ...navigator, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" });
+    renderPanel();
+    expect(
+      screen.getByRole("link", { name: "Cómo llegar a ANCAP Florida con Mapas de Apple (se abre aparte)" })
+    ).toBeTruthy();
   });
 });
