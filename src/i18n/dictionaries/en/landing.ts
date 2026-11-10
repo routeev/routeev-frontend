@@ -99,6 +99,63 @@ export const landing = {
     oneStop: "1 stop",
     goodMargin: "Good margin",
   },
+  faq: {
+    title: "Questions before you go.",
+    body: "What people ask us most about the calculation, the data and the account.",
+    items: [
+      {
+        question: "Is RouteEV free?",
+        answer: "Yes. Planning a trip costs nothing, on the web or in the phone app.",
+      },
+      {
+        question: "Do I need an account?",
+        answer:
+          "No. In the showroom you pick a model and plan a trip without signing up. An account lets you save your cars and your trip history.",
+      },
+      {
+        question: "Where does the data come from?",
+        answer:
+          "The road network is OpenStreetMap’s. The 261 charging stations are UTE’s and private operators’, and the 328 models use factory specifications.",
+      },
+      {
+        question: "How accurate is the estimate?",
+        answer:
+          "It’s a reference calculated with your model and the real road map. The charge you arrive with changes with speed, weather and how loaded the car is, so always leave a margin.",
+      },
+      {
+        question: "How is the trip cost calculated?",
+        answer:
+          "With the rate each charging operator publishes. If a stop is at an operator that doesn’t publish its rate, we tell you and that charge is left out of the total.",
+      },
+      {
+        question: "My car isn’t on the list. What do I do?",
+        answer:
+          "Write to us with the make, model and year. In the meantime you can plan with a model that has a similar battery.",
+      },
+      {
+        question: "I found a charger that doesn’t work",
+        answer:
+          "Open the station’s page on the map and report its status. The report helps whoever comes next.",
+      },
+      {
+        question: "What do you do with my data?",
+        answer:
+          "We keep what your account needs: your cars and your trip history. If you ask us to delete it, we remove all of that.",
+        privacyLink: "Read the privacy policy",
+      },
+    ],
+    contact: {
+      label: "Contact",
+      title: "Can’t find your question? Write to us and someone on the team will answer.",
+      topicsAria: "Write about a topic",
+      // Cada tema abre el correo con ese asunto.
+      topics: ["My car isn’t listed", "Something is wrong", "Another question"],
+      copyEmail: "Copy the email address",
+      emailCopied: "Email address copied.",
+      instagram: "@routeev.uy on Instagram",
+      cta: "Write to us",
+    },
+  },
   closing: {
     title: "Try it with your car.",
     webLabel: "On the web",

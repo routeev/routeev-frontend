@@ -9,6 +9,7 @@ import { IconCheck } from "../map/panelIcons";
 import { HeroNight } from "../season/HalloweenDecor";
 import { markWelcomeSeen, shouldShowWelcome } from "../welcome/welcomeGate";
 import { BatteryDemo } from "./BatteryDemo";
+import { Faq } from "./Faq";
 import { HeroMap } from "./HeroMap";
 import { HowItWorks } from "./HowItWorks";
 import { CONTACT_EMAIL, LandingFooter } from "./LandingFooter";
@@ -169,6 +170,8 @@ export function LandingPage() {
         <BatteryDemo />
 
         <HowItWorks />
+
+        <Faq />
 
         <section id="app" aria-labelledby="cierre-titulo" className={styles.closing}>
           <div className={styles.closingGlow} aria-hidden="true" />
