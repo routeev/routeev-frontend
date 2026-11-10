@@ -5,7 +5,11 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text-muted);
-  font: var(--text-eyebrow);
+  /* Los valores de --text-eyebrow, pero con la fuente del cuerpo: con
+     JetBrains Mono esta etiqueta era lo único que obligaba a bajar esa
+     familia (31 kB) en la landing y el showroom. Igual que el esqueleto de
+     index.html, que es lo que se ve antes de que React monte. */
+  font: 500 11px/1.4 var(--font-body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
