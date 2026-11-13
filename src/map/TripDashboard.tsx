@@ -129,6 +129,17 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
     );
   };
 
+  // Avisos de cada parada para este auto (códigos de la API, ver
+  // breakdown.recargas_avisos). Solo se muestran los que la interfaz sabe decir:
+  // un código nuevo de una API más reciente se ignora en vez de mostrarse crudo.
+  const avisosDe = (i: number): (keyof typeof td.stopCard.avisos)[] => {
+    const listas = primary.breakdown.recargas_avisos;
+    if (!listas || listas.length !== primary.recharges.length) return [];
+    return (listas[i] ?? []).filter(
+      (codigo): codigo is keyof typeof td.stopCard.avisos => codigo in td.stopCard.avisos
+    );
+  };
+
   // Desglose del costo. costo_uyu_recargas presente significa que
   // costo_uyu_energia es SOLO lo cargado en casa y las recargas en ruta van
   // cotizadas aparte, con el tarifario de cada operador.
@@ -529,6 +540,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                       : costos?.find((c) => c.node_id === String(rc.node_id));
                   const respaldo = respaldoDe(i, rc.node_id);
                   const pois = poisDe(i);
+                  const avisos = avisosDe(i);
                   return (
                     <div className={styles.stop} key={i}>
                       <span className={styles.stopNum}>{i + 1}</span>
@@ -562,6 +574,18 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                           </div>
                         </div>
                         <dl className={styles.stopRows}>
+                          {avisos.length > 0 && (
+                            <div>
+                              <dt>{pt.notice}</dt>
+                              <dd className={ui.textWarn}>
+                                {avisos.map((codigo) => (
+                                  <span key={codigo} className={styles.stopNotice}>
+                                    {td.stopCard.avisos[codigo]}
+                                  </span>
+                                ))}
+                              </dd>
+                            </div>
+                          )}
                           {detail && (
                             <div>
                               <dt>{pt.charger}</dt>

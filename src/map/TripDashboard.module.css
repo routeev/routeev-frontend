@@ -533,6 +533,11 @@
 }
 
 /* "Waze · Google Maps" del respaldo, en su propia línea debajo del nombre. */
+/* Un aviso por línea: si una parada llegara a tener más de uno, no se pegan. */
+.stopNotice {
+  display: block;
+}
+
 .backupLinks {
   display: block;
   margin-top: 2px;

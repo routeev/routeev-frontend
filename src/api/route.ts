@@ -62,6 +62,10 @@ export interface RouteBreakdown {
   // aprovechar el rato de carga. Lista vacía si no hay dato para esa
   // estación; el campo entero puede faltar en un backend viejo o un replay.
   recargas_pois?: EstacionPoi[][];
+  // Idem, 1 a 1 con `recharges`: los avisos de cada parada PARA ESE AUTO, como
+  // códigos (hoy "equipo_30kw"). El texto lo pone la interfaz y un código que no
+  // conoce se ignora. El campo entero puede faltar en un backend viejo o un replay.
+  recargas_avisos?: string[][];
 }
 
 export interface EstacionPoi {

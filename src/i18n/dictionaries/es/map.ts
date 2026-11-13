@@ -39,6 +39,13 @@ export const map = {
       occupationValue: (price: string, min: number) => `$ ${price}/min pasados ${min} min`,
       backupValue: (name: string, km: number, tooFar: boolean) =>
         `${name} a ${km} km${tooFar ? " — sin respaldo cerca" : ""}`,
+      // Un texto por código de aviso de la API (breakdown.recargas_avisos). Los
+      // reportes de fallas son de usuarios, no un dato de UTE: se dice así.
+      avisos: {
+        equipo_30kw:
+          "Equipo de 30 kW: carga lenta. Usuarios reportan fallas y que algunos modelos no cargan acá; tené a mano el respaldo.",
+        sin_cable: "Cargador sin cable: llevá el tuyo (Tipo 2).",
+      },
       poiParadaLarga: "para una parada más larga",
       poiDist: (m: number) => `a ${m} m`,
       poiCategoria: {
@@ -161,6 +168,7 @@ export const map = {
       stopCost: "Costo",
       noRate: "Sin tarifa",
       charger: "Cargador",
+      notice: "Ojo",
       fee: "Ocupación",
       backup: "Respaldo",
       nearby: "Cerca a pie",
