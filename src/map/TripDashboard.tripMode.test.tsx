@@ -81,6 +81,22 @@ describe("Datos del viaje -- tipo de viaje", () => {
 
     expect(toCompareRoutesResult(v2, "A", "B").modo).toBe("rapido");
   });
+
+  // El aviso de "sin ruta" de un GB/T lee el conector del resultado ADAPTADO, no
+  // del de la API: si el adaptador lo pierde, el aviso no sale nunca aunque la
+  // API lo mande bien.
+  it("el adaptador de /api/route/plan no pierde el conector del auto", () => {
+    const v2 = {
+      plan_id: null,
+      conector: "gbt",
+      paradas: [],
+      astar: { found: false, route_coords: [], breakdown: {} },
+      dijkstra: null,
+    } as unknown as CompareRoutesResultV2;
+
+    expect(toCompareRoutesResult(v2, "A", "B").conector).toBe("gbt");
+    expect(toCompareRoutesResult({ ...v2, conector: undefined }, "A", "B").conector).toBeUndefined();
+  });
 });
 
 describe("Datos del viaje -- consumo propio", () => {
