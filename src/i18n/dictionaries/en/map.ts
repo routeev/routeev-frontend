@@ -39,6 +39,10 @@ export const map = {
       occupationValue: (price: string, min: number) => `$ ${price}/min after ${min} min`,
       backupValue: (name: string, km: number, tooFar: boolean) =>
         `${name} at ${km} km${tooFar ? " — no backup nearby" : ""}`,
+      avisos: {
+        equipo_30kw:
+          "30 kW unit: slow charging. Users report faults, and that some models can't charge here; keep the backup in mind.",
+      },
       poiParadaLarga: "for a longer stop",
       poiDist: (m: number) => `${m} m away`,
       poiCategoria: {
@@ -155,6 +159,7 @@ export const map = {
       stopCost: "Cost",
       noRate: "No rate",
       charger: "Charger",
+      notice: "Heads-up",
       fee: "Idle fee",
       backup: "Backup",
       nearby: "Walkable",
