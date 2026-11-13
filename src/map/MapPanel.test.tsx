@@ -118,4 +118,44 @@ describe("MapPanel", () => {
     expect(screen.getByRole("tab", { name: /viaje/i })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("No encontramos una ruta")).toBeInTheDocument();
   });
+
+  describe("sin ruta, según el conector del auto", () => {
+    function sinRuta(conector?: string) {
+      act(() =>
+        useMapStore.getState().setLastResult(
+          {
+            origin: { name: "Montevideo" },
+            destination: { name: "Rivera" },
+            ...(conector ? { conector } : {}),
+            astar: {
+              found: false,
+              route_coords: [],
+              route: [],
+              node_coords: [],
+              breakdown: {},
+              recharges: [],
+            },
+            dijkstra: null,
+          } as unknown as CompareRoutesResult,
+          null
+        )
+      );
+    }
+
+    it("un GB/T sin adaptador ve por qué hay pocas estaciones y qué hacer", () => {
+      renderPanel();
+      sinRuta("gbt");
+      expect(screen.getByText("No encontramos una ruta")).toBeInTheDocument();
+      expect(screen.getByText(/Con GB\/T sin adaptador solo podés cargar/)).toBeInTheDocument();
+    });
+
+    it("con CCS2, con adaptador, o con una API que no manda el conector, no aparece", () => {
+      renderPanel();
+      for (const conector of ["ccs2", "gbt_con_adaptador", undefined]) {
+        sinRuta(conector);
+        expect(screen.getByText("No encontramos una ruta")).toBeInTheDocument();
+        expect(screen.queryByText(/Con GB\/T sin adaptador/)).not.toBeInTheDocument();
+      }
+    });
+  });
 });

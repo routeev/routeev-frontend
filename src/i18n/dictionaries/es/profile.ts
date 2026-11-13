@@ -89,6 +89,20 @@ export const profile = {
     battery: "Batería",
     consumption: "Consumo",
     charging: "Carga máxima",
+    connector: "Conector de carga rápida",
+    connectorHint:
+      "El de carga rápida de tu auto. Casi todos son CCS2; los de origen chino suelen ser GB/T.",
+    connectors: {
+      ccs2: { name: "CCS2", sub: "El más común. Carga en casi todas las estaciones." },
+      gbt: {
+        name: "GB/T, sin adaptador",
+        sub: "Solo carga en las estaciones que tienen GB/T, que son pocas.",
+      },
+      gbt_con_adaptador: {
+        name: "GB/T, con adaptador a CCS2",
+        sub: "Puede usar las estaciones CCS2 y las GB/T.",
+      },
+    },
     errName: "Ponele un nombre.",
     errDuplicate: "Ya tenés un auto con ese nombre. Probá, por ejemplo, agregándole el año.",
     errBattery: "Poné la batería en kWh, de 1 para arriba (ej. 44,9).",

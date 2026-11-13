@@ -16,6 +16,7 @@ import {
   lookupVehicleAiPhoto,
   updateVehicle,
   uploadVehiclePhoto,
+  type ConectorAuto,
   type EvModel,
   type Vehicle,
 } from "../api/vehicles";
@@ -35,6 +36,9 @@ import styles from "./AddCarDialog.module.css";
 import ui from "./ui.module.css";
 
 const MAX_RESULTS = 6;
+
+/** En el orden en que se muestran: el de casi todos primero. */
+const CONECTORES: ConectorAuto[] = ["ccs2", "gbt", "gbt_con_adaptador"];
 
 type Source = "catalog" | "ia" | "manual";
 type CarField = "name" | "kwh" | "cons" | "kw";
@@ -100,6 +104,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
         }
       : EMPTY
   );
+  const [conector, setConector] = useState<ConectorAuto>(vehicle?.conector ?? "ccs2");
   const [errors, setErrors] = useState<Errors>({});
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -146,6 +151,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
     focusOnStep.current = true;
     setSource(from);
     setPicked(model);
+    setConector("ccs2");
     setErrors({});
     setApiError(null);
     setVals(
@@ -194,6 +200,17 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
         battery_capacity_kwh: parseDecimal(vals.kwh),
         consumption_kwh_per_km: parseDecimal(vals.cons),
         charging_power_kw: parseDecimal(vals.kw),
+        // Solo se manda lo que no es el de siempre (al crear) o lo que cambió (al
+        // editar). Así un alta o una edición común viaja igual que antes, también
+        // contra una API que todavía no conoce el campo, y al editar no se le pisa
+        // a nadie el conector que ya tenía.
+        ...(vehicle
+          ? conector !== (vehicle.conector ?? "ccs2")
+            ? { conector }
+            : {}
+          : conector !== "ccs2"
+            ? { conector }
+            : {}),
       };
       if (vehicle) return updateVehicle(vehicle.id, payload);
       const created = await createVehicle(payload);
@@ -531,6 +548,28 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
                 unit="kW"
                 placeholder="60"
               />
+
+              <fieldset className={styles.connector} aria-describedby={`${uid}-conn-hint`}>
+                <legend className={ui.label}>{a.connector}</legend>
+                <p id={`${uid}-conn-hint`} className={styles.connectorHint}>
+                  {a.connectorHint}
+                </p>
+                {CONECTORES.map((c) => (
+                  <label key={c} className={styles.connectorOption}>
+                    <input
+                      type="radio"
+                      name={`${uid}-connector`}
+                      value={c}
+                      checked={conector === c}
+                      onChange={() => setConector(c)}
+                    />
+                    <span className={styles.connectorText}>
+                      <span className={styles.connectorName}>{a.connectors[c].name}</span>
+                      <span className={styles.connectorSub}>{a.connectors[c].sub}</span>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
 
               <div aria-live="polite" className={styles.estimate}>
                 <span className={styles.estimateLabel}>{a.rangeEstimate}</span>

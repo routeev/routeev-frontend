@@ -195,6 +195,9 @@ export interface CompareRoutesResult {
   // esté elegida ahora en el formulario). Ausente en un replay del historial:
   // el plan guardado no la trae, y ahí no se muestra.
   modo?: RouteModo;
+  // Con qué conector del auto se calculó ("ccs2", "gbt" o "gbt_con_adaptador"). Ausente
+  // contra una API vieja y en un replay del historial: ahí no se muestra nada de él.
+  conector?: string;
   // El consumo propio con que se calculó ESTA ruta (kWh/km), si se puso uno
   // para el viaje. Ausente cuando se usó el del auto, y en un replay del
   // historial.
@@ -280,6 +283,8 @@ export interface CompareRoutesResultV2 {
   modo?: RouteModo;
   /** Con qué consumo se calculó (kWh/km): el del auto o el propio. Opcional: una API vieja no lo manda. */
   consumo_kwh_km?: number;
+  /** Con qué conector del auto se calculó ("ccs2", "gbt" o "gbt_con_adaptador"). Opcional: una API vieja no lo manda. */
+  conector?: string;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };
@@ -334,6 +339,7 @@ export function toCompareRoutesResult(
     cargador_destino: v2.cargador_destino,
     respaldo_paradas: v2.respaldo_paradas,
     modo: v2.modo,
+    conector: v2.conector,
     astar: toRouteResult(v2.astar, true),
     dijkstra: v2.dijkstra ? toRouteResult(v2.dijkstra, false) : null,
   };

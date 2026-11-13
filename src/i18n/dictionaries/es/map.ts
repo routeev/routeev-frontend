@@ -172,6 +172,8 @@ export const map = {
         "Salí con más batería.",
         "Probá con «Lo antes posible»: busca cargadores más cerca.",
       ],
+      noRouteGbt:
+        "Con GB/T sin adaptador solo podés cargar en las estaciones que tienen GB/T, que son pocas. Si tenés adaptador, marcalo en tu auto.",
       editTrip: "Editar viaje",
       live: "En viaje",
       traveled: "Recorrido",

@@ -240,6 +240,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               {pt.noRouteTips.map((tip) => (
                 <li key={tip}>{tip}</li>
               ))}
+              {result.conector === "gbt" && <li>{pt.noRouteGbt}</li>}
             </ul>
             <button
               type="button"

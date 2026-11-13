@@ -375,6 +375,76 @@
 }
 
 /* Al editar: que corregir el consumo no reescribe los viajes ya hechos. */
+/* Conector de carga rápida: tres opciones en columna, también en el celular
+   (cada una lleva su aclaración, no entra en una fila). */
+.connector {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.connector legend {
+  padding: 0;
+  margin-bottom: 2px;
+}
+
+.connectorHint {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.connectorOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  cursor: pointer;
+}
+
+.connectorOption:has(input:checked) {
+  border-color: var(--accent-astar);
+  background: var(--accent-soft);
+}
+
+.connectorOption:has(input:focus-visible) {
+  outline: 2px solid var(--accent-astar);
+  outline-offset: 2px;
+}
+
+.connectorOption input {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--accent-astar);
+}
+
+.connectorText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connectorName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.connectorSub {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
 .editNote {
   margin: 0;
   font-size: 13px;
