@@ -532,6 +532,12 @@
   text-wrap: pretty;
 }
 
+/* "Waze · Google Maps" del respaldo, en su propia línea debajo del nombre. */
+.backupLinks {
+  display: block;
+  margin-top: 2px;
+}
+
 .pois {
   margin: 0;
   padding: 0;

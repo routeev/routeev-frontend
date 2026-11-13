@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationSummariesQuery } from "./stationSummariesQuery";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { ComoLlegar } from "./ComoLlegar";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { IconBack, IconNavigate, IconPlug } from "./panelIcons";
 import { StationPhotos } from "./StationPhotos";
@@ -130,6 +131,13 @@ export function StationDetailPanel({ onCalculate, onGoTo }: StationDetailPanelPr
           <dl className={styles.info}>
             <dt>{sd.address}</dt>
             <dd>{station.direccion}</dd>
+            {/* Al lado de la dirección, que es lo que hasta ahora había que
+                copiar a mano en Waze. "Ir acá" (abajo) planifica con RouteEV;
+                esto es para manejar. */}
+            <dt>{t.map.directions.label}</dt>
+            <dd>
+              <ComoLlegar lat={station.lat} lon={station.lon} nombre={station.nombre} />
+            </dd>
             {station.departamento && (
               <>
                 <dt>{sd.department}</dt>
