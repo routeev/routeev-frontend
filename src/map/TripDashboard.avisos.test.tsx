@@ -76,6 +76,14 @@ describe("Datos del viaje -- avisos por parada", () => {
     expect(screen.queryByText("Ojo")).toBeNull();
   });
 
+  it("avisa que el cargador no trae cable, y se lleva bien con el de 30 kW en otra parada", () => {
+    renderDashboard(resultado([["sin_cable"], ["equipo_30kw"]]));
+
+    expect(screen.getAllByText("Cargador sin cable: llevá el tuyo (Tipo 2).")).toHaveLength(1);
+    expect(screen.getAllByText(AVISO_30KW)).toHaveLength(1);
+    expect(screen.getAllByText("Ojo")).toHaveLength(2);
+  });
+
   it("paradas sin aviso: filas vacías no muestran nada", () => {
     renderDashboard(resultado([[], []]));
     expect(screen.queryByText("Ojo")).toBeNull();

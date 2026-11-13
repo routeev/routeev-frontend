@@ -44,6 +44,7 @@ export const map = {
       avisos: {
         equipo_30kw:
           "Equipo de 30 kW: carga lenta. Usuarios reportan fallas y que algunos modelos no cargan acá; tené a mano el respaldo.",
+        sin_cable: "Cargador sin cable: llevá el tuyo (Tipo 2).",
       },
       poiParadaLarga: "para una parada más larga",
       poiDist: (m: number) => `a ${m} m`,

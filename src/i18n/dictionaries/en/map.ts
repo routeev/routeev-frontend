@@ -42,6 +42,7 @@ export const map = {
       avisos: {
         equipo_30kw:
           "30 kW unit: slow charging. Users report faults, and that some models can't charge here; keep the backup in mind.",
+        sin_cable: "Charger without a cable: bring your own (Type 2).",
       },
       poiParadaLarga: "for a longer stop",
       poiDist: (m: number) => `${m} m away`,
