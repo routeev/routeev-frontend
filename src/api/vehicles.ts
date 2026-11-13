@@ -3,12 +3,20 @@ import { apiFetch } from "./client";
 import { getToken } from "./session";
 import { API_BASE_URL } from "./config";
 
+/**
+ * Conector de carga rápida del auto. Casi todos son CCS2; un GB/T sin adaptador
+ * solo carga en las estaciones que tienen GB/T, que son pocas.
+ */
+export type ConectorAuto = "ccs2" | "gbt" | "gbt_con_adaptador";
+
 export interface Vehicle {
   id: number;
   name: string;
   battery_capacity_kwh: number;
   consumption_kwh_per_km: number;
   charging_power_kw: number;
+  /** Opcional: una API anterior a este campo no lo manda, y es lo mismo que "ccs2". */
+  conector?: ConectorAuto;
   has_photo?: boolean;
   /**
    * Foto de catálogo del modelo, para mostrar mientras no haya una propia.
@@ -35,6 +43,8 @@ export interface NewVehiclePayload {
   battery_capacity_kwh: number;
   consumption_kwh_per_km: number;
   charging_power_kw: number;
+  /** Sin él la API deja CCS2 al crear y conserva el que tenía al editar. */
+  conector?: ConectorAuto;
 }
 
 export function listVehicles(): Promise<Vehicle[]> {

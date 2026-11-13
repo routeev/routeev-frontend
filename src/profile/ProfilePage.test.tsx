@@ -301,6 +301,95 @@ describe("ProfilePage", () => {
     );
   });
 
+  it("el conector del auto: CCS2 si no se dice, y solo se manda cuando cambia", async () => {
+    vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+    renderProfile();
+    fireEvent.click(await screen.findByRole("button", { name: "Más opciones para BYD Dolphin" }));
+    fireEvent.click(
+      within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "Editar «BYD Dolphin»" });
+
+    // Un auto de una API anterior al campo es CCS2.
+    const grupo = within(dialog).getByRole("group", { name: "Conector de carga rápida" });
+    expect(within(grupo).getAllByRole("radio")).toHaveLength(3);
+    expect(within(grupo).getByRole("radio", { name: /^CCS2/ })).toBeChecked();
+
+    fireEvent.click(within(grupo).getByRole("radio", { name: /GB\/T, sin adaptador/ }));
+    expect(within(grupo).getByRole("radio", { name: /GB\/T, sin adaptador/ })).toBeChecked();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, {
+        name: "BYD Dolphin",
+        battery_capacity_kwh: 44.9,
+        consumption_kwh_per_km: 0.169,
+        charging_power_kw: 60,
+        conector: "gbt",
+      })
+    );
+  });
+
+  it("editar un auto que ya es GB/T lo muestra elegido y no lo manda si no lo tocás", async () => {
+    vi.mocked(vehicles.listVehicles).mockResolvedValue([
+      { ...DOLPHIN, conector: "gbt_con_adaptador" } as vehicles.Vehicle,
+      HOME_CAR as vehicles.Vehicle,
+    ]);
+    vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+    renderProfile();
+    fireEvent.click(await screen.findByRole("button", { name: "Más opciones para BYD Dolphin" }));
+    fireEvent.click(
+      within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "Editar «BYD Dolphin»" });
+    expect(
+      within(dialog).getByRole("radio", { name: /GB\/T, con adaptador a CCS2/ })
+    ).toBeChecked();
+
+    type("Consumo", "0,155");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() =>
+      expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, {
+        name: "BYD Dolphin",
+        battery_capacity_kwh: 44.9,
+        consumption_kwh_per_km: 0.155,
+        charging_power_kw: 60,
+      })
+    );
+  });
+
+  it("agregar un auto GB/T: el conector viaja con el alta", async () => {
+    vi.mocked(vehicles.createVehicle).mockResolvedValue({
+      ...HOME_CAR,
+      id: 9,
+      name: "BYD Seal",
+    } as vehicles.Vehicle);
+    renderProfile("/profile?agregar-vehiculo=1");
+    const dialog = await screen.findByRole("dialog", { name: "Agregar un auto" });
+    const search = within(dialog).getByRole("combobox", { name: "Buscá el modelo" });
+    fireEvent.change(search, { target: { value: "seal" } });
+    await within(dialog).findByRole("option", { name: /BYD Seal/ });
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    fireEvent.keyDown(search, { key: "Enter" });
+
+    expect(
+      within(dialog).getByRole("radio", { name: /^CCS2/ })
+    ).toBeChecked();
+    fireEvent.click(within(dialog).getByRole("radio", { name: /GB\/T, con adaptador a CCS2/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Agregar a mis autos" }));
+
+    await waitFor(() =>
+      expect(vehicles.createVehicle).toHaveBeenCalledWith({
+        name: "BYD Seal",
+        battery_capacity_kwh: 61.4,
+        consumption_kwh_per_km: 0.15,
+        charging_power_kw: 110,
+        conector: "gbt_con_adaptador",
+      })
+    );
+  });
+
   it("?agregar-vehiculo=1 abre el alta: catálogo → revisar los datos → agregar", async () => {
     vi.mocked(vehicles.createVehicle).mockResolvedValue({
       ...HOME_CAR,

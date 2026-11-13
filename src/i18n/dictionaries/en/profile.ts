@@ -84,6 +84,20 @@ export const profile = {
     battery: "Battery",
     consumption: "Consumption",
     charging: "Max charge",
+    connector: "Fast-charge connector",
+    connectorHint:
+      "Your car's fast-charge connector. Most are CCS2; cars of Chinese origin are often GB/T.",
+    connectors: {
+      ccs2: { name: "CCS2", sub: "The most common. Charges at almost every station." },
+      gbt: {
+        name: "GB/T, no adapter",
+        sub: "Only charges at stations that have GB/T, and there are few.",
+      },
+      gbt_con_adaptador: {
+        name: "GB/T, with a CCS2 adapter",
+        sub: "Can use both CCS2 and GB/T stations.",
+      },
+    },
     errName: "Give it a name.",
     errDuplicate: "You already have a car with that name. Try adding the year, for example.",
     errBattery: "Enter the battery in kWh, 1 or more (e.g. 44.9).",

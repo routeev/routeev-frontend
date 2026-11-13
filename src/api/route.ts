@@ -280,6 +280,8 @@ export interface CompareRoutesResultV2 {
   modo?: RouteModo;
   /** Con qué consumo se calculó (kWh/km): el del auto o el propio. Opcional: una API vieja no lo manda. */
   consumo_kwh_km?: number;
+  /** Con qué conector del auto se calculó ("ccs2", "gbt" o "gbt_con_adaptador"). Opcional: una API vieja no lo manda. */
+  conector?: string;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };
