@@ -103,6 +103,9 @@ export const profile = {
         sub: "Puede usar las estaciones CCS2 y las GB/T.",
       },
     },
+    cable: "Llevo un cable Tipo 2",
+    cableSub:
+      "Algunos postes de carga lenta no traen cable. Si no tenés uno, destildalo y el plan no te manda a esos.",
     errName: "Ponele un nombre.",
     errDuplicate: "Ya tenés un auto con ese nombre. Probá, por ejemplo, agregándole el año.",
     errBattery: "Poné la batería en kWh, de 1 para arriba (ej. 44,9).",

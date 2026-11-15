@@ -252,6 +252,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 <li key={tip}>{tip}</li>
               ))}
               {result.conector === "gbt" && <li>{pt.noRouteGbt}</li>}
+              {result.cable_tipo2 === false && <li>{pt.noRouteNoCable}</li>}
             </ul>
             <button
               type="button"

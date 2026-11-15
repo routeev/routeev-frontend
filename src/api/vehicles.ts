@@ -17,6 +17,11 @@ export interface Vehicle {
   charging_power_kw: number;
   /** Opcional: una API anterior a este campo no lo manda, y es lo mismo que "ccs2". */
   conector?: ConectorAuto;
+  /**
+   * Si lleva un cable Tipo 2 para los postes de carga lenta que no traen uno.
+   * Opcional: una API anterior a este campo no lo manda, y es lo mismo que true.
+   */
+  cable_tipo2?: boolean;
   has_photo?: boolean;
   /**
    * Foto de catálogo del modelo, para mostrar mientras no haya una propia.
@@ -45,6 +50,8 @@ export interface NewVehiclePayload {
   charging_power_kw: number;
   /** Sin él la API deja CCS2 al crear y conserva el que tenía al editar. */
   conector?: ConectorAuto;
+  /** Sin él la API asume que lleva cable al crear y conserva lo que tenía al editar. */
+  cable_tipo2?: boolean;
 }
 
 export function listVehicles(): Promise<Vehicle[]> {

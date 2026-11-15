@@ -97,6 +97,23 @@ describe("Datos del viaje -- tipo de viaje", () => {
     expect(toCompareRoutesResult(v2, "A", "B").conector).toBe("gbt");
     expect(toCompareRoutesResult({ ...v2, conector: undefined }, "A", "B").conector).toBeUndefined();
   });
+
+  // Mismo motivo que el conector: el aviso de "sin ruta" lee el resultado adaptado.
+  it("el adaptador de /api/route/plan no pierde si se calculó sin cable Tipo 2", () => {
+    const v2 = {
+      plan_id: null,
+      cable_tipo2: false,
+      paradas: [],
+      astar: { found: false, route_coords: [], breakdown: {} },
+      dijkstra: null,
+    } as unknown as CompareRoutesResultV2;
+
+    expect(toCompareRoutesResult(v2, "A", "B").cable_tipo2).toBe(false);
+    expect(toCompareRoutesResult({ ...v2, cable_tipo2: true }, "A", "B").cable_tipo2).toBe(true);
+    expect(
+      toCompareRoutesResult({ ...v2, cable_tipo2: undefined }, "A", "B").cable_tipo2
+    ).toBeUndefined();
+  });
 });
 
 describe("Datos del viaje -- consumo propio", () => {

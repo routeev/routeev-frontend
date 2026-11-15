@@ -149,6 +149,38 @@ describe("MapPanel", () => {
       expect(screen.getByText(/Con GB\/T sin adaptador solo podés cargar/)).toBeInTheDocument();
     });
 
+    it("sin cable Tipo 2 explica que no se cuenta con los postes sin cable; con cable o sin el dato, no", () => {
+      const AVISO = /Sin cable Tipo 2 no contamos con los postes/;
+      const sinRutaConCable = (cable_tipo2?: boolean) =>
+        act(() =>
+          useMapStore.getState().setLastResult(
+            {
+              origin: { name: "Montevideo" },
+              destination: { name: "Rivera" },
+              ...(cable_tipo2 === undefined ? {} : { cable_tipo2 }),
+              astar: {
+                found: false,
+                route_coords: [],
+                route: [],
+                node_coords: [],
+                breakdown: {},
+                recharges: [],
+              },
+              dijkstra: null,
+            } as unknown as CompareRoutesResult,
+            null
+          )
+        );
+      renderPanel();
+      sinRutaConCable(false);
+      expect(screen.getByText(AVISO)).toBeInTheDocument();
+      for (const cable of [true, undefined]) {
+        sinRutaConCable(cable);
+        expect(screen.getByText("No encontramos una ruta")).toBeInTheDocument();
+        expect(screen.queryByText(AVISO)).not.toBeInTheDocument();
+      }
+    });
+
     it("con CCS2, con adaptador, o con una API que no manda el conector, no aparece", () => {
       renderPanel();
       for (const conector of ["ccs2", "gbt_con_adaptador", undefined]) {

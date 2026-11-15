@@ -390,6 +390,89 @@ describe("ProfilePage", () => {
     );
   });
 
+  describe("el cable Tipo 2", () => {
+    async function abrirEdicion() {
+      renderProfile();
+      fireEvent.click(await screen.findByRole("button", { name: "Más opciones para BYD Dolphin" }));
+      fireEvent.click(
+        within(screen.getByRole("menu")).getByRole("menuitem", { name: "Editar datos" })
+      );
+      return screen.getByRole("dialog", { name: "Editar «BYD Dolphin»" });
+    }
+    const DATOS = {
+      name: "BYD Dolphin",
+      battery_capacity_kwh: 44.9,
+      consumption_kwh_per_km: 0.169,
+      charging_power_kw: 60,
+    };
+
+    it("viene tildado (un auto de una API anterior lleva cable) y no se manda si no se toca", async () => {
+      vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+      const dialog = await abrirEdicion();
+      expect(within(dialog).getByRole("checkbox", { name: /Llevo un cable Tipo 2/ })).toBeChecked();
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+      await waitFor(() => expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, DATOS));
+    });
+
+    it("destildarlo manda cable_tipo2: false", async () => {
+      vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+      const dialog = await abrirEdicion();
+      fireEvent.click(within(dialog).getByRole("checkbox", { name: /Llevo un cable Tipo 2/ }));
+      expect(within(dialog).getByRole("checkbox", { name: /Llevo un cable Tipo 2/ })).not.toBeChecked();
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+      await waitFor(() =>
+        expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, { ...DATOS, cable_tipo2: false })
+      );
+    });
+
+    it("un auto guardado sin cable lo muestra destildado, y volver a tildarlo manda true", async () => {
+      vi.mocked(vehicles.listVehicles).mockResolvedValue([
+        { ...DOLPHIN, cable_tipo2: false } as vehicles.Vehicle,
+        HOME_CAR as vehicles.Vehicle,
+      ]);
+      vi.mocked(vehicles.updateVehicle).mockResolvedValue(DOLPHIN as vehicles.Vehicle);
+      const dialog = await abrirEdicion();
+      const cable = within(dialog).getByRole("checkbox", { name: /Llevo un cable Tipo 2/ });
+      expect(cable).not.toBeChecked();
+
+      fireEvent.click(cable);
+      fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
+      await waitFor(() =>
+        expect(vehicles.updateVehicle).toHaveBeenCalledWith(1, { ...DATOS, cable_tipo2: true })
+      );
+    });
+
+    it("un alta sin cable lo manda; el conector no viaja si es el de siempre", async () => {
+      vi.mocked(vehicles.createVehicle).mockResolvedValue({
+        ...HOME_CAR,
+        id: 9,
+        name: "BYD Seal",
+      } as vehicles.Vehicle);
+      renderProfile("/profile?agregar-vehiculo=1");
+      const dialog = await screen.findByRole("dialog", { name: "Agregar un auto" });
+      const search = within(dialog).getByRole("combobox", { name: "Buscá el modelo" });
+      fireEvent.change(search, { target: { value: "seal" } });
+      await within(dialog).findByRole("option", { name: /BYD Seal/ });
+      fireEvent.keyDown(search, { key: "ArrowDown" });
+      fireEvent.keyDown(search, { key: "Enter" });
+
+      fireEvent.click(within(dialog).getByRole("checkbox", { name: /Llevo un cable Tipo 2/ }));
+      fireEvent.click(within(dialog).getByRole("button", { name: "Agregar a mis autos" }));
+
+      await waitFor(() =>
+        expect(vehicles.createVehicle).toHaveBeenCalledWith({
+          name: "BYD Seal",
+          battery_capacity_kwh: 61.4,
+          consumption_kwh_per_km: 0.15,
+          charging_power_kw: 110,
+          cable_tipo2: false,
+        })
+      );
+    });
+  });
+
   it("?agregar-vehiculo=1 abre el alta: catálogo → revisar los datos → agregar", async () => {
     vi.mocked(vehicles.createVehicle).mockResolvedValue({
       ...HOME_CAR,

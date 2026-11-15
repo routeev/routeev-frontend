@@ -431,6 +431,25 @@
   accent-color: var(--accent-astar);
 }
 
+/* "Llevo un cable Tipo 2": una tarjeta como las del conector, con su tilde. */
+/* Doble clase a propósito: le gana al `.row` de Checkbox.module.css (inline-flex,
+   centrado) sin depender del orden en que Vite junte las hojas. */
+.cable.cable {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sunken);
+  cursor: pointer;
+}
+
+/* El tilde, alineado con la primera línea del texto. */
+.cable > span[aria-hidden] {
+  margin-top: 3px;
+}
+
 .connectorText {
   display: flex;
   min-width: 0;
