@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -299,6 +299,52 @@ describe("ProfilePage", () => {
         charging_power_kw: 50,
       })
     );
+  });
+
+  describe("el conector a la vista", () => {
+    const AVISO = /^¿Tu auto carga con GB\/T\?/;
+    beforeEach(() => window.localStorage.removeItem("routeev_conector_notice_ack"));
+
+    it("cada auto dice su conector: CCS2 si la API no lo manda", async () => {
+      vi.mocked(vehicles.listVehicles).mockResolvedValue([
+        { ...DOLPHIN, conector: "gbt" } as vehicles.Vehicle,
+        HOME_CAR as vehicles.Vehicle,
+      ]);
+      renderProfile();
+      expect(await screen.findByText("Conector: GB/T, sin adaptador")).toBeInTheDocument();
+      expect(screen.getAllByText("Conector: CCS2")).toHaveLength(1);
+    });
+
+    it("con todos los autos en CCS2 avisa una vez que se puede marcar GB/T, y cerrarlo queda guardado", async () => {
+      renderProfile();
+      expect(await screen.findByText(AVISO)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Entendido" }));
+      expect(screen.queryByText(AVISO)).toBeNull();
+      expect(window.localStorage.getItem("routeev_conector_notice_ack")).toBe("1");
+
+      // Al volver a entrar no aparece de nuevo.
+      cleanup();
+      renderProfile();
+      await screen.findAllByText("Conector: CCS2");
+      expect(screen.queryByText(AVISO)).toBeNull();
+    });
+
+    it("si ya hay un GB/T marcado no avisa: ya sabe que la opción existe", async () => {
+      vi.mocked(vehicles.listVehicles).mockResolvedValue([
+        { ...DOLPHIN, conector: "gbt_con_adaptador" } as vehicles.Vehicle,
+      ]);
+      renderProfile();
+      await screen.findByText("Conector: GB/T, con adaptador a CCS2");
+      expect(screen.queryByText(AVISO)).toBeNull();
+    });
+
+    it("sin autos no hay a quién avisarle", async () => {
+      vi.mocked(vehicles.listVehicles).mockResolvedValue([]);
+      renderProfile();
+      await screen.findByText("Todavía no cargaste ningún auto");
+      expect(screen.queryByText(AVISO)).toBeNull();
+    });
   });
 
   it("el conector del auto: CCS2 si no se dice, y solo se manda cuando cambia", async () => {

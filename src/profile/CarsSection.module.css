@@ -242,6 +242,28 @@
   color: var(--text-muted);
 }
 
+/* El conector del auto, debajo de las cifras. */
+.connector {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Aviso de una sola vez, con su botón a la derecha (abajo en el celular). */
+.connectorNotice {
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.connectorNotice > span {
+  flex: 1 1 260px;
+}
+
+.connectorNotice > button {
+  flex: none;
+}
+
 .addTile {
   display: flex;
 }
