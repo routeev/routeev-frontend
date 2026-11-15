@@ -8,7 +8,7 @@ import {
   type Vehicle,
 } from "../api/vehicles";
 import { useTranslation } from "../i18n/LanguageProvider";
-import { IconCamera, IconPlus } from "../map/panelIcons";
+import { IconCamera, IconCheck, IconPlus } from "../map/panelIcons";
 import { Pumpkin } from "../season/HalloweenDecor";
 import { useSeason } from "../season/season";
 import { useMediaQuery } from "../shared/useMediaQuery";
@@ -18,6 +18,11 @@ import { toast } from "../shared/toastStore";
 import { CarOutline } from "../showroom/showroomIcons";
 import { useFormat } from "../showroom/format";
 import { AddCarDialog } from "./AddCarDialog";
+import {
+  conectorNoticeVisto,
+  debeAvisarConector,
+  marcarConectorNoticeVisto,
+} from "./conectorNotice";
 import { carFigures, carRange } from "./numbers";
 import { LoadError } from "./parts";
 import {
@@ -51,6 +56,7 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
   const [adding, setAdding] = useState(addOnLoad);
   const [deleting, setDeleting] = useState<Vehicle | null>(null);
   const [editing, setEditing] = useState<Vehicle | null>(null);
+  const [avisoVisto, setAvisoVisto] = useState(conectorNoticeVisto);
   const fileRef = useRef<HTMLInputElement>(null);
   const photoTarget = useRef<number | null>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -155,7 +161,27 @@ export function CarsSection({ addOnLoad, onAddClosed }: CarsSectionProps) {
             {c.addFirst}
           </button>
         </div>
-      ) : isDesktop ? (
+      ) : null}
+
+      {/* Una vez: quien tiene un GB/T no sabe que ahora puede marcarlo. */}
+      {!vehicles.isPending && !vehicles.isError && debeAvisarConector(list, avisoVisto) && (
+        <div role="note" className={`${ui.notice} ${ui.noticeOk} ${styles.connectorNotice}`}>
+          <span>{c.connectorNotice}</span>
+          <button
+            type="button"
+            className={`${ui.outline} ${ui.small}`}
+            onClick={() => {
+              marcarConectorNoticeVisto();
+              setAvisoVisto(true);
+            }}
+          >
+            <IconCheck size={16} />
+            {c.connectorNoticeOk}
+          </button>
+        </div>
+      )}
+
+      {vehicles.isPending || vehicles.isError || list.length === 0 ? null : isDesktop ? (
         <ul className={styles.grid}>
           {list.map((v) => (
             <CarCard key={v.id} car={v} {...actions} />
@@ -310,6 +336,10 @@ function CarCard({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
             </dd>
           </div>
         </dl>
+        {/* Siempre a la vista: quien tiene un GB/T ve "CCS2" y sabe que hay algo que corregir. */}
+        <p className={styles.connector}>
+          {c.connector(t.profile.add.connectors[car.conector ?? "ccs2"].name)}
+        </p>
       </div>
     </li>
   );
@@ -317,6 +347,7 @@ function CarCard({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
 
 /** En el celular: la fila de la app mobile, con la autonomía grande a la derecha. */
 function CarRow({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
+  const { t } = useTranslation();
   const f = useFormat();
   const photo = useCarPhoto(car);
   const range = carRange(car);
@@ -335,6 +366,9 @@ function CarRow({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
         <span className={styles.rowName}>{car.name}</span>
         <span className={styles.rowSub}>
           {fig.kwh} kWh · {fig.kw} kW
+        </span>
+        <span className={styles.rowSub}>
+          {t.profile.cars.connector(t.profile.add.connectors[car.conector ?? "ccs2"].name)}
         </span>
         <Credit car={car} compact />
       </span>

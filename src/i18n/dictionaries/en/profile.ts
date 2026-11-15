@@ -29,6 +29,10 @@ export const profile = {
     emptyTitle: "You haven't added a car yet",
     emptyBody:
       "You can't plan without a car. Find it in the catalog, take a photo or enter the numbers yourself.",
+    connector: (nombre: string) => `Connector: ${nombre}`,
+    connectorNotice:
+      "Does your car charge with GB/T? Set it under “Edit details” (the car's ⋯ menu) and the plan will only use chargers that work for you.",
+    connectorNoticeOk: "Got it",
     noPhoto: "No photo",
     ownPhoto: "Your photo",
     credit: "Reference photo",

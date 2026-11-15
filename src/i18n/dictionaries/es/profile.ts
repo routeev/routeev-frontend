@@ -31,6 +31,11 @@ export const profile = {
     emptyTitle: "Todavía no cargaste ningún auto",
     emptyBody:
       "Sin un auto no podés planificar. Buscalo en el catálogo, sacale una foto o cargá los datos a mano.",
+    connector: (nombre: string) => `Conector: ${nombre}`,
+    // Una sola vez, arriba de la lista (ver profile/conectorNotice.ts).
+    connectorNotice:
+      "¿Tu auto carga con GB/T? Marcalo en «Editar datos» (el menú ⋯ del auto) y el plan va a usar solo los cargadores que te sirven.",
+    connectorNoticeOk: "Entendido",
     noPhoto: "Sin foto",
     ownPhoto: "Tu foto",
     credit: "Foto de referencia",
