@@ -420,9 +420,14 @@
   outline-offset: 2px;
 }
 
+/* El input global (base.css) lleva width: 100%, padding y borde de campo de
+   texto: sin anularlos, el radio se come todo el ancho y el texto queda en
+   una tira de un par de letras. */
 .connectorOption input {
   flex: none;
-  margin-top: 3px;
+  width: auto;
+  margin: 3px 0 0;
+  padding: 0;
   accent-color: var(--accent-astar);
 }
 
