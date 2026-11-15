@@ -172,6 +172,8 @@ export const map = {
         "Start with more charge.",
         "Try “Fastest arrival”: it looks for closer chargers.",
       ],
+      noRouteNoCable:
+        "Without a Type 2 cable we don't count on posts that have no cable. If you get one, set it on your car.",
       noRouteGbt:
         "With GB/T and no adapter you can only charge at stations that have GB/T, and there are few. If you have an adapter, set it on your car.",
       editTrip: "Edit trip",

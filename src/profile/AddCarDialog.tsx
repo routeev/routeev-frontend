@@ -22,6 +22,7 @@ import {
 } from "../api/vehicles";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { IconCamera, IconCheck, IconClose, IconSearch } from "../map/panelIcons";
+import { Checkbox } from "../shared/Checkbox";
 import { cloudinaryResize } from "../shared/cloudinaryResize";
 import { filterModelLabels } from "../shared/evModelSearch";
 import { resizePhotoForUpload } from "../shared/resizePhoto";
@@ -105,6 +106,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
       : EMPTY
   );
   const [conector, setConector] = useState<ConectorAuto>(vehicle?.conector ?? "ccs2");
+  const [cable, setCable] = useState(vehicle?.cable_tipo2 ?? true);
   const [errors, setErrors] = useState<Errors>({});
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -152,6 +154,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
     setSource(from);
     setPicked(model);
     setConector("ccs2");
+    setCable(true);
     setErrors({});
     setApiError(null);
     setVals(
@@ -211,6 +214,8 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
           : conector !== "ccs2"
             ? { conector }
             : {}),
+        // Mismo criterio para el cable: se da por hecho que lo lleva.
+        ...(cable !== (vehicle?.cable_tipo2 ?? true) ? { cable_tipo2: cable } : {}),
       };
       if (vehicle) return updateVehicle(vehicle.id, payload);
       const created = await createVehicle(payload);
@@ -570,6 +575,18 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
                   </label>
                 ))}
               </fieldset>
+
+              <Checkbox
+                className={styles.cable}
+                checked={cable}
+                onChange={setCable}
+                label={
+                  <span className={styles.connectorText}>
+                    <span className={styles.connectorName}>{a.cable}</span>
+                    <span className={styles.connectorSub}>{a.cableSub}</span>
+                  </span>
+                }
+              />
 
               <div aria-live="polite" className={styles.estimate}>
                 <span className={styles.estimateLabel}>{a.rangeEstimate}</span>

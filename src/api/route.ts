@@ -202,6 +202,9 @@ export interface CompareRoutesResult {
   // Con qué conector del auto se calculó ("ccs2", "gbt" o "gbt_con_adaptador"). Ausente
   // contra una API vieja y en un replay del historial: ahí no se muestra nada de él.
   conector?: string;
+  // Si se calculó contando con que lleva un cable Tipo 2. false = no se usaron los
+  // postes sin cable. Ausente contra una API vieja y en un replay del historial.
+  cable_tipo2?: boolean;
   // El consumo propio con que se calculó ESTA ruta (kWh/km), si se puso uno
   // para el viaje. Ausente cuando se usó el del auto, y en un replay del
   // historial.
@@ -289,6 +292,8 @@ export interface CompareRoutesResultV2 {
   consumo_kwh_km?: number;
   /** Con qué conector del auto se calculó ("ccs2", "gbt" o "gbt_con_adaptador"). Opcional: una API vieja no lo manda. */
   conector?: string;
+  /** false si se calculó sin contar con los postes que no traen cable. Opcional: una API vieja no lo manda. */
+  cable_tipo2?: boolean;
   bateria?: RouteBattery;
   cargador_destino?: CargadorDestino | null;
   respaldo_paradas?: { cubierto: boolean; paradas: RespaldoParada[] };
@@ -344,6 +349,7 @@ export function toCompareRoutesResult(
     respaldo_paradas: v2.respaldo_paradas,
     modo: v2.modo,
     conector: v2.conector,
+    cable_tipo2: v2.cable_tipo2,
     astar: toRouteResult(v2.astar, true),
     dijkstra: v2.dijkstra ? toRouteResult(v2.dijkstra, false) : null,
   };

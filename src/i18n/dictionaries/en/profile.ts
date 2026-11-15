@@ -102,6 +102,9 @@ export const profile = {
         sub: "Can use both CCS2 and GB/T stations.",
       },
     },
+    cable: "I carry a Type 2 cable",
+    cableSub:
+      "Some slow-charging posts have no cable. If you don't have one, untick this and the plan won't send you to those.",
     errName: "Give it a name.",
     errDuplicate: "You already have a car with that name. Try adding the year, for example.",
     errBattery: "Enter the battery in kWh, 1 or more (e.g. 44.9).",
