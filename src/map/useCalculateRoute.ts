@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import { planRoute, toCompareRoutesResult } from "../api/route";
-import { batteryPctToKwh, consumoViajeKwhKm, selectedVehicle, useMapStore } from "./mapStore";
+import { planRoute, planRouteMultiple, toCompareRoutesResult, type ResumenViaje } from "../api/route";
+import { batteryPctToKwh, consumoViajeKwhKm, selectedVehicle, useMapStore, type TramoViaje } from "./mapStore";
 import { suggestedName } from "./routePoint";
 
 /**
@@ -20,6 +20,7 @@ import { suggestedName } from "./routePoint";
  */
 export function useCalculateRoute() {
   const setLastResult = useMapStore((s) => s.setLastResult);
+  const setTramos = useMapStore((s) => s.setTramos);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -34,14 +35,49 @@ export function useCalculateRoute() {
       const consumo = consumoViajeKwhKm(state.consumoViaje);
       const consumoPropio = consumo != null && Number.isFinite(consumo) ? consumo : undefined;
 
-      const v2Payload = {
-        origen: { lat: origin.lat, lon: origin.lon },
-        destino: { lat: destination.lat, lon: destination.lon },
+      const opciones = {
         vehicle_id: state.selectedVehicleId!,
         start_battery_kwh: startBatteryKwh,
         ...(consumoPropio != null ? { consumo_kwh_km: consumoPropio } : {}),
         ...(state.cargadorEnDestino === false ? { cargador_en_destino: false } : {}),
         ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
+      };
+
+      // Ida y vuelta: dos tramos, cada uno un plan completo (con su plan_id) que sale con
+      // la batería con la que llegó el anterior. Cada tramo se ve y se inicia como un viaje
+      // de un solo tramo; ver TramoViaje.
+      if (state.idaYVuelta) {
+        const multiple = await planRouteMultiple({
+          ...opciones,
+          puntos: [
+            { lat: origin.lat, lon: origin.lon },
+            { lat: destination.lat, lon: destination.lon },
+          ],
+          ida_y_vuelta: true,
+        });
+        const nombres = [
+          [origin, destination],
+          [destination, origin],
+        ] as const;
+        const tramos: TramoViaje[] = multiple.tramos.map((v2, i) => {
+          const [desde, hasta] = nombres[i] ?? nombres[0];
+          return {
+            result: {
+              ...toCompareRoutesResult(v2, desde.name, hasta.name),
+              ...(consumoPropio != null ? { consumo_propio_kwh_km: consumoPropio } : {}),
+            },
+            payload: v2.plan_id
+              ? { plan_id: v2.plan_id, origin_name: suggestedName(desde), destination_name: suggestedName(hasta) }
+              : null,
+          };
+        });
+        return { tramos, resumen: multiple.resumen as ResumenViaje | null };
+      }
+
+      const v2Payload = {
+        origen: { lat: origin.lat, lon: origin.lon },
+        destino: { lat: destination.lat, lon: destination.lon },
+        ...opciones,
       };
       const v2Result = await planRoute(v2Payload);
       const result = {
@@ -57,10 +93,16 @@ export function useCalculateRoute() {
             destination_name: suggestedName(destination),
           }
         : null;
-      return { result, payload };
+      return { tramos: [{ result, payload }] as TramoViaje[], resumen: null as ResumenViaje | null };
     },
-    onSuccess: ({ result, payload }) => {
-      setLastResult(result, payload);
+    onSuccess: ({ tramos, resumen }) => {
+      if (resumen == null) {
+        // Un solo tramo: lo de siempre, y sin restos de un viaje de varios.
+        setLastResult(tramos[0]!.result, tramos[0]!.payload);
+        setTramos(null, null);
+        return;
+      }
+      setTramos(tramos, resumen);
     },
   });
 

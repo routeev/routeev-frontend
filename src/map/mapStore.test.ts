@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { CompareRoutesResult } from "../api/route";
 import type { Vehicle } from "../api/vehicles";
-import { calculateGateMissing, consumoViajeKwhKm, useMapStore, vehicleForResult } from "./mapStore";
+import { calculateGateMissing, consumoViajeKwhKm, tramoActivo, useMapStore, vehicleForResult } from "./mapStore";
 import { fromCoords, fromNode, pointKey, SAME_POINT_KM, suggestedName } from "./routePoint";
 
 // calculateGateMissing es una función pura exportada: no necesita el store
@@ -253,5 +253,82 @@ describe("consumo propio del viaje", () => {
     expect(vehicleForResult(AUTO, { consumo_propio_kwh_km: 0.12 }).consumption_kwh_per_km).toBe(0.12);
     expect(vehicleForResult(AUTO, {})).toBe(AUTO);
     expect(vehicleForResult(null, { consumo_propio_kwh_km: 0.12 })).toBeNull();
+  });
+});
+
+describe("viaje de varios tramos (ida y vuelta)", () => {
+  const resultado = (origen: string, destino: string) =>
+    ({ origin: { name: origen }, destination: { name: destino }, astar: { found: true } }) as unknown as CompareRoutesResult;
+  const RESUMEN = {
+    completo: true,
+    tramos_pedidos: 2,
+    tramos_calculados: 2,
+    tiempo_total_min: 300,
+    energia_kwh: 80,
+    costo_uyu_total: 1500,
+    recargas: 2,
+    bateria_llegada_kwh: 12,
+    bateria_llegada_pct: 20,
+  };
+  const ida = { result: resultado("A", "B"), payload: { plan_id: "p1", origin_name: "A", destination_name: "B" } };
+  const vuelta = { result: resultado("B", "A"), payload: { plan_id: "p2", origin_name: "B", destination_name: "A" } };
+
+  beforeEach(() => useMapStore.getState().resetTripPlanning());
+
+  it("guardar los tramos deja el primero a la vista, con su plan_id", () => {
+    useMapStore.getState().setTramos([ida, vuelta], RESUMEN);
+
+    const s = useMapStore.getState();
+    expect(s.lastResult).toBe(ida.result);
+    expect(s.lastRoutePayload?.plan_id).toBe("p1");
+    expect(tramoActivo(s.tramos, s.lastResult)).toBe(0);
+  });
+
+  it("cambiar de tramo cambia lo que ve (y lo que se inicia) sin tocar el resto", () => {
+    useMapStore.getState().setTramos([ida, vuelta], RESUMEN);
+
+    useMapStore.getState().selectTramo(1);
+
+    const s = useMapStore.getState();
+    expect(s.lastResult).toBe(vuelta.result);
+    expect(s.lastRoutePayload?.plan_id).toBe("p2");
+    expect(tramoActivo(s.tramos, s.lastResult)).toBe(1);
+    // Un tramo que no existe no cambia nada.
+    s.selectTramo(5);
+    expect(useMapStore.getState().lastResult).toBe(vuelta.result);
+  });
+
+  it("si el resultado se limpia, los tramos guardados dejan de valer", () => {
+    useMapStore.getState().setTramos([ida, vuelta], RESUMEN);
+
+    useMapStore.getState().clearResult();
+
+    const s = useMapStore.getState();
+    expect(tramoActivo(s.tramos, s.lastResult)).toBe(-1);
+  });
+
+  it("pasar de solo ida a ida y vuelta invalida la ruta calculada, como cambiar el modo", () => {
+    useMapStore.getState().setLastResult(resultado("A", "B"), null);
+
+    useMapStore.getState().setIdaYVuelta(true);
+
+    expect(useMapStore.getState().idaYVuelta).toBe(true);
+    expect(useMapStore.getState().lastResult).toBeNull();
+    // Elegir lo mismo que ya estaba no la borra.
+    useMapStore.getState().setLastResult(resultado("A", "B"), null);
+    useMapStore.getState().setIdaYVuelta(true);
+    expect(useMapStore.getState().lastResult).not.toBeNull();
+  });
+
+  it("empezar un viaje nuevo vuelve a solo ida y suelta los tramos", () => {
+    useMapStore.getState().setIdaYVuelta(true);
+    useMapStore.getState().setTramos([ida, vuelta], RESUMEN);
+
+    useMapStore.getState().resetTripPlanning();
+
+    const s = useMapStore.getState();
+    expect(s.idaYVuelta).toBe(false);
+    expect(s.tramos).toBeNull();
+    expect(s.resumenViaje).toBeNull();
   });
 });

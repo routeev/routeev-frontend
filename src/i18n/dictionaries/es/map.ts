@@ -17,6 +17,16 @@ export const map = {
       rapido: "Prioriza llegar antes, aunque gaste más batería.",
       economico: "Prioriza gastar menos plata en las recargas.",
     },
+    legs: {
+      label: "Tramo del viaje",
+      out: "Ida",
+      back: "Vuelta",
+      leg: (n: number) => `Tramo ${n}`,
+      summary: (time: string, recharges: string, cost: string) => `Ida y vuelta: ${time} · ${recharges} · ${cost}`,
+      recharges: (n: number) => (n === 1 ? "1 recarga" : `${n} recargas`),
+      incomplete: "No pudimos calcular el viaje completo: mirá el tramo que no tiene ruta.",
+      hint: "Cada tramo se inicia por separado: al llegar, pasá al siguiente.",
+    },
     ownConsumption: (cons: string) =>
       `Calculado con ${cons} kWh/100 km, el consumo que pusiste para este viaje.`,
     margin: {
@@ -350,6 +360,12 @@ export const map = {
       eficiente: "Más eficiente",
       rapido: "Lo antes posible",
       economico: "Económico",
+    },
+    roundTrip: {
+      legend: "¿Solo ida o ida y vuelta?",
+      oneWay: "Solo ida",
+      roundTrip: "Ida y vuelta",
+      help: "Calculamos también la vuelta, saliendo con la batería con la que llegues.",
     },
     useMyLocation: "Usar mi ubicación",
     locatingYou: "Buscando tu ubicación...",

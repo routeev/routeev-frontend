@@ -207,3 +207,36 @@ describe("PlanView", () => {
     expect(screen.queryByLabelText("Consumo para este viaje")).toBeNull();
   });
 });
+
+describe("PlanView — ida y vuelta", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    listoMenosLaPregunta();
+  });
+
+  it("pregunta si es solo ida o ida y vuelta, y arranca en solo ida", () => {
+    renderPlan();
+
+    expect(screen.getByRole("radiogroup", { name: "¿Solo ida o ida y vuelta?" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Solo ida" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Ida y vuelta" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.queryByText(/Calculamos también la vuelta/)).toBeNull();
+  });
+
+  it("elegir ida y vuelta lo guarda y explica con qué batería sale la vuelta", () => {
+    renderPlan();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Ida y vuelta" }));
+
+    expect(useMapStore.getState().idaYVuelta).toBe(true);
+    expect(screen.getByRole("radio", { name: "Ida y vuelta" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText(/saliendo con la batería con la que llegues/)).toBeInTheDocument();
+  });
+
+  it("sin destino no pregunta: la pregunta no tiene sujeto", () => {
+    useMapStore.getState().clearDestination();
+    renderPlan();
+
+    expect(screen.queryByRole("radiogroup", { name: "¿Solo ida o ida y vuelta?" })).toBeNull();
+  });
+});

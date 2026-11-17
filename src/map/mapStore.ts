@@ -1,7 +1,7 @@
 import type L from "leaflet";
 import { create } from "zustand";
 import type { GraphNode, NodeId, Station } from "../api/graph";
-import type { CompareRoutesResult, RouteModo } from "../api/route";
+import type { CompareRoutesResult, ResumenViaje, RouteModo } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
 import { consumoDePor100, parseDecimal } from "../profile/numbers";
 import { haversineKm, normalizeForSearch } from "../shared/geo";
@@ -88,6 +88,8 @@ interface MapState {
    * (nunca por debajo del margen pedido) con tal de llegar antes.
    */
   routeMode: RouteModo;
+  /** Calcular también la vuelta (un viaje de dos tramos). */
+  idaYVuelta: boolean;
 
   // Origen y destino son RoutePoint, no GraphNode: un punto puede ser una
   // coordenada cruda de un toque en el mapa y no corresponder a ningún nodo
@@ -129,6 +131,15 @@ interface MapState {
 
   lastResult: CompareRoutesResult | null;
   lastRoutePayload: TripLogSeed | null;
+  /**
+   * Los tramos de un viaje de varios tramos (hoy, ida y vuelta), cada uno con lo que
+   * necesita para mostrarse e iniciarse como un viaje de un solo tramo. `lastResult` es
+   * SIEMPRE uno de ellos (el tramo que se está mirando): así el resto de la interfaz, el
+   * viaje en vivo y el historial no se enteran de que hay más de uno. Si `lastResult` se
+   * limpia (cambió el origen, el modo…), los tramos dejan de valer: ver tramoActivo.
+   */
+  tramos: TramoViaje[] | null;
+  resumenViaje: ResumenViaje | null;
   // Sufijo " · viaje del <fecha>" cuando lastResult viene de un replay del
   // historial (useReplayFromHistory) en vez de un calculo nuevo.
   replaySuffix: string | undefined;
@@ -147,6 +158,11 @@ interface MapState {
   setConsumoViaje: (texto: string) => void;
   setCargadorEnDestino: (tiene: boolean) => void;
   setRouteMode: (modo: RouteModo) => void;
+  setIdaYVuelta: (idaYVuelta: boolean) => void;
+  /** Guarda un viaje de varios tramos y deja el primero a la vista. */
+  setTramos: (tramos: TramoViaje[] | null, resumen: ResumenViaje | null) => void;
+  /** Pasa a mirar otro tramo del viaje. */
+  selectTramo: (index: number) => void;
 
   setOrigin: (p: RoutePoint) => void;
   setDestination: (p: RoutePoint) => void;
@@ -210,6 +226,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   cargadorEnDestino: null,
   consumoViaje: "",
   routeMode: "eficiente",
+  idaYVuelta: false,
 
   originNode: null,
   destinationNode: null,
@@ -220,6 +237,8 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   lastResult: null,
   lastRoutePayload: null,
+  tramos: null,
+  resumenViaje: null,
   replaySuffix: undefined,
 
   setSearchableNodes: (nodes) => {
@@ -272,6 +291,30 @@ export const useMapStore = create<MapState>((set, get) => ({
         ? { routeMode: modo }
         : { routeMode: modo, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
     ),
+
+  // Mismo criterio que setRouteMode: la ruta que hay en pantalla se calculó para otro tipo de
+  // viaje (de ida, o de ida y vuelta).
+  setIdaYVuelta: (idaYVuelta) =>
+    set((s) =>
+      s.idaYVuelta === idaYVuelta
+        ? { idaYVuelta }
+        : { idaYVuelta, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
+    ),
+  setTramos: (tramos, resumen) =>
+    set({
+      tramos,
+      resumenViaje: resumen,
+      ...(tramos && tramos.length > 0
+        ? { lastResult: tramos[0]!.result, lastRoutePayload: tramos[0]!.payload, replaySuffix: undefined, selectedStationId: null }
+        : {}),
+    }),
+  selectTramo: (index) =>
+    set((s) => {
+      const tramo = s.tramos?.[index];
+      return tramo
+        ? { lastResult: tramo.result, lastRoutePayload: tramo.payload, replaySuffix: undefined, selectedStationId: null }
+        : {};
+    }),
 
   setOrigin: (p) =>
     set((s) => {
@@ -389,6 +432,9 @@ export const useMapStore = create<MapState>((set, get) => ({
       destinationRevision: 0,
       lastResult: null,
       lastRoutePayload: null,
+      tramos: null,
+      resumenViaje: null,
+      idaYVuelta: false,
       replaySuffix: undefined,
       selectedStationId: null,
       // Se resetea junto con el destino, a diferencia del vehículo y la
@@ -403,6 +449,21 @@ export const useMapStore = create<MapState>((set, get) => ({
       consumoViaje: "",
     }),
 }));
+
+/** Un tramo de un viaje de varios tramos, con lo mismo que lastResult y lastRoutePayload. */
+export interface TramoViaje {
+  result: CompareRoutesResult;
+  payload: TripLogSeed | null;
+}
+
+/**
+ * El tramo que se está mirando, o -1 si lastResult ya no es de este viaje (se limpió o se
+ * calculó otro). Con -1 no hay nada que mostrar: los tramos guardados quedaron viejos.
+ */
+export function tramoActivo(tramos: TramoViaje[] | null, lastResult: CompareRoutesResult | null): number {
+  if (!tramos || !lastResult) return -1;
+  return tramos.findIndex((t) => t.result === lastResult);
+}
 
 export function selectedVehicle(state: MapState): Vehicle | null {
   return state.vehicles.find((v) => v.id === state.selectedVehicleId) ?? null;

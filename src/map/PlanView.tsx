@@ -56,6 +56,8 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
   const cargadorEnDestino = useMapStore((s) => s.cargadorEnDestino);
   const setCargadorEnDestino = useMapStore((s) => s.setCargadorEnDestino);
   const routeMode = useMapStore((s) => s.routeMode);
+  const idaYVuelta = useMapStore((s) => s.idaYVuelta);
+  const setIdaYVuelta = useMapStore((s) => s.setIdaYVuelta);
   const setRouteMode = useMapStore((s) => s.setRouteMode);
   const vehicles = useMapStore((s) => s.vehicles);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
@@ -315,6 +317,26 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                 ))}
               </div>
               <p className={ui.muted}>{t.map.tripDashboard.tripMode[routeMode]}</p>
+            </div>
+            <div className={ui.question}>
+              <p className={ui.questionLabel} id="q-round-trip">
+                {ri.roundTrip.legend}
+              </p>
+              <div role="radiogroup" aria-labelledby="q-round-trip" className={ui.segmented}>
+                {([false, true] as const).map((value) => (
+                  <button
+                    key={String(value)}
+                    type="button"
+                    role="radio"
+                    aria-checked={idaYVuelta === value}
+                    className={ui.segOption}
+                    onClick={() => setIdaYVuelta(value)}
+                  >
+                    {value ? ri.roundTrip.roundTrip : ri.roundTrip.oneWay}
+                  </button>
+                ))}
+              </div>
+              {idaYVuelta && <p className={ui.muted}>{ri.roundTrip.help}</p>}
             </div>
           </div>
         )}

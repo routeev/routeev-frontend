@@ -1,5 +1,12 @@
 /* ---- Cabecera ---- */
 
+/* El selector de tramos de un viaje de ida y vuelta, arriba de todo. */
+.legs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .header {
   display: flex;
   flex-direction: column;
