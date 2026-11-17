@@ -23,6 +23,9 @@ export const map = {
       back: "Vuelta",
       leg: (n: number) => `Tramo ${n}`,
       summary: (time: string, recharges: string, cost: string) => `Ida y vuelta: ${time} · ${recharges} · ${cost}`,
+      summaryStops: (time: string, recharges: string, cost: string) => `Viaje completo: ${time} · ${recharges} · ${cost}`,
+      outN: (n: number) => `Ida ${n}`,
+      backN: (n: number) => `Vuelta ${n}`,
       recharges: (n: number) => (n === 1 ? "1 recarga" : `${n} recargas`),
       incomplete: "No pudimos calcular el viaje completo: mirá el tramo que no tiene ruta.",
       hint: "Cada tramo se inicia por separado: al llegar, pasá al siguiente.",
@@ -324,6 +327,9 @@ export const map = {
     keepTyping: "Seguí escribiendo para buscar...",
     searchAsAddress: (label: string) => `Buscar «${label}» como dirección completa`,
     clearRole: (roleLabel: string) => `Borrar el ${roleLabel}`,
+    stopLabel: (n: number) => `Parada ${n}`,
+    stopPlaceholder: "Una parada en el camino",
+    removeStop: (n: number) => `Quitar la parada ${n}`,
     pickOnMapActive: (roleLabel: string) =>
       `Tocá el mapa para marcar el ${roleLabel}, o tocá acá para cancelar`,
     pickOnMap: (roleLabel: string) => `Marcar el ${roleLabel} tocando el mapa`,
@@ -370,6 +376,14 @@ export const map = {
     useMyLocation: "Usar mi ubicación",
     locatingYou: "Buscando tu ubicación...",
     swapPoints: "Invertir origen y destino",
+    stops: {
+      legend: "Paradas en el camino",
+      add: "Agregar una parada",
+      help: "Pasás por ellas en este orden, entre el origen y el destino. Cada tramo se calcula con la batería con la que llegaste al anterior.",
+      full: (max: number) => `Ya usaste las ${max} paradas que entran en un viaje.`,
+      roundTripLimit: (max: number) => `Con ida y vuelta entran hasta ${max} paradas.`,
+      tooManyForRoundTrip: (max: number) => `Con más de ${max} paradas no se puede calcular la vuelta: quitá alguna.`,
+    },
   },
   nextStep: {
     chooseOrigin: "Elegí desde dónde salís: escribí una dirección o tocá el mapa.",
@@ -378,6 +392,7 @@ export const map = {
     loadingVehicles: "Esperá un momento, estamos cargando tus vehículos.",
     addVehicle: "Agregá un auto acá abajo para poder calcular el viaje.",
     answerCharger: "Para calcular la ruta, contanos si tenés dónde cargar al llegar.",
+    fillStops: "Elegí las paradas que agregaste, o quitalas.",
     readyToCalculate: "Ya está todo: tocá «Calcular ruta».",
   },
   vehiclePanel: {
@@ -450,6 +465,7 @@ export const map = {
     originDestinationMarkers: {
       origin: "Origen",
       destination: "Destino",
+      stop: (n: number) => `Parada ${n}`,
     },
     routeLayers: {
       tollAmount: (amount: string) => `Peaje: ${amount}`,

@@ -23,6 +23,13 @@ describe("nextTripStep", () => {
     expect(step.text).toMatch(/a dónde vas/i);
   });
 
+  it("pide elegir las paradas agregadas antes que el vehículo", () => {
+    const step = nextTripStep({ ...LISTO, hasSelectedVehicle: false, paradasSinPunto: 1 }, t);
+    expect(step.done).toBe(false);
+    expect(step.num).toBe(2);
+    expect(step.text).toMatch(/paradas/i);
+  });
+
   it("asks for a vehicle only after both points are set", () => {
     const step = nextTripStep({ ...LISTO, hasSelectedVehicle: false }, t);
     expect(step.done).toBe(false);

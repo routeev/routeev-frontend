@@ -3,7 +3,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { consumoTexto } from "../profile/numbers";
 import { readNumberInput } from "../shared/readNumberInput";
-import { calculateGateMissing, consumoViajeKwhKm, useMapStore, vehicleAutonomyKm } from "./mapStore";
+import {
+  calculateGateMissing,
+  consumoViajeKwhKm,
+  MAX_PARADAS_IDA_Y_VUELTA,
+  maxParadas,
+  useMapStore,
+  vehicleAutonomyKm,
+} from "./mapStore";
 import { nextTripStep } from "./nextStep";
 import {
   IconAlert,
@@ -58,6 +65,8 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
   const routeMode = useMapStore((s) => s.routeMode);
   const idaYVuelta = useMapStore((s) => s.idaYVuelta);
   const setIdaYVuelta = useMapStore((s) => s.setIdaYVuelta);
+  const paradas = useMapStore((s) => s.paradas);
+  const addParada = useMapStore((s) => s.addParada);
   const setRouteMode = useMapStore((s) => s.setRouteMode);
   const vehicles = useMapStore((s) => s.vehicles);
   const vehiclesLoaded = useMapStore((s) => s.vehiclesLoaded);
@@ -80,6 +89,7 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
     origin,
     destination,
     chargerAnswered: cargadorEnDestino != null,
+    paradasSinPunto: paradas.filter((p) => p.point == null).length,
   };
   const ready = calculateGateMissing(gate).length === 0;
   const step = nextTripStep(gate, t.map.nextStep);
@@ -194,6 +204,40 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
               </button>
             </div>
           </div>
+
+          {(paradas.length > 0 || (origin && destination)) && (
+            // Recién con origen y destino (o si ya hay paradas puestas): "una parada entre qué y qué"
+            // no tiene sujeto antes.
+            <div className={styles.stops}>
+              <p className={ui.questionLabel} id="q-stops">
+                {ri.stops.legend}
+              </p>
+              {paradas.map((p, i) => (
+                <div key={p.key} className={styles.stopCard}>
+                  <span className={styles.stopMark} aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <RouteAutocompleteField role="stop" slotKey={p.key} index={i} placeholder={t.map.routeAutocomplete.stopPlaceholder} />
+                </div>
+              ))}
+              <button
+                type="button"
+                className={ui.btnOutline}
+                disabled={paradas.length >= maxParadas(idaYVuelta)}
+                onClick={() => addParada()}
+              >
+                <IconPlus />
+                {ri.stops.add}
+              </button>
+              <p className={ui.muted}>
+                {paradas.length >= maxParadas(idaYVuelta)
+                  ? idaYVuelta
+                    ? ri.stops.roundTripLimit(MAX_PARADAS_IDA_Y_VUELTA)
+                    : ri.stops.full(maxParadas(false))
+                  : ri.stops.help}
+              </p>
+            </div>
+          )}
 
           <div className={styles.locateRow}>
             <button
@@ -330,6 +374,7 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                     role="radio"
                     aria-checked={idaYVuelta === value}
                     className={ui.segOption}
+                    disabled={value && paradas.length > MAX_PARADAS_IDA_Y_VUELTA}
                     onClick={() => setIdaYVuelta(value)}
                   >
                     {value ? ri.roundTrip.roundTrip : ri.roundTrip.oneWay}
@@ -337,6 +382,9 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                 ))}
               </div>
               {idaYVuelta && <p className={ui.muted}>{ri.roundTrip.help}</p>}
+              {paradas.length > MAX_PARADAS_IDA_Y_VUELTA && (
+                <p className={ui.muted}>{ri.stops.tooManyForRoundTrip(MAX_PARADAS_IDA_Y_VUELTA)}</p>
+              )}
             </div>
           </div>
         )}

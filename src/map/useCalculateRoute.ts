@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { planRoute, planRouteMultiple, toCompareRoutesResult, type ResumenViaje } from "../api/route";
 import { batteryPctToKwh, consumoViajeKwhKm, selectedVehicle, useMapStore, type TramoViaje } from "./mapStore";
 import { suggestedName } from "./routePoint";
+import { puntosDelViaje, tramosDelViaje } from "./viaje";
 
 /**
  * Botón "Calcular ruta", portado de js/map/routeCalc.js.
@@ -43,24 +44,21 @@ export function useCalculateRoute() {
         ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
       };
 
-      // Ida y vuelta: dos tramos, cada uno un plan completo (con su plan_id) que sale con
-      // la batería con la que llegó el anterior. Cada tramo se ve y se inicia como un viaje
-      // de un solo tramo; ver TramoViaje.
-      if (state.idaYVuelta) {
+      // Ida y vuelta, o con paradas: varios tramos, cada uno un plan completo (con su plan_id)
+      // que sale con la batería con la que llegó el anterior. Cada tramo se ve y se inicia como
+      // un viaje de un solo tramo; ver TramoViaje.
+      const paradas = state.paradas.map((p) => p.point);
+      if (state.idaYVuelta || paradas.some((p) => p != null)) {
+        const puntos = puntosDelViaje(origin, paradas, destination);
+        const pares = tramosDelViaje(puntos, state.idaYVuelta);
         const multiple = await planRouteMultiple({
           ...opciones,
-          puntos: [
-            { lat: origin.lat, lon: origin.lon },
-            { lat: destination.lat, lon: destination.lon },
-          ],
-          ida_y_vuelta: true,
+          puntos: puntos.map((p) => ({ lat: p.lat, lon: p.lon })),
+          ida_y_vuelta: state.idaYVuelta,
         });
-        const nombres = [
-          [origin, destination],
-          [destination, origin],
-        ] as const;
         const tramos: TramoViaje[] = multiple.tramos.map((v2, i) => {
-          const [desde, hasta] = nombres[i] ?? nombres[0];
+          // La API para en el primer tramo sin ruta: vuelven tantos como se calcularon, en orden.
+          const [desde, hasta] = pares[i] ?? pares[0]!;
           return {
             result: {
               ...toCompareRoutesResult(v2, desde.name, hasta.name),

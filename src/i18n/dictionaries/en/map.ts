@@ -23,6 +23,9 @@ export const map = {
       back: "Return",
       leg: (n: number) => `Leg ${n}`,
       summary: (time: string, recharges: string, cost: string) => `Round trip: ${time} · ${recharges} · ${cost}`,
+      summaryStops: (time: string, recharges: string, cost: string) => `Whole trip: ${time} · ${recharges} · ${cost}`,
+      outN: (n: number) => `Out ${n}`,
+      backN: (n: number) => `Back ${n}`,
       recharges: (n: number) => (n === 1 ? "1 recharge" : `${n} recharges`),
       incomplete: "We couldn't plan the whole trip: check the leg that has no route.",
       hint: "Each leg is started separately: when you arrive, move on to the next one.",
@@ -315,6 +318,9 @@ export const map = {
     keepTyping: "Keep typing to search...",
     searchAsAddress: (label: string) => `Search "${label}" as a full address`,
     clearRole: (roleLabel: string) => `Clear the ${roleLabel}`,
+    stopLabel: (n: number) => `Stop ${n}`,
+    stopPlaceholder: "A stop along the way",
+    removeStop: (n: number) => `Remove stop ${n}`,
     pickOnMapActive: (roleLabel: string) =>
       `Tap the map to mark the ${roleLabel}, or tap here to cancel`,
     pickOnMap: (roleLabel: string) => `Mark the ${roleLabel} by tapping the map`,
@@ -361,6 +367,14 @@ export const map = {
     useMyLocation: "Use my location",
     locatingYou: "Finding your location...",
     swapPoints: "Swap origin and destination",
+    stops: {
+      legend: "Stops along the way",
+      add: "Add a stop",
+      help: "You go through them in this order, between the origin and the destination. Each leg is planned with the battery you arrived with at the previous one.",
+      full: (max: number) => `You have used all ${max} stops a trip can have.`,
+      roundTripLimit: (max: number) => `A round trip can have up to ${max} stops.`,
+      tooManyForRoundTrip: (max: number) => `With more than ${max} stops the way back cannot be planned: remove one.`,
+    },
   },
   nextStep: {
     chooseOrigin: "Choose where you start: type an address or tap the map.",
@@ -369,6 +383,7 @@ export const map = {
     loadingVehicles: "Hang on, we're loading your vehicles.",
     addVehicle: "Add a car below to plan the trip.",
     answerCharger: "To calculate the route, tell us if you can charge when you arrive.",
+    fillStops: "Choose the stops you added, or remove them.",
     readyToCalculate: "All set: tap “Plan route”.",
   },
   vehiclePanel: {
@@ -441,6 +456,7 @@ export const map = {
     originDestinationMarkers: {
       origin: "Origin",
       destination: "Destination",
+      stop: (n: number) => `Stop ${n}`,
     },
     routeLayers: {
       tollAmount: (amount: string) => `Toll: ${amount}`,

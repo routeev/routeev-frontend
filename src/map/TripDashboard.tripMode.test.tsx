@@ -171,6 +171,7 @@ describe("Datos del viaje -- ida y vuelta", () => {
   };
 
   function renderViaje(live: typeof LIVE_TRIP = LIVE_TRIP, resumen = RESUMEN) {
+    useMapStore.setState({ idaYVuelta: true });
     useMapStore.getState().setTramos([ida, vuelta], resumen);
     return render(
       <LanguageProvider>
@@ -180,7 +181,7 @@ describe("Datos del viaje -- ida y vuelta", () => {
   }
 
   afterEach(() =>
-    useMapStore.setState({ lastResult: null, lastRoutePayload: null, tramos: null, resumenViaje: null })
+    useMapStore.setState({ lastResult: null, lastRoutePayload: null, tramos: null, resumenViaje: null, idaYVuelta: false })
   );
 
   it("muestra Ida y Vuelta, arranca en la ida y resume el viaje entero", () => {
@@ -243,5 +244,76 @@ describe("Datos del viaje -- ida y vuelta", () => {
     renderDashboard(resultado("eficiente"));
 
     expect(screen.queryByRole("radiogroup", { name: "Tramo del viaje" })).toBeNull();
+  });
+});
+
+describe("Datos del viaje -- paradas intermedias", () => {
+  const resumen = (pedidos: number) => ({
+    completo: true,
+    tramos_pedidos: pedidos,
+    tramos_calculados: pedidos,
+    tiempo_total_min: 420,
+    energia_kwh: 100,
+    costo_uyu_total: 1800,
+    recargas: 3,
+    bateria_llegada_kwh: 10,
+    bateria_llegada_pct: 15,
+  });
+  const tramo = (i: number) => ({
+    result: { ...resultado("eficiente"), origin: { name: `P${i}` }, destination: { name: `P${i + 1}` } },
+    payload: { plan_id: `p${i}`, origin_name: `P${i}`, destination_name: `P${i + 1}` },
+  });
+  const PARADA = { key: 1, point: { name: "Durazno", lat: -33.38, lon: -56.52 }, revision: 0 };
+
+  function renderViaje(tramos: ReturnType<typeof tramo>[], pedidos: number) {
+    useMapStore.getState().setTramos(tramos, resumen(pedidos));
+    return render(
+      <LanguageProvider>
+        <TripDashboard liveTrip={LIVE_TRIP} />
+      </LanguageProvider>
+    );
+  }
+
+  afterEach(() =>
+    useMapStore.setState({
+      lastResult: null,
+      lastRoutePayload: null,
+      tramos: null,
+      resumenViaje: null,
+      paradas: [],
+      idaYVuelta: false,
+    })
+  );
+
+  it("sin ida y vuelta, son Tramo 1, 2 y 3, y el resumen habla del viaje completo", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: false });
+    renderViaje([tramo(1), tramo(2), tramo(3)], 3);
+
+    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual(["Tramo 1", "Tramo 2", "Tramo 3"]);
+    expect(screen.getByText(/Viaje completo: 7 h 0 min · 3 recargas · /)).toBeInTheDocument();
+  });
+
+  it("con ida y vuelta y una parada, las mitades numeran sus tramos", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: true });
+    renderViaje([tramo(1), tramo(2), tramo(3), tramo(4)], 4);
+
+    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual(["Ida 1", "Ida 2", "Vuelta 1", "Vuelta 2"]);
+  });
+
+  it("si un tramo no tuvo ruta, los que volvieron conservan su nombre dentro del viaje pedido", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: true });
+    renderViaje([tramo(1), tramo(2), tramo(3)], 4);
+
+    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual(["Ida 1", "Ida 2", "Vuelta 1"]);
+  });
+
+  it("pasar de tramo muestra el tramo con su origen y destino", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: false });
+    const { container } = renderViaje([tramo(1), tramo(2)], 2);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Tramo 2" }));
+
+    expect(container.querySelector("h2")!.textContent).toMatch(/^P2\s*→\s*P3/);
+    expect(useMapStore.getState().lastRoutePayload?.plan_id).toBe("p2");
   });
 });

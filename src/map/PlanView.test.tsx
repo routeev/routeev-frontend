@@ -240,3 +240,87 @@ describe("PlanView — ida y vuelta", () => {
     expect(screen.queryByRole("radiogroup", { name: "¿Solo ida o ida y vuelta?" })).toBeNull();
   });
 });
+
+describe("PlanView — paradas intermedias", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    listoMenosLaPregunta();
+  });
+
+  const agregar = () => fireEvent.click(screen.getByRole("button", { name: "Agregar una parada" }));
+
+  it("ofrece agregar una parada recién con origen y destino", () => {
+    useMapStore.getState().clearDestination();
+    renderPlan();
+
+    expect(screen.queryByRole("button", { name: "Agregar una parada" })).toBeNull();
+  });
+
+  it("agregar una parada muestra su campo numerado, y la «x» la saca", () => {
+    renderPlan();
+
+    agregar();
+
+    expect(screen.getByRole("combobox", { name: "Parada 1" })).toBeInTheDocument();
+    expect(useMapStore.getState().paradas).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Quitar la parada 1" }));
+
+    expect(screen.queryByRole("combobox", { name: "Parada 1" })).toBeNull();
+    expect(useMapStore.getState().paradas).toHaveLength(0);
+  });
+
+  it("una parada elegida se ve con su nombre en el campo", () => {
+    renderPlan();
+    agregar();
+    const { key } = useMapStore.getState().paradas[0]!;
+
+    act(() => useMapStore.getState().setParada(key, { name: "Durazno", lat: -33.38, lon: -56.52 }));
+
+    expect(screen.getByRole("combobox", { name: "Parada 1" })).toHaveValue("Durazno");
+  });
+
+  it("mientras haya una parada sin elegir, el paso siguiente lo dice", () => {
+    renderPlan();
+
+    agregar();
+
+    expect(screen.getByText("Elegí las paradas que agregaste, o quitalas.")).toBeInTheDocument();
+  });
+
+  it("en el máximo apaga «Agregar» y lo explica", () => {
+    renderPlan();
+
+    for (let i = 0; i < 4; i++) agregar2();
+
+    expect(screen.getByRole("button", { name: "Agregar una parada" })).toBeDisabled();
+    expect(screen.getByText("Ya usaste las 4 paradas que entran en un viaje.")).toBeInTheDocument();
+
+    function agregar2() {
+      const b = screen.getByRole("button", { name: "Agregar una parada" });
+      if (!(b as HTMLButtonElement).disabled) fireEvent.click(b);
+    }
+  });
+
+  it("con ida y vuelta entran 2 paradas", () => {
+    renderPlan();
+    useMapStore.getState().setIdaYVuelta(true);
+
+    agregar();
+    agregar();
+
+    expect(screen.getByRole("button", { name: "Agregar una parada" })).toBeDisabled();
+    expect(screen.getByText("Con ida y vuelta entran hasta 2 paradas.")).toBeInTheDocument();
+  });
+
+  it("con más de 2 paradas, «Ida y vuelta» queda apagado y dice por qué", () => {
+    renderPlan();
+
+    agregar();
+    agregar();
+    agregar();
+
+    expect(screen.getByRole("radio", { name: "Ida y vuelta" })).toBeDisabled();
+    expect(screen.getByText(/no se puede calcular la vuelta/)).toBeInTheDocument();
+  });
+});

@@ -8,7 +8,7 @@ import { useDebouncedValue } from "../shared/useDebouncedValue";
 import { sugerirLugares, type SugerenciaLugar } from "./lugares";
 import { useMapStore, type SearchableNode } from "./mapStore";
 import { IconClose, IconCrosshair, IconPin, IconSearch } from "./panelIcons";
-import { fromNode } from "./routePoint";
+import { fromNode, type RoutePoint } from "./routePoint";
 import styles from "./RouteAutocompleteField.module.css";
 
 type Item = SugerenciaLugar | { type: "node"; node: SearchableNode } | { type: "geocode"; label: string };
@@ -30,11 +30,15 @@ function localMatches(query: string, nodes: SearchableNode[]): SearchableNode[] 
 }
 
 interface RouteAutocompleteFieldProps {
-  role: "origin" | "destination";
+  /** "stop" es una parada intermedia: se identifica con `slotKey` y se numera con `index` (desde 0). */
+  role: "origin" | "destination" | "stop";
+  slotKey?: number;
+  index?: number;
   placeholder: string;
   /** Este rol se está marcando AHORA: el mapa está esperando un toque. */
-  isPicking: boolean;
-  onPickTarget: () => void;
+  isPicking?: boolean;
+  /** Sin esto no hay botón de chincheta: las paradas se eligen buscando, no tocando el mapa. */
+  onPickTarget?: () => void;
 }
 
 /**
@@ -47,13 +51,41 @@ interface RouteAutocompleteFieldProps {
  * La lista de sugerencias se posiciona contra esa tarjeta, así cae debajo
  * del bloque entero y ocupa todo su ancho.
  */
-export function RouteAutocompleteField({ role, placeholder, isPicking, onPickTarget }: RouteAutocompleteFieldProps) {
+export function RouteAutocompleteField({
+  role,
+  slotKey,
+  index = 0,
+  placeholder,
+  isPicking = false,
+  onPickTarget,
+}: RouteAutocompleteFieldProps) {
   const { t } = useTranslation();
   const ra = t.map.routeAutocomplete;
   const searchableNodes = useMapStore((s) => s.searchableNodes);
-  const node = useMapStore((s) => (role === "origin" ? s.originNode : s.destinationNode));
-  const setNode = useMapStore((s) => (role === "origin" ? s.setOrigin : s.setDestination));
-  const clearNode = useMapStore((s) => (role === "origin" ? s.clearOrigin : s.clearDestination));
+  const node = useMapStore((s) =>
+    role === "stop"
+      ? (s.paradas.find((p) => p.key === slotKey)?.point ?? null)
+      : role === "origin"
+        ? s.originNode
+        : s.destinationNode
+  );
+  const setOrigin = useMapStore((s) => s.setOrigin);
+  const setDestination = useMapStore((s) => s.setDestination);
+  const setParada = useMapStore((s) => s.setParada);
+  const clearOrigin = useMapStore((s) => s.clearOrigin);
+  const clearDestination = useMapStore((s) => s.clearDestination);
+  const removeParada = useMapStore((s) => s.removeParada);
+  const setNode = (p: RoutePoint) => {
+    if (role === "origin") setOrigin(p);
+    else if (role === "destination") setDestination(p);
+    else if (slotKey != null) setParada(slotKey, p);
+  };
+  // En una parada la "x" saca el campo entero: una parada vacía no tiene sentido.
+  const clearNode = () => {
+    if (role === "origin") clearOrigin();
+    else if (role === "destination") clearDestination();
+    else if (slotKey != null) removeParada(slotKey);
+  };
   const setPickMode = useMapStore((s) => s.setPickMode);
 
   const [editingText, setEditingText] = useState<string | null>(null);
@@ -78,7 +110,13 @@ export function RouteAutocompleteField({ role, placeholder, isPicking, onPickTar
   // movió, y la persona veía su búsqueda a medio escribir sobre un punto que
   // ya no era el que había buscado. La revisión sube con cada escritura, sin
   // importar si el nodo resultó ser el mismo (ver mapStore.ts).
-  const revision = useMapStore((s) => (role === "origin" ? s.originRevision : s.destinationRevision));
+  const revision = useMapStore((s) =>
+    role === "stop"
+      ? (s.paradas.find((p) => p.key === slotKey)?.revision ?? 0)
+      : role === "origin"
+        ? s.originRevision
+        : s.destinationRevision
+  );
   const [prevRevision, setPrevRevision] = useState(revision);
   if (revision !== prevRevision) {
     setPrevRevision(revision);
@@ -208,17 +246,25 @@ export function RouteAutocompleteField({ role, placeholder, isPicking, onPickTar
     );
   }
 
-  const etiqueta = ra.roleLabel(role);
-  const listId = `${role}-suggestions`;
+  // Sin `role === "stop"` el rótulo no tiene género que concordar: las paradas tienen frases propias.
+  const etiqueta = role === "stop" ? ra.stopLabel(index + 1) : ra.roleLabel(role);
+  const idBase = role === "stop" ? `stop-${slotKey}` : role;
+  const listId = `${idBase}-suggestions`;
+  const clearTitle = role === "stop" ? ra.removeStop(index + 1) : ra.clearRole(etiqueta);
 
   return (
     <>
-      <div className={[styles.row, role === "origin" ? styles.rowOrigin : styles.rowDest].join(" ")}>
-        <label className="sr-only" htmlFor={`${role}-input`}>
-          {role === "origin" ? ra.originLabel : ra.destinationLabel}
+      <div
+        className={[
+          styles.row,
+          role === "origin" ? styles.rowOrigin : role === "destination" ? styles.rowDest : "",
+        ].join(" ")}
+      >
+        <label className="sr-only" htmlFor={`${idBase}-input`}>
+          {role === "origin" ? ra.originLabel : role === "destination" ? ra.destinationLabel : etiqueta}
         </label>
         <input
-          id={`${role}-input`}
+          id={`${idBase}-input`}
           className={styles.input}
           type="text"
           role="combobox"
@@ -286,31 +332,33 @@ export function RouteAutocompleteField({ role, placeholder, isPicking, onPickTar
             )}
           </ul>
         )}
-        {node && (
-          <button type="button" className={styles.iconBtn} title={ra.clearRole(etiqueta)} onClick={() => clearNode()}>
+        {(node || role === "stop") && (
+          <button type="button" className={styles.iconBtn} title={clearTitle} onClick={() => clearNode()}>
             <IconClose size={16} />
-            <span className="sr-only">{ra.clearRole(etiqueta)}</span>
+            <span className="sr-only">{clearTitle}</span>
           </button>
         )}
         {/* El estado apretado cambia de forma (chincheta -> mira) y de texto,
             no solo de color: tiene que leerse igual con daltonismo o con el
             brillo al mínimo. */}
-        <button
-          type="button"
-          className={[styles.iconBtn, isPicking ? styles.pinActive : ""].join(" ")}
-          aria-pressed={isPicking}
-          title={isPicking ? ra.pickOnMapActive(etiqueta) : ra.pickOnMap(etiqueta)}
-          onClick={onPickTarget}
-        >
-          {isPicking ? <IconCrosshair /> : <IconPin />}
-          <span className="sr-only">{isPicking ? ra.pickOnMapActiveSr(etiqueta) : ra.pickOnMap(etiqueta)}</span>
-        </button>
+        {onPickTarget && (
+          <button
+            type="button"
+            className={[styles.iconBtn, isPicking ? styles.pinActive : ""].join(" ")}
+            aria-pressed={isPicking}
+            title={isPicking ? ra.pickOnMapActive(etiqueta) : ra.pickOnMap(etiqueta)}
+            onClick={onPickTarget}
+          >
+            {isPicking ? <IconCrosshair /> : <IconPin />}
+            <span className="sr-only">{isPicking ? ra.pickOnMapActiveSr(etiqueta) : ra.pickOnMap(etiqueta)}</span>
+          </button>
+        )}
       </div>
       {result && (
         <p
           className={[
             styles.result,
-            role === "origin" ? styles.resultOrigin : styles.resultDest,
+            role === "origin" ? styles.resultOrigin : role === "destination" ? styles.resultDest : "",
             result.kind === "warn" ? styles.resultWarn : "",
             result.kind === "error" ? styles.resultError : "",
           ].join(" ")}

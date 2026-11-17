@@ -32,6 +32,16 @@ export function originIcon(): L.DivIcon {
   });
 }
 
+/** Parada intermedia: un círculo con su número, distinto del origen (target) y del destino (pin). */
+export function stopIcon(n: number): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<div class="${styles.stopMarker}">${n}</div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+}
+
 export function destinationIcon(): L.DivIcon {
   return L.divIcon({
     className: "",

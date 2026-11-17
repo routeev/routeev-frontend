@@ -1,6 +1,6 @@
 import { Marker, Popup } from "react-leaflet";
 import { useTranslation } from "../../i18n/LanguageProvider";
-import { destinationIcon, originIcon } from "../markerIcons";
+import { destinationIcon, originIcon, stopIcon } from "../markerIcons";
 import { useMapStore } from "../mapStore";
 
 export function OriginDestinationMarkers() {
@@ -8,6 +8,7 @@ export function OriginDestinationMarkers() {
   const om = t.map.layers.originDestinationMarkers;
   const originNode = useMapStore((s) => s.originNode);
   const destinationNode = useMapStore((s) => s.destinationNode);
+  const paradas = useMapStore((s) => s.paradas);
 
   return (
     <>
@@ -19,6 +20,17 @@ export function OriginDestinationMarkers() {
             {originNode.name}
           </Popup>
         </Marker>
+      )}
+      {paradas.map((p, i) =>
+        p.point ? (
+          <Marker key={p.key} position={[p.point.lat, p.point.lon]} icon={stopIcon(i + 1)} zIndexOffset={400}>
+            <Popup>
+              <b>{om.stop(i + 1)}</b>
+              <br />
+              {p.point.name}
+            </Popup>
+          </Marker>
+        ) : null
       )}
       {destinationNode && (
         <Marker
