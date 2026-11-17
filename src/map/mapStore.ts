@@ -90,6 +90,12 @@ interface MapState {
   routeMode: RouteModo;
   /** Calcular también la vuelta (un viaje de dos tramos). */
   idaYVuelta: boolean;
+  /**
+   * Paradas intermedias, en el orden en que se pasa por ellas (entre el origen y el destino).
+   * Cada una es un "lugar" con su propia llave para React y su propia revisión (mismo motivo
+   * que originRevision). Un lugar vacío es una parada que se agregó y todavía no se eligió.
+   */
+  paradas: Parada[];
 
   // Origen y destino son RoutePoint, no GraphNode: un punto puede ser una
   // coordenada cruda de un toque en el mapa y no corresponder a ningún nodo
@@ -163,6 +169,10 @@ interface MapState {
   setTramos: (tramos: TramoViaje[] | null, resumen: ResumenViaje | null) => void;
   /** Pasa a mirar otro tramo del viaje. */
   selectTramo: (index: number) => void;
+  /** Agrega una parada vacía al final (no hace nada si ya está el máximo). */
+  addParada: () => void;
+  setParada: (key: number, p: RoutePoint) => void;
+  removeParada: (key: number) => void;
 
   setOrigin: (p: RoutePoint) => void;
   setDestination: (p: RoutePoint) => void;
@@ -227,6 +237,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   consumoViaje: "",
   routeMode: "eficiente",
   idaYVuelta: false,
+  paradas: [],
 
   originNode: null,
   destinationNode: null,
@@ -295,11 +306,14 @@ export const useMapStore = create<MapState>((set, get) => ({
   // Mismo criterio que setRouteMode: la ruta que hay en pantalla se calculó para otro tipo de
   // viaje (de ida, o de ida y vuelta).
   setIdaYVuelta: (idaYVuelta) =>
-    set((s) =>
-      s.idaYVuelta === idaYVuelta
+    set((s) => {
+      // Con más paradas de las que entran en un viaje de ida y vuelta (la API acepta hasta
+      // seis tramos) no se puede pasar a ida y vuelta: la pantalla ya lo muestra apagado.
+      if (idaYVuelta && s.paradas.length > MAX_PARADAS_IDA_Y_VUELTA) return {};
+      return s.idaYVuelta === idaYVuelta
         ? { idaYVuelta }
-        : { idaYVuelta, lastResult: null, lastRoutePayload: null, replaySuffix: undefined }
-    ),
+        : { idaYVuelta, lastResult: null, lastRoutePayload: null, replaySuffix: undefined };
+    }),
   setTramos: (tramos, resumen) =>
     set({
       tramos,
@@ -314,6 +328,36 @@ export const useMapStore = create<MapState>((set, get) => ({
       return tramo
         ? { lastResult: tramo.result, lastRoutePayload: tramo.payload, replaySuffix: undefined, selectedStationId: null }
         : {};
+    }),
+
+  addParada: () =>
+    set((s) =>
+      s.paradas.length >= maxParadas(s.idaYVuelta)
+        ? {}
+        : { paradas: [...s.paradas, { key: siguienteLlaveDeParada(), point: null, revision: 0 }] }
+    ),
+  // Cambiar una parada invalida la ruta calculada, igual que cambiar el origen: el viaje
+  // pasaba por otro lado. "Cambió" se mide por distancia, como en setOrigin.
+  setParada: (key, p) =>
+    set((s) => {
+      const actual = s.paradas.find((x) => x.key === key);
+      if (!actual) return {};
+      const changed =
+        actual.point == null || haversineKm(actual.point.lat, actual.point.lon, p.lat, p.lon) > SAME_SPOT_KM;
+      return {
+        paradas: s.paradas.map((x) => (x.key === key ? { ...x, point: p, revision: x.revision + 1 } : x)),
+        ...(changed ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      };
+    }),
+  removeParada: (key) =>
+    set((s) => {
+      const actual = s.paradas.find((x) => x.key === key);
+      if (!actual) return {};
+      return {
+        paradas: s.paradas.filter((x) => x.key !== key),
+        // Sacar una parada vacía no cambia el viaje; sacar una elegida, sí.
+        ...(actual.point != null ? { lastResult: null, lastRoutePayload: null, replaySuffix: undefined } : {}),
+      };
     }),
 
   setOrigin: (p) =>
@@ -360,6 +404,9 @@ export const useMapStore = create<MapState>((set, get) => ({
         // otro rol (ver el comentario de originRevision arriba).
         originRevision: s.originRevision + 1,
         destinationRevision: s.destinationRevision + 1,
+        // Invertir el viaje es recorrerlo al revés: las paradas también se pasan en el orden
+        // contrario. Cada una conserva su llave (y su texto, si se está escribiendo).
+        paradas: [...s.paradas].reverse(),
         // Con un solo punto puesto, el swap lo mueve al otro rol y deja este
         // vacío: el próximo toque del mapa tiene que ir al hueco, no pisar el
         // punto que se acaba de mover -- mismo criterio que clearOrigin/
@@ -435,6 +482,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       tramos: null,
       resumenViaje: null,
       idaYVuelta: false,
+      paradas: [],
       replaySuffix: undefined,
       selectedStationId: null,
       // Se resetea junto con el destino, a diferencia del vehículo y la
@@ -449,6 +497,28 @@ export const useMapStore = create<MapState>((set, get) => ({
       consumoViaje: "",
     }),
 }));
+
+/** Una parada intermedia: ver MapState.paradas. */
+export interface Parada {
+  key: number;
+  point: RoutePoint | null;
+  revision: number;
+}
+
+/** Cuántas paradas entran en un pedido: la API acepta hasta 6 puntos y 6 tramos. */
+export const MAX_PARADAS = 4;
+/** Con ida y vuelta se recorren dos veces: 3 puntos van y vuelven en 4 tramos, 4 puntos en 6. */
+export const MAX_PARADAS_IDA_Y_VUELTA = 2;
+
+export function maxParadas(idaYVuelta: boolean): number {
+  return idaYVuelta ? MAX_PARADAS_IDA_Y_VUELTA : MAX_PARADAS;
+}
+
+let ultimaLlaveDeParada = 0;
+function siguienteLlaveDeParada(): number {
+  ultimaLlaveDeParada += 1;
+  return ultimaLlaveDeParada;
+}
 
 /** Un tramo de un viaje de varios tramos, con lo mismo que lastResult y lastRoutePayload. */
 export interface TramoViaje {
@@ -535,6 +605,8 @@ export function calculateGateMissing(params: {
   destination: { lat: number; lon: number } | null;
   /** cargadorEnDestino ya tiene respuesta (no es null). */
   chargerAnswered: boolean;
+  /** Paradas agregadas y sin elegir todavía. */
+  paradasSinPunto?: number;
 }): string[] {
   const { vehiclesLoaded, hasSelectedVehicle, origin, destination, chargerAnswered } = params;
   const missing: string[] = [];
@@ -550,6 +622,7 @@ export function calculateGateMissing(params: {
   if (origin && destination && haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
     missing.push("origen y destino están demasiado cerca");
   }
+  if ((params.paradasSinPunto ?? 0) > 0) missing.push("elegí las paradas o quitalas");
   if (!chargerAnswered) missing.push("respondé si podés cargar en el destino");
   return missing;
 }

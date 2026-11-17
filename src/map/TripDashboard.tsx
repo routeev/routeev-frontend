@@ -7,6 +7,7 @@ import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { ComoLlegar } from "./ComoLlegar";
 import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult, tramoActivo } from "./mapStore";
+import { etiquetaDeTramo } from "./viaje";
 import {
   IconAlert,
   IconBlocked,
@@ -62,6 +63,8 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const clearResult = useMapStore((s) => s.clearResult);
   const tramos = useMapStore((s) => s.tramos);
   const resumenViaje = useMapStore((s) => s.resumenViaje);
+  const idaYVueltaViaje = useMapStore((s) => s.idaYVuelta);
+  const conParadas = useMapStore((s) => s.paradas.some((p) => p.point != null));
   const selectTramo = useMapStore((s) => s.selectTramo);
   const autoElegido = useMapStore(selectedVehicle);
   // Lazy init: lee localStorage una sola vez al montar, no en cada render.
@@ -191,7 +194,14 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // valen mientras lastResult sea uno de ellos (ver tramoActivo).
   const tramoMirado = tramoActivo(tramos, result);
   const tl = td.legs;
-  const tramoLabel = (i: number) => (i === 0 ? tl.out : i === (tramos?.length ?? 0) - 1 ? tl.back : tl.leg(i + 1));
+  // El total que se pidió, no los que volvieron: si un tramo no tuvo ruta, la mitad de ida y vuelta
+  // se sigue contando sobre el viaje entero.
+  const tramoLabel = (i: number) => {
+    const e = etiquetaDeTramo(i, resumenViaje?.tramos_pedidos ?? tramos?.length ?? 0, idaYVueltaViaje);
+    if (e.tipo === "ida") return e.n == null ? tl.out : tl.outN(e.n);
+    if (e.tipo === "vuelta") return e.n == null ? tl.back : tl.backN(e.n);
+    return tl.leg(e.n ?? i + 1);
+  };
 
   return (
     <>
@@ -217,7 +227,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
             {resumenViaje && (
               <p className={ui.muted}>
                 {resumenViaje.completo
-                  ? tl.summary(
+                  ? (conParadas ? tl.summaryStops : tl.summary)(
                       formatDuration(resumenViaje.tiempo_total_min),
                       tl.recharges(resumenViaje.recargas),
                       formatUyu(resumenViaje.costo_uyu_total)

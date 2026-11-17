@@ -49,6 +49,8 @@ export function nextTripStep(
     destination: { lat: number; lon: number } | null;
     /** cargadorEnDestino ya tiene respuesta (no es null). */
     chargerAnswered: boolean;
+    /** Paradas agregadas y sin elegir todavía. */
+    paradasSinPunto?: number;
   },
   t: (typeof enMap)["nextStep"]
 ): TripStep {
@@ -65,6 +67,11 @@ export function nextTripStep(
   // (ver SAME_POINT_KM en routePoint.ts).
   if (haversineKm(origin.lat, origin.lon, destination.lat, destination.lon) < SAME_POINT_KM) {
     return { text: t.samePoint, done: false, num: 2 };
+  }
+  // Una parada vacía es un campo a la vista que se agregó a propósito: se pide antes que el
+  // vehículo, que vive más abajo.
+  if ((params.paradasSinPunto ?? 0) > 0) {
+    return { text: t.fillStops, done: false, num: 2 };
   }
   if (!vehiclesLoaded) {
     return { text: t.loadingVehicles, done: false, num: 3 };

@@ -54,6 +54,41 @@
   pointer-events: none;
 }
 
+/* Paradas intermedias: una tarjeta por parada, con su número, debajo de la de origen y destino. */
+.stops {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stopCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  column-gap: 8px;
+  padding: 0 8px 0 12px;
+  border-radius: 16px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+}
+
+.stopMark {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 20px;
+  height: 20px;
+  margin-left: -2px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--point-dest);
+  background: var(--bg-panel);
+  color: var(--text);
+  font: 700 11px/1 var(--font-body);
+}
+
 .swapCell {
   grid-column: 3;
   grid-row: 1 / span 2;

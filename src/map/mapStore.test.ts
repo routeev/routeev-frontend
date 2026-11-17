@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { CompareRoutesResult } from "../api/route";
 import type { Vehicle } from "../api/vehicles";
-import { calculateGateMissing, consumoViajeKwhKm, tramoActivo, useMapStore, vehicleForResult } from "./mapStore";
+import {
+  calculateGateMissing,
+  consumoViajeKwhKm,
+  MAX_PARADAS,
+  MAX_PARADAS_IDA_Y_VUELTA,
+  tramoActivo,
+  useMapStore,
+  vehicleForResult,
+} from "./mapStore";
 import { fromCoords, fromNode, pointKey, SAME_POINT_KM, suggestedName } from "./routePoint";
 
 // calculateGateMissing es una función pura exportada: no necesita el store
@@ -330,5 +338,113 @@ describe("viaje de varios tramos (ida y vuelta)", () => {
     expect(s.idaYVuelta).toBe(false);
     expect(s.tramos).toBeNull();
     expect(s.resumenViaje).toBeNull();
+  });
+});
+
+describe("paradas intermedias", () => {
+  const DURAZNO = { name: "Durazno", lat: -33.38, lon: -56.52 };
+  const TACUAREMBO = { name: "Tacuarembó", lat: -31.71, lon: -55.98 };
+  const resultado = { astar: { found: true } } as unknown as CompareRoutesResult;
+
+  beforeEach(() => useMapStore.getState().resetTripPlanning());
+
+  it("agregar una parada deja un lugar vacío y respeta el máximo", () => {
+    for (let i = 0; i < MAX_PARADAS + 2; i++) useMapStore.getState().addParada();
+
+    const { paradas } = useMapStore.getState();
+    expect(paradas).toHaveLength(MAX_PARADAS);
+    expect(paradas.every((p) => p.point == null)).toBe(true);
+    expect(new Set(paradas.map((p) => p.key)).size).toBe(MAX_PARADAS);
+  });
+
+  it("con ida y vuelta entran menos paradas: la vuelta pasa por las mismas", () => {
+    useMapStore.getState().setIdaYVuelta(true);
+    for (let i = 0; i < MAX_PARADAS; i++) useMapStore.getState().addParada();
+
+    expect(useMapStore.getState().paradas).toHaveLength(MAX_PARADAS_IDA_Y_VUELTA);
+  });
+
+  it("no se puede pasar a ida y vuelta con más paradas de las que entran", () => {
+    for (let i = 0; i < MAX_PARADAS_IDA_Y_VUELTA + 1; i++) useMapStore.getState().addParada();
+
+    useMapStore.getState().setIdaYVuelta(true);
+
+    expect(useMapStore.getState().idaYVuelta).toBe(false);
+  });
+
+  it("elegir una parada guarda el punto, sube su revisión y suelta la ruta calculada", () => {
+    useMapStore.getState().addParada();
+    const { key } = useMapStore.getState().paradas[0]!;
+    useMapStore.getState().setLastResult(resultado, null);
+
+    useMapStore.getState().setParada(key, DURAZNO);
+
+    const p = useMapStore.getState().paradas[0]!;
+    expect(p.point).toEqual(DURAZNO);
+    expect(p.revision).toBe(1);
+    expect(useMapStore.getState().lastResult).toBeNull();
+  });
+
+  it("volver a elegir el mismo lugar no suelta la ruta, pero sí sube la revisión", () => {
+    useMapStore.getState().addParada();
+    const { key } = useMapStore.getState().paradas[0]!;
+    useMapStore.getState().setParada(key, DURAZNO);
+    useMapStore.getState().setLastResult(resultado, null);
+
+    useMapStore.getState().setParada(key, { ...DURAZNO });
+
+    expect(useMapStore.getState().lastResult).toBe(resultado);
+    expect(useMapStore.getState().paradas[0]!.revision).toBe(2);
+  });
+
+  it("sacar una parada elegida suelta la ruta; sacar una vacía no", () => {
+    useMapStore.getState().addParada();
+    useMapStore.getState().addParada();
+    const [vacia, elegida] = useMapStore.getState().paradas;
+    useMapStore.getState().setParada(elegida!.key, DURAZNO);
+    useMapStore.getState().setLastResult(resultado, null);
+
+    useMapStore.getState().removeParada(vacia!.key);
+    expect(useMapStore.getState().lastResult).toBe(resultado);
+
+    useMapStore.getState().removeParada(elegida!.key);
+    expect(useMapStore.getState().paradas).toHaveLength(0);
+    expect(useMapStore.getState().lastResult).toBeNull();
+  });
+
+  it("invertir el viaje invierte el orden de las paradas, y cada una conserva su llave", () => {
+    useMapStore.getState().setOrigin(fromCoords(-34.9, -56.18));
+    useMapStore.getState().setDestination(fromCoords(-30.9, -55.55));
+    useMapStore.getState().addParada();
+    useMapStore.getState().addParada();
+    const [a, b] = useMapStore.getState().paradas;
+    useMapStore.getState().setParada(a!.key, DURAZNO);
+    useMapStore.getState().setParada(b!.key, TACUAREMBO);
+
+    useMapStore.getState().swapEnds();
+
+    const despues = useMapStore.getState().paradas;
+    expect(despues.map((p) => p.point?.name)).toEqual(["Tacuarembó", "Durazno"]);
+    expect(despues.map((p) => p.key)).toEqual([b!.key, a!.key]);
+  });
+
+  it("empezar un viaje nuevo vacía las paradas", () => {
+    useMapStore.getState().addParada();
+
+    useMapStore.getState().resetTripPlanning();
+
+    expect(useMapStore.getState().paradas).toEqual([]);
+  });
+
+  it("una parada sin elegir impide calcular", () => {
+    const listo = {
+      vehiclesLoaded: true,
+      hasSelectedVehicle: true,
+      origin: { lat: -34.9, lon: -56.18 },
+      destination: { lat: -30.9, lon: -55.55 },
+      chargerAnswered: true,
+    };
+    expect(calculateGateMissing(listo)).toEqual([]);
+    expect(calculateGateMissing({ ...listo, paradasSinPunto: 1 })).toEqual(["elegí las paradas o quitalas"]);
   });
 });
