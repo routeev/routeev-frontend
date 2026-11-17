@@ -17,6 +17,16 @@ export const map = {
       rapido: "Prioritizes arriving sooner, even if it uses more battery.",
       economico: "Prioritizes spending less money on recharges.",
     },
+    legs: {
+      label: "Trip leg",
+      out: "Outbound",
+      back: "Return",
+      leg: (n: number) => `Leg ${n}`,
+      summary: (time: string, recharges: string, cost: string) => `Round trip: ${time} · ${recharges} · ${cost}`,
+      recharges: (n: number) => (n === 1 ? "1 recharge" : `${n} recharges`),
+      incomplete: "We couldn't plan the whole trip: check the leg that has no route.",
+      hint: "Each leg is started separately: when you arrive, move on to the next one.",
+    },
     ownConsumption: (cons: string) =>
       `Calculated with ${cons} kWh/100 km, the consumption you set for this trip.`,
     margin: {
@@ -341,6 +351,12 @@ export const map = {
       eficiente: "Most efficient",
       rapido: "Fastest arrival",
       economico: "Lowest cost",
+    },
+    roundTrip: {
+      legend: "One way or round trip?",
+      oneWay: "One way",
+      roundTrip: "Round trip",
+      help: "We also plan the way back, starting with the battery you arrive with.",
     },
     useMyLocation: "Use my location",
     locatingYou: "Finding your location...",

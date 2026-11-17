@@ -6,7 +6,7 @@ import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { ComoLlegar } from "./ComoLlegar";
-import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult } from "./mapStore";
+import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult, tramoActivo } from "./mapStore";
 import {
   IconAlert,
   IconBlocked,
@@ -60,6 +60,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const stations = useMapStore((s) => s.stations);
   const startBatteryPct = useMapStore((s) => s.startBatteryPct);
   const clearResult = useMapStore((s) => s.clearResult);
+  const tramos = useMapStore((s) => s.tramos);
+  const resumenViaje = useMapStore((s) => s.resumenViaje);
+  const selectTramo = useMapStore((s) => s.selectTramo);
   const autoElegido = useMapStore(selectedVehicle);
   // Lazy init: lee localStorage una sola vez al montar, no en cada render.
   const [radarVibrationEnabled, setRadarVibrationEnabledState] = useState(getRadarVibrationEnabled);
@@ -184,9 +187,47 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
     if (state.myPosition) state.leafletMap?.setView(state.myPosition, AUTO_LOCATE_ZOOM);
   }
 
+  // Un viaje de varios tramos (hoy, ida y vuelta): se mira y se inicia de a uno. Los tramos
+  // valen mientras lastResult sea uno de ellos (ver tramoActivo).
+  const tramoMirado = tramoActivo(tramos, result);
+  const tl = td.legs;
+  const tramoLabel = (i: number) => (i === 0 ? tl.out : i === (tramos?.length ?? 0) - 1 ? tl.back : tl.leg(i + 1));
+
   return (
     <>
       <div className={ui.body}>
+        {tramos && tramoMirado >= 0 && (
+          <div className={styles.legs}>
+            <div role="radiogroup" aria-label={tl.label} className={ui.segmented}>
+              {tramos.map((tramo, i) => (
+                <button
+                  key={tramo.payload?.plan_id ?? i}
+                  type="button"
+                  role="radio"
+                  aria-checked={i === tramoMirado}
+                  className={ui.segOption}
+                  // Con el viaje en marcha no se cambia de tramo: se termina el que está.
+                  disabled={live.active}
+                  onClick={() => selectTramo(i)}
+                >
+                  {tramoLabel(i)}
+                </button>
+              ))}
+            </div>
+            {resumenViaje && (
+              <p className={ui.muted}>
+                {resumenViaje.completo
+                  ? tl.summary(
+                      formatDuration(resumenViaje.tiempo_total_min),
+                      tl.recharges(resumenViaje.recargas),
+                      formatUyu(resumenViaje.costo_uyu_total)
+                    )
+                  : tl.incomplete}
+              </p>
+            )}
+            <p className={ui.muted}>{tl.hint}</p>
+          </div>
+        )}
         <div className={styles.header}>
           <div className={styles.headRow}>
             <div className={styles.headText}>

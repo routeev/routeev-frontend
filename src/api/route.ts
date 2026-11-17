@@ -307,6 +307,42 @@ export function planRoute(payload: RoutePlanPayload): Promise<CompareRoutesResul
 }
 
 /**
+ * Un viaje de varios tramos (POST /api/route/plan-multiple): hoy, la ida y la vuelta. Cada
+ * tramo es un plan como el de planRoute(), y sale con la batería con la que llegó el anterior.
+ */
+export interface RoutePlanMultiplePayload extends Omit<RoutePlanPayload, "origen" | "destino" | "comparar"> {
+  /** Origen, paradas intermedias y destino, en orden (de 2 a 6). */
+  puntos: { lat: number; lon: number }[];
+  /** De vuelta por los mismos puntos, al revés. */
+  ida_y_vuelta?: boolean;
+}
+
+/** El viaje entero, sumando los tramos que se pudieron calcular. */
+export interface ResumenViaje {
+  /** Se calcularon todos los tramos y todos llegaron respetando el margen. */
+  completo: boolean;
+  tramos_pedidos: number;
+  tramos_calculados: number;
+  tiempo_total_min: number;
+  energia_kwh: number;
+  costo_uyu_total: number;
+  recargas: number;
+  bateria_llegada_kwh: number | null;
+  bateria_llegada_pct: number | null;
+}
+
+export interface PlanMultipleResult {
+  ida_y_vuelta: boolean;
+  /** Cada uno con la misma forma que la respuesta de /plan. Si uno no tiene ruta, es el último. */
+  tramos: CompareRoutesResultV2[];
+  resumen: ResumenViaje;
+}
+
+export function planRouteMultiple(payload: RoutePlanMultiplePayload): Promise<PlanMultipleResult> {
+  return apiFetch<PlanMultipleResult>("/api/route/plan-multiple", { method: "POST", body: payload });
+}
+
+/**
  * Adapta una respuesta de planRoute() (v2) a la misma forma que devuelve
  * compareRoutes() (v1), para que el resto de la interfaz no tenga que saber
  * cual de las dos calculó la ruta. `originName`/`destinationName` van aparte

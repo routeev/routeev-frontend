@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   toCompareRoutesResult,
@@ -146,5 +146,102 @@ describe("Datos del viaje -- consumo propio", () => {
 
     expect(screen.queryByText(/el consumo que pusiste/)).toBeNull();
     expect(screen.getByText("50")).toBeInTheDocument();
+  });
+});
+
+describe("Datos del viaje -- ida y vuelta", () => {
+  const RESUMEN = {
+    completo: true,
+    tramos_pedidos: 2,
+    tramos_calculados: 2,
+    tiempo_total_min: 310,
+    energia_kwh: 80,
+    costo_uyu_total: 1500,
+    recargas: 2,
+    bateria_llegada_kwh: 12,
+    bateria_llegada_pct: 20,
+  };
+  const ida = {
+    result: resultado("eficiente"),
+    payload: { plan_id: "p1", origin_name: "Montevideo", destination_name: "Punta del Este" },
+  };
+  const vuelta = {
+    result: { ...resultado("eficiente"), origin: { name: "Punta del Este" }, destination: { name: "Montevideo" } },
+    payload: { plan_id: "p2", origin_name: "Punta del Este", destination_name: "Montevideo" },
+  };
+
+  function renderViaje(live: typeof LIVE_TRIP = LIVE_TRIP, resumen = RESUMEN) {
+    useMapStore.getState().setTramos([ida, vuelta], resumen);
+    return render(
+      <LanguageProvider>
+        <TripDashboard liveTrip={live} />
+      </LanguageProvider>
+    );
+  }
+
+  afterEach(() =>
+    useMapStore.setState({ lastResult: null, lastRoutePayload: null, tramos: null, resumenViaje: null })
+  );
+
+  it("muestra Ida y Vuelta, arranca en la ida y resume el viaje entero", () => {
+    renderViaje();
+
+    expect(screen.getByRole("radiogroup", { name: "Tramo del viaje" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Ida" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Vuelta" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText(/Ida y vuelta: 5 h 10 min · 2 recargas · /)).toBeInTheDocument();
+    expect(screen.getByText("Cada tramo se inicia por separado: al llegar, pasá al siguiente.")).toBeInTheDocument();
+  });
+
+  it("pasar a la Vuelta muestra el tramo de vuelta, con el origen y el destino al revés", () => {
+    const { container } = renderViaje();
+    const titulo = () => container.querySelector("h2")!.textContent ?? "";
+    expect(titulo()).toMatch(/^Montevideo\s*→\s*Punta del Este/);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Vuelta" }));
+
+    expect(screen.getByRole("radio", { name: "Vuelta" })).toHaveAttribute("aria-checked", "true");
+    expect(titulo()).toMatch(/^Punta del Este\s*→\s*Montevideo/);
+    // Lo que se inicia ahora es el plan de la vuelta.
+    expect(useMapStore.getState().lastRoutePayload?.plan_id).toBe("p2");
+  });
+
+  it("con el viaje en marcha no deja cambiar de tramo", () => {
+    const enMarcha = {
+      active: true,
+      finished: false,
+      livePosition: null,
+      distanceKm: 10,
+      totalKm: 100,
+      batteryKwh: 30,
+      capacityKwh: 60,
+      elapsedMin: 12,
+      speedKmh: 90,
+      heading: null,
+      statusText: "",
+      statusKind: "",
+      advisory: null,
+      radarAlert: null,
+      gpsAccuracyM: null,
+      gpsGapMs: null,
+      saveError: null,
+    } as LiveTripUi;
+    renderViaje({ ...LIVE_TRIP, ui: enMarcha });
+
+    expect(screen.getByRole("radio", { name: "Vuelta" })).toBeDisabled();
+  });
+
+  it("si no se pudo calcular todo, lo dice en vez de un resumen", () => {
+    renderViaje(LIVE_TRIP, { ...RESUMEN, completo: false, tramos_calculados: 1 });
+
+    expect(screen.getByText(/No pudimos calcular el viaje completo/)).toBeInTheDocument();
+    expect(screen.queryByText(/Ida y vuelta: /)).toBeNull();
+  });
+
+  it("un viaje de un solo tramo no muestra el selector", () => {
+    useMapStore.setState({ tramos: null, resumenViaje: null });
+    renderDashboard(resultado("eficiente"));
+
+    expect(screen.queryByRole("radiogroup", { name: "Tramo del viaje" })).toBeNull();
   });
 });
