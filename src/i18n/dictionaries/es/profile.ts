@@ -114,7 +114,7 @@ export const profile = {
     errName: "Ponele un nombre.",
     errDuplicate: "Ya tenés un auto con ese nombre. Probá, por ejemplo, agregándole el año.",
     errBattery: "Poné la batería en kWh, de 1 para arriba (ej. 44,9).",
-    errConsumption: "Poné el consumo en kWh por km, de 0,01 para arriba (ej. 0,18).",
+    errConsumption: "Poné el consumo en kWh cada 100 km, de 1 para arriba (ej. 18).",
     errCharging: "Poné la carga máxima en kW, de 1 para arriba (ej. 50).",
     rangeEstimate: "Autonomía estimada",
     save: "Agregar a mis autos",

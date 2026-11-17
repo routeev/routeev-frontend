@@ -317,9 +317,9 @@
   letter-spacing: 0.42em;
 }
 
-/* La unidad dentro del campo, a la derecha. */
+/* La unidad dentro del campo, a la derecha. Lugar para la más larga: «kWh/100 km». */
 .inputWithUnit {
-  padding-right: 70px;
+  padding-right: 96px;
 }
 
 .unit {

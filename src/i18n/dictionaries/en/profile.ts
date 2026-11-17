@@ -108,7 +108,7 @@ export const profile = {
     errName: "Give it a name.",
     errDuplicate: "You already have a car with that name. Try adding the year, for example.",
     errBattery: "Enter the battery in kWh, 1 or more (e.g. 44.9).",
-    errConsumption: "Enter consumption in kWh per km, 0.01 or more (e.g. 0.18).",
+    errConsumption: "Enter consumption in kWh per 100 km, 1 or more (e.g. 18).",
     errCharging: "Enter max charge in kW, 1 or more (e.g. 50).",
     rangeEstimate: "Estimated range",
     save: "Add to my cars",

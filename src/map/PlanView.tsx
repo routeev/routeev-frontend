@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { consumoTexto } from "../profile/numbers";
 import { readNumberInput } from "../shared/readNumberInput";
 import { calculateGateMissing, consumoViajeKwhKm, useMapStore, vehicleAutonomyKm } from "./mapStore";
 import { nextTripStep } from "./nextStep";
@@ -125,7 +126,7 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
     vehicle && consumo != null && Number.isFinite(consumo)
       ? vehicle.battery_capacity_kwh / consumo
       : fullRangeKm;
-  const carCons = vehicle ? fmt(vehicle.consumption_kwh_per_km, 3).replace(/0$/, "") : "";
+  const carCons = vehicle ? consumoTexto(fmt, vehicle.consumption_kwh_per_km) : "";
   const level = pct >= 40 ? "high" : pct >= 20 ? "mid" : "low";
   const levelTone = { high: ui.toneAccent, mid: ui.toneWarn, low: ui.toneDanger }[level];
   const levelText = { high: ui.textAccent, mid: ui.textWarn, low: ui.textDanger }[level];
@@ -472,7 +473,7 @@ export function PlanView({ calc, mapNotice, loadFailed, onRetryLoad }: PlanViewP
                           aria-describedby="trip-consumption-help"
                           onChange={(e) => setConsumoViaje(e.target.value)}
                         />
-                        <span className={styles.consumptionUnit}>kWh/km</span>
+                        <span className={styles.consumptionUnit}>kWh/100 km</span>
                       </span>
                       <p
                         id="trip-consumption-help"

@@ -3,7 +3,7 @@ import { create } from "zustand";
 import type { GraphNode, NodeId, Station } from "../api/graph";
 import type { CompareRoutesResult, RouteModo } from "../api/route";
 import type { EvModel, Vehicle } from "../api/vehicles";
-import { parseDecimal } from "../profile/numbers";
+import { consumoDePor100, parseDecimal } from "../profile/numbers";
 import { haversineKm, normalizeForSearch } from "../shared/geo";
 import type { StationFilter } from "./stationFilter";
 import { pointKey, SAME_POINT_KM, SAME_SPOT_KM, type RoutePoint, type TripLogSeed } from "./routePoint";
@@ -444,14 +444,15 @@ const CONSUMO_MIN_KWH_KM = 0.01;
 const CONSUMO_MAX_KWH_KM = 5;
 
 /**
- * El consumo propio del viaje en kWh/km, leído del texto del campo: null si
- * está vacío (se usa el del auto) y NaN si lo escrito no sirve. NaN y no null
- * a propósito: tratar un "0,0" como "vacío" calcularía con el consumo del auto
- * sin avisar, que es justo lo que la persona quiso cambiar.
+ * El consumo propio del viaje en kWh/km, leído del texto del campo, que la persona
+ * escribe en kWh cada 100 km: null si está vacío (se usa el del auto) y NaN si lo
+ * escrito no sirve. NaN y no null a propósito: tratar un "0,0" como "vacío"
+ * calcularía con el consumo del auto sin avisar, que es justo lo que la persona
+ * quiso cambiar.
  */
 export function consumoViajeKwhKm(texto: string): number | null {
   if (!texto.trim()) return null;
-  const n = parseDecimal(texto);
+  const n = consumoDePor100(parseDecimal(texto));
   return n >= CONSUMO_MIN_KWH_KM && n <= CONSUMO_MAX_KWH_KM ? n : NaN;
 }
 

@@ -18,7 +18,7 @@ export const map = {
       economico: "Prioritizes spending less money on recharges.",
     },
     ownConsumption: (cons: string) =>
-      `Calculated with ${cons} kWh/km, the consumption you set for this trip.`,
+      `Calculated with ${cons} kWh/100 km, the consumption you set for this trip.`,
     margin: {
       noPlanFallback:
         " There's no charging plan that respects that margin on this trip: showing the best route available.",
@@ -93,8 +93,8 @@ export const map = {
         open: "Use a different consumption for this trip",
         label: "Consumption for this trip",
         help: (carCons: string) =>
-          `Only for this calculation: your car stays at ${carCons} kWh/km. Useful if you're carrying a load, running the A/C or driving faster on the highway.`,
-        invalid: "Enter consumption in kWh per km, between 0.01 and 5 (e.g. 0.20).",
+          `Only for this calculation: your car stays at ${carCons} kWh/100 km. Useful if you're carrying a load, running the A/C or driving faster on the highway.`,
+        invalid: "Enter consumption in kWh per 100 km, between 1 and 500 (e.g. 20).",
         useCars: "Use the car's",
       },
       noVehicleTitle: "You haven't added a car yet",
