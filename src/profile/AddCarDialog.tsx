@@ -29,7 +29,7 @@ import { resizePhotoForUpload } from "../shared/resizePhoto";
 import { toast } from "../shared/toastStore";
 import { CarOutline } from "../showroom/showroomIcons";
 import { useFormat } from "../showroom/format";
-import { parseDecimal } from "./numbers";
+import { consumoDePor100, consumoPor100, parseDecimal } from "./numbers";
 import { ErrorNotice, Field } from "./parts";
 import { IconPencil } from "./profileIcons";
 import { useModal } from "../shared/useModal";
@@ -100,7 +100,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
       ? {
           name: vehicle.name,
           kwh: exact(vehicle.battery_capacity_kwh),
-          cons: exact(vehicle.consumption_kwh_per_km),
+          cons: exact(consumoPor100(vehicle.consumption_kwh_per_km)),
           kw: exact(vehicle.charging_power_kw),
         }
       : EMPTY
@@ -162,7 +162,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
         ? {
             name: modelLabel(model),
             kwh: f.n(model.bateria_kwh, model.bateria_kwh % 1 ? 1 : 0),
-            cons: f.n(model.consumo_kwh_km, 3).replace(/0$/, ""),
+            cons: exact(consumoPor100(model.consumo_kwh_km)),
             kw: f.n(model.potencia_carga_kw, model.potencia_carga_kw % 1 ? 1 : 0),
           }
         : EMPTY
@@ -201,7 +201,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
       const payload = {
         name: vals.name.trim(),
         battery_capacity_kwh: parseDecimal(vals.kwh),
-        consumption_kwh_per_km: parseDecimal(vals.cons),
+        consumption_kwh_per_km: consumoDePor100(parseDecimal(vals.cons)),
         charging_power_kw: parseDecimal(vals.kw),
         // Solo se manda lo que no es el de siempre (al crear) o lo que cambió (al
         // editar). Así un alta o una edición común viaja igual que antes, también
@@ -258,7 +258,7 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
     else if (existingNames.some((n) => n.toLowerCase() === name.toLowerCase()))
       found.name = a.errDuplicate;
     if (!(parseDecimal(vals.kwh) >= 1)) found.kwh = a.errBattery;
-    if (!(parseDecimal(vals.cons) >= 0.01)) found.cons = a.errConsumption;
+    if (!(consumoDePor100(parseDecimal(vals.cons)) >= 0.01)) found.cons = a.errConsumption;
     if (!(parseDecimal(vals.kw) >= 1)) found.kw = a.errCharging;
     setErrors(found);
     setApiError(null);
@@ -286,7 +286,8 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
   }
 
   const kwh = parseDecimal(vals.kwh);
-  const cons = parseDecimal(vals.cons);
+  // En kWh/km (lo que habla la API), aunque el campo se escriba en kWh cada 100 km.
+  const cons = consumoDePor100(parseDecimal(vals.cons));
   const estimate = kwh > 0 && cons >= 0.01 ? f.n(Math.round(kwh / cons)) : "—";
   const catalogPhoto = source === "catalog" && picked?.foto_url ? picked : null;
   const credit = catalogPhoto
@@ -540,8 +541,8 @@ export function AddCarDialog({ existingNames, vehicle, onClose, returnFocus }: A
                 onChange={(v) => setValue("cons", v)}
                 error={errors.cons}
                 inputMode="decimal"
-                unit="kWh/km"
-                placeholder={f.n(0.169, 3)}
+                unit="kWh/100 km"
+                placeholder={f.n(16.9, 1)}
               />
               <Field
                 id={fieldId("kw")}

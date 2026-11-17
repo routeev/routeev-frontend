@@ -217,31 +217,34 @@ describe("consumo propio del viaje", () => {
   it("lee el campo con coma o con punto, y vacío es usar el del auto", () => {
     expect(consumoViajeKwhKm("")).toBeNull();
     expect(consumoViajeKwhKm("  ")).toBeNull();
-    expect(consumoViajeKwhKm("0,22")).toBe(0.22);
-    expect(consumoViajeKwhKm("0.22")).toBe(0.22);
+    // La persona escribe kWh cada 100 km; sale en kWh/km, lo que habla la API.
+    expect(consumoViajeKwhKm("22")).toBe(0.22);
+    expect(consumoViajeKwhKm("22,5")).toBe(0.225);
+    expect(consumoViajeKwhKm("22.5")).toBe(0.225);
   });
 
   // NaN y no null: tratarlo como vacío calcularía con el consumo del auto sin
   // avisar, que es justo lo que la persona quiso cambiar.
   it("lo que no sirve es NaN, con los mismos límites que la API", () => {
     expect(consumoViajeKwhKm("0")).toBeNaN();
-    expect(consumoViajeKwhKm("0,005")).toBeNaN();
-    expect(consumoViajeKwhKm("5,1")).toBeNaN();
+    expect(consumoViajeKwhKm("0,5")).toBeNaN();
+    expect(consumoViajeKwhKm("500,1")).toBeNaN();
     expect(consumoViajeKwhKm("abc")).toBeNaN();
-    expect(consumoViajeKwhKm("5")).toBe(5);
+    expect(consumoViajeKwhKm("1")).toBe(0.01);
+    expect(consumoViajeKwhKm("500")).toBe(5);
   });
 
   it("cambiar de auto lo vacía; volver a elegir el mismo, no", () => {
-    useMapStore.getState().setConsumoViaje("0,2");
+    useMapStore.getState().setConsumoViaje("20");
     useMapStore.getState().selectVehicle(1);
-    expect(useMapStore.getState().consumoViaje).toBe("0,2");
+    expect(useMapStore.getState().consumoViaje).toBe("20");
 
     useMapStore.getState().selectVehicle(2);
     expect(useMapStore.getState().consumoViaje).toBe("");
   });
 
   it("«Cancelar» (resetTripPlanning) lo vacía: es de ese viaje", () => {
-    useMapStore.getState().setConsumoViaje("0,2");
+    useMapStore.getState().setConsumoViaje("20");
     useMapStore.getState().resetTripPlanning();
     expect(useMapStore.getState().consumoViaje).toBe("");
   });

@@ -210,7 +210,8 @@
 
 .specs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* La del medio es la del consumo, y su unidad («kWh/100 km») es la más larga. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr);
   gap: 8px;
   margin: 0;
   padding-top: 12px;
@@ -240,6 +241,16 @@
   margin-left: 2px;
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* Si no entra, la unidad baja entera en vez de pisar la columna de al lado. */
+.specs dd.cons {
+  white-space: normal;
+}
+
+.specs dd.cons span {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 /* El conector del auto, debajo de las cifras. */

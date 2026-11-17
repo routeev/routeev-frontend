@@ -234,11 +234,11 @@ describe("ProfilePage", () => {
     expect(within(dialog).getByLabelText("Nombre")).toHaveFocus();
     expect(within(dialog).getByLabelText("Nombre")).toHaveValue("BYD Dolphin");
     expect(within(dialog).getByLabelText("Batería")).toHaveValue("44,9");
-    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("0,169");
+    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("16,9");
     expect(within(dialog).getByLabelText("Carga máxima")).toHaveValue("60");
     expect(within(dialog).getByText(/Los viajes que ya hiciste no cambian/)).toBeInTheDocument();
 
-    type("Consumo", "0,155");
+    type("Consumo", "15,5");
     fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
 
     await waitFor(() =>
@@ -288,7 +288,7 @@ describe("ProfilePage", () => {
     const dialog = screen.getByRole("dialog", { name: "Editar «El auto de casa»" });
 
     expect(within(dialog).getByLabelText("Batería")).toHaveValue("45,12");
-    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("0,1455");
+    expect(within(dialog).getByLabelText("Consumo")).toHaveValue("14,55");
     fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
 
     await waitFor(() =>
@@ -392,7 +392,7 @@ describe("ProfilePage", () => {
       within(dialog).getByRole("radio", { name: /GB\/T, con adaptador a CCS2/ })
     ).toBeChecked();
 
-    type("Consumo", "0,155");
+    type("Consumo", "15,5");
     fireEvent.click(within(dialog).getByRole("button", { name: "Guardar cambios" }));
 
     await waitFor(() =>

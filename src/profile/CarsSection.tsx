@@ -323,9 +323,9 @@ function CarCard({ car, onPhoto, onRemovePhoto, onEdit, onDelete }: CarProps) {
           </div>
           <div>
             <dt>{c.consumption}</dt>
-            <dd>
+            <dd className={styles.cons}>
               {fig.cons}
-              <span>kWh/km</span>
+              <span>kWh/100 km</span>
             </dd>
           </div>
           <div>

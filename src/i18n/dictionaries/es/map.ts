@@ -18,7 +18,7 @@ export const map = {
       economico: "Prioriza gastar menos plata en las recargas.",
     },
     ownConsumption: (cons: string) =>
-      `Calculado con ${cons} kWh/km, el consumo que pusiste para este viaje.`,
+      `Calculado con ${cons} kWh/100 km, el consumo que pusiste para este viaje.`,
     margin: {
       noPlanFallback:
         " No hay plan de cargas que respete ese margen en este viaje: se muestra la mejor ruta posible.",
@@ -96,8 +96,8 @@ export const map = {
         open: "Usar otro consumo para este viaje",
         label: "Consumo para este viaje",
         help: (carCons: string) =>
-          `Solo para este cálculo: el auto sigue con ${carCons} kWh/km. Sirve si vas cargado, con el aire prendido o por ruta a más velocidad.`,
-        invalid: "Poné el consumo en kWh por km, entre 0,01 y 5 (ej. 0,20).",
+          `Solo para este cálculo: el auto sigue con ${carCons} kWh/100 km. Sirve si vas cargado, con el aire prendido o por ruta a más velocidad.`,
+        invalid: "Poné el consumo en kWh cada 100 km, entre 1 y 500 (ej. 20).",
         useCars: "Usar el del auto",
       },
       noVehicleTitle: "Todavía no cargaste ningún auto",

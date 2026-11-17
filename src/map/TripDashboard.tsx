@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { EstacionPoi } from "../api/route";
 import { useTranslation } from "../i18n/LanguageProvider";
+import { consumoTexto } from "../profile/numbers";
 import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
@@ -225,7 +226,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
               </span>
               <p className={ui.muted}>{td.tripMode[result.modo]}</p>
               {result.consumo_propio_kwh_km != null && (
-                <p className={ui.muted}>{td.ownConsumption(num(result.consumo_propio_kwh_km, 3).replace(/0$/, ""))}</p>
+                <p className={ui.muted}>{td.ownConsumption(consumoTexto(num, result.consumo_propio_kwh_km))}</p>
               )}
             </div>
           )}

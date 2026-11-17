@@ -132,7 +132,7 @@ describe("Datos del viaje -- consumo propio", () => {
     renderDashboard({ ...resultado("eficiente"), consumo_propio_kwh_km: 0.125 });
 
     expect(
-      screen.getByText("Calculado con 0,125 kWh/km, el consumo que pusiste para este viaje.")
+      screen.getByText("Calculado con 12,5 kWh/100 km, el consumo que pusiste para este viaje.")
     ).toBeInTheDocument();
     // 10 kWh del desglose a 0,125 kWh/km son 80 km. Con el del auto (0,2)
     // se mostrarían 50.
