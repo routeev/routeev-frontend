@@ -188,6 +188,7 @@
   background: var(--warn);
   box-shadow: 0 0 0 3px #0b0e12;
   font: 700 12px/1 var(--font-display);
+  white-space: nowrap;
   color: var(--on-warn);
 }
 

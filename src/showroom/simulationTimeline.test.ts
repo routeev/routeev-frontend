@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { Parada, RouteTramo, SimulateResult } from "../api/showroom";
-import { acumular, armarSegmentos, armarTramos, cumKmDePunto, puntoEnKm, segmentoEnTiempo } from "./simulationTimeline";
+import {
+  acumular,
+  agruparPorLugar,
+  armarSegmentos,
+  armarTramos,
+  cumKmDePunto,
+  etiquetaGrupo,
+  numerarParadas,
+  puntoEnKm,
+  segmentoEnTiempo,
+} from "./simulationTimeline";
 
 const IDA_COORDS: [number, number][] = [
   [-34.9, -56.16],
@@ -137,5 +147,32 @@ describe("armarTramos + armarSegmentos", () => {
 
     // Dos tramos sin paradas: drive(ida) + turn + drive(vuelta).
     expect(segments.map((s) => s.type)).toEqual(["drive", "turn", "drive"]);
+  });
+});
+
+describe("agruparPorLugar + etiquetaGrupo", () => {
+  it("joins outbound and return stops at the same charger into one indicator", () => {
+    const resultado = {
+      detalle: {
+        tramos: [tramo(), tramo({ tramo: "vuelta", route_coords: [...IDA_COORDS].reverse() })],
+      },
+      paradas: [
+        parada({ nombre: "Sarandí Grande" }),
+        parada({ nombre: "Otra", lat: -34.0, lon: -55.8, tramo: "vuelta" }),
+        parada({ nombre: "Sarandí Grande", tramo: "vuelta" }),
+      ],
+    } as unknown as SimulateResult;
+
+    const grupos = agruparPorLugar(numerarParadas(armarTramos(resultado)));
+
+    expect(grupos.map(etiquetaGrupo)).toEqual(["1 · 3", "2"]);
+  });
+
+  it("keeps stops a few hundred meters apart separate", () => {
+    const grupos = agruparPorLugar([
+      { lat: -34.5, lon: -56.0, n: 1 },
+      { lat: -34.505, lon: -56.0, n: 2 },
+    ]);
+    expect(grupos.map(etiquetaGrupo)).toEqual(["1", "2"]);
   });
 });
