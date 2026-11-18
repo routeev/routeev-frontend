@@ -5,7 +5,7 @@ import { IconAlert, IconCheck } from "../map/panelIcons";
 import { useFormat } from "./format";
 import { IconXCircle } from "./showroomIcons";
 import { cargarSimulationMap } from "./simulationMapLoader";
-import { armarTramos, type ParadaConKm } from "./simulationTimeline";
+import { agruparPorLugar, armarTramos, etiquetaGrupo, numerarParadas } from "./simulationTimeline";
 import { tarifaLinea } from "./tarifaTexto";
 import styles from "./SimulationResult.module.css";
 import ui from "./ui.module.css";
@@ -48,9 +48,7 @@ export function SimulationResult({
   const tramos = useMemo(() => (result.llega ? armarTramos(result) : []), [result]);
   const hasMap = tramos.length > 0 && tramos.every((tramo) => tramo.coords.length > 1);
   // Las paradas numeradas en el orden en que se hacen: la ida y después la vuelta.
-  const stops: (ParadaConKm & { n: number })[] = tramos
-    .flatMap((tramo) => tramo.paradas)
-    .map((p, i) => ({ ...p, n: i + 1 }));
+  const stops = numerarParadas(tramos);
 
   if (!result.llega) {
     return (
@@ -75,7 +73,12 @@ export function SimulationResult({
   const tone = toneOf(pct);
   const ida = tramos[0];
   const idaStops = stops.filter((s) => s.tramo === "ida");
-  const fractions = idaStops.map((s) => (ida && ida.totalKm > 0 ? s.cumKm / ida.totalKm : 0));
+  // La tira es la ida. Si la vuelta para en el mismo cargador que una parada
+  // de la ida, ese indicador lleva los dos números ("1 · 3"), igual que en el mapa.
+  const stripGroups = agruparPorLugar(stops).filter((g) => g[0]!.tramo === "ida");
+  const fractions = stripGroups.map((g) =>
+    ida && ida.totalKm > 0 ? g[0]!.cumKm / ida.totalKm : 0
+  );
   const points = [0, ...fractions, 1];
   const roomy = points.every((p, i) => i === 0 || p - points[i - 1]! >= MIN_LABEL_GAP);
   const conTarifas = d.costo_uyu_recargas != null;
@@ -132,14 +135,16 @@ export function SimulationResult({
             <div className={styles.stripLine} />
             <span className={styles.stripOrigin} />
             <span className={styles.stripDest} />
-            {idaStops.map((s, i) => (
+            {stripGroups.map((g, i) => (
               <span
-                key={s.n}
+                key={g[0]!.n}
                 className={styles.stripStop}
                 style={{ "--at": fractions[i] } as CSSProperties}
               >
-                <span className={styles.stopSquare}>{s.n}</span>
-                {roomy && <span className={styles.stripStopName}>{s.ciudad ?? s.nombre}</span>}
+                <span className={styles.stopSquare}>{etiquetaGrupo(g)}</span>
+                {roomy && (
+                  <span className={styles.stripStopName}>{g[0]!.ciudad ?? g[0]!.nombre}</span>
+                )}
               </span>
             ))}
             <span className={styles.stripFrom}>{from}</span>

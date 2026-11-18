@@ -7,7 +7,12 @@ import { IconRetry } from "../map/panelIcons";
 import { useTranslation } from "../i18n/LanguageProvider";
 import { formatDuration } from "../shared/format";
 import { num } from "./num";
-import type { TramoInfo } from "./simulationTimeline";
+import {
+  agruparPorLugar,
+  etiquetaGrupo,
+  numerarParadas,
+  type TramoInfo,
+} from "./simulationTimeline";
 import { useSimulationAnimation } from "./useSimulationAnimation";
 import styles from "./SimulationMap.module.css";
 
@@ -19,13 +24,18 @@ const CAR_SVG =
 // showroom es siempre oscuro, así que no hace falta seguir al tema.
 const ROUTE = "#34e3a8";
 
-function divIcon(className: string, size: number, html = "") {
+function divIcon(className: string, size: number, html = "", width = size) {
   return L.divIcon({
     className: "",
     html: `<div class="${className}">${html}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [width, size],
+    iconAnchor: [width / 2, size / 2],
   });
+}
+
+/** Ancho del cuadrado de una parada: 22 px para "1", más ancho para "1 · 3". */
+function anchoParada(etiqueta: string): number {
+  return etiqueta.length <= 2 ? 22 : 12 + etiqueta.length * 6;
 }
 
 function carIcon() {
@@ -114,7 +124,10 @@ export function SimulationMap({
   const bounds = useMemo(() => tramosInfo.flatMap((tramo) => tramo.coords), [tramosInfo]);
   const origen = tramosInfo[0]!.coords[0]!;
   const destino = tramosInfo[0]!.coords[tramosInfo[0]!.coords.length - 1]!;
-  const paradas = tramosInfo.flatMap((tramo) => tramo.paradas);
+  // Las que caen en el mismo cargador (la ida y la vuelta paran en el mismo
+  // lugar) van en un solo marcador con todos sus números: si no, uno tapaba al otro.
+  const grupos = useMemo(() => agruparPorLugar(numerarParadas(tramosInfo)), [tramosInfo]);
+  const tr = t.showroom.simulationResult;
 
   // La instancia de Leaflet, para el botón de "ver todo" (vive afuera del
   // <MapContainer>). Estado y no ref: en el primer render todavía no existe y
@@ -191,20 +204,30 @@ export function SimulationMap({
               />
             )
           )}
-          {paradas.map((parada, i) => (
-            <Marker
-              key={`${parada.tramo}-${i}`}
-              position={[parada.lat, parada.lon]}
-              icon={divIcon(styles.stopMarker, 22, String(i + 1))}
-              zIndexOffset={300}
-            >
-              <Popup>
-                <b>{parada.nombre}</b>
-                <br />
-                {tm.popupStop(num(parada.kwh, 1), formatDuration(parada.minutos))}
-              </Popup>
-            </Marker>
-          ))}
+          {grupos.map((grupo) => {
+            const primera = grupo[0]!;
+            const etiqueta = etiquetaGrupo(grupo);
+            return (
+              <Marker
+                key={primera.n}
+                position={[primera.lat, primera.lon]}
+                icon={divIcon(styles.stopMarker, 22, etiqueta, anchoParada(etiqueta))}
+                zIndexOffset={300}
+              >
+                <Popup>
+                  <b>{primera.nombre}</b>
+                  {grupo.map((parada) => (
+                    <span key={parada.n}>
+                      <br />
+                      {grupo.length > 1 &&
+                        `${parada.n} · ${parada.tramo === "ida" ? tr.outbound : tr.return}: `}
+                      {tm.popupStop(num(parada.kwh, 1), formatDuration(parada.minutos))}
+                    </span>
+                  ))}
+                </Popup>
+              </Marker>
+            );
+          })}
           <Marker position={origen} icon={divIcon(styles.originMarker, 14)} zIndexOffset={500} />
           <Marker position={destino} icon={divIcon(styles.destMarker, 14)} zIndexOffset={500} />
           <Marker position={origen} icon={carIcon()} zIndexOffset={1000} ref={markerRef} />

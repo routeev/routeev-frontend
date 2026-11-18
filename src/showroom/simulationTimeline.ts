@@ -108,6 +108,43 @@ export function armarTramos(resultado: SimulateResult): TramoInfo[] {
   });
 }
 
+export type ParadaNumerada = ParadaConKm & { n: number };
+
+/** Las paradas numeradas en el orden en que se hacen: la ida y después la vuelta. */
+export function numerarParadas(tramosInfo: TramoInfo[]): ParadaNumerada[] {
+  return tramosInfo.flatMap((tramo) => tramo.paradas).map((p, i) => ({ ...p, n: i + 1 }));
+}
+
+/**
+ * A menos de esta distancia dos paradas son el mismo cargador. Pasa en el ida
+ * y vuelta: el planificador puede elegir la misma estación a la ida y a la
+ * vuelta, y sus marcadores quedaban uno encima del otro (solo se veía uno).
+ */
+const MISMO_LUGAR_KM = 0.05;
+
+/**
+ * Agrupa las paradas que caen en el mismo lugar, para mostrar un solo
+ * indicador con todos sus números ("1 · 3") en vez de dos encimados. Mantiene
+ * el orden de la primera aparición de cada lugar y, dentro del grupo, el de
+ * las paradas.
+ */
+export function agruparPorLugar<T extends { lat: number; lon: number }>(paradas: T[]): T[][] {
+  const grupos: T[][] = [];
+  for (const p of paradas) {
+    const grupo = grupos.find(
+      (g) => haversineKm(g[0]!.lat, g[0]!.lon, p.lat, p.lon) < MISMO_LUGAR_KM
+    );
+    if (grupo) grupo.push(p);
+    else grupos.push([p]);
+  }
+  return grupos;
+}
+
+/** Texto del indicador de un grupo de paradas: "1", o "1 · 3" si coinciden. */
+export function etiquetaGrupo(grupo: { n: number }[]): string {
+  return grupo.map((p) => p.n).join(" · ");
+}
+
 // Ritmo de animación: "manejar" es proporcional a la distancia real (no al
 // tiempo real -- un viaje de 8 horas no puede animarse 8 horas), acotado
 // para que ni una vuelta a la esquina ni cruzar el país se sientan mal.
