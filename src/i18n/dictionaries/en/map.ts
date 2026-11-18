@@ -7,6 +7,17 @@ export const map = {
     label: "Directions",
     appleMaps: "Apple Maps",
     aria: (app: string, place: string) => `Directions to ${place} with ${app} (opens separately)`,
+    // The whole route in the app people already use (NavegarRutaCompleta.tsx).
+    fullRoute: {
+      label: "Navigate the whole route",
+      scopeAll: "the whole route",
+      scopeFirstStop: "up to the first stop",
+      aria: (app: string, scope: string) => `Navigate with ${app}: ${scope} (opens separately)`,
+      noteWithStops:
+        "Google Maps opens the whole route with the charging stops, but it may pick another road between them. Waze and Apple Maps open only up to the first stop.",
+      noteNoStops: "This trip needs no charging: it opens in full. Google Maps may pick another road.",
+      tooMany: "That is more stops than Google Maps accepts. Waze opens only up to the first one.",
+    },
   },
   tripDashboard: {
     // The mode's name comes from routeInput.routeMode (the one that was

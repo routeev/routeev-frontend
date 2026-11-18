@@ -7,6 +7,17 @@ export const map = {
     label: "Cómo llegar",
     appleMaps: "Mapas de Apple",
     aria: (app: string, place: string) => `Cómo llegar a ${place} con ${app} (se abre aparte)`,
+    // La ruta entera en la app que ya usa la persona (NavegarRutaCompleta.tsx).
+    fullRoute: {
+      label: "Navegar la ruta completa",
+      scopeAll: "todo el recorrido",
+      scopeFirstStop: "hasta la primera parada",
+      aria: (app: string, scope: string) => `Navegar con ${app}: ${scope} (se abre aparte)`,
+      noteWithStops:
+        "Google Maps abre todo el recorrido con las paradas de carga, pero puede elegir otro camino entre ellas. Waze y Mapas de Apple abren solo hasta la primera parada.",
+      noteNoStops: "Este viaje no necesita cargar: se abre completo. Google Maps puede elegir otro camino.",
+      tooMany: "Son más paradas de las que acepta Google Maps. Waze abre solo hasta la primera.",
+    },
   },
   tripDashboard: {
     // El nombre del modo sale de routeInput.routeMode (el mismo que se eligió);
