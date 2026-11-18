@@ -6,6 +6,7 @@ import { Checkbox } from "../shared/Checkbox";
 import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { ComoLlegar } from "./ComoLlegar";
+import { NavegarRutaCompleta } from "./NavegarRutaCompleta";
 import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult, tramoActivo } from "./mapStore";
 import { etiquetaDeTramo, totalParaRotular } from "./viaje";
 import {
@@ -192,6 +193,20 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // Un viaje de varios tramos (hoy, ida y vuelta): se mira y se inicia de a uno. Los tramos
   // valen mientras lastResult sea uno de ellos (ver tramoActivo).
   const tramoMirado = tramoActivo(tramos, result);
+
+  // Navegar la ruta completa: de la primera a la última coordenada del recorrido, pasando por las
+  // paradas de carga. Solo si TODAS las paradas traen su ubicación (un replay del historial anterior
+  // a la v2 no la trae): con una de menos, el recorrido que se abriría no sería el del plan.
+  const coordsRuta = primary.route_coords;
+  const paradasNav = primary.recharges.flatMap((r) => (r.lat != null && r.lon != null ? [{ lat: r.lat, lon: r.lon }] : []));
+  const rutaParaNavegar =
+    result.astar.found && coordsRuta.length >= 2 && paradasNav.length === primary.recharges.length
+      ? {
+          origen: { lat: coordsRuta[0]![0], lon: coordsRuta[0]![1] },
+          paradas: paradasNav,
+          destino: { lat: coordsRuta[coordsRuta.length - 1]![0], lon: coordsRuta[coordsRuta.length - 1]![1] },
+        }
+      : null;
   const tl = td.legs;
   // Con el viaje unido, lo que se elige es la ida o la vuelta; sin él (una API anterior), cada tramo.
   const tramoLabel = (i: number) => {
@@ -730,6 +745,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                     </div>
                   );
                 })
+              )}
+              {rutaParaNavegar && (
+                <NavegarRutaCompleta
+                  origen={rutaParaNavegar.origen}
+                  paradas={rutaParaNavegar.paradas}
+                  destino={rutaParaNavegar.destino}
+                />
               )}
             </section>
           </>
