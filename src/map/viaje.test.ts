@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RoutePoint } from "./routePoint";
-import { etiquetaDeTramo, puntosDelViaje, tramosDelViaje } from "./viaje";
+import { etiquetaDeTramo, puntosDelViaje, totalParaRotular, tramosDelViaje } from "./viaje";
 
 const punto = (name: string): RoutePoint => ({ name, lat: 0, lon: 0 });
 const A = punto("A");
@@ -59,5 +59,25 @@ describe("etiquetaDeTramo", () => {
   it("sin ida y vuelta, son tramos numerados desde 1", () => {
     expect(etiquetaDeTramo(0, 3, false)).toEqual({ tipo: "tramo", n: 1 });
     expect(etiquetaDeTramo(2, 3, false)).toEqual({ tipo: "tramo", n: 3 });
+  });
+});
+
+describe("totalParaRotular", () => {
+  it("con el viaje unido (uno, o dos con ida y vuelta) se rotula sobre los que hay: Ida y Vuelta, sin números", () => {
+    // Ida y vuelta con una parada: se pidieron 4 tramos, pero hay DOS viajes.
+    expect(totalParaRotular(2, true, 4)).toBe(2);
+    expect(etiquetaDeTramo(0, totalParaRotular(2, true, 4), true)).toEqual({ tipo: "ida", n: null });
+    expect(etiquetaDeTramo(1, totalParaRotular(2, true, 4), true)).toEqual({ tipo: "vuelta", n: null });
+    expect(totalParaRotular(1, false, 3)).toBe(1);
+  });
+
+  it("con los tramos sueltos (una API anterior) se cuenta sobre los que se pidieron", () => {
+    // Faltó el último tramo de una ida y vuelta con parada: los 3 que volvieron conservan su nombre.
+    expect(totalParaRotular(3, true, 4)).toBe(4);
+    expect(totalParaRotular(3, false, 3)).toBe(3);
+  });
+
+  it("sin el dato de los pedidos, usa los que hay", () => {
+    expect(totalParaRotular(3, false, undefined)).toBe(3);
   });
 });

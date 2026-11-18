@@ -44,3 +44,13 @@ export function etiquetaDeTramo(i: number, total: number, idaYVuelta: boolean): 
   const tipo = i < mitad ? "ida" : "vuelta";
   return { tipo, n: mitad > 1 ? (i % mitad) + 1 : null };
 }
+
+/**
+ * El total sobre el que se numeran las etiquetas del selector. Con el viaje unido hay a lo sumo uno
+ * por sentido (uno, o dos con ida y vuelta), y se rotulan sobre los que hay: «Ida» y «Vuelta». Con los
+ * tramos sueltos (una API anterior, que no manda el viaje unido) hay uno por tramo, y se cuentan sobre
+ * los que se pidieron: si un tramo no tuvo ruta, los demás conservan su nombre.
+ */
+export function totalParaRotular(tramosMostrados: number, idaYVuelta: boolean, tramosPedidos: number | undefined): number {
+  return tramosMostrados <= (idaYVuelta ? 2 : 1) ? tramosMostrados : (tramosPedidos ?? tramosMostrados);
+}

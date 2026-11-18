@@ -7,7 +7,7 @@ import { formatDuration, formatUyu } from "../shared/format";
 import { AUTO_LOCATE_ZOOM } from "./mapConstants";
 import { ComoLlegar } from "./ComoLlegar";
 import { useMapStore, selectedVehicle, batteryPctToKwh, vehicleForResult, tramoActivo } from "./mapStore";
-import { etiquetaDeTramo } from "./viaje";
+import { etiquetaDeTramo, totalParaRotular } from "./viaje";
 import {
   IconAlert,
   IconBlocked,
@@ -64,7 +64,6 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   const tramos = useMapStore((s) => s.tramos);
   const resumenViaje = useMapStore((s) => s.resumenViaje);
   const idaYVueltaViaje = useMapStore((s) => s.idaYVuelta);
-  const conParadas = useMapStore((s) => s.paradas.some((p) => p.point != null));
   const selectTramo = useMapStore((s) => s.selectTramo);
   const autoElegido = useMapStore(selectedVehicle);
   // Lazy init: lee localStorage una sola vez al montar, no en cada render.
@@ -194,10 +193,13 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   // valen mientras lastResult sea uno de ellos (ver tramoActivo).
   const tramoMirado = tramoActivo(tramos, result);
   const tl = td.legs;
-  // El total que se pidió, no los que volvieron: si un tramo no tuvo ruta, la mitad de ida y vuelta
-  // se sigue contando sobre el viaje entero.
+  // Con el viaje unido, lo que se elige es la ida o la vuelta; sin él (una API anterior), cada tramo.
   const tramoLabel = (i: number) => {
-    const e = etiquetaDeTramo(i, resumenViaje?.tramos_pedidos ?? tramos?.length ?? 0, idaYVueltaViaje);
+    const e = etiquetaDeTramo(
+      i,
+      totalParaRotular(tramos?.length ?? 0, idaYVueltaViaje, resumenViaje?.tramos_pedidos),
+      idaYVueltaViaje
+    );
     if (e.tipo === "ida") return e.n == null ? tl.out : tl.outN(e.n);
     if (e.tipo === "vuelta") return e.n == null ? tl.back : tl.backN(e.n);
     return tl.leg(e.n ?? i + 1);
@@ -206,8 +208,10 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
   return (
     <>
       <div className={ui.body}>
-        {tramos && tramoMirado >= 0 && (
+        {tramos && tramoMirado >= 0 && (tramos.length > 1 || (resumenViaje != null && !resumenViaje.completo)) && (
           <div className={styles.legs}>
+            {/* Un viaje con paradas es UNO: sin ida y vuelta no hay nada que elegir. */}
+            {tramos.length > 1 && (
             <div role="radiogroup" aria-label={tl.label} className={ui.segmented}>
               {tramos.map((tramo, i) => (
                 <button
@@ -224,10 +228,11 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                 </button>
               ))}
             </div>
+            )}
             {resumenViaje && (
               <p className={ui.muted}>
                 {resumenViaje.completo
-                  ? (conParadas ? tl.summaryStops : tl.summary)(
+                  ? (idaYVueltaViaje && tramos.length === 2 ? tl.summary : tl.summaryStops)(
                       formatDuration(resumenViaje.tiempo_total_min),
                       tl.recharges(resumenViaje.recargas),
                       formatUyu(resumenViaje.costo_uyu_total)
@@ -235,7 +240,7 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                   : tl.incomplete}
               </p>
             )}
-            <p className={ui.muted}>{tl.hint}</p>
+            {tramos.length > 1 && <p className={ui.muted}>{tl.hint}</p>}
           </div>
         )}
         <div className={styles.header}>
