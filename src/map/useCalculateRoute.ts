@@ -2,7 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { planRoute, planRouteMultiple, toCompareRoutesResult, type ResumenViaje } from "../api/route";
 import { batteryPctToKwh, consumoViajeKwhKm, selectedVehicle, useMapStore, type TramoViaje } from "./mapStore";
 import { suggestedName } from "./routePoint";
-import { puntosDelViaje, tramosDelViaje } from "./viaje";
+import { puntosDelViaje } from "./viaje";
+import { tramosDeLaRespuesta } from "./viajeUnido";
 
 /**
  * Botón "Calcular ruta", portado de js/map/routeCalc.js.
@@ -44,31 +45,18 @@ export function useCalculateRoute() {
         ...(state.routeMode === "eficiente" ? {} : { modo: state.routeMode }),
       };
 
-      // Ida y vuelta, o con paradas: varios tramos, cada uno un plan completo (con su plan_id)
-      // que sale con la batería con la que llegó el anterior. Cada tramo se ve y se inicia como
-      // un viaje de un solo tramo; ver TramoViaje.
+      // Con paradas o ida y vuelta: un solo pedido de varios tramos. La API devuelve el viaje de cada
+      // sentido unido en un plan (con su plan_id): uno solo con paradas, dos (ida y vuelta) con ella. Cada
+      // uno se ve y se inicia como un viaje de siempre; ver tramosDeLaRespuesta.
       const paradas = state.paradas.map((p) => p.point);
       if (state.idaYVuelta || paradas.some((p) => p != null)) {
         const puntos = puntosDelViaje(origin, paradas, destination);
-        const pares = tramosDelViaje(puntos, state.idaYVuelta);
         const multiple = await planRouteMultiple({
           ...opciones,
           puntos: puntos.map((p) => ({ lat: p.lat, lon: p.lon })),
           ida_y_vuelta: state.idaYVuelta,
         });
-        const tramos: TramoViaje[] = multiple.tramos.map((v2, i) => {
-          // La API para en el primer tramo sin ruta: vuelven tantos como se calcularon, en orden.
-          const [desde, hasta] = pares[i] ?? pares[0]!;
-          return {
-            result: {
-              ...toCompareRoutesResult(v2, desde.name, hasta.name),
-              ...(consumoPropio != null ? { consumo_propio_kwh_km: consumoPropio } : {}),
-            },
-            payload: v2.plan_id
-              ? { plan_id: v2.plan_id, origin_name: suggestedName(desde), destination_name: suggestedName(hasta) }
-              : null,
-          };
-        });
+        const tramos = tramosDeLaRespuesta(multiple, puntos, state.idaYVuelta, consumoPropio);
         return { tramos, resumen: multiple.resumen as ResumenViaje | null };
       }
 

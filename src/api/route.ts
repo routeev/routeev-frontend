@@ -331,11 +331,31 @@ export interface ResumenViaje {
   bateria_llegada_pct: number | null;
 }
 
+/**
+ * El viaje de UN sentido como un solo plan: sin ida y vuelta hay uno con todos los tramos; con ella,
+ * dos (la ida y la vuelta, porque entre una y otra uno se queda). Es lo que se muestra, se sigue en
+ * vivo y se registra en el historial.
+ */
+export interface ViajeUnido {
+  sentido: "viaje" | "ida" | "vuelta";
+  /** Índices, en `tramos`, de los tramos que lo forman. */
+  tramos: number[];
+  /** Se calcularon todos los tramos de este sentido. */
+  completo: boolean;
+  /** Con la misma forma que la respuesta de /plan, y su propio `plan_id`. */
+  plan: CompareRoutesResultV2;
+}
+
 export interface PlanMultipleResult {
   ida_y_vuelta: boolean;
   /** Cada uno con la misma forma que la respuesta de /plan. Si uno no tiene ruta, es el último. */
   tramos: CompareRoutesResultV2[];
   resumen: ResumenViaje;
+  /**
+   * El viaje de cada sentido, unido. Opcional: una API anterior no lo manda, y entonces la pantalla
+   * muestra los tramos por separado (ver tramosDeLaRespuesta).
+   */
+  viajes?: ViajeUnido[];
 }
 
 export function planRouteMultiple(payload: RoutePlanMultiplePayload): Promise<PlanMultipleResult> {

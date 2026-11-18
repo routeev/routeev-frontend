@@ -28,7 +28,7 @@ export const map = {
       backN: (n: number) => `Vuelta ${n}`,
       recharges: (n: number) => (n === 1 ? "1 recarga" : `${n} recargas`),
       incomplete: "No pudimos calcular el viaje completo: mirá el tramo que no tiene ruta.",
-      hint: "Cada tramo se inicia por separado: al llegar, pasá al siguiente.",
+      hint: "Cada viaje se inicia por separado: al llegar, pasá al siguiente.",
     },
     ownConsumption: (cons: string) =>
       `Calculado con ${cons} kWh/100 km, el consumo que pusiste para este viaje.`,

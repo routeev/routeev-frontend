@@ -191,7 +191,7 @@ describe("Datos del viaje -- ida y vuelta", () => {
     expect(screen.getByRole("radio", { name: "Ida" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Vuelta" })).toHaveAttribute("aria-checked", "false");
     expect(screen.getByText(/Ida y vuelta: 5 h 10 min · 2 recargas · /)).toBeInTheDocument();
-    expect(screen.getByText("Cada tramo se inicia por separado: al llegar, pasá al siguiente.")).toBeInTheDocument();
+    expect(screen.getByText("Cada viaje se inicia por separado: al llegar, pasá al siguiente.")).toBeInTheDocument();
   });
 
   it("pasar a la Vuelta muestra el tramo de vuelta, con el origen y el destino al revés", () => {
@@ -315,5 +315,68 @@ describe("Datos del viaje -- paradas intermedias", () => {
 
     expect(container.querySelector("h2")!.textContent).toMatch(/^P2\s*→\s*P3/);
     expect(useMapStore.getState().lastRoutePayload?.plan_id).toBe("p2");
+  });
+});
+
+describe("Datos del viaje -- el viaje unido", () => {
+  const RESUMEN = {
+    completo: true,
+    tramos_pedidos: 2,
+    tramos_calculados: 2,
+    tiempo_total_min: 420,
+    energia_kwh: 100,
+    costo_uyu_total: 1800,
+    recargas: 3,
+    bateria_llegada_kwh: 10,
+    bateria_llegada_pct: 15,
+  };
+  const viaje = (i: number, desde: string, hasta: string) => ({
+    result: { ...resultado("eficiente"), origin: { name: desde }, destination: { name: hasta } },
+    payload: { plan_id: `p${i}`, origin_name: desde, destination_name: hasta },
+  });
+  const PARADA = { key: 1, point: { name: "Durazno", lat: -33.38, lon: -56.52 }, revision: 0 };
+
+  function renderViaje(tramos: ReturnType<typeof viaje>[], resumen = RESUMEN) {
+    useMapStore.getState().setTramos(tramos, resumen);
+    return render(
+      <LanguageProvider>
+        <TripDashboard liveTrip={LIVE_TRIP} />
+      </LanguageProvider>
+    );
+  }
+
+  afterEach(() =>
+    useMapStore.setState({
+      lastResult: null,
+      lastRoutePayload: null,
+      tramos: null,
+      resumenViaje: null,
+      paradas: [],
+      idaYVuelta: false,
+    })
+  );
+
+  it("un viaje con paradas es UNO: no hay pestañas ni ayuda de tramos", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: false });
+    renderViaje([viaje(1, "Montevideo", "Rivera")], { ...RESUMEN, tramos_pedidos: 2 });
+
+    expect(screen.queryByRole("radiogroup", { name: "Tramo del viaje" })).toBeNull();
+    expect(screen.queryByText(/Cada viaje se inicia por separado/)).toBeNull();
+  });
+
+  it("con ida y vuelta y una parada son Ida y Vuelta (sin números) y el resumen es el del viaje completo", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: true });
+    renderViaje([viaje(1, "Montevideo", "Rivera"), viaje(2, "Rivera", "Montevideo")], { ...RESUMEN, tramos_pedidos: 4 });
+
+    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual(["Ida", "Vuelta"]);
+    expect(screen.getByText(/Ida y vuelta: 7 h 0 min · 3 recargas · /)).toBeInTheDocument();
+  });
+
+  it("si faltó un tramo, un viaje solo igual avisa que no se pudo calcular completo", () => {
+    useMapStore.setState({ paradas: [PARADA], idaYVuelta: false });
+    renderViaje([viaje(1, "Montevideo", "Durazno")], { ...RESUMEN, completo: false, tramos_calculados: 1 });
+
+    expect(screen.getByText(/No pudimos calcular el viaje completo/)).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Tramo del viaje" })).toBeNull();
   });
 });
