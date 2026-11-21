@@ -61,12 +61,14 @@ export const map = {
     },
     stopCard: {
       occupationValue: (price: string, min: number) => `$ ${price}/min after ${min} min`,
-      backupValue: (name: string, km: number, tooFar: boolean) =>
-        `${name} at ${km} km${tooFar ? " — no backup nearby" : ""}`,
+      backupValue: (name: string, km: number, tooFar: boolean, porRuta = false) =>
+        `${name} at ${km} km${porRuta ? " by road" : ""}${tooFar ? " — no backup nearby" : ""}`,
       avisos: {
         equipo_30kw:
           "30 kW unit: slow charging. Users report faults, and that some models can't charge here; keep the backup in mind.",
         sin_cable: "Charger without a cable: bring your own (Type 2).",
+        carga_lenta:
+          "Slow AC charging (about 7 kW): this stop takes hours. If you can, charge more at the previous fast stop.",
       },
       poiParadaLarga: "for a longer stop",
       poiDist: (m: number) => `${m} m away`,
