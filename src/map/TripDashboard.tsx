@@ -700,8 +700,9 @@ export function TripDashboard({ liveTrip }: TripDashboardProps) {
                               <dd>
                                 {td.stopCard.backupValue(
                                   respaldo.nombre,
-                                  respaldo.distancia_km_recta,
-                                  respaldo.demasiado_lejos
+                                  respaldo.distancia_km_ruta ?? respaldo.distancia_km_recta,
+                                  respaldo.demasiado_lejos,
+                                  respaldo.distancia_km_ruta != null
                                 )}
                                 {/* Lo que pidió Esteban: llegar a un cargador
                                     que no anda, con la batería justa, y tener

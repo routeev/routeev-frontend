@@ -170,9 +170,14 @@ export interface CargadorDestino extends EstacionCercana {
 /**
  * El respaldo de una parada: a que OTRO cargador se llegaria si el de esa
  * parada no funciona. Mismo shape que el cargador del destino, porque es la
- * misma pregunta hecha en otro momento del viaje.
+ * misma pregunta hecha en otro momento del viaje, mas la distancia POR RUTA
+ * (la API la saca de la matriz estacion<->estacion). Una API vieja, o una
+ * estacion que la matriz todavia no tiene, solo trae la recta.
  */
-export type CargadorRespaldo = CargadorDestino;
+export interface CargadorRespaldo extends CargadorDestino {
+  distancia_km_ruta?: number;
+  minutos_ruta?: number | null;
+}
 
 export interface RespaldoParada {
   node_id: string;
